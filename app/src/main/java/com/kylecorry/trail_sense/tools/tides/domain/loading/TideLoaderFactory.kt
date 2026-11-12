@@ -10,7 +10,7 @@ import com.kylecorry.trail_sense.tools.tides.domain.selection.EstimateTideSelect
 import com.kylecorry.trail_sense.tools.tides.domain.selection.FallbackTideSelectionStrategy
 import com.kylecorry.trail_sense.tools.tides.domain.selection.LastTideSelectionStrategy
 import com.kylecorry.trail_sense.tools.tides.domain.selection.NearestTideSelectionStrategy
-import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideTableRepo
+import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.ITideTableRepo
 
 class TideLoaderFactory {
 
@@ -33,7 +33,7 @@ class TideLoaderFactory {
         }
 
         return TideLoaderImpl(
-            TideTableRepo.getInstance(context),
+            getAppService<ITideTableRepo>(),
             FallbackTideSelectionStrategy(
                 strategy,
                 EstimateTideSelectionStrategy(),

@@ -1,29 +1,26 @@
 package com.kylecorry.trail_sense.tools.weather.widgets
 
-import kotlin.time.Clock
-
-import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetChart
-
-import androidx.compose.ui.graphics.drawscope.DrawScope
-
-import androidx.compose.material3.ColorScheme
-
 import android.content.Context
+import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
+import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetChart
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.ChartToolWidgetViewBase
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
 import kotlin.math.max
+import kotlin.time.Clock
 
 class PressureChartToolWidgetView : ChartToolWidgetViewBase() {
 
@@ -31,7 +28,7 @@ class PressureChartToolWidgetView : ChartToolWidgetViewBase() {
         context: Context,
         prefs: WidgetPreferences?
     ): ToolWidgetContent {
-        val weather = WeatherSubsystem.getInstance(context)
+        val weather = getAppService<IWeatherSubsystem>()
         val userPrefs = UserPreferences(context)
         val units = userPrefs.pressureUnits
 

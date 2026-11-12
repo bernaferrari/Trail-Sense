@@ -1,19 +1,20 @@
 package com.kylecorry.trail_sense.tools.weather.widgets
 
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.SimpleToolWidgetView
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetPreferences
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
 
 class PressureWidgetView : SimpleToolWidgetView() {
 
@@ -21,7 +22,7 @@ class PressureWidgetView : SimpleToolWidgetView() {
         context: Context,
         prefs: WidgetPreferences?
     ): ToolWidgetContent {
-        val weather = WeatherSubsystem.getInstance(context)
+        val weather = getAppService<IWeatherSubsystem>()
         val formatter = FormatService.getInstance(context)
         val prefs = UserPreferences(context)
         val current = weather.getWeather()

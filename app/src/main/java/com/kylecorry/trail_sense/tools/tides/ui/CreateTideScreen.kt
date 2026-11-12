@@ -96,7 +96,7 @@ import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.TideTableIsDirtySpecification
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
-import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideTableRepo
+import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.ITideTableRepo
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -119,7 +119,7 @@ fun CreateTideToolScreen(route: Route.CreateTide) {
     val viewModel = viewModel {
         CreateTideViewModel(
             editTideId = route.editTideId,
-            tideRepo = TideTableRepo.getInstance(appContext),
+            tideRepo = getAppService<ITideTableRepo>(),
             units = prefs.baseDistanceUnits,
             includeHarmonic = isDebug()
         )
@@ -225,7 +225,7 @@ fun CreateTideToolScreen(route: Route.CreateTide) {
  */
 internal class CreateTideViewModel(
     editTideId: Long,
-    private val tideRepo: TideTableRepo,
+    private val tideRepo: ITideTableRepo,
     private val units: DistanceUnits,
     includeHarmonic: Boolean
 ) : ViewModel() {

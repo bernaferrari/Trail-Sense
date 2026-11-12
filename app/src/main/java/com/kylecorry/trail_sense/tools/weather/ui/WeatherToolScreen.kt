@@ -114,7 +114,7 @@ import com.kylecorry.trail_sense.tools.weather.domain.CurrentWeather
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherLogger
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.ChangeWeatherFrequencyCommand
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHighLowTemperatureDialogCommand
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHistoricTemperatureDisclaimerCommand
 import com.kylecorry.trail_sense.tools.weather.ui.fields.AlertWeatherField
@@ -156,11 +156,11 @@ fun WeatherToolScreen(
     val prefs = remember(appContext) { UserPreferences(appContext) }
     val viewModel = viewModel {
         WeatherViewModel(
-            weatherSubsystem = WeatherSubsystem.getInstance(appContext),
+            weatherSubsystem = getAppService<IWeatherSubsystem>(),
             prefs = prefs,
             monitorService = getAppService<ToolCatalog>().getService(WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!,
             createLogger = { indicator ->
-                WeatherLogger(appContext, 30.seconds, 500.milliseconds, indicator)
+                WeatherLogger(30.seconds, 500.milliseconds, indicator)
             }
         )
     }
@@ -414,7 +414,7 @@ fun WeatherToolScreen(
  * screen is resumed it logs a reading and keeps the history, the pressure chart and the monitor's status current.
  */
 internal class WeatherViewModel(
-    private val weatherSubsystem: WeatherSubsystem,
+    private val weatherSubsystem: IWeatherSubsystem,
     private val prefs: UserPreferences,
     private val monitorService: ToolService,
     createLogger: (ILoadingIndicator) -> WeatherLogger

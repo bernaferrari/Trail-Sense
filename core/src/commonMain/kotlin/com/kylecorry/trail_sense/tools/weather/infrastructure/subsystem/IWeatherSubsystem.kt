@@ -8,6 +8,7 @@ import com.kylecorry.sol.science.meteorology.KoppenGeigerClimateClassification
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
+import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.tools.weather.domain.CurrentWeather
@@ -61,6 +62,8 @@ interface IWeatherSubsystem {
         elevation: Distance? = null,
         calibrated: Boolean = true
     ): KoppenGeigerClimateClassification
+
+    suspend fun getPressureForecast(): List<Reading<Pressure>>
 
     suspend fun updateWeather()
 }

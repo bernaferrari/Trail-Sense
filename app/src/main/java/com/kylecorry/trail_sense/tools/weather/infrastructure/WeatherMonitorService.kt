@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
-import kotlin.time.Duration.Companion.seconds
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -16,8 +15,9 @@ import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.permissions.canStartLocationForegroundService
 import com.kylecorry.trail_sense.tools.weather.infrastructure.alerts.CurrentWeatherAlerter
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class WeatherMonitorService :
     IntervalService(wakelockDuration = 60.seconds, useOneTimeWorkers = true) {
@@ -48,7 +48,7 @@ class WeatherMonitorService :
         get() = prefs.weather.weatherUpdateFrequency
 
     override suspend fun doWork() {
-        WeatherSubsystem.getInstance(applicationContext).updateWeather()
+        getAppService<IWeatherSubsystem>().updateWeather()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

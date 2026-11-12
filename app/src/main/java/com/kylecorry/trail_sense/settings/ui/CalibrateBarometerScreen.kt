@@ -2,25 +2,18 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
-import com.kylecorry.trail_sense.settings.PreferenceKeys
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.time.CoroutineTimer
@@ -29,20 +22,27 @@ import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherLogger
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.launch
-import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun CalibrateBarometerToolScreen() {
@@ -50,10 +50,8 @@ fun CalibrateBarometerToolScreen() {
     val viewModel = viewModel {
         CalibrateBarometerViewModel(
             prefs = UserPreferences(context),
-            weatherSubsystem = WeatherSubsystem.getInstance(context),
-            logger = WeatherLogger(
-                context,
-                30.seconds,
+            weatherSubsystem = getAppService<IWeatherSubsystem>(),
+            logger = WeatherLogger(30.seconds,
                 500.milliseconds,
             )
         )
@@ -75,7 +73,7 @@ fun CalibrateBarometerToolScreen() {
  */
 internal class CalibrateBarometerViewModel(
     val prefs: UserPreferences,
-    private val weatherSubsystem: WeatherSubsystem,
+    private val weatherSubsystem: IWeatherSubsystem,
     private val logger: WeatherLogger
 ) : ViewModel() {
 

@@ -43,7 +43,7 @@ class TideGeoJsonSource : GeoJsonSource {
         val time = Instant.fromEpochMilliseconds(params.getLong(MapLayerParams.PARAM_TIME))
         val context = DependencyRegistry.get<Context>()
         val tideService = TideService(context)
-        val tables = LoadAllTideTablesCommand(context).execute() + getNearbyTideTables(
+        val tables = LoadAllTideTablesCommand().execute() + getNearbyTideTables(
             bounds,
             zoom,
             showModeledTides

@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.tools.tides.domain.commands
 
-import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
-import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideTableRepo
+import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.ITideTableRepo
 
-class ToggleTideTableVisibilityCommand(context: Context) {
+class ToggleTideTableVisibilityCommand() {
 
-    private val repo = TideTableRepo.getInstance(context)
+    private val repo = getAppService<ITideTableRepo>()
 
     suspend fun execute(table: TideTable): TideTable {
         val newTable = table.copy(isVisible = !table.isVisible)

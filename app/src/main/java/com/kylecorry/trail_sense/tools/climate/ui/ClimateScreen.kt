@@ -123,7 +123,7 @@ import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -145,7 +145,7 @@ fun ClimateToolScreen() {
     val viewModel = viewModel {
         ClimateViewModel(
             locationSubsystem = getAppService<ILocationSubsystem>(),
-            weatherSubsystem = WeatherSubsystem.getInstance(appContext),
+            weatherSubsystem = getAppService<IWeatherSubsystem>(),
             distanceUnits = { prefs.baseDistanceUnits }
         )
     }
@@ -235,7 +235,7 @@ private fun ClimateKind.nameRes(): Int = when (this) {
  */
 private class ClimateViewModel(
     private val locationSubsystem: ILocationSubsystem,
-    private val weatherSubsystem: WeatherSubsystem,
+    private val weatherSubsystem: IWeatherSubsystem,
     private val distanceUnits: () -> DistanceUnits
 ) : ViewModel() {
 

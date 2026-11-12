@@ -39,9 +39,13 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.ITideTableRepo
+import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideTableRepo
 import com.kylecorry.trail_sense.tools.tools.infrastructure.AndroidToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
+import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 
 object TrailSenseServiceRegister {
     fun setup(context: Context) {
@@ -84,6 +88,8 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(HapticSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton<IPathService>(PathService.getInstance(appContext))
         DependencyRegistry.addSingleton<IBeaconService>(BeaconService(appContext))
+        DependencyRegistry.addSingleton(IWeatherSubsystem::class) { WeatherSubsystem.getInstance(appContext) }
+        DependencyRegistry.addSingleton(ITideTableRepo::class) { TideTableRepo.getInstance(appContext) }
 
         // Map layers
         DependencyRegistry.addSingleton(MapLayerLoader(appContext))

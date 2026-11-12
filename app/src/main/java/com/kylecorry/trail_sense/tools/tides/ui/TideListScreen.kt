@@ -4,33 +4,17 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
-import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.trail_sense.settings.infrastructure.TidePreferences
-import com.kylecorry.sol.units.Coordinate
-
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
-import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +22,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -45,13 +31,24 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.sol.science.oceanography.TideType
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.settings.infrastructure.TidePreferences
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
@@ -59,16 +56,17 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
 import com.kylecorry.trail_sense.tools.tides.domain.TideService
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideTypeCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.ToggleTideTableVisibilityCommand
-import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.TideTableRepo
+import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
+import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.ITideTableRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun TideListToolScreen() {
@@ -78,9 +76,9 @@ fun TideListToolScreen() {
     val viewModel = viewModel {
         val gps = getAppService<SensorService>().getGPS()
         TideListViewModel(
-            tideRepo = TideTableRepo.getInstance(appContext),
+            tideRepo = getAppService<ITideTableRepo>(),
             tideTypeCommand = CurrentTideTypeCommand(TideService(appContext)),
-            toggleVisibilityCommand = ToggleTideTableVisibilityCommand(appContext),
+            toggleVisibilityCommand = ToggleTideTableVisibilityCommand(),
             tidePreferences = UserPreferences(appContext).tides,
             currentLocation = { gps.location }
         )
@@ -140,7 +138,7 @@ fun TideListToolScreen() {
  * Plain Kotlin over the tide table repository and preferences.
  */
 internal class TideListViewModel(
-    private val tideRepo: TideTableRepo,
+    private val tideRepo: ITideTableRepo,
     private val tideTypeCommand: CurrentTideTypeCommand,
     private val toggleVisibilityCommand: ToggleTideTableVisibilityCommand,
     private val tidePreferences: TidePreferences,

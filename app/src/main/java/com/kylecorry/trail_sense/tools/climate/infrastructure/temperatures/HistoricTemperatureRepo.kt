@@ -16,7 +16,7 @@ import kotlin.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 
-internal class HistoricTemperatureRepo() : ITemperatureRepo {
+internal class HistoricTemperatureRepo : ITemperatureRepo {
 
     private val highInterpolator = MonthlyValueInterpolator()
     private val lowInterpolator = MonthlyValueInterpolator()

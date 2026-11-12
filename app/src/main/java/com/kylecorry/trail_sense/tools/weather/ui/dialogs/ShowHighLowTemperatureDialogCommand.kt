@@ -1,14 +1,10 @@
 package com.kylecorry.trail_sense.tools.weather.ui.dialogs
 
-import androidx.compose.ui.platform.testTag
-import kotlin.time.Duration.Companion.hours
-
-import kotlin.time.Clock
-
 import android.content.Context
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.units.Coordinate
@@ -16,13 +12,16 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.views.charts.TrailSenseLineChart
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
 
 class ShowHighLowTemperatureDialogCommand(
     private val context: Context,
@@ -30,7 +29,7 @@ class ShowHighLowTemperatureDialogCommand(
     private val elevation: Distance? = null
 ) : CoroutineCommand {
 
-    private val weatherSubsystem by lazy { WeatherSubsystem.getInstance(context) }
+    private val weatherSubsystem by lazy { getAppService<IWeatherSubsystem>() }
     private val formatter by lazy { FormatService.getInstance(context) }
     private val temperatureUnits by lazy { UserPreferences(context).temperatureUnits }
 

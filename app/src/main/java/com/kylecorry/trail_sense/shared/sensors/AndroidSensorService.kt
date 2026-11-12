@@ -288,7 +288,7 @@ class AndroidSensorService(ctx: Context) : SensorService {
 
     override fun getThermometer(calibrated: Boolean): Thermometer {
         val thermometer = when (userPrefs.thermometer.source) {
-            ThermometerSource.Historic -> HistoricThermometer(context)
+            ThermometerSource.Historic -> HistoricThermometer()
             ThermometerSource.Sensor -> getThermometerSensor()
         }
         return if (calibrated) {

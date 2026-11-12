@@ -3,10 +3,10 @@ package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 import android.content.Context
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.units.Distance
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 
 class BackfillHistoricalTemperaturesCommand(
     private val weather: IWeatherSubsystem,
@@ -29,7 +29,7 @@ class BackfillHistoricalTemperaturesCommand(
     companion object {
         fun create(context: Context): BackfillHistoricalTemperaturesCommand {
             return BackfillHistoricalTemperaturesCommand(
-                WeatherSubsystem.getInstance(context),
+                getAppService<IWeatherSubsystem>(),
                 WeatherRepo.getInstance(context)
             )
         }

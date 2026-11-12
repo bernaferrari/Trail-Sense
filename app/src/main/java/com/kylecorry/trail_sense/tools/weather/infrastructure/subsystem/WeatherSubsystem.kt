@@ -338,7 +338,7 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
 
 
     // TODO: Extract this to Sol (new forecaster)
-    suspend fun getPressureForecast(): List<Reading<Pressure>> = onDefault {
+    override suspend fun getPressureForecast(): List<Reading<Pressure>> = onDefault {
         val forecaster = MonteCarloPressureForecaster()
         val history = getHistory().map { it.pressureReading() }.takeLast(50)
         // TODO: Determine if the pressure history is reliable - sum of squared errors between raw and smoothed?

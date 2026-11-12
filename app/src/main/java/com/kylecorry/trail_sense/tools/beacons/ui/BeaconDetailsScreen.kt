@@ -4,43 +4,10 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
-import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.time.today
-
-import com.kylecorry.trail_sense.shared.time.toLocalTime
-
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
-import com.kylecorry.sol.science.astronomy.SunTimesMode
-import com.kylecorry.sol.units.Temperature
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.tools.beacons.domain.icon
-import com.kylecorry.trail_sense.tools.tides.domain.TideDetails
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.receiveAsFlow
-
-import com.kylecorry.trail_sense.shared.navigation.Route
-
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.Surface
-import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.text.font.FontWeight
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -55,48 +22,77 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.sol.math.Range
+import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
+import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.sol.units.Distance
+import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.time.toLocalTime
+import com.kylecorry.trail_sense.shared.time.today
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
-import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.beacons.domain.icon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconEntity
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.share.BeaconSender
+import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
+import com.kylecorry.trail_sense.tools.tides.domain.TideDetails
 import com.kylecorry.trail_sense.tools.tides.subsystem.TidesSubsystem
 import com.kylecorry.trail_sense.tools.tides.ui.TideFormatter
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHighLowTemperatureDialogCommand
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
@@ -110,7 +106,7 @@ fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
         BeaconDetailsViewModel(
             beaconId = route.beaconId,
             beaconRepo = BeaconRepo.getInstance(appContext),
-            weather = WeatherSubsystem.getInstance(appContext),
+            weather = getAppService<IWeatherSubsystem>(),
             tides = TidesSubsystem.getInstance(appContext),
             sunTimesMode = prefs.astronomy.sunTimesMode
         )
@@ -235,7 +231,7 @@ fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
 internal class BeaconDetailsViewModel(
     private val beaconId: Long,
     private val beaconRepo: BeaconRepo,
-    private val weather: WeatherSubsystem,
+    private val weather: IWeatherSubsystem,
     private val tides: TidesSubsystem,
     private val sunTimesMode: SunTimesMode
 ) : ViewModel() {
