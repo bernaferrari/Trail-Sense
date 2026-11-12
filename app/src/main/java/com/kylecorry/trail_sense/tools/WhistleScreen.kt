@@ -2,12 +2,6 @@ package com.kylecorry.trail_sense.tools
 
 import kotlin.time.Duration.Companion.milliseconds
 
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseValueChip
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -26,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
@@ -57,19 +50,15 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.sound.SoundPlayer
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.icons.trail.Pause
 import com.kylecorry.trail_sense.shared.icons.trail.ToolWhistle
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
-import com.kylecorry.trail_sense.shared.icons.trail.WhistleSos
 import com.kylecorry.trail_sense.shared.morse.Signal
 import com.kylecorry.trail_sense.shared.morse.SignalPlayer
 import com.kylecorry.trail_sense.shared.morse.Signals
 import com.kylecorry.trail_sense.shared.morse.asSignal
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.whistle.infrastructure.Whistle
 import kotlinx.coroutines.CoroutineScope
@@ -94,7 +83,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.graphics.shapes.RoundedPolygon
 import com.kylecorry.trail_sense.shared.icons.trail.Alert
-import com.kylecorry.trail_sense.shared.icons.trail.BaselinePlayArrow24
 import androidx.graphics.shapes.toPath
 import androidx.compose.ui.graphics.asComposePath
 import com.kylecorry.trail_sense.shared.icons.trail.BaselineStop24

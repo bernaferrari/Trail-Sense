@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure
 
 import com.kylecorry.andromeda.preferences.Preferences
-import androidx.annotation.ColorInt
 import com.kylecorry.andromeda.preferences.IntEnumPreference
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.settings.infrastructure.IBeaconPreferences

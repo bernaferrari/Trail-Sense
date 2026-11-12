@@ -7,8 +7,6 @@ import androidx.lifecycle.lifecycleScope
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.os.Bundle
-import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools

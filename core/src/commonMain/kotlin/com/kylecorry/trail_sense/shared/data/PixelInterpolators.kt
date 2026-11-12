@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.shared.data
 
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.algebra.Algebra
-import com.kylecorry.sol.math.arithmetic.Arithmetic
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.roundToInt

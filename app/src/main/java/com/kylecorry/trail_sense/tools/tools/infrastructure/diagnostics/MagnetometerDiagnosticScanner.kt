@@ -4,7 +4,6 @@ import android.content.Context
 import android.hardware.SensorManager
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.sense.magnetometer.AndroidMagnetometer
-import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.navigation.Route

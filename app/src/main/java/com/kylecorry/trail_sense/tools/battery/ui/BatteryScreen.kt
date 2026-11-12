@@ -8,11 +8,8 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
-import com.kylecorry.trail_sense.tools.level.ui.CalmKeyValue
-import androidx.compose.material3.LinearWavyProgressIndicator
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseGridCellShape
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -24,31 +21,15 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
 import androidx.compose.ui.text.font.FontWeight
-import com.kylecorry.trail_sense.shared.icons.trail.Check
 import com.kylecorry.trail_sense.shared.icons.trail.ToolBattery
-import com.kylecorry.trail_sense.shared.icons.trail.ToolClock
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.kylecorry.trail_sense.shared.icons.trail.Help
-import com.kylecorry.trail_sense.shared.icons.trail.CheckOutline
 import com.kylecorry.trail_sense.shared.icons.trail.Alert
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
-import com.kylecorry.trail_sense.shared.icons.trail.Cancel
 import com.kylecorry.trail_sense.shared.icons.trail.Chart
 import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
-import com.kylecorry.trail_sense.shared.icons.trail.Power
-import com.kylecorry.trail_sense.shared.icons.trail.Settings
 import com.kylecorry.trail_sense.shared.icons.trail.MoonWaningCrescent
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Path
@@ -67,7 +48,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -75,9 +55,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -90,8 +68,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -111,14 +87,9 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMetricItem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMetricRow
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack

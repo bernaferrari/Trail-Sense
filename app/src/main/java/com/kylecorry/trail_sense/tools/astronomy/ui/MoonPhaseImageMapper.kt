@@ -16,7 +16,6 @@ import com.kylecorry.trail_sense.shared.icons.toBitmap
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
 import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.astronomy.domain.MoonTilt
 import kotlin.math.abs
 

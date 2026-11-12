@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.shared.scales.IColorScale
 import androidx.compose.material3.MaterialTheme
 

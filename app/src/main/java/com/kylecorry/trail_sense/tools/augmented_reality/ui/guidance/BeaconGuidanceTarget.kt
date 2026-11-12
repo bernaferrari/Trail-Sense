@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance
 
 import com.kylecorry.andromeda.core.ui.Colors
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.GeographicARPoint

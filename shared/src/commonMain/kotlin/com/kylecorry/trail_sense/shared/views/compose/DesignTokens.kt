@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.shared.views.compose
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**

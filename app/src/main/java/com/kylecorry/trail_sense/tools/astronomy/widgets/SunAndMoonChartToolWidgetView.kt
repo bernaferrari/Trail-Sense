@@ -9,14 +9,11 @@ import com.kylecorry.trail_sense.tools.astronomy.ui.drawAstroChart
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetChart
 
 import android.content.Context
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
-import com.kylecorry.trail_sense.tools.astronomy.ui.AstroChart
 import com.kylecorry.trail_sense.tools.astronomy.ui.AstroChartState
 import androidx.compose.ui.graphics.asImageBitmap
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper

@@ -3,10 +3,8 @@ package com.kylecorry.trail_sense.tools.guide.infrastructure
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import android.content.Context
-import android.os.Bundle
 import androidx.annotation.RawRes
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import com.kylecorry.trail_sense.R
 
 object UserGuideUtils {
 

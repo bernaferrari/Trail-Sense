@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape

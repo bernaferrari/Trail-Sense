@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.tools.quickactions
 import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 
 class QuickActionToolWidgets(button: QuickActionButtonView, host: AndroidDestinationHost) : QuickActionButton(

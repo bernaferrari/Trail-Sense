@@ -30,7 +30,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlin.time.Duration
-import kotlin.time.toKotlinDuration
 
 class BacktrackService :
     IntervalService(wakelockDuration = 60.seconds, useOneTimeWorkers = true) {

@@ -18,11 +18,9 @@ import com.kylecorry.trail_sense.shared.dialogs.ProgressBody
 import com.kylecorry.trail_sense.shared.dialogs.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.dialogs.dialog
 import com.kylecorry.trail_sense.shared.dialogs.onMain
-import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
 import com.kylecorry.trail_sense.shared.logging.Logger
-import com.kylecorry.trail_sense.shared.safeRoundToInt
 
 inline fun Alerts.withCancelableLoading(
     context: Context,

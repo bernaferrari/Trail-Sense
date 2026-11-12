@@ -35,9 +35,7 @@ import androidx.compose.material3.toShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
-import androidx.compose.ui.graphics.Color
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.compose.foundation.Image

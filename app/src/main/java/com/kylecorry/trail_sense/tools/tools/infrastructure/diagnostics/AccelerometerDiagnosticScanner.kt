@@ -9,7 +9,6 @@ import android.hardware.Sensor
 import android.hardware.SensorManager
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.sense.Sensors
-import com.kylecorry.andromeda.sense.accelerometer.Accelerometer
 import com.kylecorry.trail_sense.R
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine

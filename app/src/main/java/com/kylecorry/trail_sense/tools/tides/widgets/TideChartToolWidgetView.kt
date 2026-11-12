@@ -9,22 +9,9 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.material3.ColorScheme
 
 import android.content.Context
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
-import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R

@@ -22,7 +22,6 @@ import com.kylecorry.trail_sense.shared.data.AssetInputStreamable
 import com.kylecorry.trail_sense.shared.data.EncodedDataImageReader
 import com.kylecorry.trail_sense.shared.data.GeographicImageSource
 import com.kylecorry.trail_sense.shared.data.SingleImageReader
-import kotlin.math.roundToInt
 
 object TideModel {
 

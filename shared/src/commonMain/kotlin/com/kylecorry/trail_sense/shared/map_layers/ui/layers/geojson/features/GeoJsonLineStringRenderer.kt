@@ -19,7 +19,6 @@ import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.geometry.Rectangle
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.math.lists.Lists
-import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.canvas.LineClipper

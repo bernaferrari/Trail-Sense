@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.cliffheight.domain
 
 
 import com.kylecorry.luna.hooks.Hooks
-import com.kylecorry.sol.science.geology.Geology
 import com.kylecorry.sol.science.geophysics.Geophysics
 import com.kylecorry.sol.science.physics.Physics
 import com.kylecorry.sol.units.Coordinate

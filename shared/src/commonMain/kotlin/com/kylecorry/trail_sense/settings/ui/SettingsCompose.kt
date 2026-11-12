@@ -27,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.toShape
 import androidx.compose.ui.draw.alpha
 import org.jetbrains.compose.resources.stringResource
 import com.kylecorry.trail_sense.shared.generated.resources.Res

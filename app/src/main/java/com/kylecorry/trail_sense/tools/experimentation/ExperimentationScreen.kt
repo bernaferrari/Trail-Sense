@@ -4,19 +4,8 @@ package com.kylecorry.trail_sense.tools.experimentation
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.Surface
-import androidx.compose.material3.toShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Arrangement
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAccents
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
@@ -44,10 +33,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.plugins.PluginSubsystem

@@ -10,10 +10,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -40,7 +38,6 @@ import androidx.compose.ui.unit.sp
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.getInstance
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.min

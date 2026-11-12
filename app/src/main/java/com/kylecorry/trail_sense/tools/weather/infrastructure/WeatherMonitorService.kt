@@ -18,7 +18,6 @@ import com.kylecorry.trail_sense.shared.permissions.canStartLocationForegroundSe
 import com.kylecorry.trail_sense.tools.weather.infrastructure.alerts.CurrentWeatherAlerter
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
 import kotlin.time.Duration
-import kotlin.time.toKotlinDuration
 
 class WeatherMonitorService :
     IntervalService(wakelockDuration = 60.seconds, useOneTimeWorkers = true) {

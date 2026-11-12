@@ -10,7 +10,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.commands.AstronomyAlertCommand
 import kotlinx.datetime.LocalTime
-import kotlinx.datetime.toKotlinLocalTime
 
 // TODO: Autogenerate last run key (pref_andromeda_daily_worker_last_run_date_UNIQUEID)
 class AstronomyDailyWorker(context: Context, params: WorkerParameters) : DailyWorker(

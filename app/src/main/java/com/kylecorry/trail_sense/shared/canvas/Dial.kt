@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.canvas
 
 import android.graphics.Path
-import com.kylecorry.andromeda.canvas.Paths
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import kotlin.math.cos
 import kotlin.math.sin

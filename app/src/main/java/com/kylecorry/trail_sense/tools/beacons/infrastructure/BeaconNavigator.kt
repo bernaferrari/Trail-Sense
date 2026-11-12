@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.beacons.infrastructure
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigation.IAppNavigation
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService

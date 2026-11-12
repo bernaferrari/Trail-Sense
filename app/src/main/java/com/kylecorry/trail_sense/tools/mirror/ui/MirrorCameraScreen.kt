@@ -11,10 +11,8 @@ import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.camera.CameraScaleType
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
@@ -47,7 +45,6 @@ import com.kylecorry.trail_sense.R
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCameraUnavailable
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.andromeda.torch.ScreenTorch
 
 @Composable

@@ -5,7 +5,6 @@ import kotlin.time.Duration.Companion.minutes
 import com.kylecorry.trail_sense.shared.time.plusDays
 import kotlin.time.Clock
 import kotlin.time.Instant
-import kotlin.time.toKotlinInstant
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 

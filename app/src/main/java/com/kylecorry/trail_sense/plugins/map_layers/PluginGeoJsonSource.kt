@@ -18,7 +18,6 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
-import java.io.ByteArrayInputStream
 
 class PluginGeoJsonSource(private val packageId: String, private val endpoint: String) : GeoJsonSource {
     private val plugins = getAppService<PluginSubsystem>()

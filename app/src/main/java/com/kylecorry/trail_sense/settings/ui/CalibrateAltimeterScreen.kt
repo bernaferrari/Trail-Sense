@@ -4,7 +4,6 @@ package com.kylecorry.trail_sense.settings.ui
 
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
-import kotlin.time.toKotlinDuration
 import com.kylecorry.andromeda.core.sensors.read
 
 import com.kylecorry.trail_sense.shared.preferences.onChange

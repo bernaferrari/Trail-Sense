@@ -10,7 +10,6 @@ import kotlin.time.Clock
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.torch.Torch
 import com.kylecorry.andromeda.torch.deviceTorch
@@ -26,7 +25,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.util.Optional
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

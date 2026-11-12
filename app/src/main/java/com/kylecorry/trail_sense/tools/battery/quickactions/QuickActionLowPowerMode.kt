@@ -5,11 +5,9 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class QuickActionLowPowerMode(button: QuickActionButtonView, host: AndroidDestinationHost) :
     QuickActionButton(button, host) {

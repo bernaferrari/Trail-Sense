@@ -1,10 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors
 
-import kotlin.time.Duration.Companion.milliseconds
 
-import kotlin.time.Duration.Companion.minutes
 
-import kotlin.time.Duration.Companion.seconds
 
 import com.kylecorry.andromeda.sense.accelerometer.AndroidAccelerometer
 import com.kylecorry.andromeda.sense.barometer.AndroidBarometer
@@ -44,7 +41,6 @@ import com.kylecorry.andromeda.sense.mock.MockBarometer
 import com.kylecorry.andromeda.sense.mock.MockGyroscope
 import com.kylecorry.andromeda.sense.orientation.DeviceOrientation
 import com.kylecorry.andromeda.sense.orientation.GameRotationSensor
-import com.kylecorry.andromeda.sense.orientation.Gyroscope
 import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
@@ -59,7 +55,6 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.sensors.compass.MockCompass
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.sensors.altimeter.AltimeterWrapper
 import com.kylecorry.trail_sense.shared.sensors.altimeter.AutoInitializeBarometricAltimeter
 import com.kylecorry.trail_sense.shared.sensors.altimeter.CachedAltimeter
 import com.kylecorry.trail_sense.shared.sensors.altimeter.CachingAltimeterWrapper

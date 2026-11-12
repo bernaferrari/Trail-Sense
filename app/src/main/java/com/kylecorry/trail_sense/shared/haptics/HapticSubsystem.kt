@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.andromeda.haptics.DialHapticFeedback
 import com.kylecorry.andromeda.haptics.HapticFeedbackType
-import com.kylecorry.andromeda.haptics.HapticMotor
 import com.kylecorry.andromeda.haptics.deviceHaptics
 import kotlin.time.Duration
 

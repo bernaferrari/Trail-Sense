@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.shared.icons.trail
 
 // Generated from res/drawable/planet_saturn.xml; redraw freely, it is ours now.
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin

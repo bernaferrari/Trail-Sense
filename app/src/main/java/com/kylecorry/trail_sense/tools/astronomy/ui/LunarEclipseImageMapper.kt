@@ -11,7 +11,6 @@ import com.kylecorry.trail_sense.shared.icons.toBitmap
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.astronomy.eclipse.LunarEclipseShadow
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.astronomy.domain.MoonTilt
 
 class LunarEclipseImageMapper(private val context: Context) {

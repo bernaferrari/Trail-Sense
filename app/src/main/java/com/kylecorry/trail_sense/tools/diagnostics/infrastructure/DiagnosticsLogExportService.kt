@@ -22,7 +22,6 @@ import com.kylecorry.trail_sense.shared.logging.AndroidLogger
 import java.io.File
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
-import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
