@@ -39,7 +39,7 @@ class MapExportService(
 
     override suspend fun export(data: PhotoMap, filename: String): Boolean {
         // If the map was auto calibrated and the PDF exists, just copy it
-        if (data.hasPdf(context) && isGeospatialPdf(data.pdfFileName)) {
+        if (data.hasPdf() && isGeospatialPdf(data.pdfFileName)) {
             val uri = uriPicker.create(filename, "application/pdf") ?: return false
             val outputStream = files.output(uri) ?: return false
             val saver = FileSaver()

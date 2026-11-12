@@ -8,6 +8,7 @@ import com.kylecorry.andromeda.print.Printer
 import com.kylecorry.andromeda.print.ScaleMode
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.hasPdf
 
 class PrintMapCommand(private val context: Context) {
 
@@ -15,7 +16,7 @@ class PrintMapCommand(private val context: Context) {
         val printer = Printer(context)
         val files = FileSubsystem.getInstance(context)
 
-        val uri = if (map.hasPdf(context)) {
+        val uri = if (map.hasPdf()) {
             files.uri(map.pdfFileName)
         } else {
             files.uri(map.filename)

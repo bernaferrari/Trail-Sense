@@ -1,14 +1,11 @@
 package com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps
 
-import android.content.Context
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.math.MathExtensions.roundNearestAngle
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.science.geography.projections.IMapProjection
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.projections.PhotoMapProjection
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.projections.distancePerPixel
@@ -107,10 +104,6 @@ data class PhotoMap(
         return hooks.memo("boundary") {
             PhotoMapBoundsCalculator().calculate(this)
         }
-    }
-
-    fun hasPdf(context: Context): Boolean {
-        return DependencyRegistry.get<FileSubsystem>().get(pdfFileName).exists()
     }
 
     companion object {

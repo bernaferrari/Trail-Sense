@@ -18,6 +18,7 @@ import com.kylecorry.sol.math.floorToInt
 import com.kylecorry.trail_sense.shared.extensions.toAndroidSize
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.hasPdf
 import kotlin.math.roundToInt
 
 class PhotoMapRegionLoader(
@@ -88,7 +89,7 @@ class PhotoMapRegionLoader(
             (maxSize.height * sampleSizeMultiplier).roundToInt()
         )
 
-        val isPdf = loadPdfs && map.hasPdf(context)
+        val isPdf = loadPdfs && map.hasPdf()
         val bitmap = decoderCache.decodeRegion(context, map, region, inSampleSize, isPdf)
 
         bitmap?.applyOperationsOrNull(

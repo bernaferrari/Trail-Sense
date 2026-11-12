@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.PhotoMapPreferences
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.hasPdf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -204,7 +205,7 @@ fun OfflineMapListToolScreen(
                 }
 
                 if (map is PhotoMap) {
-                    val isPdfMap = map.hasPdf(context)
+                    val isPdfMap = map.hasPdf()
                     if ((isPdfMap && prefs.photoMaps.autoReducePdfMaps) || (!isPdfMap && prefs.photoMaps.autoReducePhotoMaps)) {
                         mapImportingIndicator.show()
                         val reducer = HighQualityMapReducer(context)
