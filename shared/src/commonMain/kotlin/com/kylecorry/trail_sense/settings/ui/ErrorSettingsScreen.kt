@@ -1,29 +1,27 @@
 package com.kylecorry.trail_sense.settings.ui
 
-import androidx.compose.ui.platform.LocalContext
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 
 @Composable
 fun ErrorSettingsToolScreen() {
-    val context = LocalContext.current
-    val prefs = remember { UserPreferences(context).errors }
+    val prefs = remember { getAppService<UserPreferences>().errors }
     val errors = remember { ErrorBannerReason.values().sortedBy { it.id } }
     var values by remember {
         mutableStateOf(errors.associateWith { prefs.canShowError(it) })
     }
-    val footer = stringResource(R.string.settings_error_banners_footer)
+    val footer = appString(Res.string.settings_error_banners_footer)
 
-    SettingsList(title = stringResource(R.string.error_banners)) {
+    SettingsList(title = appString(Res.string.error_banners)) {
         trailSenseSection("errors", footer = footer) {
             errors.forEach { error ->
                 row { position ->
@@ -45,11 +43,11 @@ fun ErrorSettingsToolScreen() {
 @Composable
 private fun getErrorDisplayName(reason: ErrorBannerReason): String {
     return when (reason) {
-        ErrorBannerReason.NoGPS -> stringResource(R.string.gps_unavailable)
-        ErrorBannerReason.LocationNotSet -> stringResource(R.string.location_not_set)
-        ErrorBannerReason.CompassPoor -> stringResource(R.string.compass_accuracy)
-        ErrorBannerReason.NoCompass -> stringResource(R.string.compass_unavailable)
-        ErrorBannerReason.GPSTimeout -> stringResource(R.string.gps_timeouts)
-        ErrorBannerReason.LocationPermissionDenied -> stringResource(R.string.location_permission)
+        ErrorBannerReason.NoGPS -> appString(Res.string.gps_unavailable)
+        ErrorBannerReason.LocationNotSet -> appString(Res.string.location_not_set)
+        ErrorBannerReason.CompassPoor -> appString(Res.string.compass_accuracy)
+        ErrorBannerReason.NoCompass -> appString(Res.string.compass_unavailable)
+        ErrorBannerReason.GPSTimeout -> appString(Res.string.gps_timeouts)
+        ErrorBannerReason.LocationPermissionDenied -> appString(Res.string.location_permission)
     }
 }
