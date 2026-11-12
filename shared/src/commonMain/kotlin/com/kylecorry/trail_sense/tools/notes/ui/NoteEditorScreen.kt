@@ -2,11 +2,18 @@
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.main.getAppService
+
+import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
+
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
 import kotlin.time.Clock
 
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.views.compose.UnsavedChangesBackHandler
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.channels.Channel
@@ -26,11 +33,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -38,7 +43,6 @@ import com.kylecorry.trail_sense.tools.notes.domain.Note
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 
 /**
  * The note editor: the title and the contents as one grouped object, the contents roomy enough to write in, and Save
@@ -76,9 +80,9 @@ fun NoteEditorScreen(
     }
 
     TrailSensePage(
-        title = stringResource(R.string.note),
+        title = appString(Res.string.note),
         onBack = back,
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier,
         actions = {
             Button(
@@ -92,7 +96,7 @@ fun NoteEditorScreen(
                     .padding(end = TrailSenseSpacing.sm)
                     .testTag("note_create_btn")
             ) {
-                Text(stringResource(R.string.save))
+                Text(appString(Res.string.save))
             }
         }
     ) {
@@ -101,7 +105,7 @@ fun NoteEditorScreen(
                 com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
                     value = title,
                     onValueChange = { title = it },
-                    label = stringResource(R.string.note_title_hint),
+                    label = appString(Res.string.note_title_hint),
                     position = TrailSenseGroupPosition(isFirst = true, isLast = false),
                     keyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
                     capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences,
@@ -111,7 +115,7 @@ fun NoteEditorScreen(
                 com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
                     value = content,
                     onValueChange = { content = it },
-                    label = stringResource(R.string.contents),
+                    label = appString(Res.string.contents),
                     position = TrailSenseGroupPosition(isFirst = false, isLast = true),
                     keyboardType = androidx.compose.ui.text.input.KeyboardType.Text,
                     capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences,
@@ -133,9 +137,8 @@ fun NoteEditorScreen(
 /** The note editor for [Route.NoteEditor]; back asks before dropping unsaved changes. */
 @Composable
 fun NoteEditorToolScreen(route: Route.NoteEditor) {
-    val context = LocalContext.current.applicationContext
     val navigator = LocalNavigator.current
-    val viewModel = viewModel { NoteEditorViewModel(NoteRepo.getInstance(context)) }
+    val viewModel = viewModel { NoteEditorViewModel(getAppService<INoteRepo>()) }
     UnsavedChangesBackHandler(hasChanges = viewModel.hasChanges)
     LaunchedEffect(viewModel) {
         viewModel.saved.collect { navigator.navigateUp() }
@@ -149,7 +152,7 @@ fun NoteEditorToolScreen(route: Route.NoteEditor) {
 }
 
 /** What the editor has typed against the note being edited; reports [saved] once the note is stored. */
-internal class NoteEditorViewModel(private val repo: NoteRepo) : ViewModel() {
+internal class NoteEditorViewModel(private val repo: INoteRepo) : ViewModel() {
     private var editingNote by mutableStateOf<Note?>(null)
     private var title by mutableStateOf("")
     private var content by mutableStateOf("")
@@ -171,7 +174,6 @@ internal class NoteEditorViewModel(private val repo: NoteRepo) : ViewModel() {
     suspend fun save(title: String, content: String) {
         val existingNote = editingNote
         val note = existingNote?.copy(title = title, contents = content)
-            ?.apply { id = existingNote.id }
             ?: Note(title, content, Clock.System.now().toEpochMilliseconds())
         withContext(Dispatchers.IO) {
             repo.addNote(note)

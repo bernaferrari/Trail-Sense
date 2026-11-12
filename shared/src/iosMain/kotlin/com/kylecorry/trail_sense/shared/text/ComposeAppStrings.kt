@@ -23,4 +23,6 @@ class ComposeAppStrings : AppStrings {
         val template = runBlocking { getPluralString(resource, quantity) }
         return AndroidStringFormat.format(template, *args)
     }
+
+    override fun system(string: SystemString): String = iosSystemString(string)
 }

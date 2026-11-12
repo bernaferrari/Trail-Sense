@@ -3,6 +3,14 @@
 
 package com.kylecorry.trail_sense.tools.lightning.ui
 
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.main.getAppService
+
+import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.ILightningRepo
+
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
@@ -53,9 +61,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -68,10 +74,8 @@ import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.sol.science.meteorology.Meteorology
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.icons.trail.BaselineRefresh24
@@ -84,7 +88,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
-import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.LightningRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -114,11 +117,10 @@ private enum class StrikeStage { Ready, Counting, Result }
 fun LightningScreen(
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val formatService = remember { FormatService.getInstance(context) }
-    val prefs = remember { UserPreferences(context) }
-    val repo = remember { LightningRepo.getInstance(context) }
+    val formatService = remember { FormatService.getInstance() }
+    val prefs = remember { getAppService<UserPreferences>() }
+    val repo = remember { getAppService<ILightningRepo>() }
 
     KeepScreenOn()
 
@@ -170,11 +172,11 @@ fun LightningScreen(
         formatService.formatDistance(it, 0, false)
     }
 
-    val actionLabel = stringResource(
+    val actionLabel = appString(
         when (stage) {
-            StrikeStage.Ready -> R.string.lightning
-            StrikeStage.Counting -> R.string.thunder
-            StrikeStage.Result -> R.string.lightning_again
+            StrikeStage.Ready -> Res.string.lightning
+            StrikeStage.Counting -> Res.string.thunder
+            StrikeStage.Result -> Res.string.lightning_again
         }
     )
 
@@ -212,9 +214,9 @@ fun LightningScreen(
     }
 
     TrailSensePage(
-        title = stringResource(R.string.tool_lightning_title),
+        title = appString(Res.string.tool_lightning_title),
         onBack = rememberTrailSenseBack(),
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier
     ) {
         item(key = "storm") {
@@ -237,10 +239,10 @@ fun LightningScreen(
                 )
                 // The one line: what to do next, or the verdict once the thunder came.
                 val line = when {
-                    stage == StrikeStage.Ready -> stringResource(R.string.lightning_hint_flash)
-                    stage == StrikeStage.Counting -> stringResource(R.string.lightning_hint_thunder)
-                    isDangerous -> stringResource(R.string.lightning_verdict_danger)
-                    else -> stringResource(R.string.lightning_verdict_calm)
+                    stage == StrikeStage.Ready -> appString(Res.string.lightning_hint_flash)
+                    stage == StrikeStage.Counting -> appString(Res.string.lightning_hint_thunder)
+                    isDangerous -> appString(Res.string.lightning_verdict_danger)
+                    else -> appString(Res.string.lightning_verdict_calm)
                 }
                 val lineColor by animateColorAsState(
                     if (isDangerous) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
@@ -364,7 +366,7 @@ private fun StormSky(
         animationSpec = infiniteRepeatable(tween(1200, easing = LinearEasing), RepeatMode.Restart),
         label = "roll"
     )
-    val description = value?.let { "$it $unit" } ?: stringResource(R.string.lightning_hint_flash)
+    val description = value?.let { "$it $unit" } ?: appString(Res.string.lightning_hint_flash)
     // The sky is the button too: it presses in under the finger and ripples, then springs back.
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()

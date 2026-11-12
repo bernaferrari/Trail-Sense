@@ -7,22 +7,21 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.kylecorry.trail_sense.tools.notes.domain.Note
 
 @Dao
 interface NoteDao {
     @Query("SELECT * FROM notes")
-    fun getAll(): Flow<List<Note>>
+    fun getAll(): Flow<List<NoteEntity>>
 
     @Query("SELECT * FROM notes WHERE _id = :id LIMIT 1")
-    suspend fun get(id: Long): Note?
+    suspend fun get(id: Long): NoteEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(note: Note): Long
+    suspend fun insert(note: NoteEntity): Long
 
     @Delete
-    suspend fun delete(note: Note)
+    suspend fun delete(note: NoteEntity)
 
     @Update
-    suspend fun update(note: Note)
+    suspend fun update(note: NoteEntity)
 }

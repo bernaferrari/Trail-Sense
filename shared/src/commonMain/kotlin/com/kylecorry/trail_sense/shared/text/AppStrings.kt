@@ -16,4 +16,7 @@ interface AppStrings {
 
     fun get(resource: StringResource, vararg args: Any?): String
     fun plural(resource: PluralStringResource, quantity: Int, vararg args: Any?): String
+
+    /** The platform's own translation of a common label (composables use systemString). */
+    fun system(string: SystemString): String
 }

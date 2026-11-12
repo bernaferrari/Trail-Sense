@@ -32,6 +32,17 @@ class AndroidAppStrings(context: Context) : AppStrings {
         return context.resources.getQuantityString(id(resource.key, "plurals"), quantity, *args)
     }
 
+    override fun system(string: SystemString): String {
+        return context.getString(
+            when (string) {
+                SystemString.Ok -> android.R.string.ok
+                SystemString.Cancel -> android.R.string.cancel
+                SystemString.Copy -> android.R.string.copy
+                SystemString.Untitled -> android.R.string.untitled
+            }
+        )
+    }
+
     @SuppressLint("DiscouragedApi")
     private fun id(name: String, type: String): Int {
         return ids.getOrPut("$type/$name") {

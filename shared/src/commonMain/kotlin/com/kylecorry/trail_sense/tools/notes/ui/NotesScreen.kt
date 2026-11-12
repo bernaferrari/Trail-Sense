@@ -4,16 +4,22 @@
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
+import com.kylecorry.trail_sense.shared.FormatService
+
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.text.SystemString
+
+
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
 import com.kylecorry.trail_sense.shared.time.displayName
 
 import com.kylecorry.trail_sense.shared.time.DateNameWidth
 
 import com.kylecorry.trail_sense.shared.time.toLocalDateTime
 
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.material3.MaterialShapes
 import com.kylecorry.trail_sense.shared.views.NotesEmptyIllustration
 import androidx.compose.material3.toShape
@@ -58,14 +64,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.Flow
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
@@ -73,16 +77,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import kotlin.time.Instant
-import java.text.DateFormat
-import java.util.Date
-import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
-import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 /**
  * The notes list: newest first, one grouped card of rows (title, then the date and the start of the note), with the
@@ -107,9 +101,9 @@ fun NotesScreen(
     val back: () -> Unit = onBack ?: { dispatcher?.invoke() }
 
     TrailSensePage(
-        title = stringResource(R.string.tool_notes_title),
+        title = appString(Res.string.tool_notes_title),
         onBack = back,
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier,
         floatingActionButton = {
             // The FAB only once there are notes; the empty notebook carries its own in-flow button.
@@ -119,7 +113,7 @@ fun NotesScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 icon = { Icon(TrailIcons.Edit, contentDescription = null) },
-                text = { Text(stringResource(R.string.places_notes_new)) }
+                text = { Text(appString(Res.string.places_notes_new)) }
             )
         }
     ) {
@@ -131,12 +125,12 @@ fun NotesScreen(
                 TrailSenseEmptyState(
                     icon = TrailIcons.ToolNotes,
                     illustration = { NotesEmptyIllustration() },
-                    title = stringResource(R.string.notes_empty_text),
-                    description = stringResource(R.string.notes_empty_description),
+                    title = appString(Res.string.notes_empty_text),
+                    description = appString(Res.string.notes_empty_description),
                     modifier = Modifier
                         .fillParentMaxHeight(0.9f)
                         .testTag("notes_empty_text"),
-                    actionLabel = stringResource(R.string.places_notes_new),
+                    actionLabel = appString(Res.string.places_notes_new),
                     actionIcon = TrailIcons.Add,
                     onAction = onAdd,
                     actionModifier = Modifier.testTag("add_btn")
@@ -173,7 +167,7 @@ private fun NoteRow(
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
     val title = if (note.title?.trim().isNullOrEmpty()) {
-        stringResource(android.R.string.untitled)
+        systemString(SystemString.Untitled)
     } else {
         note.title.orEmpty().trim()
     }
@@ -266,7 +260,7 @@ private fun NoteRow(
                 IconButton(onClick = { isMenuOpen = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(R.string.note_more_options),
+                        contentDescription = appString(Res.string.note_more_options),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -275,7 +269,7 @@ private fun NoteRow(
                     onDismissRequest = { isMenuOpen = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.qr_code)) },
+                        text = { Text(appString(Res.string.qr_code)) },
                         leadingIcon = {
                             Icon(rememberVectorPainter(TrailIcons.QrCode), contentDescription = null)
                         },
@@ -285,7 +279,7 @@ private fun NoteRow(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.delete)) },
+                        text = { Text(appString(Res.string.delete)) },
                         leadingIcon = {
                             Icon(rememberVectorPainter(TrailIcons.Delete), contentDescription = null)
                         },
@@ -301,53 +295,7 @@ private fun NoteRow(
 }
 
 
-private val timestampFormatter: DateFormat =
-    DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
-
 private fun formatTimestamp(epochMillis: Long): String? {
     if (epochMillis <= 0L) return null
-    return runCatching {
-        timestampFormatter.format(Date(epochMillis))
-    }.getOrNull()
-}
-
-/** The Notes tool: every note, newest first, each with edit, delete and QR share. */
-@Composable
-fun NotesToolScreen() {
-    val context = LocalContext.current
-    val navigator = LocalNavigator.current
-    val scope = rememberCoroutineScope()
-    val repo = remember(context) { NoteRepo.getInstance(context.applicationContext) }
-    val notes = remember(repo) { repo.getNotes() }
-    NotesScreen(
-        notes = notes,
-        lifecycleOwner = LocalLifecycleOwner.current,
-        onAdd = { navigator.navigate(Route.NoteEditor()) },
-        onEdit = { note -> navigator.navigate(Route.NoteEditor(editNoteId = note.id)) },
-        onDelete = { note ->
-            Alerts.dialog(
-                context,
-                context.getString(R.string.delete_note_title),
-                if (note.title?.trim().isNullOrEmpty()) {
-                    context.getString(android.R.string.untitled)
-                } else {
-                    note.title
-                }
-            ) { cancelled ->
-                if (!cancelled) {
-                    scope.launch(Dispatchers.IO) {
-                        repo.deleteNote(note)
-                    }
-                }
-            }
-        },
-        onShowQR = { note ->
-            CustomUiUtils.showQR(
-                context,
-                navigator,
-                note.title ?: context.getString(android.R.string.untitled),
-                NoteQREncoder().encode(note)
-            )
-        }
-    )
+    return FormatService.getInstance().formatDateTime(Instant.fromEpochMilliseconds(epochMillis), abbreviateMonth = true)
 }

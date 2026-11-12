@@ -1,5 +1,20 @@
 package com.kylecorry.trail_sense.main
 
+import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
+import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
+import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.ILightningRepo
+import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.LightningRepo
+import com.kylecorry.trail_sense.tools.battery.infrastructure.persistence.IBatteryRepo
+import com.kylecorry.trail_sense.tools.battery.infrastructure.persistence.BatteryRepo
+import com.kylecorry.trail_sense.tools.packs.infrastructure.IPackRepo
+import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
+import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.IWaypointRepo
+import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.WaypointRepo
+import com.kylecorry.trail_sense.tools.flashlight.infrastructure.IFlashlightSubsystem
+import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
+import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.IPedometerSubsystem
+import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
+
 import android.content.Context
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -100,6 +115,13 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton<IBeaconService>(BeaconService(appContext))
         DependencyRegistry.addSingleton(IWeatherSubsystem::class) { WeatherSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(ITideTableRepo::class) { TideTableRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(INoteRepo::class) { NoteRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(ILightningRepo::class) { LightningRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IBatteryRepo::class) { BatteryRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IPackRepo::class) { PackRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IWaypointRepo::class) { WaypointRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IFlashlightSubsystem::class) { FlashlightSubsystem.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IPedometerSubsystem::class) { PedometerSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(MapService::class) { MapService(MapRepo.getInstance(appContext)) }
 
         // Map layers
