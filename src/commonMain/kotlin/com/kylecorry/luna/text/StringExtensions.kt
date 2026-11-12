@@ -1,0 +1,73 @@
+package com.kylecorry.luna.text
+
+
+fun String.capitalizeCompat(): String {
+    return replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+}
+
+fun String.capitalizeWords(): String {
+    val words = split(" ")
+    return words.joinToString(" ") { it.capitalizeCompat() }
+}
+
+fun String.toDoubleCompat(): Double? {
+    val asDouble = try {
+        this.replace(",", ".").toDoubleOrNull()
+    } catch (e: Exception) {
+        null
+    }
+    asDouble ?: return null
+    if (asDouble.isNaN() || asDouble.isInfinite()) {
+        return null
+    }
+    return asDouble
+}
+
+fun String.toFloatCompat(): Float? {
+    val asFloat = try {
+        this.replace(",", ".").toFloatOrNull()
+    } catch (e: Exception) {
+        null
+    }
+    asFloat ?: return null
+    if (asFloat.isNaN() || asFloat.isInfinite()) {
+        return null
+    }
+    return asFloat
+}
+
+fun String.toIntCompat(): Int? {
+    return try {
+        this.replace(",", ".").toIntOrNull()
+    } catch (e: Exception) {
+        null
+    }
+}
+
+fun String.toLongCompat(): Long? {
+    return try {
+        this.replace(",", ".").toLongOrNull()
+    } catch (e: Exception) {
+        null
+    }
+}
+
+/**
+ * Determines if the brackets in the string are balanced. The brackets are balanced if for every open bracket there is a corresponding close bracket.
+ */
+fun String.areBracketsBalanced(openBracket: Char, closeBracket: Char): Boolean {
+    var total = 0
+    forEach {
+        if (it == openBracket) {
+            total++
+        }
+        if (it == closeBracket) {
+            total--
+        }
+        // Handles cases like []]
+        if (total < 0) {
+            return false
+        }
+    }
+    return total == 0
+}
