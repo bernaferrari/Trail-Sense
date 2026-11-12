@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure
 
-import android.content.Context
+import com.kylecorry.trail_sense.tools.paths.PathsToolServices
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.main.getAppService
@@ -14,15 +15,20 @@ import kotlin.time.Clock
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class PathLoader(private val pathService: IPathService) {
+class PathLoader(
+    private val pathService: IPathService,
+    private val isBacktrackOn: () -> Boolean = {
+        getAppService<ToolCatalog>().getService(PathsToolServices.BACKTRACK)?.isEnabled() == true
+    }
+) {
 
     val points: MutableMap<Long, List<PathPoint>> = mutableMapOf()
     val pointsLock = Mutex()
     private val updateLock = Mutex()
 
-    suspend fun getPointsWithBacktrack(context: Context): Map<Long, List<PathPoint>> = onIO {
+    suspend fun getPointsWithBacktrack(): Map<Long, List<PathPoint>> = onIO {
         val currentBacktrackPathId = pathService.getBacktrackPathId()
-        if (currentBacktrackPathId == null || !BacktrackScheduler.isOn(context)) {
+        if (currentBacktrackPathId == null || !isBacktrackOn()) {
             return@onIO pointsLock.withLock { points.toMap() }
         }
 

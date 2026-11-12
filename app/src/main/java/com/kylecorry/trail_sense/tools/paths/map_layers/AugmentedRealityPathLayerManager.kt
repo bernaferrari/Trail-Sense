@@ -72,7 +72,7 @@ class AugmentedRealityPathLayerManager(
             loaded = true
         }
 
-        val points = pathLoader.getPointsWithBacktrack(context)
+        val points = pathLoader.getPointsWithBacktrack()
         onPathsChanged(paths, points)
     }
 

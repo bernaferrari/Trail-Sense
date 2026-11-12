@@ -534,7 +534,6 @@ private class MapController(
         lifecycleOwner.inBackground {
             val elevation = Distance.meters(DEM.getElevation(location).elevation)
             val stats = locationDetailStats(
-                context,
                 formatter,
                 prefs.baseDistanceUnits,
                 userLocation,

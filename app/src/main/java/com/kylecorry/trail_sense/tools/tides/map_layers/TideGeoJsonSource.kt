@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.tides.map_layers
 
-import android.content.Context
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideHarmonicsSource
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
@@ -22,7 +23,6 @@ import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTidePhaseCom
 import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideTypeCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.LoadAllTideTablesCommand
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
-import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
 import kotlin.time.Instant
 
 class TideGeoJsonSource : GeoJsonSource {
@@ -41,8 +41,7 @@ class TideGeoJsonSource : GeoJsonSource {
             preferences.getBoolean(SHOW_PHASE, DEFAULT_SHOW_PHASE)
 
         val time = Instant.fromEpochMilliseconds(params.getLong(MapLayerParams.PARAM_TIME))
-        val context = DependencyRegistry.get<Context>()
-        val tideService = TideService(context)
+        val tideService = TideService(getAppService<TideHarmonicsSource>())
         val tables = LoadAllTideTablesCommand().execute() + getNearbyTideTables(
             bounds,
             zoom,

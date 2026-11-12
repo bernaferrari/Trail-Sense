@@ -897,3 +897,10 @@ crash_not_now
 crash_send_report
 crash_title
 survival_guide_empty_desc
+elevation_change
+elevation_diff_format
+from_you
+increase
+print
+survival_guide_section_closed
+survival_guide_section_open

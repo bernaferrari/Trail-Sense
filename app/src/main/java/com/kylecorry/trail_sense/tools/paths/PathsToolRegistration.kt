@@ -175,7 +175,7 @@ object PathsToolRegistration : ToolRegistration {
     const val ACTION_PAUSE_BACKTRACK = "paths-action-pause-backtrack"
     const val ACTION_RESUME_BACKTRACK = "paths-action-resume-backtrack"
 
-    const val SERVICE_BACKTRACK = "paths-service-backtrack"
+    const val SERVICE_BACKTRACK = PathsToolServices.BACKTRACK
 
     const val WIDGET_BACKTRACK = "paths-widget-backtrack"
     const val NOTIFICATION_CHANNEL_GROUP_PATHS = "paths"

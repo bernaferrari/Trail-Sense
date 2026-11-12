@@ -424,7 +424,6 @@ private class ViewPhotoMapRenderer(
         scope.launch {
             val elevation = onIO { Distance.meters(DEM.getElevation(location).elevation) }
             val stats = locationDetailStats(
-                context,
                 formatService,
                 prefs.baseDistanceUnits,
                 gps.location,

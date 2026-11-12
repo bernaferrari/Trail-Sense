@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.map_layers
 
 import com.kylecorry.trail_sense.main.getAppService
-import android.content.Context
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -19,8 +18,6 @@ import kotlinx.coroutines.flow.first
 
 class PathGeoJsonSource : GeoJsonSource {
 
-    private val context: Context
-        get() = getAppService()
     private val pathService = DependencyRegistry.get<PathService>()
     private val pathLoader = PathLoader(pathService)
     private var paths = emptyList<Path>()
@@ -47,7 +44,7 @@ class PathGeoJsonSource : GeoJsonSource {
         pathLoader.update(paths, bounds, bounds, !loaded)
         loaded = true
 
-        val points = pathLoader.getPointsWithBacktrack(context)
+        val points = pathLoader.getPointsWithBacktrack()
         val mappablePaths = points.mapNotNull {
             val path = pathsById[it.key] ?: return@mapNotNull null
 
