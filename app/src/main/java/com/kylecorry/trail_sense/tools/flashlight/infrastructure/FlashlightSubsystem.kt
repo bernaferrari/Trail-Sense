@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class FlashlightSubsystem private constructor(private val context: Context) : IFlashlightSubsystem {
+class FlashlightSubsystem private constructor(private val context: Context) : IFlashlightSubsystem, FlashlightSwitch {
 
     private val cache by lazy { PreferencesSubsystem.getInstance(context).preferences }
     private val prefs by lazy { UserPreferences(context) }
@@ -160,17 +160,21 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
         return isAvailable
     }
 
-    internal fun turnOn() = synchronized(torchLock) {
-        if (brightnessLevels > 0) {
-            val mapped = Interpolation.map(brightness, 0f, 1f, 1f / (brightnessLevels + 1), 1f)
-            torch?.on(mapped)
-        } else {
-            torch?.on()
+    override fun turnOn() {
+        synchronized(torchLock) {
+            if (brightnessLevels > 0) {
+                val mapped = Interpolation.map(brightness, 0f, 1f, 1f / (brightnessLevels + 1), 1f)
+                torch?.on(mapped)
+            } else {
+                torch?.on()
+            }
         }
     }
 
-    internal fun turnOff() = synchronized(torchLock) {
-        torch?.off()
+    override fun turnOff() {
+        synchronized(torchLock) {
+            torch?.off()
+        }
     }
 
     private fun onTorchStateChanged(enabled: Boolean) {

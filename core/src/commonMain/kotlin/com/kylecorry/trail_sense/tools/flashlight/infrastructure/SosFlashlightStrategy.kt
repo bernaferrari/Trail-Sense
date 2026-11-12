@@ -7,7 +7,7 @@ import com.kylecorry.trail_sense.shared.morse.Signal
 import com.kylecorry.trail_sense.shared.morse.SignalPlayer
 import com.kylecorry.trail_sense.shared.morse.Signals
 
-class SosFlashlightStrategy(private val flashlight: FlashlightSubsystem) : IFlashlightStrategy {
+class SosFlashlightStrategy(private val flashlight: FlashlightSwitch) : IFlashlightStrategy {
 
     private val player by lazy {
         SignalPlayer(

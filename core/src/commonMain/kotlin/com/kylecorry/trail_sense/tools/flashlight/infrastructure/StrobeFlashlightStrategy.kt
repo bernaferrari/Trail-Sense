@@ -4,7 +4,7 @@ import com.kylecorry.luna.time.CoroutineTimer
 import kotlin.time.Duration
 
 class StrobeFlashlightStrategy(
-    private val flashlight: FlashlightSubsystem,
+    private val flashlight: FlashlightSwitch,
     private val interval: Duration
 ) : IFlashlightStrategy {
 
