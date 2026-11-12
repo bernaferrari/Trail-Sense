@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.main
 
+import androidx.compose.runtime.CompositionLocalProvider
+import com.kylecorry.trail_sense.shared.views.LocalErrorBanner
 import android.Manifest
 import android.app.Activity
 import android.app.PendingIntent
@@ -189,6 +191,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
                     )
                     return@TrailSenseAppTheme
                 }
+                CompositionLocalProvider(LocalErrorBanner provides errorBanner) {
                 MainActivityContent(
                     appHost = appHost,
                     errorBanner = errorBanner,
@@ -199,6 +202,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
                     onBottomNavigationItemSelected = ::onBottomNavigationItemSelected,
                     onBottomNavigationItemLongSelected = { quickActionsSheet.show(this) }
                 )
+                }
             }
         }
 

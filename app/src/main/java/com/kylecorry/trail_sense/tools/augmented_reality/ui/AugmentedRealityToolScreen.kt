@@ -147,17 +147,6 @@ import kotlin.time.Instant
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-fun openAugmentedReality(
-    appNavigator: TrailSenseNavigator,
-    mode: ARMode = ARMode.Normal,
-    enableCamera: Boolean = true,
-    time: Instant? = null
-) {
-    appNavigator.navigate(
-        Route.AugmentedReality(modeId = mode.id, cameraEnabled = enableCamera, time = time?.toString())
-    )
-}
-
 @Composable
 fun AugmentedRealityToolScreen(
     route: Route.AugmentedReality,

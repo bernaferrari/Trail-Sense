@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.sensors.overrides
 
+import com.kylecorry.trail_sense.shared.sensors.gps.CachedLocationGPS
 import kotlin.time.Clock
 
 import android.content.Context
@@ -20,7 +21,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.MockedGPS
 import kotlin.time.Instant
 
 class CachedGPS(context: Context, private val updateFrequency: Long = 1000L) : SharedSensor(),
-    ISatelliteGPS, InactiveGPS, MockedGPS {
+    ISatelliteGPS, InactiveGPS, MockedGPS, CachedLocationGPS {
     override val location: Coordinate
         get() {
             val cached = cached

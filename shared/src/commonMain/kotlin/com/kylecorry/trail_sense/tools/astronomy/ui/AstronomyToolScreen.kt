@@ -1,9 +1,17 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
+import com.kylecorry.trail_sense.shared.dialogs.oneTimeSnackbar
+
 import com.kylecorry.trail_sense.shared.views.compose.chartHeight
 
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -45,10 +53,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,26 +71,19 @@ import com.kylecorry.luna.text.capitalizeWords
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.dialogs.item
-import com.kylecorry.trail_sense.shared.dialogs.withLoading
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.MockedGPS
-import com.kylecorry.trail_sense.shared.sensors.overrides.CachedGPS
 import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.shared.time.atEndOfDay
 import com.kylecorry.trail_sense.shared.time.atStartOfDay
@@ -95,7 +94,6 @@ import com.kylecorry.trail_sense.shared.time.toLocalTime
 import com.kylecorry.trail_sense.shared.time.today
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.UserError
-import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
@@ -109,7 +107,6 @@ import com.kylecorry.trail_sense.tools.astronomy.domain.AstroPositions
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyEvent
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.astronomy.domain.MoonTilt
-import com.kylecorry.trail_sense.tools.astronomy.quickactions.AstronomyQuickActionBinder
 import com.kylecorry.trail_sense.tools.astronomy.ui.commands.AstroChartData
 import com.kylecorry.trail_sense.tools.astronomy.ui.commands.CenteredAstroChartDataProvider
 import com.kylecorry.trail_sense.tools.astronomy.ui.commands.DailyAstroChartDataProvider
@@ -125,6 +122,10 @@ import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARMode
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.openAugmentedReality
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import androidx.lifecycle.LifecycleOwner
+import com.kylecorry.trail_sense.shared.dialogs.oneTimeSnackbar
+import com.kylecorry.trail_sense.shared.sensors.gps.CachedLocationGPS
+import com.kylecorry.trail_sense.shared.views.LocalErrorBanner
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -141,26 +142,26 @@ import kotlinx.datetime.toInstant
 
 @Composable
 fun AstronomyToolScreen(
-    quickActionHost: AndroidDestinationHost,
+    bindQuickActions: (left: ComposeQuickActionButtonView, right: ComposeQuickActionButtonView, lifecycleOwner: LifecycleOwner) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
+    val host = AppHost.current()
+    val strings = LocalAppStrings.current
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
-    // The error banner lives on the activity; the screen only reports to it.
-    val errorBanner = (LocalActivity.current as? MainActivity)?.errorBanner
+    // The error banner lives in the platform shell; the screen only reports to it.
+    val errorBanner = LocalErrorBanner.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel = viewModel {
-        AstronomyViewModel(getAppService<SensorService>(), UserPreferences(appContext))
+        AstronomyViewModel(getAppService<SensorService>(), getAppService<UserPreferences>())
     }
-    val prefs = remember(appContext) { UserPreferences(appContext) }
-    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
+    val prefs = remember { getAppService<UserPreferences>() }
+    val formatService = remember { FormatService.getInstance() }
     val markdownService = remember { DependencyRegistry.get<MarkdownService>() }
     // The rows' text, icons and detail dialogs are presentation, so they are produced here from the ViewModel's
     // date, place and declination.
-    val producers = remember(context) {
+    val producers = remember {
         listOf(
             SunListItemProducer(),
             MoonListItemProducer(),
@@ -170,19 +171,19 @@ fun AstronomyToolScreen(
         )
     }
 
-    // The two quick actions in the app bar; the shared QuickActionFactory still takes the host.
+    // The two quick actions in the app bar; the platform shell binds them.
     val leftButton = remember { ComposeQuickActionButtonView() }
     val rightButton = remember { ComposeQuickActionButtonView() }
-    DisposableEffect(quickActionHost, lifecycleOwner) {
-        AstronomyQuickActionBinder(quickActionHost, lifecycleOwner, leftButton, rightButton, prefs.astronomy).bind()
+    DisposableEffect(lifecycleOwner) {
+        bindQuickActions(leftButton, rightButton, lifecycleOwner)
         onDispose { }
     }
 
     LifecycleResumeEffect(viewModel) {
         viewModel.onResume()
-        CustomUiUtils.oneTimeSnackbar(
-            context,
-            context.getString(R.string.tap_sun_moon_hint),
+        Alerts.oneTimeSnackbar(
+            host,
+            strings.get(Res.string.tap_sun_moon_hint),
             "cache_tap_sun_moon_shown"
         )
         onPauseOrDispose { viewModel.onPause() }
@@ -194,9 +195,9 @@ fun AstronomyToolScreen(
                 AstronomyScreenEvent.LocationNotSet -> errorBanner?.report(
                     UserError(
                         ErrorBannerReason.LocationNotSet,
-                        context.getString(R.string.location_not_set),
+                        getAppService<AppStrings>().get(Res.string.location_not_set),
                         TrailIcons.Satellite,
-                        context.getString(R.string.set)
+                        getAppService<AppStrings>().get(Res.string.set)
                     ) {
                         errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
                         navigator.navigate(Route.CalibrateGps)
@@ -206,7 +207,7 @@ fun AstronomyToolScreen(
                 AstronomyScreenEvent.NoLocation -> errorBanner?.report(
                     UserError(
                         ErrorBannerReason.NoGPS,
-                        context.getString(R.string.location_disabled),
+                        getAppService<AppStrings>().get(Res.string.location_disabled),
                         TrailIcons.Satellite
                     )
                 )
@@ -238,29 +239,29 @@ fun AstronomyToolScreen(
         SunCountdownKind.UntilSunrise, SunCountdownKind.UntilSunset ->
             countdown.duration?.let { formatService.formatDuration(it) } ?: ""
 
-        SunCountdownKind.UpNoSet -> stringResource(R.string.sun_up_no_set)
-        SunCountdownKind.DownNoRise -> stringResource(R.string.sun_down_no_set)
+        SunCountdownKind.UpNoSet -> appString(Res.string.sun_up_no_set)
+        SunCountdownKind.DownNoRise -> appString(Res.string.sun_down_no_set)
         null -> ""
     }
     val subtitle = when (countdown?.kind) {
-        SunCountdownKind.UntilSunrise -> stringResource(R.string.until_sunrise)
-        SunCountdownKind.UntilSunset -> stringResource(R.string.until_sunset)
-        SunCountdownKind.UpNoSet -> stringResource(R.string.sun_does_not_set)
-        SunCountdownKind.DownNoRise -> stringResource(R.string.sun_does_not_rise)
+        SunCountdownKind.UntilSunrise -> appString(Res.string.until_sunrise)
+        SunCountdownKind.UntilSunset -> appString(Res.string.until_sunset)
+        SunCountdownKind.UpNoSet -> appString(Res.string.sun_does_not_set)
+        SunCountdownKind.DownNoRise -> appString(Res.string.sun_does_not_rise)
         null -> ""
     }
 
     val seeker = if (viewModel.isSeeking) {
         val positions = viewModel.seekPositions
-        val sunName = stringResource(R.string.sun)
-        val moonName = stringResource(R.string.moon)
+        val sunName = appString(Res.string.sun)
+        val moonName = appString(Res.string.moon)
         AstronomySeeker(
             time = formatService.formatTime(viewModel.seekTime, includeSeconds = false),
             sunPosition = positions?.let {
-                positionText(context, markdownService, formatService, sunName, it.sunAltitude, it.sunAzimuth)
+                positionText(strings, markdownService, formatService, sunName, it.sunAltitude, it.sunAzimuth)
             } ?: "",
             moonPosition = positions?.let {
-                positionText(context, markdownService, formatService, moonName, it.moonAltitude, it.moonAzimuth)
+                positionText(strings, markdownService, formatService, moonName, it.moonAltitude, it.moonAzimuth)
             } ?: "",
             value = viewModel.seekProgress,
             maxValue = AstronomyViewModel.MAX_SEEK_PROGRESS.toFloat()
@@ -269,7 +270,7 @@ fun AstronomyToolScreen(
         null
     }
 
-    val show3d = remember(context) { getAppService<ToolCatalog>().isToolAvailable(ToolIds.AUGMENTED_REALITY) } && seeker == null
+    val show3d = remember { getAppService<ToolCatalog>().isToolAvailable(ToolIds.AUGMENTED_REALITY) } && seeker == null
 
     val searchOptions = remember {
         listOf(
@@ -293,7 +294,7 @@ fun AstronomyToolScreen(
             onPrevious = { viewModel.changeDate(viewModel.displayDate.minusDays(1)) },
             onNext = { viewModel.changeDate(viewModel.displayDate.plusDays(1)) },
             onPickDate = {
-                CustomUiUtils.pickDate(context, viewModel.displayDate) {
+                Pickers.date(host, viewModel.displayDate) {
                     if (it != null) {
                         viewModel.changeDate(it)
                     }
@@ -302,28 +303,28 @@ fun AstronomyToolScreen(
             onToday = { viewModel.changeDate(today()) },
             onSearch = {
                 val optionNames = listOf(
-                    R.string.full_moon,
-                    R.string.new_moon,
-                    R.string.quarter_moon,
-                    R.string.meteor_shower,
-                    R.string.lunar_eclipse,
-                    R.string.solar_eclipse,
-                    R.string.supermoon
-                ).map { context.getString(it).capitalizeWords() }
+                    Res.string.full_moon,
+                    Res.string.new_moon,
+                    Res.string.quarter_moon,
+                    Res.string.meteor_shower,
+                    Res.string.lunar_eclipse,
+                    Res.string.solar_eclipse,
+                    Res.string.supermoon
+                ).map { strings.get(it).capitalizeWords() }
                 Pickers.item(
-                    context,
-                    context.getString(R.string.find_next_occurrence),
+                    host,
+                    strings.get(Res.string.find_next_occurrence),
                     optionNames,
                     searchOptions.indexOf(viewModel.lastSearch)
                 ) {
                     if (it != null) {
                         scope.launch {
-                            Alerts.withLoading(context, context.getString(R.string.loading)) {
+                            Alerts.withLoading(host, strings.get(Res.string.loading)) {
                                 val found = viewModel.findNextEvent(searchOptions[it])
                                 if (!found) {
                                     effects.showMessage(
-                                        context.getString(
-                                            R.string.unable_to_find_next_astronomy,
+                                        strings.get(
+                                            Res.string.unable_to_find_next_astronomy,
                                             optionNames[it].lowercase()
                                         )
                                     )
@@ -354,7 +355,7 @@ fun AstronomyToolScreen(
 }
 
 private fun positionText(
-    context: android.content.Context,
+    strings: AppStrings,
     markdownService: MarkdownService,
     formatService: FormatService,
     name: String,
@@ -362,8 +363,8 @@ private fun positionText(
     azimuth: Float
 ): String {
     return markdownService.toMarkdown(
-        context.getString(
-            R.string.sun_moon_position_template,
+        strings.get(
+            Res.string.sun_moon_position_template,
             name,
             formatService.formatDegrees(altitude),
             formatService.formatDegrees(azimuth)
@@ -679,7 +680,7 @@ internal class AstronomyViewModel(
         if (gps is MockedGPS && prefs.gps.locationOverride == Coordinate.zero) {
             eventChannel.trySend(AstronomyScreenEvent.LocationNotSet)
             gpsErrorShown = true
-        } else if (gps is CachedGPS && location == Coordinate.zero) {
+        } else if (gps is CachedLocationGPS && location == Coordinate.zero) {
             eventChannel.trySend(AstronomyScreenEvent.NoLocation)
             gpsErrorShown = true
         }
@@ -935,7 +936,7 @@ private fun AstronomyScreen(
     // One question: how long until the light changes? The countdown to sunrise or sunset answers it; the day's chart
     // and the bodies' times sit under it as quiet evidence.
     TrailSensePage(
-        title = stringResource(R.string.astronomy),
+        title = appString(Res.string.astronomy),
         modifier = modifier,
         actions = {
             // The user's quick actions, quiet like any app-bar action.
@@ -1017,7 +1018,7 @@ private fun AstronomyScreen(
                 item(key = "3d") {
                     // A way in, not the point of the page: tonal, with the AR icon. The page has no primary fill.
                     TrailSenseButton(
-                        text = stringResource(R.string.view_in_3d),
+                        text = appString(Res.string.view_in_3d),
                         onClick = on3d,
                         icon = TrailIcons.Camera,
                         style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
@@ -1058,7 +1059,7 @@ private fun AstronomyTimeSeekerDetails(seeker: AstronomySeeker, onClose: () -> U
             ) {
                 Icon(
                     imageVector = TrailIcons.Cancel,
-                    contentDescription = stringResource(android.R.string.cancel),
+                    contentDescription = systemString(SystemString.Cancel),
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
@@ -1148,8 +1149,8 @@ private fun AstronomyDateHeader(
                 .heightIn(min = 48.dp)
                 .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
                 .combinedClickable(
-                    onClickLabel = stringResource(R.string.date),
-                    onLongClickLabel = stringResource(R.string.today),
+                    onClickLabel = appString(Res.string.date),
+                    onLongClickLabel = appString(Res.string.today),
                     onClick = onPickDate,
                     onLongClick = onCalendarLongPress
                 )
@@ -1181,7 +1182,7 @@ private fun AstronomyDateHeader(
                 onClick = onSearch,
                 modifier = Modifier.testTag("search_btn")
             ) {
-                Icon(TrailIcons.Search, contentDescription = stringResource(R.string.search), tint = variant)
+                Icon(TrailIcons.Search, contentDescription = appString(Res.string.search), tint = variant)
             }
         }
         IconButton(
@@ -1190,7 +1191,7 @@ private fun AstronomyDateHeader(
         ) {
             Icon(
                 TrailIcons.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.previous),
+                contentDescription = appString(Res.string.previous),
                 tint = variant,
                 modifier = Modifier.rotate(180f)
             )
@@ -1199,7 +1200,7 @@ private fun AstronomyDateHeader(
             onClick = onNext,
             modifier = Modifier.testTag("next_date")
         ) {
-            Icon(TrailIcons.KeyboardArrowRight, contentDescription = stringResource(R.string.next), tint = variant)
+            Icon(TrailIcons.KeyboardArrowRight, contentDescription = appString(Res.string.next), tint = variant)
         }
     }
 }

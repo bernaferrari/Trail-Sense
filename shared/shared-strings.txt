@@ -948,3 +948,15 @@ place_you_are_here
 sunrise
 sunset
 tide
+find_next_occurrence
+quarter_moon
+sun_does_not_rise
+sun_does_not_set
+sun_down_no_set
+sun_moon_position_template
+sun_up_no_set
+tap_sun_moon_hint
+unable_to_find_next_astronomy
+until_sunrise
+until_sunset
+view_in_3d

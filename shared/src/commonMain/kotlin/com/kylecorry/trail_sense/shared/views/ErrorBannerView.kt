@@ -22,6 +22,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +31,9 @@ import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+
+/** The app-wide error banner, or null where the platform shell has none (screens then skip reporting). */
+val LocalErrorBanner = staticCompositionLocalOf<ErrorBannerState?> { null }
 
 class ErrorBannerState(private val prefs: IErrorPreferences = getAppService<UserPreferences>().errors) {
 

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
+import com.kylecorry.trail_sense.tools.astronomy.quickactions.bindAstronomyQuickActions
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.share.rememberBeaconShare
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -221,7 +222,7 @@ fun DestinationContent(
             Route.StrideLengthEstimation -> StrideLengthEstimationToolScreen()
             is Route.Clouds -> CloudToolScreen(route)
             is Route.CloudResults -> CloudResultsToolScreen(route)
-            Route.Astronomy -> AstronomyToolScreen(this)
+            Route.Astronomy -> AstronomyToolScreen(bindQuickActions = { left, right, owner -> bindAstronomyQuickActions(left, right, owner) })
             is Route.AugmentedReality -> AugmentedRealityToolScreen(route)
             is Route.BeaconList -> BeaconListToolScreen(
                 route = route,
