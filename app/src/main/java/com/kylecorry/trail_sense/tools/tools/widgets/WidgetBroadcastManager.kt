@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.widgets
 
 import android.content.Context
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 object WidgetBroadcastManager {
@@ -16,7 +17,7 @@ object WidgetBroadcastManager {
 
         // Subscribe to each broadcast
         broadcasts.forEach { broadcastId ->
-            Tools.subscribe(broadcastId) { _ ->
+            ToolBroadcasts.subscribe(broadcastId) { _ ->
                 val widgets = Tools.getTools(context).flatMap { it.widgets }
 
                 // Find widgets that listen to this broadcast

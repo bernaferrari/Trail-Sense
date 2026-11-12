@@ -10,6 +10,7 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dem.DEM
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.preferences.SessionStateSubsystem
 import com.kylecorry.trail_sense.shared.preferences.onEachChange
@@ -26,7 +27,6 @@ import com.kylecorry.trail_sense.tools.navigation.domain.guidance.GuidanceInput
 import com.kylecorry.trail_sense.tools.navigation.domain.paths.PathFollow
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.persistence.NavigationBearingService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -93,12 +93,12 @@ class Navigator private constructor(context: Context) {
         pathNavigator.navigate(path, follow)
         clearBeaconDestination()
         clearBearing()
-        Tools.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STARTED)
+        ToolBroadcasts.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STARTED)
     }
 
     private val listenTask = BackgroundTask {
         destination.collect {
-            Tools.broadcast(NavigationToolRegistration.BROADCAST_DESTINATION_CHANGED)
+            ToolBroadcasts.broadcast(NavigationToolRegistration.BROADCAST_DESTINATION_CHANGED)
         }
     }
 
@@ -149,7 +149,7 @@ class Navigator private constructor(context: Context) {
         pathNavigator.cancel()
         CoroutineScope(Dispatchers.IO).launch { clearBearing() }
         setBeaconDestination(beaconId)
-        Tools.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STARTED)
+        ToolBroadcasts.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STARTED)
     }
 
     private fun setBeaconDestination(beaconId: Long) {
@@ -161,7 +161,7 @@ class Navigator private constructor(context: Context) {
         val wasNavigating = getBeaconDestinationId() != null
         clearBeaconDestination()
         if (wasNavigating) {
-            Tools.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STOPPED)
+            ToolBroadcasts.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STOPPED)
         }
     }
 
@@ -177,7 +177,7 @@ class Navigator private constructor(context: Context) {
 
     fun cancelPathNavigation(pathId: Long) {
         if (pathNavigator.cancel(pathId)) {
-            Tools.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STOPPED)
+            ToolBroadcasts.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STOPPED)
         }
     }
 
@@ -196,7 +196,7 @@ class Navigator private constructor(context: Context) {
         clearBearing()
 
         if (beaconId != null || bearing != null || pathSession != null) {
-            Tools.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STOPPED)
+            ToolBroadcasts.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STOPPED)
         }
 
         return restore@{
@@ -207,7 +207,7 @@ class Navigator private constructor(context: Context) {
             bearing?.let { bearings.setBearing(it) }
             pathSession?.let { pathNavigator.restore(it) }
             if (beaconId != null || bearing != null || pathSession != null) {
-                Tools.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STARTED)
+                ToolBroadcasts.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STARTED)
             }
         }
     }
@@ -242,7 +242,7 @@ class Navigator private constructor(context: Context) {
             startTime = Clock.System.now()
         )
         bearings.setBearing(navigationBearing)
-        Tools.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STARTED)
+        ToolBroadcasts.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STARTED)
     }
 
     suspend fun clearBearing() {

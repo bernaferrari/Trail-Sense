@@ -1,22 +1,20 @@
 package com.kylecorry.trail_sense.tools.whitenoise.quickactions
 
-import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
-import kotlinx.coroutines.launch
-
 import androidx.lifecycle.lifecycleScope
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.os.Bundle
 import com.kylecorry.trail_sense.shared.QuickActionButton
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.tools.whitenoise.WhiteNoiseToolRegistration
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoiseService
+import kotlinx.coroutines.launch
 
 class QuickActionWhiteNoise(btn: QuickActionButtonView, host: AndroidDestinationHost) :
     QuickActionButton(btn, host) {
 
-    private val stateListener: (Bundle) -> Unit = {
+    private val stateListener: (EventData) -> Unit = {
         host.lifecycleOwner.lifecycleScope.launch {
             setState(isOn())
         }
@@ -43,12 +41,12 @@ class QuickActionWhiteNoise(btn: QuickActionButtonView, host: AndroidDestination
     override fun onResume() {
         super.onResume()
         setState(isOn())
-        Tools.subscribe(WhiteNoiseToolRegistration.BROADCAST_PLAYBACK_STATE_CHANGED, stateListener)
+        ToolBroadcasts.subscribe(WhiteNoiseToolRegistration.BROADCAST_PLAYBACK_STATE_CHANGED, stateListener)
     }
 
     override fun onPause() {
         super.onPause()
-        Tools.unsubscribe(WhiteNoiseToolRegistration.BROADCAST_PLAYBACK_STATE_CHANGED, stateListener)
+        ToolBroadcasts.unsubscribe(WhiteNoiseToolRegistration.BROADCAST_PLAYBACK_STATE_CHANGED, stateListener)
     }
 
     override fun onDestroy() {

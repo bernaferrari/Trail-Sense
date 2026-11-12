@@ -1,16 +1,16 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
-import android.os.Bundle
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.sol.units.Speed
-import com.kylecorry.trail_sense.shared.ZERO_SPEED
 import com.kylecorry.trail_sense.settings.infrastructure.IPedometerPreferences
+import com.kylecorry.trail_sense.shared.ZERO_SPEED
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.domain.IPaceCalculator
 import com.kylecorry.trail_sense.tools.pedometer.domain.IStepTrackerService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -41,16 +41,16 @@ class AveragePaceSpeedometer(
             scope = newScope()
         }
         timer.interval(10000)
-        Tools.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, this::onStepsChanged)
+        ToolBroadcasts.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, this::onStepsChanged)
     }
 
     override fun stopImpl() {
         timer.stop()
-        Tools.unsubscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, this::onStepsChanged)
+        ToolBroadcasts.unsubscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, this::onStepsChanged)
         scope.cancel()
     }
 
-    private fun onStepsChanged(@Suppress("UNUSED_PARAMETER") data: Bundle) {
+    private fun onStepsChanged(@Suppress("UNUSED_PARAMETER") data: EventData) {
         scope.launch { refresh() }
     }
 

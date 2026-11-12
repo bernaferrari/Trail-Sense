@@ -4,10 +4,10 @@ import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.tools.beacons.BeaconsToolRegistration
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
@@ -32,7 +32,7 @@ class BeaconRepo private constructor(context: Context) {
 
     suspend fun deleteBeacon(beacon: BeaconEntity) = onIO {
         beaconDao.delete(beacon)
-        Tools.broadcast(BeaconsToolRegistration.BROADCAST_BEACONS_CHANGED)
+        ToolBroadcasts.broadcast(BeaconsToolRegistration.BROADCAST_BEACONS_CHANGED)
     }
 
     suspend fun addBeacon(beacon: BeaconEntity): Long = onIO {
@@ -42,7 +42,7 @@ class BeaconRepo private constructor(context: Context) {
         } else {
             beaconDao.insert(beacon)
         }
-        Tools.broadcast(BeaconsToolRegistration.BROADCAST_BEACONS_CHANGED)
+        ToolBroadcasts.broadcast(BeaconsToolRegistration.BROADCAST_BEACONS_CHANGED)
         newId
     }
 
@@ -58,7 +58,7 @@ class BeaconRepo private constructor(context: Context) {
     suspend fun deleteBeaconGroup(group: BeaconGroupEntity?) {
         // Delete beacons
         beaconDao.deleteInGroup(group?.id)
-        Tools.broadcast(BeaconsToolRegistration.BROADCAST_BEACONS_CHANGED)
+        ToolBroadcasts.broadcast(BeaconsToolRegistration.BROADCAST_BEACONS_CHANGED)
 
         // Delete groups
         val groups = getGroupsWithParent(group?.id)

@@ -3,14 +3,15 @@ package com.kylecorry.trail_sense.tools.tools.infrastructure
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
-import android.os.Bundle
-import com.kylecorry.luna.text.capitalizeWords
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.andromeda.widgets.Widgets
 import com.kylecorry.luna.hooks.Hooks
+import com.kylecorry.luna.text.capitalizeWords
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionOpenTool
 import com.kylecorry.trail_sense.shared.views.QuickActionNone
@@ -42,10 +43,10 @@ import com.kylecorry.trail_sense.tools.metaldetector.MetalDetectorToolRegistrati
 import com.kylecorry.trail_sense.tools.mirror.MirrorCameraToolRegistration
 import com.kylecorry.trail_sense.tools.navigation.NavigationToolRegistration
 import com.kylecorry.trail_sense.tools.notes.NotesToolRegistration
+import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.packs.PackingListsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
-import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.qr.QRCodeScannerToolRegistration
 import com.kylecorry.trail_sense.tools.ruler.RulerToolRegistration
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
@@ -61,14 +62,6 @@ import com.kylecorry.trail_sense.tools.waterpurification.WaterBoilTimerToolRegis
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
 import com.kylecorry.trail_sense.tools.whistle.WhistleToolRegistration
 import com.kylecorry.trail_sense.tools.whitenoise.WhiteNoiseToolRegistration
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 
@@ -124,9 +117,6 @@ object Tools {
         MapToolRegistration,
         MagnifierToolRegistration
     )
-    private val broadcasts = MutableSharedFlow<Pair<String, Bundle>>(extraBufferCapacity = 64)
-    private val subscriptions = mutableMapOf<Pair<String, (Bundle) -> Unit>, Job>()
-    private val broadcastScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
 
     fun isToolAvailable(context: Context, toolId: Long): Boolean {
@@ -178,32 +168,6 @@ object Tools {
         return listOf(none) + quickActions + toolActions
     }
 
-    /** The broadcasts sent with [toolBroadcastId] from now on; nothing is replayed. */
-    fun broadcastFlow(toolBroadcastId: String): Flow<Bundle> =
-        broadcasts.filter { it.first == toolBroadcastId }.map { it.second }
-
-    fun broadcast(toolBroadcastId: String, data: Bundle? = null) {
-        broadcasts.tryEmit(toolBroadcastId to (data ?: Bundle()))
-    }
-
-    /** Calls [callback] on the main thread for each broadcast with [toolBroadcastId] until [unsubscribe]. */
-    fun subscribe(toolBroadcastId: String, callback: (Bundle) -> Unit) {
-        val key = toolBroadcastId to callback
-        synchronized(subscriptions) {
-            if (subscriptions.containsKey(key)) return
-            // Undispatched, so the subscription is in place before this returns
-            subscriptions[key] = broadcastScope.launch(start = CoroutineStart.UNDISPATCHED) {
-                broadcastFlow(toolBroadcastId).collect { callback(it) }
-            }
-        }
-    }
-
-    fun unsubscribe(toolBroadcastId: String, callback: (Bundle) -> Unit) {
-        synchronized(subscriptions) {
-            subscriptions.remove(toolBroadcastId to callback)
-        }?.cancel()
-    }
-
     fun getService(context: Context, serviceId: String): ToolService? {
         return getTools(context)
             .flatMap { it.services }
@@ -242,9 +206,9 @@ object Tools {
 
         val widget = getWidget(context, widgetId) ?: return
         Widgets.requestUpdate(context, widget.widgetClass)
-        broadcast(
+        ToolBroadcasts.broadcast(
             SettingsToolRegistration.BROADCAST_UPDATE_IN_APP_WIDGET,
-            Bundle().apply {
+            EventData().apply {
                 putString("widgetId", widgetId)
             }
         )

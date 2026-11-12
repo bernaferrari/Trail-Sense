@@ -1,33 +1,30 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
-import com.kylecorry.trail_sense.settings.PreferenceKeys
-import kotlin.time.Duration.Companion.seconds
-import com.kylecorry.andromeda.torch.isTorchAvailable
-
-import kotlin.time.Clock
-
-
 import android.annotation.SuppressLint
 import android.content.Context
-import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.torch.Torch
-import com.kylecorry.andromeda.torch.deviceTorch
 import com.kylecorry.andromeda.torch.TorchState
+import com.kylecorry.andromeda.torch.deviceTorch
+import com.kylecorry.andromeda.torch.isTorchAvailable
 import com.kylecorry.andromeda.torch.torchStates
+import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.sol.math.interpolation.Interpolation
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.flashlight.FlashlightToolRegistration
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class FlashlightSubsystem private constructor(private val context: Context) : IFlashlightSubsystem, FlashlightSwitch {
 
@@ -66,7 +63,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
     init {
         scope.launch {
             _mode.collect {
-                Tools.broadcast(FlashlightToolRegistration.BROADCAST_FLASHLIGHT_STATE_CHANGED)
+                ToolBroadcasts.broadcast(FlashlightToolRegistration.BROADCAST_FLASHLIGHT_STATE_CHANGED)
             }
         }
         scope.launch {

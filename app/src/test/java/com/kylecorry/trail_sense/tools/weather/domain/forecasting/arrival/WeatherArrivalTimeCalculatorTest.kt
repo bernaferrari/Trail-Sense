@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.time.Clock
-import kotlin.time.Duration
 import kotlin.time.Instant
 
 internal class WeatherArrivalTimeCalculatorTest {

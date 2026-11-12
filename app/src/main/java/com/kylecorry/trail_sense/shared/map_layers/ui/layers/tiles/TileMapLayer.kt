@@ -1,18 +1,11 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles
 
 import android.content.Context
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
-import kotlin.time.Clock
-import kotlin.time.Duration
-
 import android.graphics.Bitmap
+import android.os.Build
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
-import android.os.Build
-import android.os.Bundle
-import com.kylecorry.trail_sense.shared.canvas.MapDrawer
-import com.kylecorry.trail_sense.shared.canvas.setPolyToPoly
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.luna.concurrency.BackgroundTask
@@ -22,7 +15,11 @@ import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.main.errors.SafeMode
 import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
+import com.kylecorry.trail_sense.shared.canvas.setPolyToPoly
 import com.kylecorry.trail_sense.shared.concurrency.CustomDispatchers
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.map_layers.MapLayerBackgroundTask
 import com.kylecorry.trail_sense.shared.map_layers.MapViewState
@@ -36,12 +33,14 @@ import com.kylecorry.trail_sense.shared.map_layers.tiles.TileState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IAsyncLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import kotlin.time.Instant
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import java.util.UUID
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 open class TileMapLayer<T : TileSource>(
     protected val source: T,
@@ -95,7 +94,7 @@ open class TileMapLayer<T : TileSource>(
         source.cleanup()
     }
 
-    private fun onRefreshBroadcastReceived(data: Bundle) {
+    private fun onRefreshBroadcastReceived(data: EventData) {
         refresh()
     }
 
@@ -488,7 +487,7 @@ open class TileMapLayer<T : TileSource>(
         }
         loadTimer.interval(100)
         refreshBroadcasts.forEach {
-            Tools.subscribe(it, this::onRefreshBroadcastReceived)
+            ToolBroadcasts.subscribe(it, this::onRefreshBroadcastReceived)
         }
         refreshInterval?.let { refreshTimer?.interval(it, it) }
     }
@@ -496,7 +495,7 @@ open class TileMapLayer<T : TileSource>(
     override fun stop() {
         loadTimer.stop()
         refreshBroadcasts.forEach {
-            Tools.unsubscribe(it, this::onRefreshBroadcastReceived)
+            ToolBroadcasts.unsubscribe(it, this::onRefreshBroadcastReceived)
         }
         refreshTimer?.stop()
         taskRunner.stop()

@@ -4,7 +4,6 @@ package com.kylecorry.trail_sense.tools.paths.ui
 
 import android.content.Context
 import android.content.ContextWrapper
-import android.os.Bundle
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -75,6 +74,8 @@ import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.dialogs.item
 import com.kylecorry.trail_sense.shared.dialogs.withLoading
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -409,7 +410,7 @@ internal class PathsViewModel(
     val handlesBack: Boolean
         get() = isInGroup
 
-    private val onBacktrackChanged: (Bundle) -> Unit = { updateBacktrackStatus() }
+    private val onBacktrackChanged: (EventData) -> Unit = { updateBacktrackStatus() }
 
     init {
         // Path updates currently require loading all paths because the repository exposes full snapshots.
@@ -421,14 +422,14 @@ internal class PathsViewModel(
     }
 
     fun onResume() {
-        Tools.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
-        Tools.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_FREQUENCY_CHANGED, onBacktrackChanged)
+        ToolBroadcasts.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
+        ToolBroadcasts.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_FREQUENCY_CHANGED, onBacktrackChanged)
         updateBacktrackStatus()
     }
 
     fun onPause() {
-        Tools.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
-        Tools.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_FREQUENCY_CHANGED, onBacktrackChanged)
+        ToolBroadcasts.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
+        ToolBroadcasts.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_FREQUENCY_CHANGED, onBacktrackChanged)
     }
 
     override fun onCleared() {

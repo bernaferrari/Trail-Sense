@@ -1,18 +1,16 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure
 
-import androidx.lifecycle.lifecycleScope
-
-import android.os.Bundle
-import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import com.kylecorry.trail_sense.shared.FeatureState
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.lifecycleScope
+import com.kylecorry.trail_sense.shared.FeatureState
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
+import kotlinx.coroutines.launch
 
 fun ToolService.getFeatureState(): FeatureState {
     return if (isBlocked()) {
@@ -27,9 +25,9 @@ fun ToolService.getFeatureState(): FeatureState {
 fun Tools.observe(
     host: AndroidDestinationHost,
     toolBroadCastId: String,
-    onReceiveBroadcast: suspend (data: Bundle) -> Unit
+    onReceiveBroadcast: suspend (data: EventData) -> Unit
 ) {
-    val callback: (Bundle) -> Unit = { data ->
+    val callback: (EventData) -> Unit = { data ->
         host.lifecycleOwner.lifecycleScope.launch {
             onReceiveBroadcast(data)
         }
@@ -37,29 +35,14 @@ fun Tools.observe(
     host.lifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
-                subscribe(toolBroadCastId, callback)
+                ToolBroadcasts.subscribe(toolBroadCastId, callback)
             }
 
             Lifecycle.Event.ON_PAUSE -> {
-                unsubscribe(toolBroadCastId, callback)
+                ToolBroadcasts.unsubscribe(toolBroadCastId, callback)
             }
 
             else -> {} // Do nothing
         }
     })
-}
-
-/**
- * Runs [onReceiveBroadcast] for each [toolBroadcastId] broadcast while the screen is resumed: the composable form of
- * [observe], for screens that no longer take the destination host.
- */
-@Composable
-fun ToolBroadcastEffect(toolBroadcastId: String, onReceiveBroadcast: suspend (data: Bundle) -> Unit) {
-    val scope = rememberCoroutineScope()
-    val onReceive by rememberUpdatedState(onReceiveBroadcast)
-    LifecycleResumeEffect(toolBroadcastId) {
-        val callback: (Bundle) -> Unit = { data -> scope.launch { onReceive(data) } }
-        Tools.subscribe(toolBroadcastId, callback)
-        onPauseOrDispose { Tools.unsubscribe(toolBroadcastId, callback) }
-    }
 }

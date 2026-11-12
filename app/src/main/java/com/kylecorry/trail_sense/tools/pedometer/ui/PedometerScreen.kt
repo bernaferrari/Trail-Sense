@@ -2,37 +2,12 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
-import com.kylecorry.trail_sense.shared.time.today
-import com.kylecorry.trail_sense.shared.time.toLocalTime
-import com.kylecorry.trail_sense.shared.time.toLocalDate
-import com.kylecorry.trail_sense.shared.time.minusDays
-import com.kylecorry.trail_sense.shared.time.plusDays
-import com.kylecorry.andromeda.sense.pedometer.AndroidPedometer
-
-import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.shared.views.compose.AppPermission
-
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.graphics.vector.ImageVector
-import android.os.Bundle
-import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -62,31 +37,60 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Speedometer
+import com.kylecorry.andromeda.sense.pedometer.AndroidPedometer
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.date
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
+import com.kylecorry.trail_sense.shared.time.minusDays
+import com.kylecorry.trail_sense.shared.time.plusDays
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+import com.kylecorry.trail_sense.shared.time.toLocalTime
+import com.kylecorry.trail_sense.shared.time.today
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -105,19 +109,13 @@ import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculat
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.AveragePaceSpeedometer
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.CurrentPaceSpeedometer
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
-import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.DistanceUtils
-import com.kylecorry.trail_sense.shared.dialogs.date
-import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 /**
  * Pedometer, an instrument like the boil timer. One question: how far have I walked? A ring of footprints holds the
@@ -165,16 +163,16 @@ internal fun PedometerScreen(
             refreshKey++
             true
         }
-        val stepsListener: (Bundle) -> Unit = {
+        val stepsListener: (EventData) -> Unit = {
             scope.launch { reloadOpenPeriod() }
         }
         averageSpeedometer.start(listener)
         instantSpeedometer.start(listener)
-        Tools.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, stepsListener)
+        ToolBroadcasts.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, stepsListener)
         onDispose {
             averageSpeedometer.stop(listener)
             instantSpeedometer.stop(listener)
-            Tools.unsubscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, stepsListener)
+            ToolBroadcasts.unsubscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, stepsListener)
         }
     }
 

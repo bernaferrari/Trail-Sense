@@ -6,7 +6,6 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.main.getAppService
 import kotlin.time.toKotlinInstant
-import kotlin.time.toJavaInstant
 import androidx.test.platform.app.InstrumentationRegistry
 import com.kylecorry.andromeda.gpx.GpxSerializer
 import com.kylecorry.andromeda.files.AssetFileSystem

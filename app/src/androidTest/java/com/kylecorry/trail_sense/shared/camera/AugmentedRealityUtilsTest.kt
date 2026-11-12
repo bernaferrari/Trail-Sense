@@ -1,11 +1,9 @@
 package com.kylecorry.trail_sense.shared.camera
 
 import android.opengl.Matrix
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kylecorry.sol.math.Vector3
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.junit.runner.RunWith
 
 class AugmentedRealityUtilsTest {
 

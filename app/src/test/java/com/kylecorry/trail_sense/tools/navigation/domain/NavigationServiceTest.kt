@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.navigation.domain
 
-import kotlin.time.Duration.Companion.seconds
 import android.graphics.Color
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate

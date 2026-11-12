@@ -8,7 +8,6 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.andromeda.core.time.SystemZonedDateTimeProvider
 import com.kylecorry.andromeda.core.time.ZonedDateTime
 import com.kylecorry.sol.units.Coordinate

@@ -1,15 +1,14 @@
 package com.kylecorry.trail_sense.tools.astronomy.services
 
-import kotlin.time.Duration.Companion.days
-
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.SunsetAlarmReceiver
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 
 class SunsetAlertsToolService(private val context: Context) : ToolService {
 
@@ -37,15 +36,15 @@ class SunsetAlertsToolService(private val context: Context) : ToolService {
 
     override suspend fun enable() {
         prefs.astronomy.sendSunsetAlerts = true
-        Tools.broadcast(AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_ENABLED)
-        Tools.broadcast(AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_STATE_CHANGED)
+        ToolBroadcasts.broadcast(AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_ENABLED)
+        ToolBroadcasts.broadcast(AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_STATE_CHANGED)
         restart()
     }
 
     override suspend fun disable() {
         prefs.astronomy.sendSunsetAlerts = false
-        Tools.broadcast(AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_DISABLED)
-        Tools.broadcast(AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_STATE_CHANGED)
+        ToolBroadcasts.broadcast(AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_DISABLED)
+        ToolBroadcasts.broadcast(AstronomyToolRegistration.BROADCAST_SUNSET_ALERTS_STATE_CHANGED)
         stop()
     }
 

@@ -1,17 +1,14 @@
 package com.kylecorry.trail_sense.tools.paths
 
-import androidx.test.uiautomator.By
-import com.kylecorry.trail_sense.settings.PreferenceKeys
-import com.kylecorry.trail_sense.test_utils.views.view
-import java.util.regex.Pattern
-import com.kylecorry.trail_sense.test_utils.views.desc
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInVerticalOrder
 import android.net.Uri
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
 import com.kylecorry.luna.result.Result
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.io.GpxIOService
 import com.kylecorry.trail_sense.shared.io.UriPicker
 import com.kylecorry.trail_sense.shared.io.UriPickerError
@@ -19,20 +16,19 @@ import com.kylecorry.trail_sense.shared.io.UriService
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.OPTIONAL_WAIT_FOR_TIMEOUT
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.backUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOk
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOkIfShown
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.delay
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasDataPoint
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInOrder
+import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasTextsInVerticalOrder
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isNotVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.optional
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.OPTIONAL_WAIT_FOR_TIMEOUT
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.clickOkIfShown
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToStart
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
@@ -45,9 +41,11 @@ import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.notifications.hasTitle
 import com.kylecorry.trail_sense.test_utils.notifications.notification
 import com.kylecorry.trail_sense.test_utils.views.Side
+import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.test_utils.views.toolbarButton
+import com.kylecorry.trail_sense.test_utils.views.view
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.domain.paths.PathFollow
 import com.kylecorry.trail_sense.tools.navigation.domain.paths.PathRoute
@@ -61,8 +59,12 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAlerter
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.regex.Pattern
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -73,10 +75,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeFalse
 import org.junit.Test
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.io.OutputStream
 
 class ToolPathsTest : ToolTestBase(ToolIds.PATHS, Coordinate(42.03, -71.97)) {
 
@@ -845,7 +843,7 @@ class ToolPathsTest : ToolTestBase(ToolIds.PATHS, Coordinate(42.03, -71.97)) {
         route.navigate(points[28])
         // The navigator saves the progress when the location changes
         UserPreferences(TestUtils.context).gps.locationOverride = location
-        Tools.broadcast(SensorsToolRegistration.BROADCAST_LOCATION_CHANGED)
+        ToolBroadcasts.broadcast(SensorsToolRegistration.BROADCAST_LOCATION_CHANGED)
         waitFor { assertNotNull(PathNavigationStore().load()?.progress) }
 
         // A new navigator is what the app has after it is restarted

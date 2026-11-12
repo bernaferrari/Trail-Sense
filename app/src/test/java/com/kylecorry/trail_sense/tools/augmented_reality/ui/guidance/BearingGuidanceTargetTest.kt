@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import kotlin.time.Clock
-import kotlin.time.Instant
 
 class BearingGuidanceTargetTest {
     private val context = mock<Context> {

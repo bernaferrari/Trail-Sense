@@ -7,13 +7,13 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.preferences.onEachChange
 import com.kylecorry.trail_sense.shared.sensors.altimeter.CachingAltimeterWrapper
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
 import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -77,10 +77,10 @@ class LocationSubsystem private constructor(private val context: Context) : ILoc
         )
         prefs.onEachChange { key ->
             if (locationChangedPrefs.contains(key)) {
-                Tools.broadcast(SensorsToolRegistration.BROADCAST_LOCATION_CHANGED)
+                ToolBroadcasts.broadcast(SensorsToolRegistration.BROADCAST_LOCATION_CHANGED)
             }
             if (elevationChangedPrefs.contains(key)) {
-                Tools.broadcast(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED)
+                ToolBroadcasts.broadcast(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED)
             }
         }
     }

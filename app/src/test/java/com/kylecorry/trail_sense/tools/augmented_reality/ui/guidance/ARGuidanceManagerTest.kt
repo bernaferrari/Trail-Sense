@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
-import kotlin.time.Clock
 import kotlin.time.Instant
 
 class ARGuidanceManagerTest {

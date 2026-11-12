@@ -1,13 +1,14 @@
 package com.kylecorry.trail_sense.tools.paths.services
 
 import android.content.Context
-import android.os.Bundle
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.permissions.canStartLocationForegroundService
@@ -19,7 +20,6 @@ import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.BacktrackScheduler
 import com.kylecorry.trail_sense.tools.paths.infrastructure.services.BacktrackService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.time.Duration
 
 class BacktrackToolService(private val context: Context) : ToolService {
@@ -70,7 +70,7 @@ class BacktrackToolService(private val context: Context) : ToolService {
         }
 
         prefs.paths.backtrackEnabled = true
-        Tools.broadcast(PathsToolRegistration.BROADCAST_BACKTRACK_ENABLED)
+        ToolBroadcasts.broadcast(PathsToolRegistration.BROADCAST_BACKTRACK_ENABLED)
         if (!isBlocked()) {
             start(true)
         }
@@ -78,7 +78,7 @@ class BacktrackToolService(private val context: Context) : ToolService {
 
     override suspend fun disable() {
         prefs.paths.backtrackEnabled = false
-        Tools.broadcast(PathsToolRegistration.BROADCAST_BACKTRACK_DISABLED)
+        ToolBroadcasts.broadcast(PathsToolRegistration.BROADCAST_BACKTRACK_DISABLED)
         stop()
         getAppService<IPathService>().endBacktrackPath()
     }
@@ -113,13 +113,13 @@ class BacktrackToolService(private val context: Context) : ToolService {
 
     private fun onPreferencesChanged(preference: String): Boolean {
         if (preference in stateChangePrefKeys) {
-            Tools.broadcast(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED)
+            ToolBroadcasts.broadcast(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED)
         }
 
         if (preference in frequencyChangePrefKeys) {
-            Tools.broadcast(
+            ToolBroadcasts.broadcast(
                 PathsToolRegistration.BROADCAST_BACKTRACK_FREQUENCY_CHANGED,
-                Bundle().apply {
+                EventData().apply {
                     putLong(PathsToolRegistration.BROADCAST_PARAM_BACKTRACK_FREQUENCY, prefs.paths.backtrackRecordFrequency.inWholeMilliseconds)
                 }
             )

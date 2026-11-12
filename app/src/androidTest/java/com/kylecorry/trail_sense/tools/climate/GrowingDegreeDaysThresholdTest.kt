@@ -13,7 +13,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
-import kotlinx.datetime.toJavaLocalDate
 import kotlin.math.roundToInt
 
 class GrowingDegreeDaysThresholdTest {

@@ -1,24 +1,23 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance
 
-import kotlin.time.Clock
-
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.Bundle
 import com.kylecorry.andromeda.files.CacheFileSystem
 import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapType
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.ImageSaver
 import com.kylecorry.trail_sense.tools.offline_maps.map_layers.PhotoMapTileSource
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import java.io.FileOutputStream
+import java.util.UUID
+import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.FileOutputStream
-import java.util.UUID
 
 class PersistentTileCache(context: Context) {
 
@@ -27,28 +26,28 @@ class PersistentTileCache(context: Context) {
     private val files = CacheFileSystem(appContext)
     private val imageSaver = ImageSaver()
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val offlineMapsChangedCallback: (Bundle) -> Unit = { data ->
+    private val offlineMapsChangedCallback: (EventData) -> Unit = { data ->
         scope.launch {
             onOfflineMapsChanged(data)
         }
     }
 
     init {
-        Tools.subscribe(
+        ToolBroadcasts.subscribe(
             OfflineMapsToolRegistration.BROADCAST_OFFLINE_MAP_CHANGED,
             offlineMapsChangedCallback
         )
-        Tools.subscribe(
+        ToolBroadcasts.subscribe(
             OfflineMapsToolRegistration.BROADCAST_OFFLINE_MAP_ADDED,
             offlineMapsChangedCallback
         )
-        Tools.subscribe(
+        ToolBroadcasts.subscribe(
             OfflineMapsToolRegistration.BROADCAST_OFFLINE_MAP_DELETED,
             offlineMapsChangedCallback
         )
     }
 
-    private suspend fun onOfflineMapsChanged(data: Bundle) {
+    private suspend fun onOfflineMapsChanged(data: EventData) {
         val mapId = data.getLong(OfflineMapsToolRegistration.BROADCAST_PARAM_OFFLINE_MAP_ID)
         val mapTypeId = data.getLong(OfflineMapsToolRegistration.BROADCAST_PARAM_OFFLINE_MAP_TYPE)
 

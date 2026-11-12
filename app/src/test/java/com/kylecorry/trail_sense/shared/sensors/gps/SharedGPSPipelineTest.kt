@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.sensors.gps
 
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.luna.time.ITimer
 import com.kylecorry.sol.units.Coordinate
@@ -29,7 +28,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import kotlin.time.Duration
 
 class SharedGPSPipelineTest {
     private val cache = InMemoryPreferences()

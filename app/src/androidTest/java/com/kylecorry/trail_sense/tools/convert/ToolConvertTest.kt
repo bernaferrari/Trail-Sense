@@ -12,8 +12,6 @@ import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.test_utils.views.view
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.doesNotHaveNotification
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasNotification
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
@@ -26,7 +24,6 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
-import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorService
 import org.junit.Test
 
 class ToolConvertTest : ToolTestBase(ToolIds.CONVERT) {

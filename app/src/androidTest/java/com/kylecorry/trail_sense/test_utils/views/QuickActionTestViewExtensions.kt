@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.test_utils.views
 
 import androidx.annotation.IdRes
-import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary
 import com.kylecorry.trail_sense.test_utils.byResId
 import com.kylecorry.trail_sense.test_utils.byResName

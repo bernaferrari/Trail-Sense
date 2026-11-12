@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.guide
 
 import com.kylecorry.trail_sense.test_utils.views.view
 import androidx.test.uiautomator.By
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input

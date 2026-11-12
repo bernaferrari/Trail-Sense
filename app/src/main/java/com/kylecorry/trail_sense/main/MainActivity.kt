@@ -61,6 +61,8 @@ import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.commands.ComposedCommand
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.snackbar
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
@@ -340,11 +342,11 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
         updateDeviceSurfaceRotation()
         FlashlightSubsystem.getInstance(this).startSystemMonitor()
         PedometerSubsystem.getInstance(this).recalculateState()
-        Tools.subscribe(
+        ToolBroadcasts.subscribe(
             BatteryToolRegistration.BROADCAST_POWER_SAVING_MODE_ENABLED,
             ::onPowerSavingModeChanged
         )
-        Tools.subscribe(
+        ToolBroadcasts.subscribe(
             BatteryToolRegistration.BROADCAST_POWER_SAVING_MODE_DISABLED,
             ::onPowerSavingModeChanged
         )
@@ -354,11 +356,11 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
         super.onPause()
         isRunning = false
         FlashlightSubsystem.getInstance(this).stopSystemMonitor()
-        Tools.unsubscribe(
+        ToolBroadcasts.unsubscribe(
             BatteryToolRegistration.BROADCAST_POWER_SAVING_MODE_ENABLED,
             ::onPowerSavingModeChanged
         )
-        Tools.unsubscribe(
+        ToolBroadcasts.unsubscribe(
             BatteryToolRegistration.BROADCAST_POWER_SAVING_MODE_DISABLED,
             ::onPowerSavingModeChanged
         )
@@ -612,7 +614,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
         }
     }
 
-    private fun onPowerSavingModeChanged(data: Bundle): Boolean {
+    private fun onPowerSavingModeChanged(data: EventData): Boolean {
         recreate()
         return true
     }

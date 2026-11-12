@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.tools.ui.widgets
 
 import android.content.Context
-import android.os.Bundle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -11,6 +10,8 @@ import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -84,7 +85,7 @@ class ToolWidgetViewBinder(
     }
 
     private fun onResume() {
-        Tools.subscribe(SettingsToolRegistration.BROADCAST_UPDATE_IN_APP_WIDGET, this::onUpdate)
+        ToolBroadcasts.subscribe(SettingsToolRegistration.BROADCAST_UPDATE_IN_APP_WIDGET, this::onUpdate)
 
         // TODO: Get a GPS / elevation reading
 
@@ -100,7 +101,7 @@ class ToolWidgetViewBinder(
     }
 
     private fun onPause() {
-        Tools.unsubscribe(SettingsToolRegistration.BROADCAST_UPDATE_IN_APP_WIDGET, this::onUpdate)
+        ToolBroadcasts.unsubscribe(SettingsToolRegistration.BROADCAST_UPDATE_IN_APP_WIDGET, this::onUpdate)
         this.widgets.forEach {
             it.widget.widgetView.onInAppEvent(
                 context,
@@ -122,7 +123,7 @@ class ToolWidgetViewBinder(
         onWidgetsChanged(emptyList())
     }
 
-    private fun onUpdate(data: Bundle): Boolean {
+    private fun onUpdate(data: EventData): Boolean {
         val widgetId = data.getString("widgetId") ?: return true
         val widget = widgets.find { it.widget.id == widgetId } ?: return true
         widget.updateFunction()

@@ -3,10 +3,10 @@ package com.kylecorry.trail_sense.tools.pedometer.services
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounterService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.time.Duration
 
 class PedometerToolService(private val context: Context) : ToolService {
@@ -35,13 +35,13 @@ class PedometerToolService(private val context: Context) : ToolService {
 
     override suspend fun enable() {
         prefs.pedometer.isEnabled = true
-        Tools.broadcast(PedometerToolRegistration.BROADCAST_PEDOMETER_ENABLED)
+        ToolBroadcasts.broadcast(PedometerToolRegistration.BROADCAST_PEDOMETER_ENABLED)
         restart()
     }
 
     override suspend fun disable() {
         prefs.pedometer.isEnabled = false
-        Tools.broadcast(PedometerToolRegistration.BROADCAST_PEDOMETER_DISABLED)
+        ToolBroadcasts.broadcast(PedometerToolRegistration.BROADCAST_PEDOMETER_DISABLED)
         stop()
     }
 

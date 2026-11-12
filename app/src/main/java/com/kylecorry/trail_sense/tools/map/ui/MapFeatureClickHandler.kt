@@ -1,13 +1,14 @@
 package com.kylecorry.trail_sense.tools.map.ui
 
 import android.content.Context
-import android.os.Bundle
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonPoint
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.extensions.getLayerId
 import com.kylecorry.trail_sense.shared.extensions.getLongProperty
 import com.kylecorry.trail_sense.shared.extensions.getName
@@ -79,11 +80,11 @@ internal class MapFeatureClickHandler(
     }
 
     private fun broadcastSelection(featureId: String?, layerId: String?) {
-        val bundle = Bundle().apply {
+        val bundle = EventData().apply {
             putString(MapToolRegistration.BROADCAST_PARAM_GEOJSON_FEATURE_ID, featureId)
             putString(MapToolRegistration.BROADCAST_PARAM_GEOJSON_LAYER_ID, layerId)
         }
-        Tools.broadcast(MapToolRegistration.BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED, bundle)
+        ToolBroadcasts.broadcast(MapToolRegistration.BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED, bundle)
     }
 
     private fun getFeatureLocation(feature: GeoJsonFeature): Coordinate? {

@@ -1,19 +1,19 @@
 package com.kylecorry.trail_sense.shared.tiles
 
-import android.os.Bundle
 import android.service.quicksettings.Tile
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.widgets.tiles.AndromedaTileService
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
 
 abstract class ToolServiceTile(
     private val serviceId: String,
@@ -63,26 +63,26 @@ abstract class ToolServiceTile(
 
     override fun onStartListening() {
         showIcon(icon)
-        Tools.subscribe(stateChangeBroadcastId, this::onStateChanged)
+        ToolBroadcasts.subscribe(stateChangeBroadcastId, this::onStateChanged)
         updateState()
         if (frequencyChangeBroadcastId != null) {
-            Tools.subscribe(frequencyChangeBroadcastId, this::onFrequencyChanged)
+            ToolBroadcasts.subscribe(frequencyChangeBroadcastId, this::onFrequencyChanged)
             updateFrequency()
         }
     }
 
     override fun onStopListening() {
-        Tools.unsubscribe(stateChangeBroadcastId, this::onStateChanged)
+        ToolBroadcasts.unsubscribe(stateChangeBroadcastId, this::onStateChanged)
         if (frequencyChangeBroadcastId != null) {
-            Tools.unsubscribe(frequencyChangeBroadcastId, this::onFrequencyChanged)
+            ToolBroadcasts.unsubscribe(frequencyChangeBroadcastId, this::onFrequencyChanged)
         }
     }
 
-    private fun onFrequencyChanged(data: Bundle) {
+    private fun onFrequencyChanged(data: EventData) {
         updateFrequency()
     }
 
-    private fun onStateChanged(data: Bundle) {
+    private fun onStateChanged(data: EventData) {
         updateState()
     }
 

@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.test_utils
 
 import com.kylecorry.andromeda.torch.deviceTorch
-import com.kylecorry.trail_sense.shared.navigation.Route
 
 import android.Manifest
 import android.os.Build

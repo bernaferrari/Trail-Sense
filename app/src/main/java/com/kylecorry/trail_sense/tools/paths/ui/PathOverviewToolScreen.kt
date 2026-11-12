@@ -5,7 +5,6 @@ package com.kylecorry.trail_sense.tools.paths.ui
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.ColorStateList
-import android.os.Bundle
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
@@ -99,6 +98,8 @@ import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.declination.IDeclinationStrategy
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.extensions.lineString
 import com.kylecorry.trail_sense.shared.extensions.point
 import com.kylecorry.trail_sense.shared.extensions.range
@@ -709,7 +710,7 @@ internal class PathOverviewViewModel(
     var isRecording by mutableStateOf(false)
         private set
 
-    private val onBacktrackChanged: (Bundle) -> Unit = { refreshRecording() }
+    private val onBacktrackChanged: (EventData) -> Unit = { refreshRecording() }
 
     private val _navigationStarted = Channel<Unit>(Channel.BUFFERED)
 
@@ -729,7 +730,7 @@ internal class PathOverviewViewModel(
     }
 
     init {
-        Tools.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
+        ToolBroadcasts.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
         refreshRecording()
         viewModelScope.launch {
             pathService.getLivePath(pathId).collect {
@@ -759,7 +760,7 @@ internal class PathOverviewViewModel(
 
     override fun onCleared() {
         stopSensors()
-        Tools.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
+        ToolBroadcasts.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
     }
 
     fun refreshRecording() {

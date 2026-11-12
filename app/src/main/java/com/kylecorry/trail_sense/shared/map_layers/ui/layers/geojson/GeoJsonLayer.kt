@@ -1,35 +1,34 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson
 
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IFeatureClickableLayer
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.OnGeoJsonFeatureClickListener
-import kotlin.concurrent.Volatile
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
-import kotlin.time.Clock
-import kotlin.time.Duration
-
-import android.os.Bundle
-import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.units.PixelCoordinate
-import com.kylecorry.luna.concurrency.BackgroundTask
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
+import com.kylecorry.luna.concurrency.BackgroundTask
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.extensions.isClickable
 import com.kylecorry.trail_sense.shared.map_layers.MapLayerBackgroundTask
 import com.kylecorry.trail_sense.shared.map_layers.MapViewState
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IAsyncLayer
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IFeatureClickableLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.OnGeoJsonFeatureClickListener
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.paths.ui.PathBackgroundColor
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import kotlin.time.Instant
+import kotlin.concurrent.Volatile
 import kotlin.math.roundToInt
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Instant
 import kotlinx.coroutines.CancellationException
 
 open class GeoJsonLayer<T : GeoJsonSource>(
@@ -78,7 +77,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
         refresh()
     }
 
-    private fun onRefreshBroadcastReceived(data: Bundle): Boolean {
+    private fun onRefreshBroadcastReceived(data: EventData): Boolean {
         refresh()
         return true
     }
@@ -213,24 +212,24 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     override fun start() {
         isStopped = false
         invalidate()
-        Tools.subscribe(
+        ToolBroadcasts.subscribe(
             MapToolRegistration.BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED,
             this::onSelectionBroadcast
         )
         refreshBroadcasts.forEach {
-            Tools.subscribe(it, this::onRefreshBroadcastReceived)
+            ToolBroadcasts.subscribe(it, this::onRefreshBroadcastReceived)
         }
         refreshInterval?.let { refreshTimer?.interval(it, it) }
     }
 
     override fun stop() {
         isStopped = true
-        Tools.unsubscribe(
+        ToolBroadcasts.unsubscribe(
             MapToolRegistration.BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED,
             this::onSelectionBroadcast
         )
         refreshBroadcasts.forEach {
-            Tools.unsubscribe(it, this::onRefreshBroadcastReceived)
+            ToolBroadcasts.unsubscribe(it, this::onRefreshBroadcastReceived)
         }
         refreshTimer?.stop()
         taskRunner.stop()
@@ -240,7 +239,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
         isLoaded = false
     }
 
-    private fun onSelectionBroadcast(bundle: Bundle) {
+    private fun onSelectionBroadcast(bundle: EventData) {
         val broadcastLayerId =
             bundle.getString(MapToolRegistration.BROADCAST_PARAM_GEOJSON_LAYER_ID)
         if (broadcastLayerId == layerId) {

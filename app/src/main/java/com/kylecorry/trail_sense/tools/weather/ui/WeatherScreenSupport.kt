@@ -1,16 +1,13 @@
 package com.kylecorry.trail_sense.tools.weather.ui
 
 import android.content.Context
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -38,16 +35,3 @@ internal class WeatherBatteryRestrictionsAlerter(
     }
 }
 
-/** Calls [onReceive] on the main thread for each [toolBroadcastId] broadcast while the screen is resumed. */
-@Composable
-internal fun ToolBroadcastEffect(toolBroadcastId: String, onReceive: () -> Unit) {
-    val scope = rememberCoroutineScope()
-    val latest by rememberUpdatedState(onReceive)
-    LifecycleResumeEffect(toolBroadcastId) {
-        val callback: (android.os.Bundle) -> Unit = { scope.launch { latest() } }
-        Tools.subscribe(toolBroadcastId, callback)
-        onPauseOrDispose {
-            Tools.unsubscribe(toolBroadcastId, callback)
-        }
-    }
-}

@@ -8,6 +8,7 @@ import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.domain.paths.PathFollow
@@ -19,7 +20,6 @@ import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingService
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,7 +56,7 @@ class PathNavigator(context: Context) {
                 buildJob = startBuild()
             }
         }
-        Tools.subscribe(SensorsToolRegistration.BROADCAST_LOCATION_CHANGED) {
+        ToolBroadcasts.subscribe(SensorsToolRegistration.BROADCAST_LOCATION_CHANGED) {
             destinationState.value?.let { destination ->
                 tryOrLog {
                     val location = locationSubsystem.location

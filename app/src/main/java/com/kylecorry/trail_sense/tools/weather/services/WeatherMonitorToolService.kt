@@ -1,26 +1,25 @@
 package com.kylecorry.trail_sense.tools.weather.services
 
-
 import android.content.Context
-import android.os.Bundle
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.permissions.canStartLocationForegroundService
 import com.kylecorry.trail_sense.shared.permissions.isAppForeground
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.preferences.onEachChange
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorScheduler
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorService
 import kotlin.time.Duration
-import com.kylecorry.trail_sense.shared.preferences.onEachChange
 
 class WeatherMonitorToolService(private val context: Context) : ToolService {
 
@@ -60,13 +59,13 @@ class WeatherMonitorToolService(private val context: Context) : ToolService {
 
     override suspend fun enable() {
         prefs.weather.shouldMonitorWeather = true
-        Tools.broadcast(WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_ENABLED)
+        ToolBroadcasts.broadcast(WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_ENABLED)
         start()
     }
 
     override suspend fun disable() {
         prefs.weather.shouldMonitorWeather = false
-        Tools.broadcast(WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_DISABLED)
+        ToolBroadcasts.broadcast(WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_DISABLED)
         stop()
     }
 
@@ -110,13 +109,13 @@ class WeatherMonitorToolService(private val context: Context) : ToolService {
 
     private fun onPreferencesChanged(preference: String): Boolean {
         if (preference in stateChangePrefKeys) {
-            Tools.broadcast(WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED)
+            ToolBroadcasts.broadcast(WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED)
         }
 
         if (preference in frequencyChangePrefKeys) {
-            Tools.broadcast(
+            ToolBroadcasts.broadcast(
                 WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED,
-                Bundle().apply {
+                EventData().apply {
                     putLong(WeatherToolRegistration.BROADCAST_PARAM_WEATHER_MONITOR_FREQUENCY, prefs.weather.weatherUpdateFrequency.inWholeMilliseconds)
                 }
             )

@@ -1,9 +1,10 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
-import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
-import android.os.Bundle
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.QuickActionButton
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 
@@ -22,12 +23,12 @@ abstract class ToolServiceQuickAction(
     override fun onResume() {
         super.onResume()
         updateState()
-        Tools.subscribe(stateChangeBroadcastId, this::onStateChange)
+        ToolBroadcasts.subscribe(stateChangeBroadcastId, this::onStateChange)
     }
 
     override fun onPause() {
         super.onPause()
-        Tools.unsubscribe(stateChangeBroadcastId, this::onStateChange)
+        ToolBroadcasts.unsubscribe(stateChangeBroadcastId, this::onStateChange)
     }
 
     override fun onDestroy() {
@@ -35,7 +36,7 @@ abstract class ToolServiceQuickAction(
         onPause()
     }
 
-    private fun onStateChange(data: Bundle) {
+    private fun onStateChange(data: EventData) {
         updateState()
     }
 

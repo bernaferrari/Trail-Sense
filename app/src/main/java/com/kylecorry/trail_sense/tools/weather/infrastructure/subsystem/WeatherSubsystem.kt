@@ -23,6 +23,7 @@ import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.data.DataUtils
 import com.kylecorry.trail_sense.shared.debugging.DebugWeatherCommand
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.preferences.onEachChange
@@ -31,7 +32,6 @@ import com.kylecorry.trail_sense.shared.time.today
 import com.kylecorry.trail_sense.tools.climate.infrastructure.ClimateSubsystem
 import com.kylecorry.trail_sense.tools.climate.infrastructure.precipitation.HistoricMonthlyPrecipitationRepo
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
 import com.kylecorry.trail_sense.tools.weather.domain.CurrentWeather
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
@@ -103,7 +103,7 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
         }
 
         weatherChanged.subscribe {
-            Tools.broadcast(WeatherToolRegistration.BROADCAST_WEATHER_PREDICTION_CHANGED)
+            ToolBroadcasts.broadcast(WeatherToolRegistration.BROADCAST_WEATHER_PREDICTION_CHANGED)
         }
     }
 

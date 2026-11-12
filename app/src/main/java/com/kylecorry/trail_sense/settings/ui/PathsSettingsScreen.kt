@@ -2,11 +2,7 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
-import com.kylecorry.trail_sense.settings.PreferenceKeys
-import kotlin.time.Duration.Companion.days
-
 import android.content.Context
-import android.os.Bundle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -28,12 +24,16 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.number
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
@@ -49,9 +49,9 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.services.BacktrackSe
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangeBacktrackFrequencyCommand
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
+import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import com.kylecorry.trail_sense.shared.dialogs.number
 
 @Composable
 fun PathsSettingsToolScreen() {
@@ -103,13 +103,13 @@ fun PathsSettingsToolScreen() {
     // Backtrack can be turned on or off elsewhere while this page is shown; the channel may change in system settings.
     LifecycleResumeEffect(Unit) {
         isNotificationBlocked = Notify.isChannelBlocked(context, BacktrackService.FOREGROUND_CHANNEL_ID)
-        val onEnabled: (Bundle) -> Unit = { backtrackEnabled = true }
-        val onDisabled: (Bundle) -> Unit = { backtrackEnabled = false }
-        Tools.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_ENABLED, onEnabled)
-        Tools.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_DISABLED, onDisabled)
+        val onEnabled: (EventData) -> Unit = { backtrackEnabled = true }
+        val onDisabled: (EventData) -> Unit = { backtrackEnabled = false }
+        ToolBroadcasts.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_ENABLED, onEnabled)
+        ToolBroadcasts.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_DISABLED, onDisabled)
         onPauseOrDispose {
-            Tools.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_ENABLED, onEnabled)
-            Tools.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_DISABLED, onDisabled)
+            ToolBroadcasts.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_ENABLED, onEnabled)
+            ToolBroadcasts.unsubscribe(PathsToolRegistration.BROADCAST_BACKTRACK_DISABLED, onDisabled)
         }
     }
 

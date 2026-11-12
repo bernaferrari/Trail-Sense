@@ -1,9 +1,5 @@
 package com.kylecorry.trail_sense.tools.map.map_layers
 
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.colors.ColorInts
-import android.os.Bundle
-import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.canvas.ImageMode
 import com.kylecorry.andromeda.canvas.TextMode
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -11,12 +7,16 @@ import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.canvas.MapDrawer
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
+import com.kylecorry.trail_sense.shared.icons.toImageBitmap
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.overlay.OverlayLayer
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
-import com.kylecorry.trail_sense.shared.icons.toImageBitmap
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class MyElevationLayer : OverlayLayer() {
 
@@ -40,7 +40,7 @@ class MyElevationLayer : OverlayLayer() {
     private var elevationString = ""
 
     override fun start() {
-        Tools.subscribe(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED, this::onElevationChange)
+        ToolBroadcasts.subscribe(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED, this::onElevationChange)
     }
 
     override fun drawOverlay(
@@ -79,10 +79,10 @@ class MyElevationLayer : OverlayLayer() {
     }
 
     override fun stop() {
-        Tools.unsubscribe(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED, this::onElevationChange)
+        ToolBroadcasts.unsubscribe(SensorsToolRegistration.BROADCAST_ELEVATION_CHANGED, this::onElevationChange)
     }
 
-    private fun onElevationChange(ignored: Bundle) {
+    private fun onElevationChange(ignored: EventData) {
         elevation = locationSubsystem.elevation.convertTo(prefs.baseDistanceUnits)
     }
 

@@ -1,16 +1,17 @@
 package com.kylecorry.trail_sense.shared.sharing
 
-import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
-import android.os.Bundle
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonPoint
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.extensions.getLayerId
 import com.kylecorry.trail_sense.shared.extensions.getLongProperty
 import com.kylecorry.trail_sense.shared.extensions.getName
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.map_layers.BeaconGeoJsonSource
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
@@ -25,11 +26,11 @@ object GeoJsonFeatureClickHandler {
     ) {
         val layerId = feature.getLayerId()
 
-        val bundle = Bundle().apply {
+        val bundle = EventData().apply {
             putString(MapToolRegistration.BROADCAST_PARAM_GEOJSON_FEATURE_ID, feature.id?.toString())
             putString(MapToolRegistration.BROADCAST_PARAM_GEOJSON_LAYER_ID, layerId)
         }
-        Tools.broadcast(MapToolRegistration.BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED, bundle)
+        ToolBroadcasts.broadcast(MapToolRegistration.BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED, bundle)
 
         val formatter = DependencyRegistry.get<FormatService>()
         val location = getFeatureLocation(feature) ?: return
@@ -81,11 +82,11 @@ object GeoJsonFeatureClickHandler {
             }
 
             // Broadcast deselection after the action
-            val deselectBundle = Bundle().apply {
+            val deselectBundle = EventData().apply {
                 putString(MapToolRegistration.BROADCAST_PARAM_GEOJSON_FEATURE_ID, null)
                 putString(MapToolRegistration.BROADCAST_PARAM_GEOJSON_LAYER_ID, layerId)
             }
-            Tools.broadcast(
+            ToolBroadcasts.broadcast(
                 MapToolRegistration.BROADCAST_GEOJSON_FEATURE_SELECTION_CHANGED,
                 deselectBundle
             )

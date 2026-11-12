@@ -1,10 +1,5 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.services
 
-import kotlin.time.Duration.Companion.seconds
-import com.kylecorry.trail_sense.shared.sensors.asFlowable
-
-import kotlin.time.Duration.Companion.milliseconds
-
 import android.content.Context
 import android.content.Intent
 import com.kylecorry.andromeda.background.AlwaysOnTaskScheduler
@@ -19,17 +14,20 @@ import com.kylecorry.luna.time.ITimer
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
 import com.kylecorry.trail_sense.shared.logging.Logger
+import com.kylecorry.trail_sense.shared.sensors.asFlowable
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSSource
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSSourceSelector
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAlerter
 import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.BacktrackCommand
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
-import kotlin.time.Duration
 
 class BacktrackService :
     IntervalService(wakelockDuration = 60.seconds, useOneTimeWorkers = true) {
@@ -121,7 +119,7 @@ class BacktrackService :
         var isRunning = false
             private set(value) {
                 field = value
-                Tools.broadcast(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED)
+                ToolBroadcasts.broadcast(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED)
             }
 
         fun start(context: Context) {

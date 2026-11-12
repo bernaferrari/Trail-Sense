@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.declination
 
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.sol.science.geology.Geology
 import com.kylecorry.sol.science.geophysics.Geophysics
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R

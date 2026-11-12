@@ -4,7 +4,6 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Duration.Companion.hours
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import kotlin.time.Duration
 import kotlin.time.Instant
 
 class TurnBackViewModelTest {

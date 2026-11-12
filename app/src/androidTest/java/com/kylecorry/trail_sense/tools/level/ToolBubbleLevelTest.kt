@@ -4,7 +4,6 @@ import java.util.regex.Pattern
 import com.kylecorry.trail_sense.test_utils.views.view
 import androidx.test.uiautomator.By
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.ToolTestBase

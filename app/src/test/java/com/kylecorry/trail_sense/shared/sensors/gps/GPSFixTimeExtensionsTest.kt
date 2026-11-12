@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.shared.sensors.gps
 
 import kotlin.time.Duration.Companion.seconds
 import com.kylecorry.andromeda.core.time.TimeProvider
-import kotlin.time.Duration
 import kotlin.time.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

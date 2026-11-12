@@ -3,8 +3,6 @@ package com.kylecorry.trail_sense.tools.temperature_estimation
 import androidx.test.uiautomator.Direction
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
-import com.kylecorry.luna.text.toFloatCompat
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.GPS_WAIT_FOR_TIMEOUT
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText

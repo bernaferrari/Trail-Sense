@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.sensors.gps.modules
 
-import kotlin.time.toJavaDuration
 import com.kylecorry.andromeda.core.time.TimeProvider
 import com.kylecorry.luna.time.ITimer
 import com.kylecorry.trail_sense.shared.sensors.SensorService

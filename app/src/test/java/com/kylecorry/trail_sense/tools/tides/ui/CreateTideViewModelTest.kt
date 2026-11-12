@@ -11,9 +11,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
-import kotlin.time.Duration
 import kotlin.time.Clock
-import kotlin.time.Instant
 
 class CreateTideViewModelTest {
 

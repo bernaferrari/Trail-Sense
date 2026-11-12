@@ -1,10 +1,8 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem
 
-
 import android.annotation.SuppressLint
 import android.content.Context
 import android.hardware.Sensor
-import android.os.Bundle
 import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.luna.concurrency.BackgroundTask
@@ -14,15 +12,14 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.preferences.onEachChange
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
 import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounterService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import com.kylecorry.trail_sense.shared.preferences.onEachChange
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,6 +28,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class PedometerSubsystem private constructor(private val context: Context) : IPedometerSubsystem {
 
@@ -48,13 +47,13 @@ class PedometerSubsystem private constructor(private val context: Context) : IPe
 
     override fun enable() {
         prefs.pedometer.isEnabled = true
-        Tools.broadcast(PedometerToolRegistration.BROADCAST_PEDOMETER_ENABLED)
+        ToolBroadcasts.broadcast(PedometerToolRegistration.BROADCAST_PEDOMETER_ENABLED)
         StepCounterService.start(context)
     }
 
     override fun disable() {
         prefs.pedometer.isEnabled = false
-        Tools.broadcast(PedometerToolRegistration.BROADCAST_PEDOMETER_DISABLED)
+        ToolBroadcasts.broadcast(PedometerToolRegistration.BROADCAST_PEDOMETER_DISABLED)
         StepCounterService.stop(context)
     }
 
@@ -75,7 +74,7 @@ class PedometerSubsystem private constructor(private val context: Context) : IPe
 
     init {
         initialPopulationTask.start()
-        Tools.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED) {
+        ToolBroadcasts.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED) {
             BackgroundTask {
                 stepsQueue.enqueue {
                     updateSteps(it)
@@ -86,7 +85,7 @@ class PedometerSubsystem private constructor(private val context: Context) : IPe
         // Tell the rest of the app when the distance changes (a state flow only emits changes)
         scope.launch {
             distance.drop(1).collect {
-                Tools.broadcast(PedometerToolRegistration.BROADCAST_DISTANCE_CHANGED)
+                ToolBroadcasts.broadcast(PedometerToolRegistration.BROADCAST_DISTANCE_CHANGED)
             }
         }
 
@@ -101,7 +100,7 @@ class PedometerSubsystem private constructor(private val context: Context) : IPe
         }
     }
 
-    private suspend fun updateSteps(data: Bundle? = null) = stepsMutex.withLock {
+    private suspend fun updateSteps(data: EventData? = null) = stepsMutex.withLock {
         val stepCount = data?.getLong(PedometerToolRegistration.BROADCAST_PARAM_STEPS)
             ?: stepTrackerService.getOpenStepTrackingPeriod()?.steps
             ?: 0L

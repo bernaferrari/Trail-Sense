@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.tides
 
 import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toJavaZoneId
 import kotlinx.datetime.toKotlinTimeZone
 import kotlin.time.toKotlinInstant
 import kotlin.time.Instant

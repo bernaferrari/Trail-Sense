@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import kotlin.time.Duration
 
 class AccuracyFilterGPSModuleTest {
     private val configuredFilter = GPSAccuracyFilter(16f, 8.seconds)

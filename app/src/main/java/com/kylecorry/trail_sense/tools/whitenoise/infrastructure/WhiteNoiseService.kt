@@ -1,27 +1,25 @@
 package com.kylecorry.trail_sense.tools.whitenoise.infrastructure
 
-
-import kotlin.time.Clock
-
-import com.kylecorry.trail_sense.shared.notifications.*
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
 import com.kylecorry.andromeda.background.services.AndromedaService
 import com.kylecorry.andromeda.background.services.ForegroundInfo
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import com.kylecorry.trail_sense.tools.whitenoise.WhiteNoiseToolRegistration
-import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.andromeda.sound.SoundPlayer
+import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.logging.Logger
+import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.withId
+import com.kylecorry.trail_sense.tools.whitenoise.WhiteNoiseToolRegistration
+import kotlin.time.Clock
 import kotlin.time.Duration
 
 class WhiteNoiseService : AndromedaService() {
@@ -38,7 +36,7 @@ class WhiteNoiseService : AndromedaService() {
         return tryStartForegroundOrNotify {
             super.onStartCommand(intent, flags, startId)
             isRunning = true
-            Tools.broadcast(WhiteNoiseToolRegistration.BROADCAST_PLAYBACK_STATE_CHANGED)
+            ToolBroadcasts.broadcast(WhiteNoiseToolRegistration.BROADCAST_PLAYBACK_STATE_CHANGED)
             val stopAt = cache.getInstant(CACHE_KEY_OFF_TIME)
             if (stopAt != null && Clock.System.now() < stopAt) {
                 offTimer.once((stopAt - Clock.System.now()))
@@ -74,8 +72,8 @@ class WhiteNoiseService : AndromedaService() {
         soundPlayer?.fadeOff(true)
         stopService(true)
         clearSleepTimer(this)
-        Tools.broadcast(WhiteNoiseToolRegistration.BROADCAST_PLAYBACK_STATE_CHANGED)
-        Tools.broadcast(WhiteNoiseToolRegistration.BROADCAST_PLAYBACK_FINISHED)
+        ToolBroadcasts.broadcast(WhiteNoiseToolRegistration.BROADCAST_PLAYBACK_STATE_CHANGED)
+        ToolBroadcasts.broadcast(WhiteNoiseToolRegistration.BROADCAST_PLAYBACK_FINISHED)
         super.onDestroy()
     }
 

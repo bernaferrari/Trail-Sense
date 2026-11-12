@@ -1,17 +1,9 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
-
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.notifications.*
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
 import android.os.SystemClock
 import com.kylecorry.andromeda.background.services.AndromedaService
 import com.kylecorry.andromeda.background.services.ForegroundInfo
@@ -25,20 +17,26 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
+import com.kylecorry.trail_sense.shared.events.EventData
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.notifications.*
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
 import com.kylecorry.trail_sense.tools.pedometer.domain.ActiveTimeCalculator
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
 import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculator
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -116,7 +114,7 @@ class StepCounterService : AndromedaService() {
             val flag = super.onStartCommand(intent, flags, startId)
             isRunning = true
             pedometer.start(this::onPedometer)
-            Tools.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, this::onStepsChanged)
+            ToolBroadcasts.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, this::onStepsChanged)
             flag
         }
     }
@@ -130,8 +128,8 @@ class StepCounterService : AndromedaService() {
         return true
     }
 
-    private fun onStepsChanged(data: Bundle) {
-        steps.value = data.getLong(PedometerToolRegistration.BROADCAST_PARAM_STEPS)
+    private fun onStepsChanged(data: EventData) {
+        steps.value = data.getLong(PedometerToolRegistration.BROADCAST_PARAM_STEPS) ?: 0L
     }
 
     override fun onDestroy() {
@@ -142,7 +140,7 @@ class StepCounterService : AndromedaService() {
         stopService(true)
         addStepsTask.stop()
         addStepsQueue.cancel()
-        Tools.unsubscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, this::onStepsChanged)
+        ToolBroadcasts.unsubscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, this::onStepsChanged)
         super.onDestroy()
     }
 

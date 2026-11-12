@@ -1,12 +1,11 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
 import android.content.Context
-import kotlinx.coroutines.flow.map
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -42,7 +41,7 @@ class PathRepo private constructor(context: Context) {
         synchronized(changeLock) {
             changeKey++
         }
-        Tools.broadcast(PathsToolRegistration.BROADCAST_PATHS_CHANGED)
+        ToolBroadcasts.broadcast(PathsToolRegistration.BROADCAST_PATHS_CHANGED)
     }
 
     suspend fun get(id: Long): Path? {
