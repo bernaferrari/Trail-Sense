@@ -68,7 +68,6 @@ import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
-import com.kylecorry.trail_sense.tools.qr.ui.QR_SHARE_MAX_LENGTH
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -356,10 +355,7 @@ object CustomUiUtils {
         title: String,
         qr: String
     ) {
-        if (qr.length > QR_SHARE_MAX_LENGTH) {
-            Alerts.snackbar(context, context.getString(R.string.qr_text_too_long))
-        }
-        appNavigator.navigate(Route.ViewQr(title = title, text = qr.take(QR_SHARE_MAX_LENGTH)))
+        com.kylecorry.trail_sense.tools.qr.ui.showQR(AppHost.from(context), appNavigator, title, qr)
     }
 
     /** Asks for the camera, then takes or picks a photo; null when refused or cancelled. */

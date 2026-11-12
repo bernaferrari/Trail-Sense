@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.notes.ui
 
-import com.kylecorry.trail_sense.R
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
 import kotlinx.coroutines.IO
 import com.kylecorry.trail_sense.shared.text.SystemString
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
@@ -9,7 +9,7 @@ import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import androidx.compose.ui.platform.LocalContext
+import com.kylecorry.trail_sense.tools.qr.ui.showQR
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -19,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
@@ -29,10 +28,10 @@ import kotlinx.coroutines.launch
 /** The Notes tool: every note, newest first, each with edit, delete and QR share. */
 @Composable
 fun NotesToolScreen() {
-    val context = LocalContext.current
+    val host = AppHost.current()
     val navigator = LocalNavigator.current
     val scope = rememberCoroutineScope()
-    val repo = remember(context) { getAppService<INoteRepo>() }
+    val repo = remember { getAppService<INoteRepo>() }
     val notes = remember(repo) { repo.getNotes() }
     NotesScreen(
         notes = notes,
@@ -40,8 +39,8 @@ fun NotesToolScreen() {
         onAdd = { navigator.navigate(Route.NoteEditor()) },
         onEdit = { note -> navigator.navigate(Route.NoteEditor(editNoteId = note.id)) },
         onDelete = { note ->
-            Alerts.dialog(AppHost.current(),
-                context.getString(R.string.delete_note_title),
+            Alerts.dialog(host,
+                getAppService<AppStrings>().get(Res.string.delete_note_title),
                 if (note.title?.trim().isNullOrEmpty()) {
                     getAppService<AppStrings>().system(SystemString.Untitled)
                 } else {
@@ -56,8 +55,8 @@ fun NotesToolScreen() {
             }
         },
         onShowQR = { note ->
-            CustomUiUtils.showQR(
-                context,
+            showQR(
+                host,
                 navigator,
                 note.title ?: getAppService<AppStrings>().system(SystemString.Untitled),
                 NoteQREncoder().encode(note)

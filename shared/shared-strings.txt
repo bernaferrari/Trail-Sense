@@ -994,3 +994,5 @@ return_time
 turn_back_alert_set
 turn_back_cancel
 turn_back_empty_description
+delete_note_title
+qr_text_too_long

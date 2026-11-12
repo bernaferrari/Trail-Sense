@@ -53,8 +53,6 @@ fun QRShareScreen(
     )
 }
 
-const val QR_SHARE_MAX_LENGTH = 1000
-
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun QRShareContent(
