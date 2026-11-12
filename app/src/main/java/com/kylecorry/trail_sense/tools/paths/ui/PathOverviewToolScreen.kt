@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.chartHeight
+
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.ColorStateList
@@ -950,9 +952,7 @@ private fun PathOverviewHost(
 ) {
     val density = LocalDensity.current
     val context = LocalContext.current
-    val chartHeight = with(density) {
-        context.resources.getDimensionPixelSize(R.dimen.chart_height).toDp()
-    }
+    val chartHeight = chartHeight()
     val elevationGain = PathDataPoint(model.elevationGain, stringResource(R.string.ascent), TrailIcons.ElevationGain)
     val elevationLoss = PathDataPoint(model.elevationLoss, stringResource(R.string.descent), TrailIcons.ElevationLoss)
     val elevationMin = model.elevationMin?.let {

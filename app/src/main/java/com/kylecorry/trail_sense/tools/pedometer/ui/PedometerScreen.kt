@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.chartHeight
+
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -54,7 +56,6 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -491,7 +492,7 @@ private fun HourlyStepsHistory(
                     formatHour = { formatService.formatTime(it, includeSeconds = false, includeMinutes = false) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(dimensionResource(R.dimen.chart_height))
+                        .height(chartHeight())
                         .testTag("hourly_steps_chart")
                 )
             }

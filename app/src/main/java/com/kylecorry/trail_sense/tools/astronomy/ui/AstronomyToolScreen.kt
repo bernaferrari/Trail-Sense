@@ -1,6 +1,8 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.chartHeight
+
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -46,7 +48,6 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -981,7 +982,7 @@ private fun AstronomyScreen(
                     onChartClicked = onChartClicked,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(dimensionResource(R.dimen.chart_height))
+                        .height(chartHeight())
                         .testTag("sunMoonChart")
                 )
             }

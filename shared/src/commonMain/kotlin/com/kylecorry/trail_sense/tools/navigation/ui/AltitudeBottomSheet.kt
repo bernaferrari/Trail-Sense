@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
+import com.kylecorry.trail_sense.shared.views.compose.chartHeight
+
 import kotlin.time.Clock
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -17,14 +22,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -61,7 +63,7 @@ fun AltitudeContent(
             units = units,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dimensionResource(R.dimen.chart_height))
+                .height(chartHeight())
                 .padding(top = TrailSenseSpacing.lg)
                 .testTag("chart")
         )
@@ -84,7 +86,7 @@ private fun AltitudeChartView(
     ) {
         if (readings.isEmpty()) {
             Text(
-                text = stringResource(R.string.no_data),
+                text = appString(Res.string.no_data),
                 color = textColor,
                 style = MaterialTheme.typography.bodyMedium
             )

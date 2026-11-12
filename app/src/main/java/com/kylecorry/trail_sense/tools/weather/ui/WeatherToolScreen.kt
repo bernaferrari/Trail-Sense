@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.chartHeight
+
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloat
@@ -55,7 +57,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -223,7 +224,7 @@ fun WeatherToolScreen(
                 maximum = 100f,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.chart_height))
+                    .height(chartHeight())
             )
         }
     }
@@ -248,7 +249,7 @@ fun WeatherToolScreen(
                 freezingValue = Temperature.celsius(0f).convertTo(temperatureUnits).value,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.chart_height))
+                    .height(chartHeight())
             )
         }
     }

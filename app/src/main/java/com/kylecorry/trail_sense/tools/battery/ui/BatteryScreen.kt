@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.battery.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.chartHeight
+
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
@@ -107,7 +109,6 @@ import kotlinx.coroutines.withContext
 import kotlin.time.Duration
 import kotlin.math.absoluteValue
 import android.content.Context
-import androidx.compose.ui.res.dimensionResource
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.views.charts.TrailSenseLineChart
@@ -873,7 +874,7 @@ private fun showBatteryHistory(context: Context, readings: List<BatteryReading>,
             maximum = 100f,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dimensionResource(R.dimen.chart_height))
+                .height(chartHeight())
         )
     }
 }

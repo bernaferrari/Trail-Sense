@@ -1,11 +1,12 @@
 package com.kylecorry.trail_sense.tools.weather.ui.dialogs
 
+import com.kylecorry.trail_sense.shared.views.compose.chartHeight
+
 import android.content.Context
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.dimensionResource
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
@@ -69,7 +70,7 @@ class ShowHighLowTemperatureDialogCommand(
                 freezingValue = Temperature.celsius(0f).convertTo(temperatureUnits).value,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.chart_height))
+                    .height(chartHeight())
                     .testTag("chart")
             )
         }
