@@ -72,7 +72,7 @@ fun PlacesBearingField(
     hasCompass: Boolean,
     onBearingChange: (Float?, Boolean) -> Unit,
     onCompassClick: () -> Unit,
-    onCameraClick: () -> Unit,
+    onCameraClick: (() -> Unit)?,
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier,
     tag: String? = null,
@@ -181,13 +181,15 @@ fun PlacesBearingField(
                                 .testTag("compass_bearing")
                         )
                     }
-                    FilledTonalIconButton(
-                        onClick = onCameraClick,
-                        modifier = Modifier
-                            .size(56.dp)
-                            .testTag("camera_btn")
-                    ) {
-                        Icon(TrailIcons.Camera, contentDescription = appString(Res.string.camera))
+                    if (onCameraClick != null) {
+                        FilledTonalIconButton(
+                            onClick = onCameraClick,
+                            modifier = Modifier
+                                .size(56.dp)
+                                .testTag("camera_btn")
+                        ) {
+                            Icon(TrailIcons.Camera, contentDescription = appString(Res.string.camera))
+                        }
                     }
                     FilledTonalIconButton(
                         onClick = { showManualEntry = true },

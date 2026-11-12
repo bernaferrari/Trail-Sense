@@ -1050,3 +1050,9 @@ triangulate_destination_location_2_instructions
 triangulate_self_location_1_instructions
 triangulate_self_location_2_instructions
 update_gps_override
+appearance
+beacon_comment
+beacon_invalid_name
+create_at_distance
+edit_beacon
+icon

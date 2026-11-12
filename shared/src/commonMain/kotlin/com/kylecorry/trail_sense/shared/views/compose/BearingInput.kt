@@ -48,7 +48,7 @@ fun BearingInput(
     hasCompass: Boolean,
     onBearingChange: (Float?, Boolean) -> Unit,
     onCompassClick: () -> Unit,
-    onCameraClick: () -> Unit,
+    onCameraClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     tag: String? = null
 ) {
@@ -116,7 +116,7 @@ fun BearingInput(
             }
         }
 
-        if (hasCompass) {
+        if (hasCompass && onCameraClick != null) {
             IconButton(
                 onClick = onCameraClick,
                 modifier = Modifier.testTag("camera_btn")

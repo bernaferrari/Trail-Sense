@@ -2,8 +2,11 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
-import com.kylecorry.trail_sense.shared.views.compose.from
 
 import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
 
@@ -40,18 +43,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
+import com.kylecorry.trail_sense.shared.camera.rememberSightingCompass
+import com.kylecorry.trail_sense.shared.sensors.ISensorSubsystem
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.math.DecimalFormatter
@@ -59,24 +63,19 @@ import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.camera.SightingCompassDialog
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.dialogs.item
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import com.kylecorry.trail_sense.shared.navigation.toGeoUri
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.views.BeaconIconPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
@@ -117,28 +116,26 @@ fun PlaceBeaconToolScreen(
     route: Route.PlaceBeacon,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
+    val host = AppHost.current()
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     val viewModel = viewModel {
         PlaceBeaconViewModel(
             route = route,
             beaconService = getAppService<IBeaconService>(),
-            defaultColor = UserPreferences(appContext).beacons.defaultBeaconColor
+            defaultColor = getAppService<UserPreferences>().beacons.defaultBeaconColor
         )
     }
-    val formatter = remember(appContext) { FormatService.getInstance(appContext) }
-    val sensors = remember(appContext) { getAppService<SensorService>() }
+    val formatter = remember { FormatService.getInstance() }
+    val sensors = remember { getAppService<SensorService>() }
     val compass = remember(sensors) { sensors.getCompass() }
     val hasCompass = remember(sensors) { sensors.hasCompass() }
     var compassBearingText by remember { mutableStateOf("") }
-    var cameraSheet by remember { mutableStateOf<SightingCompassDialog?>(null) }
+    val cameraSheet = rememberSightingCompass { viewModel.setBearing(it) }
     var showColorPicker by remember { mutableStateOf(false) }
     var showIconPicker by remember { mutableStateOf(false) }
-    val iconTitle = stringResource(R.string.icon)
+    val iconTitle = appString(Res.string.icon)
     val data = viewModel.data
 
     UnsavedChangesBackHandler(hasChanges = viewModel.hasChanges)
@@ -159,17 +156,10 @@ fun PlaceBeaconToolScreen(
         }
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            cameraSheet?.dismiss()
-            cameraSheet = null
-        }
-    }
-
     PlaceBeaconScreen(
         data = data,
         isEditing = viewModel.isEditing,
-        groupName = viewModel.groupName.ifBlank { stringResource(R.string.no_group) },
+        groupName = viewModel.groupName.ifBlank { appString(Res.string.no_group) },
         canSave = viewModel.canSave,
         hikingDistanceUnits = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
         onNameChange = { viewModel.update(viewModel.data.copy(name = it)) },
@@ -191,7 +181,7 @@ fun PlaceBeaconToolScreen(
         onGroupClick = {
             scope.launch {
                 val result = BeaconPickers.pickGroup(
-                    AppHost.from(context),
+                    host,
                     initialGroup = viewModel.data.groupId
                 )
                 if (!result.first) {
@@ -209,21 +199,14 @@ fun PlaceBeaconToolScreen(
         compassBearingText = compassBearingText,
         hasCompass = hasCompass,
         onCompassBearingClick = { viewModel.setBearing(compass.rawBearing) },
-        onCameraBearingClick = {
-            scope.launch {
-                if (effects.requestPermission(AppPermission.Camera)) {
-                    if (cameraSheet == null) {
-                        cameraSheet = SightingCompassDialog(
-                            context,
-                            lifecycleOwner,
-                            lifecycleOwner.lifecycleScope
-                        ) {
-                            viewModel.setBearing(it)
-                        }
+        onCameraBearingClick = cameraSheet?.let { sheet ->
+            {
+                scope.launch {
+                    if (effects.requestPermission(AppPermission.Camera)) {
+                        sheet.show()
+                    } else {
+                        effects.explainPermissionDenied(AppPermission.Camera)
                     }
-                    cameraSheet?.show()
-                } else {
-                    effects.explainPermissionDenied(AppPermission.Camera)
                 }
             }
         },
@@ -403,18 +386,18 @@ private fun PlaceBeaconScreen(
     compassBearingText: String,
     hasCompass: Boolean,
     onCompassBearingClick: () -> Unit,
-    onCameraBearingClick: () -> Unit,
+    onCameraBearingClick: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     val dispatcher = rememberSystemBack()
     val sizeSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
-    val appearanceTitle = stringResource(R.string.appearance)
+    val appearanceTitle = appString(Res.string.appearance)
 
     Box(modifier = modifier.testTag("create_beacon_title")) {
         TrailSensePage(
-            title = stringResource(if (isEditing) R.string.edit_beacon else R.string.create_beacon),
+            title = appString(if (isEditing) Res.string.edit_beacon else Res.string.create_beacon),
             onBack = { dispatcher?.invoke() },
-            backLabel = stringResource(R.string.back),
+            backLabel = appString(Res.string.back),
             modifier = Modifier.testTag("create_beacon_scroll"),
             actions = {
                 Button(
@@ -424,7 +407,7 @@ private fun PlaceBeaconScreen(
                         .padding(end = TrailSenseSpacing.sm)
                         .testTag("create_beacon_save_btn")
                 ) {
-                    Text(stringResource(R.string.save))
+                    Text(appString(Res.string.save))
                 }
             }
         ) {
@@ -442,7 +425,7 @@ private fun PlaceBeaconScreen(
 
             item(key = "location") {
                 TrailSenseRowGroup(
-                    title = stringResource(R.string.location),
+                    title = appString(Res.string.location),
                     modifier = Modifier.animateContentSize(sizeSpec)
                 ) {
                     row { position ->
@@ -465,7 +448,7 @@ private fun PlaceBeaconScreen(
                     }
                     row { position ->
                         TrailSenseSwitchRow(
-                            label = stringResource(R.string.create_at_distance),
+                            label = appString(Res.string.create_at_distance),
                             checked = data.createAtDistance,
                             onCheckedChange = onCreateAtDistanceChange,
                             position = position,
@@ -501,7 +484,7 @@ private fun PlaceBeaconScreen(
             trailSenseSection(key = "appearance", title = appearanceTitle) {
                 row { position ->
                     PlacesRow(
-                        title = stringResource(R.string.group),
+                        title = appString(Res.string.group),
                         subtitle = groupName,
                         leading = {
                             com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(androidx.compose.ui.graphics.vector.rememberVectorPainter(TrailIcons.BeaconGroup))
@@ -514,7 +497,7 @@ private fun PlaceBeaconScreen(
                 row { position ->
                     val color = Color(data.color.color)
                     PlacesRow(
-                        title = stringResource(R.string.places_shape_and_color),
+                        title = appString(Res.string.places_shape_and_color),
                         leading = {
                             BeaconShapeMark(
                                 shape = data.shape,
@@ -531,7 +514,7 @@ private fun PlaceBeaconScreen(
                 row { position ->
                     val color = Color(data.color.color)
                     PlacesRow(
-                        title = stringResource(R.string.icon),
+                        title = appString(Res.string.icon),
                         leading = {
                             PlacesBadge(
                                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -554,7 +537,7 @@ private fun PlaceBeaconScreen(
                         TrailSenseInputField(
                             value = data.notes,
                             onValueChange = onNotesChange,
-                            label = stringResource(R.string.beacon_comment),
+                            label = appString(Res.string.beacon_comment),
                             position = position,
                             keyboardType = KeyboardType.Text,
                             capitalization = KeyboardCapitalization.Sentences,
@@ -585,12 +568,12 @@ private fun BeaconNameField(
                 hasError = false
             }
         },
-        label = stringResource(R.string.name),
+        label = appString(Res.string.name),
         position = position,
         keyboardType = KeyboardType.Text,
         capitalization = KeyboardCapitalization.Sentences,
         isError = hasError,
-        errorText = stringResource(R.string.beacon_invalid_name),
+        errorText = appString(Res.string.beacon_invalid_name),
         modifier = Modifier
             .testTag("beacon_name")
             .onFocusChanged {
@@ -611,8 +594,7 @@ private fun UnitChooser(
     tag: String,
     onUnitChange: (DistanceUnits) -> Unit
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
     var isOpen by remember { mutableStateOf(false) }
     Box {
         TextButton(
@@ -668,9 +650,10 @@ private fun CoordinateInput(
     onAutoLocationClick: () -> Unit,
     onBeaconSelected: (Beacon) -> Unit
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
-    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val host = AppHost.current()
+    val strings = LocalAppStrings.current
+    val formatter = remember { FormatService.getInstance() }
+    val sensors = remember { getAppService<ISensorSubsystem>() }
     val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     // The text is the user's: it starts from the coordinate and is replaced only when the coordinate changes from
@@ -721,13 +704,13 @@ private fun CoordinateInput(
             coordinateText = it
             onCoordinateChange(Coordinate.parse(it))
         },
-        label = stringResource(R.string.location),
+        label = appString(Res.string.location),
         position = position,
         keyboardType = KeyboardType.Text,
         capitalization = KeyboardCapitalization.Sentences,
         enabled = !isLoadingLocation,
         isError = isInvalid,
-        errorText = stringResource(R.string.coordinate_input_invalid_location),
+        errorText = appString(Res.string.coordinate_input_invalid_location),
         modifier = Modifier.testTag("beacon_location"),
         leadingIcon = {
             if (isLoadingLocation) {
@@ -736,11 +719,11 @@ private fun CoordinateInput(
                 IconButton(
                     onClick = {
                         Pickers.item(
-                            context,
-                            context.getString(R.string.autofill_source),
+                            host,
+                            strings.get(Res.string.autofill_source),
                             listOf(
-                                context.getString(R.string.gps),
-                                context.getString(R.string.beacon)
+                                strings.get(Res.string.gps),
+                                strings.get(Res.string.beacon)
                             ),
                             0
                         ) { selection ->
@@ -748,7 +731,7 @@ private fun CoordinateInput(
                                 0 -> autofillFromGps()
                                 1 -> scope.launch {
                                     val beacon = BeaconPickers.pickBeacon(
-                                        AppHost.from(context),
+                                        host,
                                         sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                     ) ?: return@launch
                                     coordinateText = formatter.formatLocation(beacon.coordinate)
@@ -762,7 +745,7 @@ private fun CoordinateInput(
                 ) {
                     Icon(
                         painter = rememberVectorPainter(TrailIcons.Location),
-                        contentDescription = stringResource(R.string.gps),
+                        contentDescription = appString(Res.string.gps),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -775,7 +758,7 @@ private fun CoordinateInput(
             ) {
                 Icon(
                     painter = rememberVectorPainter(TrailIcons.Help),
-                    contentDescription = stringResource(R.string.location_input_help_title)
+                    contentDescription = appString(Res.string.location_input_help_title)
                 )
             }
         }
@@ -784,10 +767,10 @@ private fun CoordinateInput(
     if (showHelp) {
         TrailSenseDialog(
             onDismissRequest = { showHelp = false },
-            title = stringResource(R.string.location_input_help_title),
-            confirmText = stringResource(android.R.string.ok)
+            title = appString(Res.string.location_input_help_title),
+            confirmText = systemString(SystemString.Ok)
         ) {
-            Text(stringResource(R.string.location_input_help))
+            Text(appString(Res.string.location_input_help))
         }
     }
 }
@@ -799,9 +782,10 @@ private fun ElevationInput(
     onElevationChange: (Distance?) -> Unit,
     autoFillRequest: Int
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
-    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val host = AppHost.current()
+    val strings = LocalAppStrings.current
+    val formatter = remember { FormatService.getInstance() }
+    val sensors = remember { getAppService<ISensorSubsystem>() }
     val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     val units = remember {
@@ -810,7 +794,7 @@ private fun ElevationInput(
     // Always starts in the person's preferred unit: elevations arrive in metres (from the altimeter, the GPS or a
     // saved place) and are shown converted, until the person picks another unit here.
     var unit by remember(units) {
-        mutableStateOf(UserPreferences(context).baseDistanceUnits)
+        mutableStateOf(getAppService<UserPreferences>().baseDistanceUnits)
     }
     var elevationText by remember {
         mutableStateOf(formatDistanceAmount(elevation, unit))
@@ -855,7 +839,7 @@ private fun ElevationInput(
             elevationText = it
             publish(text = it)
         },
-        label = stringResource(R.string.elevation),
+        label = appString(Res.string.elevation),
         position = position,
         enabled = !isLoadingElevation,
         keyboardType = KeyboardType.Decimal,
@@ -867,11 +851,11 @@ private fun ElevationInput(
                 IconButton(
                     onClick = {
                         Pickers.item(
-                            context,
-                            context.getString(R.string.autofill_source),
+                            host,
+                            strings.get(Res.string.autofill_source),
                             listOf(
-                                context.getString(R.string.pref_altimeter_calibration_title),
-                                context.getString(R.string.beacon)
+                                strings.get(Res.string.pref_altimeter_calibration_title),
+                                strings.get(Res.string.beacon)
                             ),
                             0
                         ) { selection ->
@@ -879,7 +863,7 @@ private fun ElevationInput(
                                 0 -> autofillFromAltimeter()
                                 1 -> scope.launch {
                                     val beacon = BeaconPickers.pickBeacon(
-                                        AppHost.from(context),
+                                        host,
                                         sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                     ) { beacons: List<IBeacon> ->
                                         beacons.filterIsInstance<Beacon>().filter { it.elevation != null }
@@ -895,7 +879,7 @@ private fun ElevationInput(
                 ) {
                     Icon(
                         painter = rememberVectorPainter(TrailIcons.Altitude),
-                        contentDescription = stringResource(R.string.elevation),
+                        contentDescription = appString(Res.string.elevation),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -949,7 +933,7 @@ private fun DistanceInput(
             distanceText = it
             publish(text = it)
         },
-        label = stringResource(R.string.distance),
+        label = appString(Res.string.distance),
         position = position,
         keyboardType = KeyboardType.Decimal,
         modifier = Modifier.testTag("distance_away"),
@@ -991,7 +975,7 @@ private fun BearingInput(
     compassBearingText: String,
     hasCompass: Boolean,
     onCompassClick: () -> Unit,
-    onCameraClick: () -> Unit
+    onCameraClick: (() -> Unit)?
 ) {
     ComposeBearingInput(
         bearing = bearing,
