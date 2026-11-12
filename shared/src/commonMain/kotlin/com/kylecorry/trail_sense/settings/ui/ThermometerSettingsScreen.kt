@@ -2,22 +2,27 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
-import android.content.Context
-import androidx.activity.compose.LocalActivity
-import androidx.annotation.StringRes
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.text.appString
+
+import org.jetbrains.compose.resources.StringResource
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import com.kylecorry.trail_sense.shared.sensors.gps.isLocationUnset
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
+import com.kylecorry.trail_sense.shared.views.ErrorBannerState
+import com.kylecorry.trail_sense.shared.views.LocalErrorBanner
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
@@ -29,8 +34,6 @@ import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.TemperatureUnits
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
@@ -39,13 +42,9 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.dialogs.number
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.preferences.onChange
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -58,7 +57,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
-import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.BackfillHistoricalTemperaturesCommand
@@ -68,17 +66,17 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ThermometerSettingsToolScreen() {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
+    val host = AppHost.current()
+    val strings = LocalAppStrings.current
     val navigator = LocalNavigator.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
-    // The error banner lives on the activity; this is the only Activity-only API the page uses.
-    val activity = LocalActivity.current as? MainActivity
+    // The error banner lives in the platform shell; the page only reports to it.
+    val errorBanner = LocalErrorBanner.current
     val viewModel = viewModel {
         ThermometerSettingsViewModel(
-            prefs = UserPreferences(appContext),
-            cache = PreferencesSubsystem.getInstance(appContext).preferences,
+            prefs = getAppService<UserPreferences>(),
+            cache = getAppService<Preferences>(),
             sensorService = getAppService<SensorService>(),
             weather = getAppService<IWeatherSubsystem>(),
             keys = ThermometerPreferenceKeys(
@@ -93,60 +91,59 @@ fun ThermometerSettingsToolScreen() {
             )
         )
     }
-    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
-    val cache = remember(appContext) { PreferencesSubsystem.getInstance(appContext).preferences }
+    val formatService = remember { FormatService.getInstance() }
+    val cache = remember { getAppService<Preferences>() }
 
     // Preference changes are followed while the page is started, as before.
-    DisposableEffect(lifecycleOwner, viewModel) {
-        val changes = cache.onChange.asLiveData()
-        val observer = Observer<String> { viewModel.onPreferenceChanged(it) }
-        changes.observe(lifecycleOwner, observer)
-        onDispose { changes.removeObserver(observer) }
+    LaunchedEffect(lifecycleOwner, viewModel) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            cache.onChange.collect { viewModel.onPreferenceChanged(it) }
+        }
     }
 
     val thermometerSource = viewModel.thermometerSource
     LifecycleResumeEffect(viewModel, thermometerSource) {
         viewModel.startThermometer()
-        if (activity != null) {
-            displayLocationErrors(context, activity, { navigator.navigate(it) }, thermometerSource)
+        if (errorBanner != null) {
+            displayLocationErrors(strings, errorBanner, { navigator.navigate(it) }, thermometerSource)
         }
         onPauseOrDispose {
             viewModel.stopThermometer()
-            activity?.errorBanner?.dismiss(ErrorBannerReason.LocationNotSet)
+            errorBanner?.dismiss(ErrorBannerReason.LocationNotSet)
         }
     }
 
     val sourceOptions = rememberSettingsOptions(
-        R.array.thermometer_source_entries,
-        R.array.thermometer_source_values
+        Res.array.thermometer_source_entries,
+        Res.array.thermometer_source_values
     )
     val source = viewModel.source
     val smoothing = viewModel.smoothing
     val calibration = viewModel.calibration
     val chartData = viewModel.chartData
     val temperature = viewModel.temperature?.let { formatService.formatTemperature(it) }
-        ?: stringResource(R.string.dash)
+        ?: appString(Res.string.dash)
 
-    val sourceTitle = stringResource(R.string.source)
-    val historyTitle = stringResource(R.string.history)
-    val calibrationTitle = stringResource(R.string.calibrate)
-    val aboutTitle = stringResource(R.string.pref_category_about)
-    val noData = stringResource(R.string.no_data)
-    val chartLegend = stringResource(R.string.calibration_chart_legend)
-    val sourceFooter = stringResource(R.string.thermometer_source_explanation)
-    val calibrationFooter = stringResource(R.string.thermometer_calibration_explanation)
+    val sourceTitle = appString(Res.string.source)
+    val historyTitle = appString(Res.string.history)
+    val calibrationTitle = appString(Res.string.calibrate)
+    val aboutTitle = appString(Res.string.pref_category_about)
+    val noData = appString(Res.string.no_data)
+    val chartLegend = appString(Res.string.calibration_chart_legend)
+    val sourceFooter = appString(Res.string.thermometer_source_explanation)
+    val calibrationFooter = appString(Res.string.thermometer_calibration_explanation)
     val thermometerIcon = rememberVectorPainter(TrailIcons.Thermometer)
     val sourceChoices = sourceOptions.map { TrailSenseChoice(it.value, it.label) }
     val entries = viewModel.calibrationEntries(calibration)
 
     TrailSensePage(
-        title = stringResource(R.string.tool_thermometer_title),
+        title = appString(Res.string.tool_thermometer_title),
         onBack = rememberGoBack(),
-        backLabel = stringResource(R.string.back)
+        backLabel = appString(Res.string.back)
     ) {
         item("hero") {
             CalibrationHero(
-                label = stringResource(R.string.temperature),
+                label = appString(Res.string.temperature),
                 value = temperature,
                 icon = thermometerIcon,
                 status = optionLabel(sourceOptions, source)
@@ -179,8 +176,8 @@ fun ThermometerSettingsToolScreen() {
             }
             row { position ->
                 CalibrationSliderRow(
-                    title = stringResource(R.string.smoothing),
-                    summary = stringResource(R.string.smoothing_summary),
+                    title = appString(Res.string.smoothing),
+                    summary = appString(Res.string.smoothing_summary),
                     value = smoothing,
                     valueLabel = formatService.formatPercentage(smoothing / 10f),
                     range = 0..1000,
@@ -194,10 +191,10 @@ fun ThermometerSettingsToolScreen() {
             entries.forEach { entry ->
                 row { position ->
                     SettingsPickerRow(
-                        label = stringResource(entry.title),
+                        label = appString(entry.title),
                         selected = DecimalFormatter.format(entry.value, 1),
                         onClick = {
-                            pickTemperature(context, context.getString(entry.title), entry.value) { value ->
+                            pickTemperature(host, strings, strings.get(entry.title), entry.value) { value ->
                                 viewModel.setCalibration(entry, value)
                             }
                         },
@@ -207,7 +204,7 @@ fun ThermometerSettingsToolScreen() {
             }
             row { position ->
                 SettingsActionRow(
-                    label = stringResource(R.string.reset_calibration),
+                    label = appString(Res.string.reset_calibration),
                     onClick = viewModel::resetCalibration,
                     position = position
                 )
@@ -218,19 +215,19 @@ fun ThermometerSettingsToolScreen() {
             if (viewModel.backfillVisible) {
                 row { position ->
                     SettingsActionRow(
-                        label = stringResource(R.string.pref_backfill_temperatures_title),
+                        label = appString(Res.string.pref_backfill_temperatures_title),
                         onClick = {
                             Alerts.dialog(
-                                context,
-                                context.getString(R.string.pref_backfill_temperatures_title),
-                                context.getString(R.string.pref_backfill_temperatures_description)
+                                host,
+                                strings.get(Res.string.pref_backfill_temperatures_title),
+                                strings.get(Res.string.pref_backfill_temperatures_description)
                             ) {
                                 if (!it) {
                                     scope.launch {
                                         val loading =
-                                            AlertLoadingIndicator(context.getString(R.string.updating))
+                                            AlertLoadingIndicator(strings.get(Res.string.updating))
                                         loading.show()
-                                        BackfillHistoricalTemperaturesCommand.create(appContext).execute()
+                                        BackfillHistoricalTemperaturesCommand().execute()
                                         loading.hide()
                                     }
                                 }
@@ -242,7 +239,7 @@ fun ThermometerSettingsToolScreen() {
             }
             row { position ->
                 SettingsActionRow(
-                    label = stringResource(R.string.tool_user_guide_title),
+                    label = appString(Res.string.tool_user_guide_title),
                     onClick = {
                         UserGuideUtils.showGuide(
                             navigator,
@@ -257,19 +254,20 @@ fun ThermometerSettingsToolScreen() {
 }
 
 private fun pickTemperature(
-    context: Context,
+    host: AppHost,
+    strings: AppStrings,
     title: String,
     current: Float,
     onSelected: (Float) -> Unit
 ) {
     Pickers.number(
-        context,
+        host,
         title,
         null,
         current,
         allowDecimals = true,
         allowNegative = false,
-        hint = context.getString(R.string.temperature)
+        hint = strings.get(Res.string.temperature)
     ) {
         if (it != null) {
             onSelected(it.toFloat())
@@ -278,32 +276,31 @@ private fun pickTemperature(
 }
 
 private fun displayLocationErrors(
-    context: Context,
-    activity: MainActivity,
+    strings: AppStrings,
+    errorBanner: ErrorBannerState,
     navigate: (Route) -> Unit,
     source: ThermometerSource
 ) {
-    if (source == ThermometerSource.Historic && isLocationUnset(context)) {
+    if (source == ThermometerSource.Historic && isLocationUnset()) {
         val error = UserError(
             ErrorBannerReason.LocationNotSet,
-            context.getString(R.string.location_not_set) + "\n" +
-                    context.getString(R.string.for_historic_temperatures),
+            strings.get(Res.string.location_not_set) + "\n" +
+                    strings.get(Res.string.for_historic_temperatures),
             TrailIcons.Satellite,
-            context.getString(R.string.set)
+            strings.get(Res.string.set)
         ) {
-            activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
+            errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
             navigate(Route.CalibrateGps)
         }
-        activity.errorBanner.report(error)
+        errorBanner.report(error)
     } else {
-        activity.errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
+        errorBanner.dismiss(ErrorBannerReason.LocationNotSet)
     }
 }
 
-private fun isLocationUnset(context: Context): Boolean {
-    val diagnostic = GPSDiagnosticScanner()
-    return diagnostic.quickScan(context)
-        .any { it.id == GPSDiagnosticScanner.LOCATION_UNSET }
+private fun isLocationUnset(): Boolean {
+    val gps = getAppService<UserPreferences>().gps
+    return isLocationUnset(gps.locationSource, gps.locationOverride, getAppService<SensorService>().hasLocationPermission())
 }
 
 /** The preference keys the thermometer page reads and watches. */
@@ -331,7 +328,7 @@ internal data class TemperatureCalibrationState(
 )
 
 internal class TemperatureCalibrationEntry(
-    @StringRes val title: Int,
+    val title: StringResource,
     val value: Float,
     val onPicked: (Float) -> Unit
 )
@@ -427,38 +424,38 @@ internal class ThermometerSettingsViewModel(
     fun calibrationEntries(calibration: TemperatureCalibrationState): List<TemperatureCalibrationEntry> {
         return if (temperatureUnits == TemperatureUnits.Celsius) {
             listOf(
-                TemperatureCalibrationEntry(R.string.min_temp_uncalibrated, calibration.minBatteryC) { value ->
+                TemperatureCalibrationEntry(Res.string.min_temp_uncalibrated, calibration.minBatteryC) { value ->
                     prefs.thermometer.minBatteryTemperature = value
                     prefs.thermometer.minBatteryTemperatureF = celsiusToFahrenheit(value)
                 },
-                TemperatureCalibrationEntry(R.string.min_temp_calibrated, calibration.minActualC) { value ->
+                TemperatureCalibrationEntry(Res.string.min_temp_calibrated, calibration.minActualC) { value ->
                     prefs.thermometer.minActualTemperature = value
                     prefs.thermometer.minActualTemperatureF = celsiusToFahrenheit(value)
                 },
-                TemperatureCalibrationEntry(R.string.max_temp_uncalibrated, calibration.maxBatteryC) { value ->
+                TemperatureCalibrationEntry(Res.string.max_temp_uncalibrated, calibration.maxBatteryC) { value ->
                     prefs.thermometer.maxBatteryTemperature = value
                     prefs.thermometer.maxBatteryTemperatureF = celsiusToFahrenheit(value)
                 },
-                TemperatureCalibrationEntry(R.string.max_temp_calibrated, calibration.maxActualC) { value ->
+                TemperatureCalibrationEntry(Res.string.max_temp_calibrated, calibration.maxActualC) { value ->
                     prefs.thermometer.maxActualTemperature = value
                     prefs.thermometer.maxActualTemperatureF = celsiusToFahrenheit(value)
                 }
             )
         } else {
             listOf(
-                TemperatureCalibrationEntry(R.string.min_temp_uncalibrated, calibration.minBatteryF) { value ->
+                TemperatureCalibrationEntry(Res.string.min_temp_uncalibrated, calibration.minBatteryF) { value ->
                     prefs.thermometer.minBatteryTemperatureF = value
                     prefs.thermometer.minBatteryTemperature = fahrenheitToCelsius(value)
                 },
-                TemperatureCalibrationEntry(R.string.min_temp_calibrated, calibration.minActualF) { value ->
+                TemperatureCalibrationEntry(Res.string.min_temp_calibrated, calibration.minActualF) { value ->
                     prefs.thermometer.minActualTemperatureF = value
                     prefs.thermometer.minActualTemperature = fahrenheitToCelsius(value)
                 },
-                TemperatureCalibrationEntry(R.string.max_temp_uncalibrated, calibration.maxBatteryF) { value ->
+                TemperatureCalibrationEntry(Res.string.max_temp_uncalibrated, calibration.maxBatteryF) { value ->
                     prefs.thermometer.maxBatteryTemperatureF = value
                     prefs.thermometer.maxBatteryTemperature = fahrenheitToCelsius(value)
                 },
-                TemperatureCalibrationEntry(R.string.max_temp_calibrated, calibration.maxActualF) { value ->
+                TemperatureCalibrationEntry(Res.string.max_temp_calibrated, calibration.maxActualF) { value ->
                     prefs.thermometer.maxActualTemperatureF = value
                     prefs.thermometer.maxActualTemperature = fahrenheitToCelsius(value)
                 }

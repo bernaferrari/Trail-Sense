@@ -14,18 +14,16 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
-import com.kylecorry.trail_sense.main.persistence.IReadingRepo
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 
-class WeatherRepo private constructor(context: Context) : IReadingRepo<RawWeatherObservation> {
+class WeatherRepo private constructor(context: Context) : IWeatherRepo {
 
     private val pressureDao = AppDatabase.getInstance(context).pressureDao()
 
     private val _readingsChanged =
         MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    /** Emits after readings are added, changed or removed. */
-    val readingsChanged: SharedFlow<Unit> = _readingsChanged
+    override val readingsChanged: SharedFlow<Unit> = _readingsChanged
 
     private fun notifyReadingsChanged() {
         _readingsChanged.tryEmit(Unit)
@@ -64,11 +62,11 @@ class WeatherRepo private constructor(context: Context) : IReadingRepo<RawWeathe
         }
     }
 
-    suspend fun getLast(): Reading<RawWeatherObservation>? = onIO {
+    override suspend fun getLast(): Reading<RawWeatherObservation>? = onIO {
         pressureDao.getLast()?.toWeatherObservation()
     }
 
-    suspend fun addAll(value: List<Reading<RawWeatherObservation>>) = onIO {
+    override suspend fun addAll(value: List<Reading<RawWeatherObservation>>) = onIO {
         val entities = value.map { PressureReadingEntity.from(it) }
         val toAdd = entities.filter { it.id == 0L }
         val toUpdate = entities.filter { it.id != 0L }
@@ -84,7 +82,7 @@ class WeatherRepo private constructor(context: Context) : IReadingRepo<RawWeathe
         notifyReadingsChanged()
     }
 
-    suspend fun replaceAll(value: List<Reading<RawWeatherObservation>>) = onIO {
+    override suspend fun replaceAll(value: List<Reading<RawWeatherObservation>>) = onIO {
         pressureDao.deleteAll()
         addAll(value)
     }

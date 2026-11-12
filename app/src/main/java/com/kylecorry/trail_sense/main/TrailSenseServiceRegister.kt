@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.main
 
+import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
+import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.ILightningRepo
@@ -132,6 +134,7 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(IPathService::class) { PathService.getInstance() }
         DependencyRegistry.addSingleton<IBeaconService>(BeaconService(appContext))
         DependencyRegistry.addSingleton(IWeatherSubsystem::class) { WeatherSubsystem.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IWeatherRepo::class) { WeatherRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(ITideTableRepo::class) { TideTableRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(INoteRepo::class) { NoteRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(ILightningRepo::class) { LightningRepo.getInstance(appContext) }

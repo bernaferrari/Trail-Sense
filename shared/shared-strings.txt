@@ -1019,3 +1019,17 @@ units_metric
 units_metric_example
 weight_entries
 weight_values
+for_historic_temperatures
+max_temp_calibrated
+max_temp_uncalibrated
+min_temp_calibrated
+min_temp_uncalibrated
+pref_backfill_temperatures_description
+pref_backfill_temperatures_title
+pref_category_about
+source
+thermometer_calibration_explanation
+thermometer_source_entries
+thermometer_source_explanation
+thermometer_source_values
+updating
