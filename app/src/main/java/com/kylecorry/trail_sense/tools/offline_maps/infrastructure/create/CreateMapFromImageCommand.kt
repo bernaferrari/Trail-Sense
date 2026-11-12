@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateMapResult
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
 import kotlin.time.Clock
 
 import android.content.Context
@@ -21,8 +23,9 @@ class CreateMapFromImageCommand(
     private val files = FileSubsystem.getInstance(context)
     private val service = getAppService<MapService>()
 
-    suspend fun execute(uri: Uri): PhotoMap? = onIO {
-        val file = files.copyToLocal(uri, "maps") ?: return@onIO null
+    suspend fun execute(uri: Uri): CreateMapResult = onIO {
+        val file = files.copyToLocal(uri, "maps")
+            ?: return@onIO CreateMapResult.Failed(CreateOfflineMapError.UnableToCopy)
         var rotation = 0
         tryOrLog {
             val exif = ExifInterface(file)
@@ -46,7 +49,7 @@ class CreateMapFromImageCommand(
         )
 
         val id = service.add(map)
-        map.copy(id = id)
+        CreateMapResult.Created(map.copy(id = id))
     }
 
 }

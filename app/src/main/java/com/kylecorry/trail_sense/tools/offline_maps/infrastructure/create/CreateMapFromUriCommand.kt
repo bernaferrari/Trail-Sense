@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateMapResult
 import android.content.Context
 import android.net.Uri
 import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
@@ -19,7 +20,7 @@ class CreateMapFromUriCommand(
 
     private val files = FileSubsystem.getInstance(context)
 
-    override suspend fun execute(): IMap? = onIO {
+    override suspend fun execute(): CreateMapResult = onIO {
         val filename = files.getFileName(uri, withExtension = false, fallbackToPathName = false)
         val name = onMain {
             CoroutinePickers.text(
@@ -28,7 +29,7 @@ class CreateMapFromUriCommand(
                 hint = context.getString(R.string.name),
                 default = filename
             )
-        } ?: return@onIO null
+        } ?: return@onIO CreateMapResult.cancelled
 
         try {
             onMain {

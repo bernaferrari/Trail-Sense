@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateMapResult
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
 import kotlin.time.Clock
 
 import android.net.Uri
@@ -24,10 +26,11 @@ class CreateVectorMapFromFileCommand(
     private val service = getAppService<MapService>()
     private val prefs = getAppService<UserPreferences>()
 
-    suspend fun execute(uri: Uri): IMap? = onIO {
-        val type = MapFileTypeUtils.getType(uri) ?: return@onIO null
+    suspend fun execute(uri: Uri): CreateMapResult = onIO {
+        val type = MapFileTypeUtils.getType(uri)
+            ?: return@onIO CreateMapResult.Failed(CreateOfflineMapError.InvalidMapFile)
         val path = if (prefs.photoMaps.copyTrailMapsToAppStorage) {
-            copyToAppStorage(uri, type) ?: return@onIO null
+            copyToAppStorage(uri, type) ?: return@onIO unableToCopy
         } else {
             // Some URIs can't be persisted (ex. shared from another app), so fall back to copying
             val canPersist = tryOrDefault(false) {
@@ -37,7 +40,7 @@ class CreateVectorMapFromFileCommand(
             if (canPersist) {
                 uri.toString()
             } else {
-                copyToAppStorage(uri, type) ?: return@onIO null
+                copyToAppStorage(uri, type) ?: return@onIO unableToCopy
             }
         }
 
@@ -54,7 +57,7 @@ class CreateVectorMapFromFileCommand(
             visible = true
         )
         val id = service.add(mapFile)
-        mapFile.copy(id = id)
+        CreateMapResult.Created(mapFile.copy(id = id))
     }
 
     private suspend fun copyToAppStorage(uri: Uri, type: VectorMapFileType): String? {
@@ -66,6 +69,7 @@ class CreateVectorMapFromFileCommand(
     }
 
     companion object {
+        private val unableToCopy = CreateMapResult.Failed(CreateOfflineMapError.UnableToCopy)
         private const val OFFLINE_MAPS_DIRECTORY = "offline_maps"
     }
 }

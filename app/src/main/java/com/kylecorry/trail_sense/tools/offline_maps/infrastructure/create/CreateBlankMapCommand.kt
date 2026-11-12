@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateMapResult
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.from
 
@@ -99,8 +100,8 @@ class CreateBlankMapCommand(
     private val formatter = FormatService.getInstance(context)
     private val service = getAppService<MapService>()
 
-    override suspend fun execute(): PhotoMap? = onIO {
-        val calibration = getCalibration() ?: return@onIO null
+    override suspend fun execute(): CreateMapResult = onIO {
+        val calibration = getCalibration() ?: return@onIO CreateMapResult.cancelled
 
         onMain {
             loadingIndicator.show()
@@ -113,14 +114,16 @@ class CreateBlankMapCommand(
         files.save(files.getLocalPath(file), bitmap, 10, true)
 
         try {
-            val map = CreateMapFromUriCommand(
+            val result = CreateMapFromUriCommand(
                 context,
                 file.toUri(),
                 loadingIndicator
-            ).execute() as? PhotoMap
+            ).execute()
             DeleteTempFilesCommand(context).execute()
 
-            val calibrated = map?.copy(
+            val map = result.mapOrNull() as? PhotoMap ?: return@onIO result
+
+            val calibrated = map.copy(
                 georeference = map.georeference.copy(
                     isWarpingCompleted = true,
                     rotation = 0f,
@@ -129,9 +132,9 @@ class CreateBlankMapCommand(
                 visible = false
             )
 
-            calibrated?.let { service.add(it) }
+            service.add(calibrated)
 
-            calibrated
+            CreateMapResult.Created(calibrated)
         } finally {
             onMain {
                 loadingIndicator.hide()

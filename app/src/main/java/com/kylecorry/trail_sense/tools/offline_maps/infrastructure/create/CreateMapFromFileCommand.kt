@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateMapResult
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
+import com.kylecorry.luna.result.errorOrNull
+import com.kylecorry.trail_sense.shared.io.UriPickerError
 import android.content.Context
 import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
 import com.kylecorry.luna.concurrency.onIO
@@ -12,11 +16,19 @@ class CreateMapFromFileCommand(
     private val uriPicker: UriPicker,
     private val loadingIndicator: ILoadingIndicator
 ) : ICreateMapCommand {
-    override suspend fun execute(): IMap? = onIO {
-        val uri = uriPicker.open(
+    override suspend fun execute(): CreateMapResult = onIO {
+        val picked = uriPicker.open(
             listOf("image/*", "application/pdf", "application/octet-stream"),
             requirePersistentAccess = true
-        ).getOrNull() ?: return@onIO null
+        )
+        val uri = picked.getOrNull()
+            ?: return@onIO CreateMapResult.Failed(
+                if (picked.errorOrNull() == UriPickerError.AccessDenied) {
+                    CreateOfflineMapError.AccessDenied
+                } else {
+                    CreateOfflineMapError.Cancelled
+                }
+            )
         CreateMapFromUriCommand(context, uri, loadingIndicator).execute()
     }
 }

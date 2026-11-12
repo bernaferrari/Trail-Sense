@@ -334,7 +334,6 @@
     <string name="map_auto_rotated">تم تعديل دوران الخريطة بالمعايرة</string>
     <string name="importing_map">استيراد الخريطة</string>
     <string name="scanning_image">مسح الصورة</string>
-    <string name="error_importing_map">خطأ في استيراد الخريطة</string>
     <string name="import_gpx">استيراد GPX</string>
     <string name="sleep_timer">مؤقت النوم</string>
     <string name="actual_frequency_disclaimer">التكرار الفعلي قد يختلف حيث أن بعض الأجهزة لديها قيود في الخلفية.</string>

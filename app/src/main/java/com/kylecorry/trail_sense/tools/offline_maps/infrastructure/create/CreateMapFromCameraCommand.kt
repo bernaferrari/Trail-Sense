@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateMapResult
 import android.content.Context
 import androidx.core.net.toUri
 import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
@@ -16,8 +17,8 @@ class CreateMapFromCameraCommand(
     private val effects: ScreenEffects,
     private val loadingIndicator: ILoadingIndicator
 ) : ICreateMapCommand {
-    override suspend fun execute(): IMap? {
-        val uri = onMain { takePhoto() }?.toUri() ?: return null
+    override suspend fun execute(): CreateMapResult {
+        val uri = onMain { takePhoto() }?.toUri() ?: return CreateMapResult.cancelled
         return onIO {
             onMain {
                 loadingIndicator.show()

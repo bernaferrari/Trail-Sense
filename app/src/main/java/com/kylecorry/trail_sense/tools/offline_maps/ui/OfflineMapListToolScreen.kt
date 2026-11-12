@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui
 
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateMapResult
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.foundation.clickable
@@ -169,16 +171,20 @@ fun OfflineMapListToolScreen(
             try {
                 viewModel.isCreateEnabled = false
 
-                val map = command.execute()?.let {
-                    when (it) {
-                        is PhotoMap -> it.copy(parentId = viewModel.rootId)
-                        is VectorMap -> it.copy(parentId = viewModel.rootId)
-                        else -> null
-                    }
+                val result = command.execute()
+                val map = when (val created = result.mapOrNull()) {
+                    is PhotoMap -> created.copy(parentId = viewModel.rootId)
+                    is VectorMap -> created.copy(parentId = viewModel.rootId)
+                    else -> null
                 }
 
                 if (map == null) {
-                    effects.showMessage(context.getString(R.string.error_importing_map))
+                    val error = (result as? CreateMapResult.Failed)?.error
+                        ?: CreateOfflineMapError.InvalidMapFile
+                    // Cancelling isn't an error, so it gets no message
+                    createMapErrorMessage(error)?.let {
+                        effects.showMessage(context.getString(it))
+                    }
                     return@launch
                 }
 

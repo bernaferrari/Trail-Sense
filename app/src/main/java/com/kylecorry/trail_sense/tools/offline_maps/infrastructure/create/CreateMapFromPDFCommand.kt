@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateMapResult
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
 import kotlin.time.Clock
 
 import android.content.Context
@@ -32,7 +34,7 @@ class CreateMapFromPDFCommand(
     private val files = FileSubsystem.getInstance(context)
     private val service = getAppService<MapService>()
 
-    suspend fun execute(uri: Uri): PhotoMap? = onIO {
+    suspend fun execute(uri: Uri): CreateMapResult = onIO {
         val uuid = UUID.randomUUID().toString()
         val filename = "maps/$uuid.webp"
         val calibrationPoints = mutableListOf<MapCalibrationPoint>()
@@ -44,7 +46,7 @@ class CreateMapFromPDFCommand(
         }
         val maxSize = 2048
         val (bp, scale) = PDFRenderer().toBitmap(context, uri, maxSize = maxSize)
-            ?: return@onIO null
+            ?: return@onIO CreateMapResult.Failed(CreateOfflineMapError.InvalidMapFile)
 
         if (metadata != null && metadata.points.size >= 4) {
 
@@ -68,7 +70,7 @@ class CreateMapFromPDFCommand(
         try {
             files.save(filename, bp, recycleOnSave = true)
         } catch (e: IOException) {
-            return@onIO null
+            return@onIO CreateMapResult.Failed(CreateOfflineMapError.UnableToCopy)
         }
 
         if (shouldCopyAsPdf) {
@@ -106,7 +108,7 @@ class CreateMapFromPDFCommand(
         )
 
         val id = service.add(map)
-        map.copy(id = id)
+        CreateMapResult.Created(map.copy(id = id))
     }
 
 }
