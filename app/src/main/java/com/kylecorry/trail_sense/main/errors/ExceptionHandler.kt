@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.main.errors
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import com.kylecorry.trail_sense.shared.copy
 
 import com.kylecorry.andromeda.core.system.Intents
@@ -18,7 +21,7 @@ object ExceptionHandler {
         TrailSenseExceptionHandler.error?.let {
             getAppService<Logger>().error("Trail Sense", it)
             showCrashReportDialog(
-                activity,
+                AppHost.from(activity),
                 log = it,
                 onCopy = {
                     com.kylecorry.andromeda.clipboard.Clipboard.copy(activity, it, activity.getString(R.string.copied_to_clipboard_toast))
@@ -40,7 +43,7 @@ object ExceptionHandler {
                     .invoke(null, "debug.ts.crashpreview") == "1"
             }.getOrDefault(false)
         ) {
-            showCrashReportDialog(activity, "java.lang.IllegalStateException: sample\n\tat com.example.Sample.run(Sample.kt:1)", onCopy = {}, onSend = {})
+            showCrashReportDialog(AppHost.from(activity), "java.lang.IllegalStateException: sample\n\tat com.example.Sample.run(Sample.kt:1)", onCopy = {}, onSend = {})
         }
 
         TrailSenseExceptionHandler.error = null

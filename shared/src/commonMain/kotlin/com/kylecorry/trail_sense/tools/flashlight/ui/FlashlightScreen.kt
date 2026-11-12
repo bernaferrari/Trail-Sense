@@ -3,6 +3,15 @@
 
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.disclaimer
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Clock
 
@@ -50,9 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -61,13 +68,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.haptics.IHapticSubsystem
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
@@ -80,7 +83,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSensePressScale
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
-import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
+import com.kylecorry.trail_sense.tools.flashlight.infrastructure.IFlashlightSubsystem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import androidx.compose.animation.core.animateFloatAsState
@@ -93,10 +96,9 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.graphics.shapes.Morph
-import androidx.graphics.shapes.toPath
+import com.kylecorry.trail_sense.shared.views.compose.toComposePath
 import com.kylecorry.trail_sense.shared.icons.trail.TorchOff
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -107,13 +109,12 @@ fun FlashlightScreen(
     onOpenScreenFlashlight: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val haptics = remember { HapticSubsystem.getInstance(context) }
-    val flashlight = remember { FlashlightSubsystem.getInstance(context) }
-    val cache = remember { PreferencesSubsystem.getInstance(context).preferences }
-    val prefs = remember { UserPreferences(context) }
-    val formatter = remember { FormatService.getInstance(context) }
+    val haptics = remember { getAppService<IHapticSubsystem>() }
+    val flashlight = remember { getAppService<IFlashlightSubsystem>() }
+    val cache = remember { getAppService<Preferences>() }
+    val prefs = remember { getAppService<UserPreferences>() }
+    val formatter = remember { FormatService.getInstance() }
     val hasFlashlight = remember { flashlight.isAvailable() }
     val maxBrightness = remember { flashlight.brightnessLevels }
     val hasBrightnessControl = remember(maxBrightness) { maxBrightness > 0 }
@@ -188,10 +189,9 @@ fun FlashlightScreen(
     fun onDialSelectionChanged(selection: Int) {
         val isStrobe = selection in 1..10
         if (isStrobe) {
-            CustomUiUtils.disclaimer(
-                context,
-                context.getString(R.string.strobe_warning_title),
-                context.getString(R.string.strobe_warning_content),
+            Alerts.disclaimer(AppHost.current(),
+                getAppService<AppStrings>().get(Res.string.strobe_warning_title),
+                getAppService<AppStrings>().get(Res.string.strobe_warning_content),
                 PreferenceKeys.fineWithStrobe,
                 considerShownIfCancelled = false,
             ) { _, agreed ->
@@ -267,7 +267,7 @@ fun FlashlightScreen(
     // One question: is the light on?
     // The same medium title as the family's other tools.
     TrailSenseInstrumentScaffold(
-        title = stringResource(R.string.flashlight_title),
+        title = appString(Res.string.flashlight_title),
         largeTitle = true,
         modifier = modifier
     ) {
@@ -307,7 +307,7 @@ fun FlashlightScreen(
                 )
                 // Always laid out so the controls below don't jump when the timer appears.
                 Text(
-                    text = timerText?.let { stringResource(R.string.flashlight_turns_off_in, it) } ?: " ",
+                    text = timerText?.let { appString(Res.string.flashlight_turns_off_in, it) } ?: " ",
                     style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -362,27 +362,26 @@ private fun FlashlightControls(
     onDialSelectionChanged: (Int) -> Unit,
     onOpenScreenFlashlight: () -> Unit
 ) {
-    val context = LocalContext.current
-    val haptics = remember { HapticSubsystem.getInstance(context) }
+    val haptics = remember { getAppService<IHapticSubsystem>() }
     val kind = selectedMode.kind()
     val choices = listOf(
         TrailSenseChoice(
             FlashlightModeKind.Torch,
-            stringResource(R.string.flashlight_mode_steady),
+            appString(Res.string.flashlight_mode_steady),
             TrailIcons.TorchOn
         ),
         TrailSenseChoice(
             FlashlightModeKind.Strobe,
-            stringResource(R.string.flashlight_mode_strobe),
+            appString(Res.string.flashlight_mode_strobe),
             TrailIcons.Strobe
         ),
         TrailSenseChoice(
             FlashlightModeKind.Sos,
-            stringResource(R.string.sos),
+            appString(Res.string.sos),
             TrailIcons.WhistleSos
         )
     )
-    val modeLabel = stringResource(R.string.flashlight_mode)
+    val modeLabel = appString(Res.string.flashlight_mode)
 
     // The mode is the one choice row, on the page itself (not boxed in a card); the rest is one grouped list.
     TrailSenseConnectedChoice(
@@ -412,7 +411,7 @@ private fun FlashlightControls(
                     contentPadding = PaddingValues(vertical = TrailSenseSpacing.md)
                 ) {
                     Text(
-                        text = stringResource(R.string.flashlight_strobe_rate),
+                        text = appString(Res.string.flashlight_strobe_rate),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(
                             horizontal = TrailSenseSpacing.lg,
@@ -439,7 +438,7 @@ private fun FlashlightControls(
                     )
                 ) {
                     Text(
-                        text = stringResource(R.string.brightness),
+                        text = appString(Res.string.brightness),
                         style = MaterialTheme.typography.titleMedium
                     )
                     BrightnessSlider(
@@ -455,8 +454,8 @@ private fun FlashlightControls(
         }
         row { position ->
             TrailSenseListItem(
-                title = stringResource(R.string.flashlight_use_screen),
-                subtitle = stringResource(R.string.flashlight_use_screen_summary),
+                title = appString(Res.string.flashlight_use_screen),
+                subtitle = appString(Res.string.flashlight_use_screen_summary),
                 icon = rememberVectorPainter(TrailIcons.ScreenFlashlight),
                 position = position,
                 onClick = onOpenScreenFlashlight,
@@ -532,7 +531,7 @@ private fun PowerToggle(
     val glowColor = scheme.primary
     val morph = remember { Morph(MaterialShapes.Cookie12Sided, MaterialShapes.VerySunny) }
     val shape = remember(bloom) { MorphShape(morph, bloom) }
-    val stateText = stringResource(if (on) R.string.on else R.string.off)
+    val stateText = appString(if (on) Res.string.on else Res.string.off)
 
     Box(
         modifier = modifier
@@ -571,7 +570,7 @@ private fun PowerToggle(
         ) {}
         Icon(
             painter = rememberVectorPainter(TrailIcons.TorchOn),
-            contentDescription = stringResource(R.string.flashlight_title),
+            contentDescription = appString(Res.string.flashlight_title),
             modifier = Modifier.size(88.dp),
             tint = if (on) content else content.copy(alpha = 0.6f)
         )
@@ -585,10 +584,7 @@ private class MorphShape(private val morph: Morph, private val progress: Float) 
         layoutDirection: androidx.compose.ui.unit.LayoutDirection,
         density: androidx.compose.ui.unit.Density
     ): Outline {
-        val path = morph.toPath(progress)
-        val matrix = android.graphics.Matrix().apply { setScale(size.width, size.height) }
-        path.transform(matrix)
-        return Outline.Generic(path.asComposePath())
+        return Outline.Generic(morph.toComposePath(progress, size.width, size.height))
     }
 }
 
@@ -598,8 +594,8 @@ private fun NoFlashlight(onOpenScreenFlashlight: () -> Unit) {
     TrailSenseEmptyState(
         icon = TrailIcons.TorchOff,
         // The headline says what's missing; the button says what to do instead, so no sentence repeats it.
-        title = stringResource(R.string.flashlight_unavailable_title),
-        actionLabel = stringResource(R.string.flashlight_use_screen_action),
+        title = appString(Res.string.flashlight_unavailable_title),
+        actionLabel = appString(Res.string.flashlight_use_screen_action),
         actionIcon = TrailIcons.ScreenFlashlight,
         onAction = onOpenScreenFlashlight,
         actionModifier = Modifier.testTag("screen_flashlight_btn"),
@@ -632,8 +628,7 @@ private fun StrobeFrequencies(
     onSelectionChanged: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val haptics = remember { HapticSubsystem.getInstance(context) }
+    val haptics = remember { getAppService<IHapticSubsystem>() }
     val options = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "200")
     val selectedIndex = getDialIndex(selectedMode)
     val listState = rememberLazyListState()
@@ -770,9 +765,8 @@ private fun getStrobeMode(frequency: Int): FlashlightMode {
 /** The Flashlight tool: while it is shown, the volume buttons turn on the mode picked here. */
 @Composable
 fun FlashlightToolScreen(offerController: @Composable (Any) -> Unit = {}) {
-    val context = LocalContext.current
     val navigator = LocalNavigator.current
-    val toggle = remember(context) { FlashlightToggle(context) }
+    val toggle = remember { FlashlightToggle() }
     offerController(toggle)
     FlashlightScreen(
         initialSelectedMode = toggle.selectedMode,

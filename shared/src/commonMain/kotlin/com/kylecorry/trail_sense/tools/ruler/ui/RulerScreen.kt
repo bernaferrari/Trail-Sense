@@ -2,7 +2,15 @@
 
 package com.kylecorry.trail_sense.tools.ruler.ui
 
-import android.graphics.Paint
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -34,25 +42,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.core.system.Screen
+import com.kylecorry.trail_sense.shared.views.compose.rememberScreenYDpi
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.science.geography.Geography
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
@@ -67,7 +70,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -85,10 +87,9 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 fun RulerScreen(
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatService = remember { FormatService.getInstance(context) }
-    val prefs = remember { UserPreferences(context) }
-    val yDpi = remember { Screen.ydpi(context) }
+    val formatService = remember { FormatService.getInstance() }
+    val prefs = remember { getAppService<UserPreferences>() }
+    val yDpi = rememberScreenYDpi()
     val rulerScale = remember { prefs.ruler.rulerScale }
     val isRulerFlipped = remember { prefs.ruler.rulerFlipped }
     var rulerUnits by remember {
@@ -131,14 +132,14 @@ fun RulerScreen(
             formatService
         )
     }
-    val mapDistance = mapDistanceValue?.let { context.getString(R.string.map_distance, it) }.orEmpty()
+    val mapDistance = mapDistanceValue?.let { getAppService<AppStrings>().get(Res.string.map_distance, it) }.orEmpty()
     val scaleSummary = remember(scaleMode, fractionalFrom, fractionalTo, verbalFrom, verbalTo) {
         formatScale(scaleMode, fractionalFrom, fractionalTo, verbalFrom, verbalTo, formatService)
     }
     var isEditingScale by remember { mutableStateOf(false) }
     val zeroLength = remember(rulerUnits) { formatService.formatDistance(Distance.from(0f, rulerUnits), 0, false) }
 
-    val tapHint = stringResource(R.string.ruler_tap_hint)
+    val tapHint = appString(Res.string.ruler_tap_hint)
     val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
     val cmLabel = getUnitText(DistanceUnits.Centimeters)
     val inLabel = getUnitText(DistanceUnits.Inches)
@@ -147,7 +148,7 @@ fun RulerScreen(
     // The ruler runs down the screen's edge and is the live object. Beside it: the length in display type with the
     // units under it, then the map scale as two quiet rows (the scale, and the length on the ground).
     TrailSenseInstrumentScaffold(
-        title = stringResource(R.string.tool_ruler_title),
+        title = appString(Res.string.tool_ruler_title),
         modifier = modifier
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
@@ -211,13 +212,13 @@ fun RulerScreen(
                 // The map scale as two quiet rows, not a form: the scale (tap to set it in a sheet) and what the
                 // measured length is on the ground.
                 TrailSenseRowGroup(
-                    title = stringResource(R.string.map_scale_title),
+                    title = appString(Res.string.map_scale_title),
                     modifier = Modifier.testTag("map_scale_title")
                 ) {
                     row { position ->
                         TrailSenseListItem(
-                            title = stringResource(R.string.ruler_scale),
-                            subtitle = scaleSummary ?: stringResource(R.string.ruler_scale_not_set),
+                            title = appString(Res.string.ruler_scale),
+                            subtitle = scaleSummary ?: appString(Res.string.ruler_scale_not_set),
                             position = position,
                             onClick = { isEditingScale = true },
                             trailing = {
@@ -232,10 +233,10 @@ fun RulerScreen(
                     }
                     row { position ->
                         TrailSenseListItem(
-                            title = stringResource(R.string.ruler_on_the_ground),
+                            title = appString(Res.string.ruler_on_the_ground),
                             subtitle = if (mapDistanceValue == null) {
-                                stringResource(
-                                    if (currentDistance == null) R.string.ruler_measure_first else R.string.ruler_enter_scale
+                                appString(
+                                    if (currentDistance == null) Res.string.ruler_measure_first else Res.string.ruler_enter_scale
                                 )
                             } else {
                                 null
@@ -302,13 +303,13 @@ private fun MapScaleSheet(
 ) {
     TrailSenseSheet(
         onDismissRequest = onDismiss,
-        title = stringResource(R.string.map_scale_title)
+        title = appString(Res.string.map_scale_title)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
             TrailSenseConnectedChoice(
                 options = listOf(
-                    TrailSenseChoice(MapScaleMode.Fractional, stringResource(R.string.map_scale_ratio)),
-                    TrailSenseChoice(MapScaleMode.Relational, stringResource(R.string.map_scale_verbal))
+                    TrailSenseChoice(MapScaleMode.Fractional, appString(Res.string.map_scale_ratio)),
+                    TrailSenseChoice(MapScaleMode.Relational, appString(Res.string.map_scale_verbal))
                 ),
                 selected = scaleMode,
                 onSelect = onScaleModeChange,
@@ -344,13 +345,13 @@ private fun MapScaleSheet(
             }
             Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
                 TrailSenseButton(
-                    text = stringResource(R.string.reset),
+                    text = appString(Res.string.reset),
                     onClick = onReset,
                     style = TrailSenseButtonStyle.Tonal,
                     modifier = Modifier.weight(1f)
                 )
                 TrailSenseButton(
-                    text = stringResource(R.string.done),
+                    text = appString(Res.string.done),
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f)
                 )
@@ -384,7 +385,7 @@ private fun formatScale(
 }
 
 @Composable
-internal fun RulerCanvas(
+fun RulerCanvas(
     rulerUnits: DistanceUnits,
     highlight: Distance?,
     yDpi: Float,
@@ -396,6 +397,7 @@ internal fun RulerCanvas(
     val lineColor = MaterialTheme.colorScheme.onPrimaryContainer
     val highlightColor = MaterialTheme.colorScheme.primary
     val surfaceColor = MaterialTheme.colorScheme.primaryContainer
+    val textMeasurer = rememberTextMeasurer()
     Canvas(
         modifier = modifier
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp))
@@ -506,6 +508,7 @@ internal fun RulerCanvas(
         }
 
         drawRulerLabels(
+            measurer = textMeasurer,
             rulerHeight = rulerHeight,
             spacing = Distance.from(1f, rulerHeight.units),
             lineColor = lineColor,
@@ -557,6 +560,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRulerLines(
 }
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRulerLabels(
+    measurer: TextMeasurer,
     rulerHeight: Distance,
     spacing: Distance,
     lineColor: Color,
@@ -565,25 +569,22 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawRulerLabels(
     lineWidth: Float
 ) {
     val convertedSpacing = spacing.convertTo(rulerHeight.units)
-    val paint = Paint().apply {
-        color = android.graphics.Color.argb(
-            (lineColor.alpha * 255).toInt(),
-            (lineColor.red * 255).toInt(),
-            (lineColor.green * 255).toInt(),
-            (lineColor.blue * 255).toInt()
-        )
-        textSize = 15.dp.toPx()
-        isAntiAlias = true
-        typeface = android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD)
+    val textSize = 15.dp.toPx()
+    val style = TextStyle(
+        color = lineColor,
+        fontSize = textSize.toSp(),
+        fontWeight = FontWeight.Bold,
         fontFeatureSettings = "tnum"
-    }
+    )
     var position = Distance.from(0f, rulerHeight.units)
     while (position < rulerHeight) {
         val label = position.value.toInt().toString()
         val y = getRulerPosition(position, size.height, rulerHeight, flipped, offset)
-        drawIntoCanvas {
-            it.nativeCanvas.drawText(label, lineWidth + 6.dp.toPx(), y + paint.textSize / 2.8f, paint)
-        }
+        val layout = measurer.measure(label, style)
+        drawText(
+            layout,
+            topLeft = Offset(lineWidth + 6.dp.toPx(), y + textSize / 2.8f - layout.firstBaseline)
+        )
         position = Distance.from(position.value + convertedSpacing.value, position.units)
     }
 }
@@ -645,7 +646,7 @@ private fun FractionalScaleInput(
         TrailSenseInputField(
             value = from,
             onValueChange = onFromChanged,
-            label = stringResource(R.string.distance_from),
+            label = appString(Res.string.distance_from),
             position = TrailSenseGroupPosition.Single,
             modifier = Modifier
                 .weight(1f)
@@ -654,11 +655,11 @@ private fun FractionalScaleInput(
         TrailSenseInputField(
             value = to,
             onValueChange = onToChanged,
-            label = stringResource(R.string.distance_to),
+            label = appString(Res.string.distance_to),
             position = TrailSenseGroupPosition.Single,
             leadingIcon = {
                 Text(
-                    text = stringResource(R.string.map_fractional_separator),
+                    text = appString(Res.string.map_fractional_separator),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.testTag("textView12")
@@ -686,7 +687,7 @@ private fun VerbalScaleInput(
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
     ) {
         DistanceAmountInput(
-            label = stringResource(R.string.distance_from),
+            label = appString(Res.string.distance_from),
             value = from,
             units = formatService.sortDistanceUnits(DistanceUtils.rulerDistanceUnits),
             defaultUnit = DistanceUnits.Centimeters,
@@ -695,7 +696,7 @@ private fun VerbalScaleInput(
             modifier = Modifier.testTag("verbal_map_scale_from")
         )
         DistanceAmountInput(
-            label = stringResource(R.string.distance_to),
+            label = appString(Res.string.distance_to),
             value = to,
             units = formatService.sortDistanceUnits(DistanceUtils.hikingDistanceUnits),
             defaultUnit = DistanceUnits.Meters,
@@ -716,7 +717,7 @@ private fun DistanceAmountInput(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
-    val formatService = FormatService.getInstance(LocalContext.current)
+    val formatService = FormatService.getInstance()
     var amount by remember {
         mutableStateOf(value?.let { DecimalFormatter.format(it.value, 5, false) }.orEmpty())
     }
@@ -738,7 +739,7 @@ private fun DistanceAmountInput(
 
     if (isPickingUnit) {
         TrailSenseOptionsDialog(
-            title = stringResource(R.string.units),
+            title = appString(Res.string.units),
             options = units.map { formatService.getDistanceUnitName(it) to it },
             selected = unit,
             onSelect = {
@@ -848,11 +849,11 @@ private fun getRulerDistance(
 
 @Composable
 private fun getUnitText(units: DistanceUnits): String {
-    return stringResource(
+    return appString(
         if (units == DistanceUnits.Centimeters) {
-            R.string.unit_centimeters_abbreviation
+            Res.string.unit_centimeters_abbreviation
         } else {
-            R.string.unit_inches_abbreviation
+            Res.string.unit_inches_abbreviation
         }
     )
 }

@@ -15,7 +15,7 @@ class FlashlightToggleVolumeAction(
 ) : VolumeAction {
 
     override fun onButtonPress(isUpButton: Boolean): Boolean {
-        val controller = flashlightController ?: FlashlightToggle(context)
+        val controller = flashlightController ?: FlashlightToggle()
         controller.toggle()
         return true
     }

@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.survival_guide.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -17,7 +20,7 @@ class QuickActionSurvivalGuide(btn: QuickActionButtonView, host: AndroidDestinat
 
     override fun onClick() {
         super.onClick()
-        showSurvivalGuideQuickSearch(host.context, host.navigator)
+        showSurvivalGuideQuickSearch(AppHost.from(host.context), host.navigator)
     }
 
     override fun onLongClick(): Boolean {

@@ -39,6 +39,7 @@ import com.kylecorry.trail_sense.shared.device.DeviceProfile
 import com.kylecorry.trail_sense.shared.device.DeviceSubsystem
 import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
+import com.kylecorry.trail_sense.shared.haptics.IHapticSubsystem
 import com.kylecorry.trail_sense.shared.images.AndroidBundledImages
 import com.kylecorry.trail_sense.shared.images.BundledImages
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
@@ -125,6 +126,7 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(DeviceSubsystem(appContext))
         DependencyRegistry.addSingleton(PluginSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton(HapticSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton<IHapticSubsystem>(HapticSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton(IPathRepo::class) { PathRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(TideHarmonicsSource::class) { AndroidTideHarmonicsSource(appContext) }
         DependencyRegistry.addSingleton(IPathService::class) { PathService.getInstance() }

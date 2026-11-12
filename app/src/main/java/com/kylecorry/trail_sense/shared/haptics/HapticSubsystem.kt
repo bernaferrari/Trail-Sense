@@ -9,27 +9,27 @@ import com.kylecorry.andromeda.haptics.HapticFeedbackType
 import com.kylecorry.andromeda.haptics.deviceHaptics
 import kotlin.time.Duration
 
-class HapticSubsystem private constructor(context: Context) {
+class HapticSubsystem private constructor(context: Context) : IHapticSubsystem {
 
     private val motor = deviceHaptics()
 
-    fun off() {
+    override fun off() {
         motor.off()
     }
 
-    fun tick() {
+    override fun tick() {
         motor.feedback(HapticFeedbackType.Tick)
     }
 
-    fun interval(on: Duration, off: Duration = on) {
+    override fun interval(on: Duration, off: Duration) {
         motor.interval(on, off)
     }
 
-    fun click() {
+    override fun click() {
         motor.feedback(HapticFeedbackType.Click)
     }
 
-    fun alert() {
+    override fun alert() {
         motor.once(1.seconds)
     }
 

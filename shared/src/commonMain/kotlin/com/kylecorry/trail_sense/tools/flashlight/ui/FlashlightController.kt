@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
-import android.content.Context
-import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.haptics.IHapticSubsystem
 import com.kylecorry.trail_sense.tools.flashlight.domain.FlashlightMode
-import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
+import com.kylecorry.trail_sense.tools.flashlight.infrastructure.IFlashlightSubsystem
 
 interface FlashlightController {
     fun toggle()
@@ -11,11 +11,10 @@ interface FlashlightController {
 
 /** Turns the flashlight off when it is on, otherwise on in [selectedMode], with a click. */
 class FlashlightToggle(
-    context: Context,
     var selectedMode: FlashlightMode = FlashlightMode.Torch
 ) : FlashlightController {
-    private val flashlight = FlashlightSubsystem.getInstance(context)
-    private val haptics = HapticSubsystem.getInstance(context)
+    private val flashlight = getAppService<IFlashlightSubsystem>()
+    private val haptics = getAppService<IHapticSubsystem>()
 
     override fun toggle() {
         haptics.click()

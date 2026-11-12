@@ -1,6 +1,11 @@
 package com.kylecorry.trail_sense.main.errors
 
-import android.content.Context
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.text.appString
+
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -37,12 +42,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.dialogs.showComposeDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
@@ -52,13 +55,13 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
  * button, never dumped into the message.
  */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
-internal fun showCrashReportDialog(
-    context: Context,
+fun showCrashReportDialog(
+    host: AppHost,
     log: String,
     onCopy: () -> Unit,
     onSend: () -> Unit
 ) {
-    showComposeDialog(context) { dismiss ->
+    showComposeDialog(host) { dismiss ->
         var expanded by remember { mutableStateOf(false) }
         val chevron by animateFloatAsState(if (expanded) 180f else 0f, label = "chevron")
         val scheme = MaterialTheme.colorScheme
@@ -79,13 +82,13 @@ internal fun showCrashReportDialog(
                 }
             }
             Text(
-                stringResource(R.string.crash_title),
+                appString(Res.string.crash_title),
                 style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = TrailSenseSpacing.lg)
             )
             Text(
-                stringResource(R.string.crash_message),
+                appString(Res.string.crash_message),
                 style = MaterialTheme.typography.bodyMedium,
                 color = scheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -96,12 +99,12 @@ internal fun showCrashReportDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(onClick = { expanded = !expanded }) {
-                    Text(stringResource(R.string.crash_details))
+                    Text(appString(Res.string.crash_details))
                     Icon(Icons.Rounded.ExpandMore, contentDescription = null, modifier = Modifier.rotate(chevron))
                 }
                 AnimatedVisibility(expanded) {
                     IconButton(onClick = onCopy) {
-                        Icon(Icons.Rounded.ContentCopy, contentDescription = stringResource(android.R.string.copy), tint = scheme.primary)
+                        Icon(Icons.Rounded.ContentCopy, contentDescription = systemString(SystemString.Copy), tint = scheme.primary)
                     }
                 }
             }
@@ -132,11 +135,11 @@ internal fun showCrashReportDialog(
                 .padding(TrailSenseSpacing.lg),
             horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm, Alignment.End)
         ) {
-            TextButton(onClick = dismiss) { Text(stringResource(R.string.crash_not_now)) }
+            TextButton(onClick = dismiss) { Text(appString(Res.string.crash_not_now)) }
             Button(onClick = {
                 dismiss()
                 onSend()
-            }) { Text(stringResource(R.string.crash_send_report)) }
+            }) { Text(appString(Res.string.crash_send_report)) }
         }
     }
 }

@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.convert.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.tools.convert.ui.showConvertQuickSheet
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -17,7 +20,7 @@ class QuickActionConvert(btn: QuickActionButtonView, host: AndroidDestinationHos
 
     override fun onClick() {
         super.onClick()
-        showConvertQuickSheet(host.context)
+        showConvertQuickSheet(AppHost.from(host.context))
     }
 
     override fun onLongClick(): Boolean {
