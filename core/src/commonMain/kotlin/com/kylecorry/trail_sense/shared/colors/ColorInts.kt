@@ -25,4 +25,19 @@ object ColorInts {
     fun rgb(red: Int, green: Int, blue: Int): Int {
         return argb(255, red, green, blue)
     }
+
+    /**
+     * Mixes [color1] and [color2] channel by channel; [ratio] 0 is all [color1] and 1 is all [color2].
+     * Matches AndroidX ColorUtils.blendARGB, truncating each channel.
+     */
+    @ColorInt
+    fun blend(@ColorInt color1: Int, @ColorInt color2: Int, ratio: Float): Int {
+        val inverse = 1 - ratio
+        fun mix(shift: Int): Int {
+            val a = (color1 ushr shift) and 0xFF
+            val b = (color2 ushr shift) and 0xFF
+            return (a * inverse + b * ratio).toInt()
+        }
+        return argb(mix(24), mix(16), mix(8), mix(0))
+    }
 }

@@ -870,8 +870,7 @@ private class AugmentedRealityController(
 
     private fun displayAccuracyTips() {
         val alerter = ImproveAccuracyAlerter(
-            context,
-            context.getString(R.string.ar_calibration_instructions_hint)
+            customMessage = context.getString(R.string.ar_calibration_instructions_hint)
         )
         alerter.alert(listOf(views.arView.gps, views.arView.geomagneticOrientationSensor))
     }

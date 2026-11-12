@@ -138,7 +138,7 @@ fun NavigatorToolScreen(
     }
     val views = display.views
     val errors = remember(context) {
-        NavigatorUserErrors(context, activity.errorBanner, appNavigator) {
+        NavigatorUserErrors(activity.errorBanner, appNavigator) {
             appNavigator.navigate(Route.CalibrateCompass)
         }
     }
@@ -168,7 +168,7 @@ fun NavigatorToolScreen(
         }
         // As upstream: a sensor's status opens the tips for improving accuracy
         views.accuracyView.setOnClickListener {
-            ImproveAccuracyAlerter(context).alert(views.accuracyView.getSensors())
+            ImproveAccuracyAlerter().alert(views.accuracyView.getSensors())
         }
         views.radarCompassMap.setOnSingleTapListener { viewModel.toggleDestinationBearing() }
         views.radarCompassMap.setOnLongPressListener {

@@ -312,7 +312,7 @@ internal fun createNavigatorViews(
         alpha = 0.6f
     }
 
-    val navigationSheet = NavigationSheetView(context).apply {
+    val navigationSheet = NavigationSheetView().apply {
         this.onOpenBeacon = onOpenBeacon
     }
 

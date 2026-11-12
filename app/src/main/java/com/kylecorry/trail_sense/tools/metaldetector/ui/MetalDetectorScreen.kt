@@ -167,7 +167,7 @@ fun MetalDetectorToolScreen(
         showSinglePoleDirection = viewModel.showSinglePoleDirection,
         metalDirectionSensitivity = viewModel.metalDirectionSensitivity,
         magnetometer = viewModel.magnetometer,
-        onAccuracyClick = { ImproveAccuracyAlerter(context).alert(listOf(viewModel.magnetometer)) },
+        onAccuracyClick = { ImproveAccuracyAlerter().alert(listOf(viewModel.magnetometer)) },
         // The screen stays on while detecting.
         modifier = modifier.keepScreenOn()
     )

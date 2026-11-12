@@ -1,6 +1,11 @@
 package com.kylecorry.trail_sense.settings.ui
 
-import android.content.Context
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,9 +34,7 @@ import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
 import com.kylecorry.andromeda.sense.mock.MockSensor
 import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.IValueAlerter
 import com.kylecorry.trail_sense.shared.dialogs.showComposeDialog
@@ -44,14 +47,14 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
  * figure-8 animation, and an optional [customMessage]. All drawn in Compose in the app's dialog.
  */
 class ImproveAccuracyAlerter(
-    private val context: Context,
+    private val host: AppHost = AppHost.current(),
     private val customMessage: CharSequence? = null
 ) : IValueAlerter<List<Sensor>> {
 
-    private val formatter = FormatService.getInstance(context)
-    private val baseDistanceUnits = UserPreferences(context).baseDistanceUnits
+    private val formatter = FormatService.getInstance()
+    private val baseDistanceUnits = getAppService<UserPreferences>().baseDistanceUnits
     private val titleScale = 1.2f
-    private val doneButton = context.getString(android.R.string.ok)
+    private val doneButton = getAppService<AppStrings>().system(SystemString.Ok)
 
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun alert(value: List<Sensor>) {
@@ -76,9 +79,9 @@ class ImproveAccuracyAlerter(
                 append(it.toString())
             }
         }
-        val title = context.getString(R.string.accuracy_info_title)
+        val title = getAppService<AppStrings>().get(Res.string.accuracy_info_title)
 
-        showComposeDialog(context, cancelOnOutsideTouch = false) { dismiss ->
+        showComposeDialog(host, cancelOnOutsideTouch = false) { dismiss ->
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall,
@@ -127,9 +130,9 @@ class ImproveAccuracyAlerter(
             return
         }
 
-        title(context.getString(R.string.pref_compass_sensor_title))
+        title(getAppService<AppStrings>().get(Res.string.pref_compass_sensor_title))
 
-        appendLine(context.getString(R.string.calibrate_compass_dialog_content, doneButton))
+        appendLine(getAppService<AppStrings>().get(Res.string.calibrate_compass_dialog_content, doneButton))
     }
 
     private fun AnnotatedString.Builder.appendGPS(gps: ISatelliteGPS) {
@@ -137,33 +140,31 @@ class ImproveAccuracyAlerter(
             return
         }
 
-        title(context.getString(R.string.gps))
+        title(getAppService<AppStrings>().get(Res.string.gps))
 
-        appendLine(context.getString(R.string.gps_accuracy_tip))
+        appendLine(getAppService<AppStrings>().get(Res.string.gps_accuracy_tip))
         appendLine()
 
         // Horizontal accuracy
         gps.horizontalAccuracy?.let {
-            val accuracyText = context.getString(
-                R.string.accuracy_distance_format,
+            val accuracyText = getAppService<AppStrings>().get(Res.string.accuracy_distance_format,
                 formatter.formatDistance(Distance.meters(it).convertTo(baseDistanceUnits))
             )
-            bold(context.getString(R.string.gps_location_accuracy) + ": ")
+            bold(getAppService<AppStrings>().get(Res.string.gps_location_accuracy) + ": ")
             appendLine(accuracyText)
         }
 
         // Vertical accuracy
         gps.verticalAccuracy?.let {
-            val accuracyText = context.getString(
-                R.string.accuracy_distance_format,
+            val accuracyText = getAppService<AppStrings>().get(Res.string.accuracy_distance_format,
                 formatter.formatDistance(Distance.meters(it).convertTo(baseDistanceUnits))
             )
-            bold(context.getString(R.string.gps_elevation_accuracy) + ": ")
+            bold(getAppService<AppStrings>().get(Res.string.gps_elevation_accuracy) + ": ")
             appendLine(accuracyText)
         }
 
         // Satellites
-        bold(context.getString(R.string.gps_satellites) + ": ")
+        bold(getAppService<AppStrings>().get(Res.string.gps_satellites) + ": ")
         appendLine((gps.satellites ?: 0).toString())
     }
 

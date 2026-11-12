@@ -1,8 +1,10 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 
-import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -12,9 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.stringResource
-import com.kylecorry.andromeda.sense.Sensors
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.device.DeviceProfile
+import org.jetbrains.compose.resources.StringResource
 import com.kylecorry.trail_sense.shared.icons.trail.Altitude
 import com.kylecorry.trail_sense.shared.icons.trail.Barometer
 import com.kylecorry.trail_sense.shared.icons.trail.Camera
@@ -30,22 +32,21 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 
 @Composable
 fun SensorSettingsToolScreen() {
-    val context = LocalContext.current
     val navigator = LocalNavigator.current
-    val hasBarometer = remember { Sensors.hasBarometer(context) }
+    val hasBarometer = remember { getAppService<DeviceProfile>().hasBarometer }
     val items = remember(hasBarometer) {
         sensorSettingsItems(hasBarometer)
     }
     // The sensors to calibrate, then the raw readings of every sensor on their own.
     val (details, sensors) = items.partition { it.key == "details" }
 
-    SettingsList(title = stringResource(R.string.sensors)) {
+    SettingsList(title = appString(Res.string.sensors)) {
         listOf("sensors" to sensors, "details" to details).forEach { (key, group) ->
             trailSenseSection(key) {
                 group.forEach { item ->
                     row { position ->
                         TrailSenseListItem(
-                            title = stringResource(item.title),
+                            title = appString(item.title),
                             icon = rememberVectorPainter(item.icon),
                             trailing = {
                                 Icon(
@@ -71,26 +72,26 @@ private fun sensorSettingsItems(hasBarometer: Boolean): List<SensorSettingsItem>
     return listOfNotNull(
         SensorSettingsItem(
             key = "compass",
-            title = R.string.pref_compass_sensor_title,
+            title = Res.string.pref_compass_sensor_title,
             icon = TrailIcons.CompassIcon,
             destination = Route.CalibrateCompass
         ),
         SensorSettingsItem(
             key = "gps",
-            title = R.string.gps,
+            title = Res.string.gps,
             icon = TrailIcons.Satellite,
             destination = Route.CalibrateGps
         ),
         SensorSettingsItem(
             key = "altimeter",
-            title = R.string.pref_altimeter_calibration_title,
+            title = Res.string.pref_altimeter_calibration_title,
             icon = TrailIcons.Altitude,
             destination = Route.CalibrateAltimeter
         ),
         if (hasBarometer) {
             SensorSettingsItem(
                 key = "barometer",
-                title = R.string.barometer,
+                title = Res.string.barometer,
                 icon = TrailIcons.Barometer,
                 destination = Route.CalibrateBarometer
             )
@@ -99,25 +100,25 @@ private fun sensorSettingsItems(hasBarometer: Boolean): List<SensorSettingsItem>
         },
         SensorSettingsItem(
             key = "temperature",
-            title = R.string.tool_thermometer_title,
+            title = Res.string.tool_thermometer_title,
             icon = TrailIcons.Thermometer,
             destination = Route.ThermometerSettings
         ),
         SensorSettingsItem(
             key = "camera",
-            title = R.string.camera,
+            title = Res.string.camera,
             icon = TrailIcons.Camera,
             destination = Route.CameraSettings
         ),
         SensorSettingsItem(
             key = "cell_signal",
-            title = R.string.cell_signal,
+            title = Res.string.cell_signal,
             icon = TrailIcons.SignalCellular3,
             destination = Route.CellSignalSettings
         ),
         SensorSettingsItem(
             key = "details",
-            title = R.string.pref_sensor_details_title,
+            title = Res.string.pref_sensor_details_title,
             icon = TrailIcons.Sensors,
             destination = Route.SensorDetails
         )
@@ -126,7 +127,7 @@ private fun sensorSettingsItems(hasBarometer: Boolean): List<SensorSettingsItem>
 
 private data class SensorSettingsItem(
     val key: String,
-    val title: Int,
+    val title: StringResource,
     val icon: ImageVector,
     val destination: Route
 )

@@ -1,30 +1,28 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.errors
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.views.UserError
-import android.content.Context
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
-import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
-import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.MagnetometerDiagnosticScanner
-import java.util.Locale
+import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.SensorDiagnosticIds
 
 /** The compass's sensor problems, shown on the activity's error [banner]. */
 class NavigatorUserErrors(
-    private val context: Context,
     private val banner: ErrorBannerState,
     private val navigator: TrailSenseNavigator,
     private val onDisplayAccuracyTips: () -> Unit
 ) {
 
-    private val formatter = FormatService.getInstance(context)
+    private val formatter = FormatService.getInstance()
 
     private val possibleErrors = listOf(
         ErrorBannerReason.NoGPS,
@@ -35,40 +33,39 @@ class NavigatorUserErrors(
     )
 
     private val errorMap = mapOf(
-        GPSDiagnosticScanner.GPS_UNAVAILABLE to UserError(
+        SensorDiagnosticIds.GPS_UNAVAILABLE to UserError(
             ErrorBannerReason.NoGPS,
-            context.getString(R.string.location_disabled),
+            getAppService<AppStrings>().get(Res.string.location_disabled),
             TrailIcons.Satellite
         ),
-        GPSDiagnosticScanner.LOCATION_UNSET to UserError(
+        SensorDiagnosticIds.LOCATION_UNSET to UserError(
             ErrorBannerReason.LocationNotSet,
-            context.getString(R.string.location_not_set),
+            getAppService<AppStrings>().get(Res.string.location_not_set),
             TrailIcons.Satellite,
-            context.getString(R.string.set)
+            getAppService<AppStrings>().get(Res.string.set)
         ) {
             banner.dismiss(ErrorBannerReason.LocationNotSet)
             navigator.navigate(Route.CalibrateGps)
         },
-        GPSDiagnosticScanner.GPS_TIMED_OUT to UserError(
+        SensorDiagnosticIds.GPS_TIMED_OUT to UserError(
             ErrorBannerReason.GPSTimeout,
-            context.getString(R.string.gps_signal_lost),
+            getAppService<AppStrings>().get(Res.string.gps_signal_lost),
             TrailIcons.Satellite
         ),
-        MagnetometerDiagnosticScanner.MAGNETOMETER_POOR to UserError(
+        SensorDiagnosticIds.MAGNETOMETER_POOR to UserError(
             ErrorBannerReason.CompassPoor,
-            context.getString(
-                R.string.compass_calibrate_toast,
-                formatter.formatQuality(Quality.Poor).lowercase(Locale.getDefault())
+            getAppService<AppStrings>().get(Res.string.compass_calibrate_toast,
+                formatter.formatQuality(Quality.Poor).lowercase()
             ),
             TrailIcons.CompassIcon,
-            context.getString(R.string.how)
+            getAppService<AppStrings>().get(Res.string.how)
         ) {
             onDisplayAccuracyTips()
             banner.dismiss(ErrorBannerReason.CompassPoor)
         },
-        MagnetometerDiagnosticScanner.MAGNETOMETER_UNAVAILABLE to UserError(
+        SensorDiagnosticIds.MAGNETOMETER_UNAVAILABLE to UserError(
             ErrorBannerReason.NoCompass,
-            context.getString(R.string.no_sensor_message, context.getString(R.string.pref_compass_sensor_title).lowercase()),
+            getAppService<AppStrings>().get(Res.string.no_sensor_message, getAppService<AppStrings>().get(Res.string.pref_compass_sensor_title).lowercase()),
             TrailIcons.CompassIcon
         )
     )
@@ -93,38 +90,38 @@ class NavigatorUserErrors(
     fun update(diagnosticResultIds: List<String>) {
 
         // Location unset
-        if (!isGPSErrorShown && diagnosticResultIds.contains(GPSDiagnosticScanner.LOCATION_UNSET)) {
-            show(GPSDiagnosticScanner.LOCATION_UNSET)
+        if (!isGPSErrorShown && diagnosticResultIds.contains(SensorDiagnosticIds.LOCATION_UNSET)) {
+            show(SensorDiagnosticIds.LOCATION_UNSET)
             isGPSErrorShown = true
-        } else if (!diagnosticResultIds.contains(GPSDiagnosticScanner.LOCATION_UNSET)) {
+        } else if (!diagnosticResultIds.contains(SensorDiagnosticIds.LOCATION_UNSET)) {
             banner.dismiss(ErrorBannerReason.LocationNotSet)
             // Do not reset isGPSErrorShown
         }
 
         // GPS unavailable
-        if (!isGPSErrorShown && diagnosticResultIds.contains(GPSDiagnosticScanner.GPS_UNAVAILABLE)) {
-            show(GPSDiagnosticScanner.GPS_UNAVAILABLE)
+        if (!isGPSErrorShown && diagnosticResultIds.contains(SensorDiagnosticIds.GPS_UNAVAILABLE)) {
+            show(SensorDiagnosticIds.GPS_UNAVAILABLE)
             isGPSErrorShown = true
-        } else if (!diagnosticResultIds.contains(GPSDiagnosticScanner.GPS_UNAVAILABLE)) {
+        } else if (!diagnosticResultIds.contains(SensorDiagnosticIds.GPS_UNAVAILABLE)) {
             banner.dismiss(ErrorBannerReason.NoGPS)
             // Do not reset isGPSErrorShown
         }
 
         // GPS timed out
-        if (!isTimedOut && diagnosticResultIds.contains(GPSDiagnosticScanner.GPS_TIMED_OUT)) {
-            show(GPSDiagnosticScanner.GPS_TIMED_OUT)
+        if (!isTimedOut && diagnosticResultIds.contains(SensorDiagnosticIds.GPS_TIMED_OUT)) {
+            show(SensorDiagnosticIds.GPS_TIMED_OUT)
             isTimedOut = true
-        } else if (!diagnosticResultIds.contains(GPSDiagnosticScanner.GPS_TIMED_OUT)) {
+        } else if (!diagnosticResultIds.contains(SensorDiagnosticIds.GPS_TIMED_OUT)) {
             banner.dismiss(ErrorBannerReason.GPSTimeout)
             isTimedOut = false
         }
 
         // Compass unavailable
-        if (!isCompassErrorShown && diagnosticResultIds.contains(MagnetometerDiagnosticScanner.MAGNETOMETER_UNAVAILABLE)) {
-            show(MagnetometerDiagnosticScanner.MAGNETOMETER_UNAVAILABLE)
+        if (!isCompassErrorShown && diagnosticResultIds.contains(SensorDiagnosticIds.MAGNETOMETER_UNAVAILABLE)) {
+            show(SensorDiagnosticIds.MAGNETOMETER_UNAVAILABLE)
             isCompassErrorShown = true
 
-        } else if (!diagnosticResultIds.contains(MagnetometerDiagnosticScanner.MAGNETOMETER_UNAVAILABLE)) {
+        } else if (!diagnosticResultIds.contains(SensorDiagnosticIds.MAGNETOMETER_UNAVAILABLE)) {
             banner.dismiss(ErrorBannerReason.NoCompass)
             // Do not reset isCompassErrorShown
         }

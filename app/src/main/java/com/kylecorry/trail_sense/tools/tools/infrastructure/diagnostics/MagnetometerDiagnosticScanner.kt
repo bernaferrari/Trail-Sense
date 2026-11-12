@@ -58,7 +58,7 @@ class MagnetometerDiagnosticScanner : ToolDiagnosticScanner {
     }
 
     companion object {
-        const val MAGNETOMETER_UNAVAILABLE = "magnetometer-unavailable"
-        const val MAGNETOMETER_POOR = "magnetometer-poor"
+        const val MAGNETOMETER_UNAVAILABLE = SensorDiagnosticIds.MAGNETOMETER_UNAVAILABLE
+        const val MAGNETOMETER_POOR = SensorDiagnosticIds.MAGNETOMETER_POOR
     }
 }

@@ -101,7 +101,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
     val navigator: TrailSenseNavigator?
         get() = rootNavigator
 
-    val errorBanner by lazy { ErrorBannerState(this) }
+    val errorBanner by lazy { ErrorBannerState() }
     private val quickActionsSheet by lazy { QuickActionSheetState(this) }
     private val bottomNavigation = MainBottomNavigationState()
 

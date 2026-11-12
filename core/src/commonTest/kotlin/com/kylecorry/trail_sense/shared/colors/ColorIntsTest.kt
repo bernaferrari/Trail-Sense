@@ -13,4 +13,16 @@ class ColorIntsTest {
         assertEquals(ColorInts.Black, ColorInts.rgb(0, 0, 0))
         assertEquals(ColorInts.Gray, ColorInts.rgb(0x88, 0x88, 0x88))
     }
+
+    @Test
+    fun blendsEachChannelLikeColorUtils() {
+        val red = ColorInts.rgb(255, 0, 0)
+        val green = ColorInts.rgb(0, 255, 0)
+        assertEquals(red, ColorInts.blend(red, green, 0f))
+        assertEquals(green, ColorInts.blend(red, green, 1f))
+        // Each channel is truncated, so half of 255 is 127.
+        assertEquals(0xFF7F7F7F.toInt(), ColorInts.blend(ColorInts.Black, ColorInts.White, 0.5f))
+        // Alpha mixes too: a quarter of 255 is 63.
+        assertEquals(ColorInts.argb(63, 63, 0, 0), ColorInts.blend(red, ColorInts.Transparent, 0.75f))
+    }
 }

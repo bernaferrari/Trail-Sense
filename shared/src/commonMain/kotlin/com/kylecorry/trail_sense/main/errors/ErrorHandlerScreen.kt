@@ -2,8 +2,9 @@
 
 package com.kylecorry.trail_sense.main.errors
 
-import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
-import com.kylecorry.trail_sense.shared.copy
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,22 +33,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import com.kylecorry.andromeda.clipboard.Clipboard
-import com.kylecorry.andromeda.core.system.CurrentApp
-import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 
 @Composable
-internal fun ErrorHandlerScreen(
+fun ErrorHandlerScreen(
     toolId: Long,
     onEmail: () -> Unit,
     onCopyError: () -> Unit,
@@ -56,9 +49,8 @@ internal fun ErrorHandlerScreen(
     onRestartApp: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
-    val context = LocalContext.current
-    val toolName = Tools.getTools(context).firstOrNull { it.id == toolId }?.name
-        ?: stringResource(R.string.app_name)
+    val toolName = getAppService<ToolCatalog>().getTools().firstOrNull { it.id == toolId }?.name
+        ?: appString(Res.string.app_name)
 
     Column(
         modifier = Modifier
@@ -82,7 +74,7 @@ internal fun ErrorHandlerScreen(
         }
         Spacer(Modifier.height(TrailSenseSpacing.lg))
         Text(
-            text = stringResource(R.string.error_occurred),
+            text = appString(Res.string.error_occurred),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -94,7 +86,7 @@ internal fun ErrorHandlerScreen(
         )
         Spacer(Modifier.height(TrailSenseSpacing.xxl))
         TrailSenseButton(
-            text = stringResource(R.string.reopen_tool),
+            text = appString(Res.string.reopen_tool),
             onClick = onReopenTool,
             modifier = Modifier
                 .fillMaxWidth()
@@ -102,7 +94,7 @@ internal fun ErrorHandlerScreen(
         )
         Spacer(Modifier.height(TrailSenseSpacing.sm))
         TrailSenseButton(
-            text = stringResource(R.string.restart_app),
+            text = appString(Res.string.restart_app),
             onClick = onRestartApp,
             icon = Icons.Default.Refresh,
             style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
@@ -118,23 +110,23 @@ internal fun ErrorHandlerScreen(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             ErrorTextAction(
-                text = stringResource(R.string.view_error_details),
+                text = appString(Res.string.view_error_details),
                 icon = { Icon(Icons.Default.Info, contentDescription = null) },
                 onClick = onViewDetails
             )
             ErrorTextAction(
-                text = stringResource(R.string.copy_error),
+                text = appString(Res.string.copy_error),
                 icon = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
                 onClick = onCopyError
             )
             ErrorTextAction(
-                text = stringResource(R.string.pref_email_title),
+                text = appString(Res.string.pref_email_title),
                 icon = { Icon(Icons.Default.Email, contentDescription = null) },
                 onClick = onEmail
             )
         }
         TrailSenseButton(
-            text = stringResource(R.string.settings),
+            text = appString(Res.string.settings),
             onClick = onOpenSettings,
             icon = Icons.Default.Settings,
             style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Text
@@ -160,46 +152,3 @@ private fun ErrorTextAction(
     }
 }
 
-/** The page shown after a tool crashed ([Route.ErrorHandler]): report it, reopen the tool, or restart. */
-@Composable
-fun ErrorHandlerToolScreen(host: AndroidDestinationHost, route: Route.ErrorHandler) {
-    val toolId = route.toolId
-    val errorDetails = route.error
-    val appNavigator = host.navigator
-    ErrorHandlerScreen(
-        toolId = toolId,
-        onEmail = {
-            host.context.startActivity(
-                Intents.email(
-                    host.context.getString(R.string.email),
-                    "Error in ${host.context.getString(R.string.app_name)}",
-                    errorDetails
-                )
-            )
-        },
-        onCopyError = {
-            Clipboard.copy(
-                host.context,
-                errorDetails,
-                host.context.getString(R.string.copied_to_clipboard_toast)
-            )
-        },
-        onViewDetails = {
-            Alerts.dialog(
-                host.context,
-                host.context.getString(R.string.error_occurred),
-                errorDetails,
-                cancelText = null
-            )
-        },
-        onReopenTool = {
-            Tools.getTool(host.context, toolId)?.let { appNavigator.navigate(it.route) }
-        },
-        onRestartApp = {
-            CurrentApp.restart(host.context)
-        },
-        onOpenSettings = {
-            appNavigator.navigate(Route.Settings)
-        }
-    )
-}

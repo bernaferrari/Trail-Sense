@@ -422,7 +422,7 @@ private class MapController(
         }
 
         views.sensorStatusBadges.setOnClickListener {
-            ImproveAccuracyAlerter(context).alert(views.sensorStatusBadges.getSensors())
+            ImproveAccuracyAlerter().alert(views.sensorStatusBadges.getSensors())
         }
 
         mapView.setOnLongPressListener(::onLongPress)
@@ -933,7 +933,7 @@ private fun createMapViews(context: Context): MapViews {
         alpha = 0.6f
     }
 
-    val navigationSheet = NavigationSheetView(context).apply {
+    val navigationSheet = NavigationSheetView().apply {
         isVisible = false
     }
 

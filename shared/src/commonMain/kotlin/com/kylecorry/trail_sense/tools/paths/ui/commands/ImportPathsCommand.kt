@@ -1,19 +1,19 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import android.content.Context
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.andromeda.gpx.GPXData
 import com.kylecorry.andromeda.gpx.GPXWaypoint
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.extensions.filterIndices
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
-import com.kylecorry.trail_sense.shared.dialogs.items
-import com.kylecorry.trail_sense.shared.dialogs.snackbar
-import com.kylecorry.trail_sense.shared.dialogs.withLoading
 import com.kylecorry.trail_sense.shared.io.ImportService
 import com.kylecorry.trail_sense.tools.paths.domain.FullPath
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
@@ -27,11 +27,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 class ImportPathsCommand(
-    private val context: Context,
+    private val host: AppHost,
     private val scope: CoroutineScope,
     private val gpxService: ImportService<GPXData>,
     private val pathService: IPathService = getAppService<IPathService>(),
-    private val prefs: IPathPreferences = UserPreferences(context).paths
+    private val prefs: IPathPreferences = getAppService<UserPreferences>().paths
 ) {
 
     private val style = prefs.defaultPathStyle
@@ -45,24 +45,24 @@ class ImportPathsCommand(
 
             // Let the user select the paths to import
             val selectedPathIndices = CoroutinePickers.items(
-                context,
-                context.getString(R.string.import_btn),
+                host,
+                getAppService<AppStrings>().get(Res.string.import_btn),
                 paths.map {
-                    it.path.name ?: context.getString(android.R.string.untitled)
+                    it.path.name ?: getAppService<AppStrings>().system(SystemString.Untitled)
                 },
                 paths.indices.toList()
             ) ?: return@launch
 
 
-            Alerts.withLoading(context, context.getString(R.string.importing)) {
+            Alerts.withLoading(host, getAppService<AppStrings>().get(Res.string.importing)) {
                 // Import the selected paths
                 val selectedPaths = paths.filterIndices(selectedPathIndices)
                 importPaths(selectedPaths, parentId)
 
                 // Let the user know the import was successful
                 Alerts.snackbar(
-                    context, context.resources.getQuantityString(
-                        R.plurals.paths_imported,
+                    host, getAppService<AppStrings>().plural(
+                        Res.plurals.paths_imported,
                         selectedPathIndices.size,
                         selectedPathIndices.size
                     )

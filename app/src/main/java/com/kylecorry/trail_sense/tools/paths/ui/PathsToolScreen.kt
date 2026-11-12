@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.foundation.layout.Box
@@ -297,7 +298,7 @@ fun PathsToolScreen(
         onPathAction = ::handleAction,
         onGroupAction = ::handleGroupAction,
         onImportPath = {
-            ImportPathsCommand(context, scope, gpxService, pathService, prefs.paths).execute(viewModel.rootId)
+            ImportPathsCommand(AppHost.current(), scope, gpxService, pathService, prefs.paths).execute(viewModel.rootId)
         },
         onCreateGroup = {
             scope.launch {

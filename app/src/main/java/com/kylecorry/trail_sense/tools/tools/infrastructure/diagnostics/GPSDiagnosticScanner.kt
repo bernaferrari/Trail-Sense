@@ -134,10 +134,10 @@ class GPSDiagnosticScanner(private val gps: GpsSensor? = null) : ToolDiagnosticS
     }
 
     companion object {
-        const val LOCATION_UNSET = "location-unset"
-        const val LOCATION_OVERRIDDEN = "location-overridden"
-        const val GPS_UNAVAILABLE = "gps-unavailable"
-        const val GPS_POOR = "gps-poor"
-        const val GPS_TIMED_OUT = "gps-timed-out"
+        const val LOCATION_UNSET = SensorDiagnosticIds.LOCATION_UNSET
+        const val LOCATION_OVERRIDDEN = SensorDiagnosticIds.LOCATION_OVERRIDDEN
+        const val GPS_UNAVAILABLE = SensorDiagnosticIds.GPS_UNAVAILABLE
+        const val GPS_POOR = SensorDiagnosticIds.GPS_POOR
+        const val GPS_TIMED_OUT = SensorDiagnosticIds.GPS_TIMED_OUT
     }
 }

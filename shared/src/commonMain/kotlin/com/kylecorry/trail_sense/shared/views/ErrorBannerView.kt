@@ -1,6 +1,11 @@
 package com.kylecorry.trail_sense.shared.views
 
-import android.content.Context
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.settings.infrastructure.IErrorPreferences
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -20,25 +25,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
-class ErrorBannerState(context: Context) {
+class ErrorBannerState(private val prefs: IErrorPreferences = getAppService<UserPreferences>().errors) {
 
+    private val lock = SynchronizedObject()
     private val errors: MutableList<UserError> = mutableListOf()
-    private val prefs = UserPreferences(context)
     private var currentError by mutableStateOf<UserError?>(null)
 
     fun report(error: UserError) {
-        if (!prefs.errors.canShowError(error.reason)) {
+        if (!prefs.canShowError(error.reason)) {
             return
         }
-        synchronized(this) {
+        synchronized(lock) {
             errors.removeAll { it.reason == error.reason }
             errors.add(error)
             errors.sortBy { it.reason.id }
@@ -47,21 +50,21 @@ class ErrorBannerState(context: Context) {
     }
 
     fun dismiss(reason: ErrorBannerReason) {
-        synchronized(this) {
+        synchronized(lock) {
             errors.removeAll { it.reason == reason }
         }
         displayNextError()
     }
 
     fun dismissAll() {
-        synchronized(this) {
+        synchronized(lock) {
             errors.clear()
         }
         displayNextError()
     }
 
     private fun displayNextError() {
-        val first = synchronized(this) {
+        val first = synchronized(lock) {
             errors.firstOrNull()
         }
         if (first != null) {
@@ -141,7 +144,7 @@ private fun ErrorBannerContent(
             IconButton(onClick = onClose) {
                 Icon(
                     imageVector = TrailSenseIcons.Filled.Close,
-                    contentDescription = stringResource(android.R.string.cancel)
+                    contentDescription = systemString(SystemString.Cancel)
                 )
             }
         }

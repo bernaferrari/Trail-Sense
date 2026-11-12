@@ -31,6 +31,7 @@ import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
@@ -80,7 +81,7 @@ class Navigator private constructor(context: Context) : INavigator {
     }
 
     private val pathNavigator = PathNavigator(context)
-    val isRestoringNavigation = pathNavigator.isRestoring
+    override val isRestoringNavigation: StateFlow<Boolean> = pathNavigator.isRestoring
 
     val destination =
         combine(bearingDestination, beaconDestination, pathNavigator.destination) { bearing, beacon, path ->
@@ -186,7 +187,7 @@ class Navigator private constructor(context: Context) : INavigator {
      * @return a function which restores the navigation that was cancelled, unless the user has
      * started navigating somewhere else since
      */
-    suspend fun cancelAllNavigation(): suspend () -> Unit {
+    override suspend fun cancelAllNavigation(): suspend () -> Unit {
         val beaconId = getBeaconDestinationId()
         val bearing = navigationBearing.firstOrNull()
         val pathSession = pathNavigator.currentSession()
@@ -269,12 +270,12 @@ class Navigator private constructor(context: Context) : INavigator {
         ).targetBearing
     }
 
-    fun getGuidance(
+    override fun getGuidance(
         destination: Destination,
         location: Coordinate,
         elevation: Distance,
         declination: Float,
-        useTrueNorthOverride: Boolean? = null
+        useTrueNorthOverride: Boolean?
     ): Guidance {
         val useTrueNorth = destination.usesTrueNorth(
             userPrefs.compass.useTrueNorth,

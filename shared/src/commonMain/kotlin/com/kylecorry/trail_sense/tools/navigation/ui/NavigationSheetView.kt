@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.shared.time.toLocalTime
 
 import kotlin.time.Clock
@@ -30,8 +35,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.content.Context
-import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,10 +55,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.ColorUtils
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import org.jetbrains.compose.resources.StringResource
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
@@ -66,7 +69,6 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
@@ -77,20 +79,19 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.navigation.domain.guidance.Guidance
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import androidx.compose.ui.graphics.toArgb
 import com.kylecorry.trail_sense.shared.views.TrailSenseColors
-import com.kylecorry.trail_sense.shared.views.compose.from
 
-class NavigationSheetView(private val context: Context) {
+class NavigationSheetView {
 
     private val prefs = DependencyRegistry.get<UserPreferences>()
     private val formatter = DependencyRegistry.get<FormatService>()
-    private val navigator = DependencyRegistry.get<Navigator>()
+    private val navigator = DependencyRegistry.get<INavigator>()
     private val hasCompass = DependencyRegistry.get<SensorService>().hasCompass()
     private val navigationService = NavigationService()
     private val scope = CoroutineScope(Dispatchers.Main.immediate)
@@ -292,7 +293,7 @@ class NavigationSheetView(private val context: Context) {
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.Close,
-                                contentDescription = stringResource(R.string.stop)
+                                contentDescription = appString(Res.string.stop)
                             )
                         }
                     }
@@ -390,9 +391,9 @@ class NavigationSheetView(private val context: Context) {
         }
         scope.launch {
             val restore = navigator.cancelAllNavigation()
-            AppHost.from(context).snackbar(
-                context.getString(R.string.navigation_cancelled),
-                context.getString(R.string.undo),
+            AppHost.current().snackbar(
+                getAppService<AppStrings>().get(Res.string.navigation_cancelled),
+                getAppService<AppStrings>().get(Res.string.undo),
                 long = true
             ) {
                 CoroutineScope(Dispatchers.Default).launch { restore() }
@@ -431,7 +432,7 @@ class NavigationSheetView(private val context: Context) {
     private fun showLoading() {
         sheetVisible = true
         titleAction = null
-        model = SheetModel(title = context.getString(R.string.loading))
+        model = SheetModel(title = getAppService<AppStrings>().get(Res.string.loading))
     }
 
     private fun updateBeaconNavigation(
@@ -450,22 +451,22 @@ class NavigationSheetView(private val context: Context) {
             gain != null -> details += SheetDetail(
                 formatElevationChange(gain),
                 TrailIcons.TriangleUp,
-                context.getString(R.string.navigation_remaining_gain)
+                getAppService<AppStrings>().get(Res.string.navigation_remaining_gain)
             )
 
             loss != null -> details += SheetDetail(
                 formatElevationChange(loss),
                 TrailIcons.TriangleDown,
-                context.getString(R.string.navigation_remaining_loss)
+                getAppService<AppStrings>().get(Res.string.navigation_remaining_loss)
             )
         }
         val elevation = beacon.elevation?.let { formatter.formatElevation(Distance.meters(it)) }
         model = direction.asModel(
             title = beacon.name,
-            titleDescription = titled(R.string.beacon, beacon.name),
+            titleDescription = titled(Res.string.beacon, beacon.name),
             showCancel = isNavigating,
             distance = guidance.remainingDistance?.let {
-                SheetStat(formatRelativeDistance(it), context.getString(R.string.navigation_remaining))
+                SheetStat(formatRelativeDistance(it), getAppService<AppStrings>().get(Res.string.navigation_remaining))
             },
             details = details,
             badgeShape = beacon.shape,
@@ -483,11 +484,11 @@ class NavigationSheetView(private val context: Context) {
         // screen, so it is not repeated either.
         model = direction.asModel(
             title = title,
-            titleDescription = titled(R.string.bearing, title),
+            titleDescription = titled(Res.string.bearing, title),
             showBearing = false,
             showCancel = isNavigating,
             distance = guidance.traveledDistance?.let {
-                SheetStat(formatRelativeDistance(it), context.getString(R.string.navigation_traveled))
+                SheetStat(formatRelativeDistance(it), getAppService<AppStrings>().get(Res.string.navigation_traveled))
             },
             details = emptyList()
         )
@@ -499,7 +500,7 @@ class NavigationSheetView(private val context: Context) {
         values: NavigationSensorValues,
         direction: DirectionState
     ) {
-        val name = destination.path.name ?: context.getString(R.string.path)
+        val name = destination.path.name ?: getAppService<AppStrings>().get(Res.string.path)
         titleAction = { onOpenPath?.invoke(destination.path.id) }
         val details = mutableListOf<SheetDetail>()
         etaDetail(guidance, values)?.let { details += it }
@@ -509,22 +510,22 @@ class NavigationSheetView(private val context: Context) {
             details += SheetDetail(
                 formatElevationChange(gain),
                 TrailIcons.TriangleUp,
-                context.getString(R.string.navigation_remaining_gain)
+                getAppService<AppStrings>().get(Res.string.navigation_remaining_gain)
             )
             details += SheetDetail(
                 formatElevationChange(loss),
                 TrailIcons.TriangleDown,
-                context.getString(R.string.navigation_remaining_loss)
+                getAppService<AppStrings>().get(Res.string.navigation_remaining_loss)
             )
         }
         model = direction.asModel(
             title = name,
-            titleDescription = titled(R.string.path, name),
+            titleDescription = titled(Res.string.path, name),
             showCancel = isNavigating,
             showProgress = true,
             progress = (guidance.progress ?: 0f).coerceIn(0f, 1f),
             distance = guidance.remainingDistance?.let {
-                SheetStat(formatRelativeDistance(it), context.getString(R.string.navigation_remaining))
+                SheetStat(formatRelativeDistance(it), getAppService<AppStrings>().get(Res.string.navigation_remaining))
             },
             details = details
         )
@@ -537,7 +538,7 @@ class NavigationSheetView(private val context: Context) {
             includeSeconds = false
         )
         // The arrival time only: the duration is the same fact said a second way.
-        return SheetDetail(context.getString(R.string.navigation_arrive_format, arrival))
+        return SheetDetail(getAppService<AppStrings>().get(Res.string.navigation_arrive_format, arrival))
     }
 
     private fun directionState(guidance: Guidance, values: NavigationSensorValues): DirectionState {
@@ -565,7 +566,7 @@ class NavigationSheetView(private val context: Context) {
     private fun directionColor(offset: Float): Int {
         val fraction = ((offset - ON_TARGET_DEGREES) / (WRONG_DIRECTION_DEGREES - ON_TARGET_DEGREES))
             .coerceIn(0f, 1f)
-        return ColorUtils.blendARGB(AppColor.Green.color, AppColor.Red.color, fraction)
+        return ColorInts.blend(AppColor.Green.color, AppColor.Red.color, fraction)
     }
 
     private fun formatBearing(degrees: Float): String {
@@ -591,8 +592,8 @@ class NavigationSheetView(private val context: Context) {
         return formatter.formatDistance(converted, Units.getDecimalPlaces(converted.units), false)
     }
 
-    private fun titled(@StringRes typeRes: Int, text: String): String {
-        return "${context.getString(typeRes)}: $text"
+    private fun titled(typeRes: StringResource, text: String): String {
+        return "${getAppService<AppStrings>().get(typeRes)}: $text"
     }
 
     private data class SheetStat(
