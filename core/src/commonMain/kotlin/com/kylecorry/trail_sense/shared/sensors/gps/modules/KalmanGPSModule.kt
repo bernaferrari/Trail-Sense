@@ -26,6 +26,8 @@ import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
+import com.kylecorry.sol.math.MathExtensions.toDegrees
+import com.kylecorry.sol.math.MathExtensions.toRadians
 
 class KalmanGPSModule(
     private val prefs: IGPSPreferences = getAppService<UserPreferences>().gps,
@@ -248,8 +250,8 @@ class KalmanGPSModule(
             ?: max(3f, speed * 0.25f)
         val directionError = data.bearingAccuracy?.takeIf { it.isFinite() && it >= 0f }
             ?.coerceAtMost(90f) ?: 30f
-        val radians = Math.toRadians(direction.toDouble())
-        val lateralError = speed * sin(Math.toRadians(directionError.toDouble())).toFloat()
+        val radians = direction.toDouble().toRadians()
+        val lateralError = speed * sin(directionError.toDouble().toRadians()).toFloat()
         val variance = (speedError * speedError + lateralError * lateralError)
             .takeIf { it.isFinite() }?.coerceAtLeast(0.01f) ?: return null
         return VelocityMeasurement(
@@ -265,14 +267,14 @@ class KalmanGPSModule(
 
     private fun toLocal(location: Coordinate): Pair<Float, Float> {
         val distance = reference.distanceTo(location)
-        val bearing = Math.toRadians(reference.bearingTo(location).value.toDouble())
+        val bearing = reference.bearingTo(location).value.toDouble().toRadians()
         return Pair(distance * sin(bearing).toFloat(), distance * cos(bearing).toFloat())
     }
 
     private fun fromLocal(east: Float, north: Float): Coordinate {
         val distance = sqrt(east * east + north * north)
         if (distance == 0f) return reference
-        val bearing = Bearing.from(Math.toDegrees(atan2(east, north).toDouble()).toFloat())
+        val bearing = Bearing.from(atan2(east, north).toDouble().toDegrees().toFloat())
         return reference.plus(Distance.meters(distance), bearing)
     }
 

@@ -11,6 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import kotlin.concurrent.Volatile
 
 /**
  * Adapts andromeda's multiplatform [cellSignals] flow to the app's sensor interface.

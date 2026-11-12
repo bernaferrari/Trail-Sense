@@ -53,7 +53,7 @@ class GPSPipeline(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    logger().error(TAG, "${module.javaClass.name} failed to update GPS", e)
+                    logger().error(TAG, "${module::class.simpleName ?: module} failed to update GPS", e)
                     false
                 }
             }) {

@@ -21,6 +21,7 @@ import kotlinx.coroutines.CancellationException
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.argThat
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.same
 import org.mockito.kotlin.verify
@@ -178,7 +179,7 @@ class GPSPipelineTest {
         assertEquals(42f, pipeline.reading.altitude)
         verify(logger).error(
             eq("GPSPipeline"),
-            eq("${failingModule.javaClass.name} failed to update GPS"),
+            argThat { endsWith(" failed to update GPS") && !startsWith("null") },
             same(failure)
         )
     }

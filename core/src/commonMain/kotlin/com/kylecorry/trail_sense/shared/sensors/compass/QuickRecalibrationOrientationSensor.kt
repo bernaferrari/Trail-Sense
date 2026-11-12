@@ -11,8 +11,11 @@ import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.tools.metaldetector.ui.Debouncer
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.math.sqrt
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 
 /**
  * An orientation sensor that recalibrates itself when the device is still and is significantly out of alignment.
@@ -45,7 +48,7 @@ class QuickRecalibrationOrientationSensor(
         get() = primary.rawOrientation
 
     private var isStarted = false
-    private val startLock = Any()
+    private val startLock = SynchronizedObject()
     private val resetTimeMillis = resetTime.inWholeMilliseconds
     private var lastThresholdTime = 0L
     private var lastOrientation = Quaternion.zero
@@ -82,7 +85,7 @@ class QuickRecalibrationOrientationSensor(
             )
 
         // Don't reset if the device is moving
-        val dt = (System.currentTimeMillis() - lastMotionTime) / 1000f
+        val dt = (nowMillis() - lastMotionTime) / 1000f
         if (dt > 0.1f) {
             val motionEuler = primaryQuat.minus(lastOrientation).toEuler()
             val motion = sqrt(
@@ -90,16 +93,16 @@ class QuickRecalibrationOrientationSensor(
             ).real(0f) / dt
             lastOrientation = primaryQuat
             isMoving.update(motion > motionAngleThreshold)
-            lastMotionTime = System.currentTimeMillis()
+            lastMotionTime = nowMillis()
         }
 
         val moving = isMoving.value
 
         if (angularMagnitude > resetAngleThreshold && !moving) {
             if (lastThresholdTime == 0L) {
-                lastThresholdTime = System.currentTimeMillis()
+                lastThresholdTime = nowMillis()
             } else {
-                if (System.currentTimeMillis() - lastThresholdTime > resetTimeMillis) {
+                if (nowMillis() - lastThresholdTime > resetTimeMillis) {
                     if (verbose) {
                         getAppService<Logger>().debug(TAG, "Recalibrating", writeToFile = false)
                     }
@@ -111,7 +114,7 @@ class QuickRecalibrationOrientationSensor(
             lastThresholdTime = 0L
         }
 
-        if (verbose && System.currentTimeMillis() - lastLogTime > 500) {
+        if (verbose && nowMillis() - lastLogTime > 500) {
             getAppService<Logger>().debug(
                 TAG,
                 "Diff: ${
@@ -123,7 +126,7 @@ class QuickRecalibrationOrientationSensor(
                 }, Motion: $moving, Resetting: ${lastThresholdTime != 0L}",
                 writeToFile = false
             )
-            lastLogTime = System.currentTimeMillis()
+            lastLogTime = nowMillis()
         }
 
         return true
@@ -146,4 +149,6 @@ class QuickRecalibrationOrientationSensor(
     companion object {
         private const val TAG = "QuickRecalibrationOrientationSensor"
     }
+
+    private fun nowMillis(): Long = Clock.System.now().toEpochMilliseconds()
 }

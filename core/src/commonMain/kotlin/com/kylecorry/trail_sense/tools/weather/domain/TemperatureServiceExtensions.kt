@@ -8,6 +8,7 @@ import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.tools.weather.domain.forecasting.temperatures.ITemperatureService
+import kotlin.concurrent.Volatile
 
 private const val TAG = "TemperaturePrediction"
 
@@ -15,7 +16,7 @@ private const val TAG = "TemperaturePrediction"
 @Volatile
 private var isLookupFailing = false
 
-internal suspend fun ITemperatureService.getTemperaturePrediction(time: Instant): TemperaturePrediction? {
+suspend fun ITemperatureService.getTemperaturePrediction(time: Instant): TemperaturePrediction? {
     return try {
         val range = getTemperatureRange(time.toLocalDate())
         val low = range.start
