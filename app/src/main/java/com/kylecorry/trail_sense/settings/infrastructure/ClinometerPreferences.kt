@@ -4,7 +4,7 @@ import android.content.Context
 import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 
 class ClinometerPreferences(private val context: Context) : IClinometerPreferences {
@@ -13,16 +13,16 @@ class ClinometerPreferences(private val context: Context) : IClinometerPreferenc
 
     override var lockWithVolumeButtons by BooleanPreference(
         cache,
-        context.getString(R.string.pref_clinometer_lock_with_volume_buttons),
+        PreferenceKeys.clinometerLockWithVolumeButtons,
         false
     )
     override var baselineDistance: Distance?
         get() {
             val baseline =
-                cache.getFloat(context.getString(R.string.pref_clinometer_baseline_distance))
+                cache.getFloat(PreferenceKeys.clinometerBaselineDistance)
                     ?: return null
             val baselineUnitId =
-                cache.getInt(context.getString(R.string.pref_clinometer_baseline_distance_units))
+                cache.getInt(PreferenceKeys.clinometerBaselineDistanceUnits)
                     ?: return null
             val units = DistanceUnits.entries.firstOrNull { baselineUnitId == it.id }
                 ?: DistanceUnits.Meters
@@ -30,15 +30,15 @@ class ClinometerPreferences(private val context: Context) : IClinometerPreferenc
         }
         set(value) {
             if (value == null) {
-                cache.remove(context.getString(R.string.pref_clinometer_baseline_distance))
-                cache.remove(context.getString(R.string.pref_clinometer_baseline_distance_units))
+                cache.remove(PreferenceKeys.clinometerBaselineDistance)
+                cache.remove(PreferenceKeys.clinometerBaselineDistanceUnits)
             } else {
                 cache.putFloat(
-                    context.getString(R.string.pref_clinometer_baseline_distance),
+                    PreferenceKeys.clinometerBaselineDistance,
                     value.value
                 )
                 cache.putInt(
-                    context.getString(R.string.pref_clinometer_baseline_distance_units),
+                    PreferenceKeys.clinometerBaselineDistanceUnits,
                     value.units.id
                 )
             }

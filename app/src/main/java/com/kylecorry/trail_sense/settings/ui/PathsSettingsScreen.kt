@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Duration.Companion.days
 
 import android.content.Context
@@ -75,17 +76,17 @@ fun PathsSettingsToolScreen() {
     }
     var saveCellSignal by remember { mutableStateOf(prefs.paths.backtrackSaveCellHistory) }
     var showLastSignalBeacon by remember {
-        mutableStateOf(context.getBoolean(cache, R.string.pref_show_last_signal_beacon, true))
+        mutableStateOf(cache.booleanOr(PreferenceKeys.showLastSignalBeacon, true))
     }
     var pathStyle by remember {
-        mutableStateOf(context.getStringPreference(cache, R.string.pref_backtrack_path_style, "dotted"))
+        mutableStateOf(cache.stringOr(PreferenceKeys.backtrackPathStyle, "dotted"))
     }
     var pathColor by remember { mutableStateOf(prefs.paths.defaultPathColor) }
     var simplifyPaths by remember {
-        mutableStateOf(context.getBoolean(cache, R.string.pref_auto_simplify_paths, true))
+        mutableStateOf(cache.booleanOr(PreferenceKeys.autoSimplifyPaths, true))
     }
     var fastPathRendering by remember {
-        mutableStateOf(context.getBoolean(cache, R.string.pref_fast_path_rendering, false))
+        mutableStateOf(cache.booleanOr(PreferenceKeys.fastPathRendering, false))
     }
     var showPathColorPicker by remember { mutableStateOf(false) }
     var showBacktrackFrequencyPicker by remember { mutableStateOf(false) }
@@ -184,7 +185,7 @@ fun PathsSettingsToolScreen() {
                         checked = showLastSignalBeacon,
                         onCheckedChange = {
                             showLastSignalBeacon = it
-                            context.putBoolean(cache, R.string.pref_show_last_signal_beacon, it)
+                            cache.putBoolean(PreferenceKeys.showLastSignalBeacon, it)
                         },
                         position = position
                     )
@@ -200,7 +201,7 @@ fun PathsSettingsToolScreen() {
                     onClick = {
                         context.pickOption(pathStyleTitle, pathStyleOptions, pathStyle) {
                             pathStyle = it
-                            context.putString(cache, R.string.pref_backtrack_path_style, it)
+                            cache.putString(PreferenceKeys.backtrackPathStyle, it)
                         }
                     },
                     position = position
@@ -232,7 +233,7 @@ fun PathsSettingsToolScreen() {
                     checked = simplifyPaths,
                     onCheckedChange = {
                         simplifyPaths = it
-                        context.putBoolean(cache, R.string.pref_auto_simplify_paths, it)
+                        cache.putBoolean(PreferenceKeys.autoSimplifyPaths, it)
                     },
                     position = position
                 )
@@ -244,7 +245,7 @@ fun PathsSettingsToolScreen() {
                     checked = fastPathRendering,
                     onCheckedChange = {
                         fastPathRendering = it
-                        context.putBoolean(cache, R.string.pref_fast_path_rendering, it)
+                        cache.putBoolean(PreferenceKeys.fastPathRendering, it)
                     },
                     position = position
                 )

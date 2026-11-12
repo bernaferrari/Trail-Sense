@@ -18,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem.GroupBehavior
 import com.kylecorry.trail_sense.shared.debugging.isDebug
@@ -46,7 +47,7 @@ fun ExperimentalSettingsToolScreen() {
     val notificationGroupingOptions = remember { context.notificationGroupingOptions() }
 
     var showMetalDirection by remember {
-        mutableStateOf(context.getBoolean(cache, R.string.pref_experimental_metal_direction, false))
+        mutableStateOf(cache.booleanOr(PreferenceKeys.experimentalMetalDirection, false))
     }
     var useZeroShutterLag by remember {
         mutableStateOf(userPrefs.camera.useZeroShutterLag)
@@ -59,10 +60,7 @@ fun ExperimentalSettingsToolScreen() {
     }
     var forecastSource by remember {
         mutableStateOf(
-            context.getStringPreference(
-                cache,
-                R.string.pref_weather_forecast_source,
-                forecastSourceValue(ForecastSource.Sol)
+            cache.stringOr(PreferenceKeys.weatherForecastSource, forecastSourceValue(ForecastSource.Sol)
             )
         )
     }
@@ -103,7 +101,7 @@ fun ExperimentalSettingsToolScreen() {
                         checked = showMetalDirection,
                         onCheckedChange = {
                             showMetalDirection = it
-                            context.putBoolean(cache, R.string.pref_experimental_metal_direction, it)
+                            cache.putBoolean(PreferenceKeys.experimentalMetalDirection, it)
                         },
                         position = position
                     )
@@ -117,7 +115,7 @@ fun ExperimentalSettingsToolScreen() {
                     checked = useZeroShutterLag,
                     onCheckedChange = {
                         useZeroShutterLag = it
-                        context.putBoolean(cache, R.string.pref_use_zero_shutter_lag, it)
+                        cache.putBoolean(PreferenceKeys.useZeroShutterLag, it)
                     },
                     position = position
                 )
@@ -130,7 +128,7 @@ fun ExperimentalSettingsToolScreen() {
                     checked = useFilteredGps,
                     onCheckedChange = {
                         useFilteredGps = it
-                        cache.putInt(context.getString(R.string.pref_gps_smoothing), if (it) 50 else 0)
+                        cache.putInt(PreferenceKeys.gpsSmoothing, if (it) 50 else 0)
                     },
                     position = position
                 )
@@ -143,7 +141,7 @@ fun ExperimentalSettingsToolScreen() {
                     checked = showPressureForecast,
                     onCheckedChange = {
                         showPressureForecast = it
-                        context.putBoolean(cache, R.string.pref_show_pressure_forecast, it)
+                        cache.putBoolean(PreferenceKeys.showPressureForecast, it)
                     },
                     position = position
                 )
@@ -156,7 +154,7 @@ fun ExperimentalSettingsToolScreen() {
                         selected = forecastSource,
                         onSelected = {
                             forecastSource = it
-                            context.putString(cache, R.string.pref_weather_forecast_source, it)
+                            cache.putString(PreferenceKeys.weatherForecastSource, it)
                         },
                         position = position
                     )
@@ -172,7 +170,7 @@ fun ExperimentalSettingsToolScreen() {
                         selected = notificationGrouping,
                         onSelected = {
                             notificationGrouping = it
-                            context.putString(cache, R.string.pref_notification_group_behavior, it)
+                            cache.putString(PreferenceKeys.notificationGroupBehavior, it)
                         },
                         position = position
                     )

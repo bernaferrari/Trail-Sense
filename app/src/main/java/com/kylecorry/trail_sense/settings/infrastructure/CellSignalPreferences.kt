@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.settings.infrastructure
 
 import android.content.Context
 import com.kylecorry.andromeda.preferences.BooleanPreference
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 
 class CellSignalPreferences(private val context: Context) {
@@ -10,7 +10,7 @@ class CellSignalPreferences(private val context: Context) {
 
     var populateCache by BooleanPreference(
         cache,
-        context.getString(R.string.pref_cell_signal_refresh_cache),
+        PreferenceKeys.cellSignalRefreshCache,
         true
     )
 }

@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Duration.Companion.minutes
 
 import com.kylecorry.trail_sense.shared.preferences.onChange
@@ -60,15 +61,15 @@ fun AstronomySettingsToolScreen() {
             sunsetService = Tools.getService(appContext, AstronomyToolRegistration.SERVICE_SUNSET_ALERTS)!!,
             sunriseService = Tools.getService(appContext, AstronomyToolRegistration.SERVICE_SUNRISE_ALERTS)!!,
             keys = AstronomySettingsKeys(
-                sunTimeMode = appContext.getString(R.string.pref_sun_time_mode),
-                centerSunAndMoon = appContext.getString(R.string.pref_center_sun_and_moon),
-                quickActionLeft = appContext.getString(R.string.pref_astronomy_quick_action_left),
-                quickActionRight = appContext.getString(R.string.pref_astronomy_quick_action_right),
-                startCameraIn3D = appContext.getString(R.string.pref_start_camera_in_3d_view),
-                sunsetAlertTime = appContext.getString(R.string.pref_sunset_alert_time),
-                sunriseAlertTime = appContext.getString(R.string.pref_sunrise_alert_time),
-                useAlarmForSunset = appContext.getString(R.string.pref_astronomy_use_alarm_for_sunset_alert),
-                useAlarmForSunrise = appContext.getString(R.string.pref_astronomy_use_alarm_for_sunrise_alert)
+                sunTimeMode = PreferenceKeys.sunTimeMode,
+                centerSunAndMoon = PreferenceKeys.centerSunAndMoon,
+                quickActionLeft = PreferenceKeys.astronomyQuickActionLeft,
+                quickActionRight = PreferenceKeys.astronomyQuickActionRight,
+                startCameraIn3D = PreferenceKeys.startCameraIn3dView,
+                sunsetAlertTime = PreferenceKeys.sunsetAlertTime,
+                sunriseAlertTime = PreferenceKeys.sunriseAlertTime,
+                useAlarmForSunset = PreferenceKeys.astronomyUseAlarmForSunsetAlert,
+                useAlarmForSunrise = PreferenceKeys.astronomyUseAlarmForSunriseAlert
             )
         )
     }

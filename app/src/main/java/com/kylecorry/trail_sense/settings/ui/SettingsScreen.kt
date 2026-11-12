@@ -7,6 +7,7 @@ import com.kylecorry.trail_sense.main.MainActivity
 
 import androidx.activity.compose.LocalActivity
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -85,19 +86,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 import com.kylecorry.trail_sense.main.theme.isDynamicColorAvailable
 
-private val navigationMap = mapOf(
-    R.string.pref_unit_settings to Route.UnitSettings,
-    R.string.pref_privacy_settings to Route.PrivacySettings,
-    R.string.pref_experimental_settings to Route.ExperimentalSettings,
-    R.string.pref_plugins_settings to Route.PluginsSettings,
-    R.string.pref_error_settings to Route.ErrorSettings,
-    R.string.pref_sensor_settings to Route.SensorSettings,
-    R.string.pref_backup_settings to Route.BackupSettings,
-    R.string.pref_tool_settings_header_key to Route.ToolsSettings,
-    R.string.pref_open_source_licenses to Route.Licenses,
-    R.string.pref_diagnostics to Route.Diagnostics
-)
-
 @Composable
 fun SettingsToolScreen() {
     val context = LocalContext.current
@@ -116,8 +104,8 @@ fun SettingsToolScreen() {
             val cache = remember {
                 com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem.getInstance(context).preferences
             }
-            val fullscreenKey = stringResource(R.string.pref_night_mode_fullscreen)
-            val compassColorsKey = stringResource(R.string.pref_use_dynamic_colors_on_compass)
+            val fullscreenKey = PreferenceKeys.nightModeFullscreen
+            val compassColorsKey = PreferenceKeys.useDynamicColorsOnCompass
             ThemeAppearanceControls(
                 prefs = prefs,
                 wallpaperAvailable = remember { isDynamicColorAvailable() },
@@ -173,7 +161,7 @@ private fun SettingsScreen(
     val advancedTitle = stringResource(R.string.advanced)
     val aboutTitle = stringResource(R.string.pref_category_about)
 
-    fun go(key: Int) = onNavigate(navigationMap.getValue(key))
+    fun go(route: Route) = onNavigate(route)
 
     TrailSensePage(
         title = stringResource(R.string.settings),
@@ -198,7 +186,7 @@ private fun SettingsScreen(
                     icon = rememberVectorPainter(TrailIcons.Ruler),
                     value = quick.units,
                     position = position,
-                    onClick = { go(R.string.pref_unit_settings) }
+                    onClick = { go(Route.UnitSettings) }
                 )
             }
             // Quick actions and widgets apply across tools; a one-row "Tools" group above the tools would repeat
@@ -208,22 +196,22 @@ private fun SettingsScreen(
                     title = stringResource(R.string.sky_settings_tools_summary),
                     icon = rememberVectorPainter(Icons.Rounded.Widgets),
                     position = position,
-                    onClick = { go(R.string.pref_tool_settings_header_key) }
+                    onClick = { go(Route.ToolsSettings) }
                 )
             }
             listOf(
-                Triple(R.string.pref_sensor_settings, R.string.sensors, R.string.sky_settings_sensors_summary) to TrailIcons.Sensors,
-                Triple(R.string.pref_privacy_settings, R.string.privacy, R.string.sky_settings_privacy_summary) to TrailIcons.Visible,
-                Triple(R.string.pref_error_settings, R.string.errors, R.string.sky_settings_errors_summary) to TrailIcons.Alert,
-                Triple(R.string.pref_backup_settings, R.string.backup_restore, R.string.sky_settings_backup_summary) to TrailIcons.BackupRestore
-            ).forEach { (keys, icon) ->
+                Triple(Route.SensorSettings, R.string.sensors, R.string.sky_settings_sensors_summary) to TrailIcons.Sensors,
+                Triple(Route.PrivacySettings, R.string.privacy, R.string.sky_settings_privacy_summary) to TrailIcons.Visible,
+                Triple(Route.ErrorSettings, R.string.errors, R.string.sky_settings_errors_summary) to TrailIcons.Alert,
+                Triple(Route.BackupSettings, R.string.backup_restore, R.string.sky_settings_backup_summary) to TrailIcons.BackupRestore
+            ).forEach { (entry, icon) ->
                 row { position ->
                     SettingsNavRow(
-                        title = stringResource(keys.second),
-                        subtitle = stringResource(keys.third),
+                        title = stringResource(entry.second),
+                        subtitle = stringResource(entry.third),
                         icon = rememberVectorPainter(icon),
                         position = position,
-                        onClick = { go(keys.first) }
+                        onClick = { go(entry.first) }
                     )
                 }
             }
@@ -252,7 +240,7 @@ private fun SettingsScreen(
                     title = stringResource(R.string.diagnostics),
                     icon = rememberVectorPainter(Icons.Rounded.MonitorHeart),
                     position = position,
-                    onClick = { go(R.string.pref_diagnostics) }
+                    onClick = { go(Route.Diagnostics) }
                 )
             }
             row { position ->
@@ -260,7 +248,7 @@ private fun SettingsScreen(
                     title = stringResource(R.string.experimental),
                     icon = rememberVectorPainter(TrailIcons.Experimental),
                     position = position,
-                    onClick = { go(R.string.pref_experimental_settings) }
+                    onClick = { go(Route.ExperimentalSettings) }
                 )
             }
             if (pluginsEnabled) {
@@ -269,7 +257,7 @@ private fun SettingsScreen(
                         title = stringResource(R.string.plugins),
                         icon = rememberVectorPainter(TrailIcons.Apps),
                         position = position,
-                        onClick = { go(R.string.pref_plugins_settings) }
+                        onClick = { go(Route.PluginsSettings) }
                     )
                 }
             }

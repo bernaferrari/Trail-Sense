@@ -4,7 +4,7 @@ import android.content.Context
 import android.hardware.Sensor
 import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.andromeda.sense.Sensors
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 
 class MetalDetectorPreferences(context: Context) : PreferenceRepo(context) {
 
@@ -12,7 +12,7 @@ class MetalDetectorPreferences(context: Context) : PreferenceRepo(context) {
         get() {
             val hasGyro = Sensors.hasSensor(context, Sensor.TYPE_GYROSCOPE)
             val enabled =
-                cache.getBoolean(getString(R.string.pref_experimental_metal_direction)) ?: false
+                cache.getBoolean(PreferenceKeys.experimentalMetalDirection) ?: false
             return hasGyro && enabled
         }
 
@@ -22,12 +22,12 @@ class MetalDetectorPreferences(context: Context) : PreferenceRepo(context) {
 
     var isMetalAudioEnabled by BooleanPreference(
         cache,
-        context.getString(R.string.pref_use_metal_audio),
+        PreferenceKeys.useMetalAudio,
         false
     )
     var isMetalVibrationDisabled by BooleanPreference(
         cache,
-        context.getString(R.string.pref_no_use_metal_vibration),
+        PreferenceKeys.noUseMetalVibration,
         false
     )
 }

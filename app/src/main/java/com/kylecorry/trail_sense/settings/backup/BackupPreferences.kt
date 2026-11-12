@@ -5,26 +5,26 @@ import android.net.Uri
 import androidx.core.net.toUri
 import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.andromeda.preferences.StringPreference
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.settings.infrastructure.PreferenceRepo
 
 class BackupPreferences(context: Context) : PreferenceRepo(context) {
 
     var isAutoBackupEnabled by BooleanPreference(
         cache,
-        getString(R.string.pref_auto_backup_enabled),
+        PreferenceKeys.autoBackupEnabled,
         false
     )
 
     var includeMapsforgeMaps by BooleanPreference(
         cache,
-        getString(R.string.pref_include_mapsforge_backups),
+        PreferenceKeys.includeMapsforgeBackups,
         true
     )
 
     private var autoBackupUriString: String by StringPreference(
         cache,
-        getString(R.string.pref_auto_backup_uri),
+        PreferenceKeys.autoBackupUri,
         ""
     )
 

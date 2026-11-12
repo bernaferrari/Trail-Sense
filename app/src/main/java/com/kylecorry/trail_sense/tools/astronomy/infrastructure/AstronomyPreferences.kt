@@ -1,12 +1,12 @@
 package com.kylecorry.trail_sense.tools.astronomy.infrastructure
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.time.decodeStoredLocalDate
 
 import android.content.Context
 import com.kylecorry.luna.text.toIntCompat
 import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.sol.science.astronomy.SunTimesMode
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.datetime.LocalDate
@@ -18,7 +18,7 @@ class AstronomyPreferences(private val context: Context) {
 
     val sunTimesMode: SunTimesMode
         get() {
-            return when (cache.getString(context.getString(R.string.pref_sun_time_mode))) {
+            return when (cache.getString(PreferenceKeys.sunTimeMode)) {
                 "civil" -> SunTimesMode.Civil
                 "nautical" -> SunTimesMode.Nautical
                 "astronomical" -> SunTimesMode.Astronomical
@@ -28,11 +28,11 @@ class AstronomyPreferences(private val context: Context) {
 
     val centerSunAndMoon: Boolean
         get() {
-            return cache.getBoolean(context.getString(R.string.pref_center_sun_and_moon)) ?: false
+            return cache.getBoolean(PreferenceKeys.centerSunAndMoon) ?: false
         }
 
     private val sunMoonCompassMode: String
-        get() = cache.getString(context.getString(R.string.pref_show_sun_moon_compass)) ?: "when_up"
+        get() = cache.getString(PreferenceKeys.showSunMoonCompass) ?: "when_up"
 
     val showOnCompass: Boolean
         get() = sunMoonCompassMode.let { it == "always" || it == "when_up" }
@@ -42,19 +42,19 @@ class AstronomyPreferences(private val context: Context) {
 
     var showAstronomyBands by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_astronomy_bands),
+        PreferenceKeys.showAstronomyBands,
         false
     )
 
     var sendSunsetAlerts by BooleanPreference(
         cache,
-        context.getString(R.string.pref_sunset_alerts),
+        PreferenceKeys.sunsetAlerts,
         false
     )
 
     var sendSunriseAlerts by BooleanPreference(
         cache,
-        context.getString(R.string.pref_sunrise_alerts),
+        PreferenceKeys.sunriseAlerts,
         false
     )
 
@@ -68,86 +68,86 @@ class AstronomyPreferences(private val context: Context) {
 
     var sendLunarEclipseAlerts by BooleanPreference(
         cache,
-        context.getString(R.string.pref_send_lunar_eclipse_alerts),
+        PreferenceKeys.sendLunarEclipseAlerts,
         false
     )
 
     var sendSolarEclipseAlerts by BooleanPreference(
         cache,
-        context.getString(R.string.pref_send_solar_eclipse_alerts),
+        PreferenceKeys.sendSolarEclipseAlerts,
         false
     )
 
     var sendMeteorShowerAlerts by BooleanPreference(
         cache,
-        context.getString(R.string.pref_send_meteor_shower_alerts),
+        PreferenceKeys.sendMeteorShowerAlerts,
         false
     )
 
     val sunsetAlertMinutesBefore: Long
         get() {
-            return (cache.getString(context.getString(R.string.pref_sunset_alert_time))
+            return (cache.getString(PreferenceKeys.sunsetAlertTime)
                 ?: "60").toLong()
         }
     val sunriseAlertMinutesBefore: Long
         get() {
-            return (cache.getString(context.getString(R.string.pref_sunrise_alert_time))
+            return (cache.getString(PreferenceKeys.sunriseAlertTime)
                 ?: "0").toLong()
         }
 
     val sunsetAlertLastSent: LocalDate?
         get() {
-            return decodeStoredLocalDate(cache.getString(context.getString(R.string.pref_sunset_alert_last_sent_date)))
+            return decodeStoredLocalDate(cache.getString(PreferenceKeys.sunsetAlertLastSentDate))
         }
     val sunriseAlertLastSent: LocalDate?
         get() {
-            return decodeStoredLocalDate(cache.getString(context.getString(R.string.pref_sunrise_alert_last_sent_date)))
+            return decodeStoredLocalDate(cache.getString(PreferenceKeys.sunriseAlertLastSentDate))
         }
 
     fun setSunsetAlertLastSentDate(date: LocalDate) {
         cache.putString(
-            context.getString(R.string.pref_sunset_alert_last_sent_date),
+            PreferenceKeys.sunsetAlertLastSentDate,
             date.toString()
         )
     }
 
     fun setSunriseAlertLastSentDate(date: LocalDate) {
         cache.putString(
-            context.getString(R.string.pref_sunrise_alert_last_sent_date),
+            PreferenceKeys.sunriseAlertLastSentDate,
             date.toString()
         )
     }
 
     val leftButton: Int
         get() {
-            val id = cache.getString(context.getString(R.string.pref_astronomy_quick_action_left))
+            val id = cache.getString(PreferenceKeys.astronomyQuickActionLeft)
                 ?.toIntCompat()
             return id ?: Tools.QUICK_ACTION_FLASHLIGHT
         }
 
     val rightButton: Int
         get() {
-            val id = cache.getString(context.getString(R.string.pref_astronomy_quick_action_right))
+            val id = cache.getString(PreferenceKeys.astronomyQuickActionRight)
                 ?.toIntCompat()
             return id ?: Tools.QUICK_ACTION_SUNSET_ALERT
         }
 
     val startCameraIn3DView by BooleanPreference(
         cache,
-        context.getString(R.string.pref_start_camera_in_3d_view),
+        PreferenceKeys.startCameraIn3dView,
         true
     )
 
     // Alarms
     val useAlarmForSunsetAlert by BooleanPreference(
         cache,
-        context.getString(R.string.pref_astronomy_use_alarm_for_sunset_alert),
+        PreferenceKeys.astronomyUseAlarmForSunsetAlert,
         false
     )
 
     val useAlarmForSunriseAlert by BooleanPreference(
         cache,
-        context.getString(R.string.pref_astronomy_use_alarm_for_sunrise_alert),
+        PreferenceKeys.astronomyUseAlarmForSunriseAlert,
         false
     )
 

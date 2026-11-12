@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration
@@ -78,7 +79,7 @@ class FlashlightService : AndromedaService() {
         if (modeJob == null) {
             modeJob = scope.launch { flashlight.mode.collect(::onStateChanged) }
         }
-        stopAt = cache.getInstant(getString(R.string.pref_flashlight_timeout_instant))
+        stopAt = cache.getInstant(PreferenceKeys.flashlightTimeoutInstant)
         offTimer.interval(1000)
         return START_STICKY
     }

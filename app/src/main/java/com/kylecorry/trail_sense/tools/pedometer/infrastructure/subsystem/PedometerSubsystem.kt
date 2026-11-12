@@ -10,8 +10,8 @@ import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.luna.concurrency.BackgroundTask
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -59,12 +59,12 @@ class PedometerSubsystem private constructor(private val context: Context) : IPe
     }
 
     private val stateChangePrefKeys = listOf(
-        R.string.pref_pedometer_enabled,
-        R.string.pref_low_power_mode
-    ).map { context.getString(it) }
+        PreferenceKeys.pedometerEnabled,
+        PreferenceKeys.lowPowerMode
+    )
 
     private val distanceChangePrefKeys = listOf(
-        context.getString(R.string.pref_stride_length)
+        PreferenceKeys.strideLength
     )
 
     private val stepsMutex = Mutex()

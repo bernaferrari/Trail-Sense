@@ -35,6 +35,7 @@ import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.sol.units.WeightUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -110,11 +111,11 @@ fun UnitSettingsToolScreen() {
         val imperial = listOf("feet_miles", "f", "lbs") + if (hasBarometer) listOf("in") else emptyList()
         val current = listOf(distanceUnits, temperatureUnits, weightUnits) + if (hasBarometer) listOf(pressureUnits) else emptyList()
         fun applySystem(values: List<String>) {
-            distanceUnits = values[0]; context.putString(cache, R.string.pref_distance_units, values[0])
-            temperatureUnits = values[1]; context.putString(cache, R.string.pref_temperature_units, values[1])
-            weightUnits = values[2]; context.putString(cache, R.string.pref_weight_units, values[2])
+            distanceUnits = values[0]; cache.putString(PreferenceKeys.distanceUnits, values[0])
+            temperatureUnits = values[1]; cache.putString(PreferenceKeys.temperatureUnits, values[1])
+            weightUnits = values[2]; cache.putString(PreferenceKeys.weightUnits, values[2])
             if (hasBarometer) {
-                pressureUnits = values[3]; context.putString(cache, R.string.pref_pressure_units, values[3])
+                pressureUnits = values[3]; cache.putString(PreferenceKeys.pressureUnits, values[3])
             }
         }
         item("system") {
@@ -128,23 +129,23 @@ fun UnitSettingsToolScreen() {
         trailSenseSection("fine_tune", title = fineTuneTitle) {
             row { position ->
                 UnitValueRow(stringResource(R.string.distance), distanceOptions, distanceUnits, position) {
-                    distanceUnits = it; context.putString(cache, R.string.pref_distance_units, it)
+                    distanceUnits = it; cache.putString(PreferenceKeys.distanceUnits, it)
                 }
             }
             row { position ->
                 UnitValueRow(stringResource(R.string.temperature), temperatureOptions, temperatureUnits, position) {
-                    temperatureUnits = it; context.putString(cache, R.string.pref_temperature_units, it)
+                    temperatureUnits = it; cache.putString(PreferenceKeys.temperatureUnits, it)
                 }
             }
             row { position ->
                 UnitValueRow(stringResource(R.string.weight), weightOptions, weightUnits, position) {
-                    weightUnits = it; context.putString(cache, R.string.pref_weight_units, it)
+                    weightUnits = it; cache.putString(PreferenceKeys.weightUnits, it)
                 }
             }
             if (hasBarometer) {
                 row { position ->
                     UnitValueRow(stringResource(R.string.pressure), pressureOptions, pressureUnits, position) {
-                        pressureUnits = it; context.putString(cache, R.string.pref_pressure_units, it)
+                        pressureUnits = it; cache.putString(PreferenceKeys.pressureUnits, it)
                     }
                 }
             }
@@ -153,13 +154,13 @@ fun UnitSettingsToolScreen() {
             row { position ->
                 UnitValueRow(stringResource(R.string.pref_coordinate_format_title), coordinateOptions, coordinateFormat, position) {
                     coordinateFormat = it
-                    context.putString(cache, R.string.pref_coordinate_format, it)
+                    cache.putString(PreferenceKeys.coordinateFormat, it)
                 }
             }
             row { position ->
                 UnitValueRow(stringResource(R.string.pref_map_url_source_title), mapOptions, mapSite, position) {
                     mapSite = it
-                    context.putString(cache, R.string.pref_map_url_source, it)
+                    cache.putString(PreferenceKeys.mapUrlSource, it)
                 }
             }
         }
@@ -170,7 +171,7 @@ fun UnitSettingsToolScreen() {
                     checked = use24HourTime,
                     onCheckedChange = {
                         use24HourTime = it
-                        context.putBoolean(cache, R.string.pref_use_24_hour, it)
+                        cache.putBoolean(PreferenceKeys.use24Hour, it)
                     },
                     position = position
                 )
@@ -181,7 +182,7 @@ fun UnitSettingsToolScreen() {
                     checked = includeLeadingZero,
                     onCheckedChange = {
                         includeLeadingZero = it
-                        context.putBoolean(cache, R.string.pref_include_leading_zero, it)
+                        cache.putBoolean(PreferenceKeys.includeLeadingZero, it)
                     },
                     position = position
                 )

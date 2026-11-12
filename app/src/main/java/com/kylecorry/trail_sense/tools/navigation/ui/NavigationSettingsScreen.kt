@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.sol.units.DistanceUnits
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
@@ -134,21 +135,21 @@ internal data class NavigationSettingsKeys(
     companion object {
         fun from(context: Context): NavigationSettingsKeys {
             return NavigationSettingsKeys(
-                quickActionLeft = context.getString(R.string.pref_navigation_quick_action_left),
-                quickActionRight = context.getString(R.string.pref_navigation_quick_action_right),
-                showCalibrationDialog = context.getString(R.string.pref_show_calibrate_on_navigate_dialog),
-                lockScreenPresence = context.getString(R.string.pref_navigation_lock_screen_presence),
-                keepUnlocked = context.getString(R.string.pref_navigation_keep_unlocked),
-                speedometerType = context.getString(R.string.pref_navigation_speedometer_type),
-                showLinearCompass = context.getString(R.string.pref_show_linear_compass),
-                showDialTicksWhenNoCompass = context.getString(R.string.pref_show_dial_ticks_when_no_compass),
-                showSunMoonCompass = context.getString(R.string.pref_show_sun_moon_compass),
-                displayMultipleBeacons = context.getString(R.string.pref_display_multi_beacons),
-                numberOfVisibleBeacons = context.getString(R.string.pref_num_visible_beacons),
-                nearbyLinearOnly = context.getString(R.string.pref_nearby_linear_only),
-                showAzimuthIndicator = context.getString(R.string.pref_navigation_show_azimuth_indicator),
-                highDetailMode = context.getString(R.string.pref_navigation_high_detail_mode),
-                dialLobes = context.getString(R.string.pref_navigation_dial_lobes)
+                quickActionLeft = PreferenceKeys.navigationQuickActionLeft,
+                quickActionRight = PreferenceKeys.navigationQuickActionRight,
+                showCalibrationDialog = PreferenceKeys.showCalibrateOnNavigateDialog,
+                lockScreenPresence = PreferenceKeys.navigationLockScreenPresence,
+                keepUnlocked = PreferenceKeys.navigationKeepUnlocked,
+                speedometerType = PreferenceKeys.navigationSpeedometerType,
+                showLinearCompass = PreferenceKeys.showLinearCompass,
+                showDialTicksWhenNoCompass = PreferenceKeys.showDialTicksWhenNoCompass,
+                showSunMoonCompass = PreferenceKeys.showSunMoonCompass,
+                displayMultipleBeacons = PreferenceKeys.displayMultiBeacons,
+                numberOfVisibleBeacons = PreferenceKeys.numVisibleBeacons,
+                nearbyLinearOnly = PreferenceKeys.nearbyLinearOnly,
+                showAzimuthIndicator = PreferenceKeys.navigationShowAzimuthIndicator,
+                highDetailMode = PreferenceKeys.navigationHighDetailMode,
+                dialLobes = PreferenceKeys.navigationDialLobes
             )
         }
     }

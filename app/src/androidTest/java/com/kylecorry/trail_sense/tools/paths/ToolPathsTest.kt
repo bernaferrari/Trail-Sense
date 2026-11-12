@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths
 
 import androidx.test.uiautomator.By
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.test_utils.views.view
 import java.util.regex.Pattern
 import com.kylecorry.trail_sense.test_utils.views.desc
@@ -886,7 +887,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         val defaultGain = follow(OUT_AND_BACK, reversed = false, from = start)
             .navigate(start).remainingElevationGain.meters().value
         PreferencesSubsystem.getInstance(TestUtils.context).preferences
-            .putInt(TestUtils.context.getString(R.string.pref_elevation_smoothing), 1000)
+            .putInt(PreferenceKeys.elevationSmoothing, 1000)
         val restored = newNavigator()
         restored.awaitRestore()
         val smoothedGain = restored.destination.first()!!.route

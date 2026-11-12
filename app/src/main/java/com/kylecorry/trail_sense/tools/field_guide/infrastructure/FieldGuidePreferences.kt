@@ -4,7 +4,7 @@ import android.content.Context
 import com.kylecorry.andromeda.preferences.StringEnumPreference
 import com.kylecorry.andromeda.preferences.getLongArray
 import com.kylecorry.andromeda.preferences.putLongArray
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.data.Identifiable
 import com.kylecorry.trail_sense.settings.infrastructure.PreferenceRepo
 
@@ -17,14 +17,14 @@ enum class FieldGuideNameDisplay(override val id: Long) : Identifiable {
 class FieldGuidePreferences(context: Context) : PreferenceRepo(context) {
 
     var hiddenPageIds: List<Long>
-        get() = cache.getLongArray(getString(R.string.pref_field_guide_hidden_pages)) ?: emptyList()
+        get() = cache.getLongArray(PreferenceKeys.fieldGuideHiddenPages) ?: emptyList()
         set(value) {
-            cache.putLongArray(getString(R.string.pref_field_guide_hidden_pages), value)
+            cache.putLongArray(PreferenceKeys.fieldGuideHiddenPages, value)
         }
 
     var nameDisplay by StringEnumPreference(
         cache,
-        getString(R.string.pref_field_guide_name_display),
+        PreferenceKeys.fieldGuideNameDisplay,
         FieldGuideNameDisplay.entries.associateBy { it.id.toString() },
         FieldGuideNameDisplay.Common
     )

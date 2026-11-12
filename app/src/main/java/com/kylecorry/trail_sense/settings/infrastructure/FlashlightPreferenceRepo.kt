@@ -1,47 +1,47 @@
 package com.kylecorry.trail_sense.settings.infrastructure
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Duration.Companion.seconds
 
 import android.content.Context
 import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.andromeda.preferences.FloatPreference
-import com.kylecorry.trail_sense.R
 import kotlin.time.Duration
 
 class FlashlightPreferenceRepo(context: Context) : PreferenceRepo(context) {
 
     var toggleWithVolumeButtons by BooleanPreference(
         cache,
-        getString(R.string.pref_flashlight_toggle_with_volume),
+        PreferenceKeys.flashlightToggleWithVolume,
         false
     )
 
     var controlScreenFlashlightWithVolumeButtons by BooleanPreference(
         cache,
-        getString(R.string.pref_flashlight_control_screen_with_volume),
+        PreferenceKeys.flashlightControlScreenWithVolume,
         false
     )
 
     var shouldTimeout by BooleanPreference(
         cache,
-        getString(R.string.pref_flashlight_should_timeout),
+        PreferenceKeys.flashlightShouldTimeout,
         false
     )
 
     var brightness by FloatPreference(
         cache,
-        getString(R.string.pref_torch_brightness),
+        PreferenceKeys.torchBrightness,
         1f
     )
 
     var timeout: Duration
         get() {
             val seconds =
-                cache.getLong(getString(R.string.pref_flashlight_timeout)) ?: (5L * 60)
+                cache.getLong(PreferenceKeys.flashlightTimeout) ?: (5L * 60)
             return seconds.seconds
         }
         set(value) {
-            cache.putLong(getString(R.string.pref_flashlight_timeout), value.inWholeSeconds)
+            cache.putLong(PreferenceKeys.flashlightTimeout, value.inWholeSeconds)
         }
 
 }

@@ -3,14 +3,14 @@ package com.kylecorry.trail_sense.settings.infrastructure
 import android.content.Context
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.andromeda.preferences.StringEnumPreference
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.sensors.thermometer.ITemperatureCalibrator
 import com.kylecorry.trail_sense.shared.sensors.thermometer.RangeTemperatureCalibrator
 import com.kylecorry.trail_sense.shared.sensors.thermometer.ThermometerSource
 
 class ThermometerPreferences(context: Context) : PreferenceRepo(context), IThermometerPreferences {
     override val source by StringEnumPreference(
-        cache, getString(R.string.pref_thermometer_source),
+        cache, PreferenceKeys.thermometerSource,
         mapOf(
             "historic" to ThermometerSource.Historic,
             "sensor" to ThermometerSource.Sensor
@@ -20,93 +20,93 @@ class ThermometerPreferences(context: Context) : PreferenceRepo(context), ITherm
 
     override var smoothing: Float
         get() {
-            return (cache.getInt(context.getString(R.string.pref_temperature_smoothing))
+            return (cache.getInt(PreferenceKeys.temperatureSmoothing)
                 ?: 0) / 1000f
         }
         set(value) {
             val scaled = (value * 1000).coerceIn(0f, 1000f)
             cache.putInt(
-                context.getString(R.string.pref_temperature_smoothing),
+                PreferenceKeys.temperatureSmoothing,
                 scaled.toInt()
             )
         }
 
     override var minBatteryTemperature: Float
-        get() = cache.getString(context.getString(R.string.pref_min_uncalibrated_temp_c))
+        get() = cache.getString(PreferenceKeys.minUncalibratedTempC)
             ?.toFloatCompat() ?: 0f
         set(value) {
             cache.putString(
-                context.getString(R.string.pref_min_uncalibrated_temp_c),
+                PreferenceKeys.minUncalibratedTempC,
                 value.toString()
             )
         }
 
     override var minActualTemperature: Float
-        get() = cache.getString(context.getString(R.string.pref_min_calibrated_temp_c))
+        get() = cache.getString(PreferenceKeys.minCalibratedTempC)
             ?.toFloatCompat() ?: 0f
         set(value) {
             cache.putString(
-                context.getString(R.string.pref_min_calibrated_temp_c),
+                PreferenceKeys.minCalibratedTempC,
                 value.toString()
             )
         }
 
     override var maxBatteryTemperature: Float
-        get() = cache.getString(context.getString(R.string.pref_max_uncalibrated_temp_c))
+        get() = cache.getString(PreferenceKeys.maxUncalibratedTempC)
             ?.toFloatCompat() ?: 100f
         set(value) {
             cache.putString(
-                context.getString(R.string.pref_max_uncalibrated_temp_c),
+                PreferenceKeys.maxUncalibratedTempC,
                 value.toString()
             )
         }
 
     override var maxActualTemperature: Float
-        get() = cache.getString(context.getString(R.string.pref_max_calibrated_temp_c))
+        get() = cache.getString(PreferenceKeys.maxCalibratedTempC)
             ?.toFloatCompat() ?: 100f
         set(value) {
             cache.putString(
-                context.getString(R.string.pref_max_calibrated_temp_c),
+                PreferenceKeys.maxCalibratedTempC,
                 value.toString()
             )
         }
 
     override var minBatteryTemperatureF: Float
-        get() = cache.getString(context.getString(R.string.pref_min_uncalibrated_temp_f))
+        get() = cache.getString(PreferenceKeys.minUncalibratedTempF)
             ?.toFloatCompat() ?: 32f
         set(value) {
             cache.putString(
-                context.getString(R.string.pref_min_uncalibrated_temp_f),
+                PreferenceKeys.minUncalibratedTempF,
                 value.toString()
             )
         }
 
     override var minActualTemperatureF: Float
-        get() = cache.getString(context.getString(R.string.pref_min_calibrated_temp_f))
+        get() = cache.getString(PreferenceKeys.minCalibratedTempF)
             ?.toFloatCompat() ?: 32f
         set(value) {
             cache.putString(
-                context.getString(R.string.pref_min_calibrated_temp_f),
+                PreferenceKeys.minCalibratedTempF,
                 value.toString()
             )
         }
 
     override var maxBatteryTemperatureF: Float
-        get() = cache.getString(context.getString(R.string.pref_max_uncalibrated_temp_f))
+        get() = cache.getString(PreferenceKeys.maxUncalibratedTempF)
             ?.toFloatCompat() ?: 212f
         set(value) {
             cache.putString(
-                context.getString(R.string.pref_max_uncalibrated_temp_f),
+                PreferenceKeys.maxUncalibratedTempF,
                 value.toString()
             )
         }
 
     override var maxActualTemperatureF: Float
-        get() = cache.getString(context.getString(R.string.pref_max_calibrated_temp_f))
+        get() = cache.getString(PreferenceKeys.maxCalibratedTempF)
             ?.toFloatCompat() ?: 212f
         set(value) {
             cache.putString(
-                context.getString(R.string.pref_max_calibrated_temp_f),
+                PreferenceKeys.maxCalibratedTempF,
                 value.toString()
             )
         }

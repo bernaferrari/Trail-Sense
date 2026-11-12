@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.settings.ui
 
 import android.content.Context
 import androidx.annotation.ArrayRes
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
@@ -97,28 +96,12 @@ internal fun optionLabel(options: List<SettingsOption>, selected: String): Strin
     return options.firstOrNull { it.value == selected }?.label ?: selected
 }
 
-internal fun Context.getStringPreference(
-    cache: Preferences,
-    @StringRes key: Int,
-    default: String
-): String {
-    return cache.getString(getString(key)) ?: default
+internal fun Preferences.stringOr(key: String, default: String): String {
+    return getString(key) ?: default
 }
 
-internal fun Context.getBoolean(
-    cache: Preferences,
-    @StringRes key: Int,
-    default: Boolean
-): Boolean {
-    return cache.getBoolean(getString(key)) ?: default
-}
-
-internal fun Context.putString(cache: Preferences, @StringRes key: Int, value: String) {
-    cache.putString(getString(key), value)
-}
-
-internal fun Context.putBoolean(cache: Preferences, @StringRes key: Int, value: Boolean) {
-    cache.putBoolean(getString(key), value)
+internal fun Preferences.booleanOr(key: String, default: Boolean): Boolean {
+    return getBoolean(key) ?: default
 }
 
 /** A distance with its unit's usual decimals, or [none] when there is no distance. */

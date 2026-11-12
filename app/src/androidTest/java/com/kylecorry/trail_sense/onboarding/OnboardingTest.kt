@@ -4,6 +4,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
@@ -37,9 +38,9 @@ class OnboardingTest {
     fun setUp() {
         TestUtils.setWaitForIdleTimeout()
         TestUtils.setupApplication()
-        prefs.putBoolean(context.getString(R.string.pref_onboarding_completed), false)
-        prefs.putBoolean(context.getString(R.string.pref_main_disclaimer_shown_key), false)
-        prefs.putString(context.getString(R.string.pref_distance_units), "feet_miles")
+        prefs.putBoolean(PreferenceKeys.onboardingCompleted, false)
+        prefs.putBoolean(PreferenceKeys.mainDisclaimerShownKey, false)
+        prefs.putString(PreferenceKeys.distanceUnits, "feet_miles")
     }
 
     @After
@@ -62,7 +63,7 @@ class OnboardingTest {
         hasText(string(R.string.app_disclaimer_message_title))
         back()
         hasText(string(R.string.onboarding_setup_intro))
-        assertNotEquals(true, prefs.getBoolean(context.getString(R.string.pref_onboarding_completed)))
+        assertNotEquals(true, prefs.getBoolean(PreferenceKeys.onboardingCompleted))
 
         click(string(R.string.next), exact = true)
         click(string(R.string.i_agree), exact = true)
@@ -73,9 +74,9 @@ class OnboardingTest {
 
         // The app itself, with first run saved
         hasText(string(R.string.tools), exact = true)
-        assertEquals(true, prefs.getBoolean(context.getString(R.string.pref_onboarding_completed)))
-        assertEquals(true, prefs.getBoolean(context.getString(R.string.pref_main_disclaimer_shown_key)))
-        assertEquals("meters", prefs.getString(context.getString(R.string.pref_distance_units)))
+        assertEquals(true, prefs.getBoolean(PreferenceKeys.onboardingCompleted))
+        assertEquals(true, prefs.getBoolean(PreferenceKeys.mainDisclaimerShownKey))
+        assertEquals("meters", prefs.getString(PreferenceKeys.distanceUnits))
 
         // It stays finished across a recreation
         scenario?.recreate()
@@ -93,6 +94,6 @@ class OnboardingTest {
         waitFor {
             assertNotEquals(Lifecycle.State.RESUMED, scenario?.state)
         }
-        assertNotEquals(true, prefs.getBoolean(context.getString(R.string.pref_onboarding_completed)))
+        assertNotEquals(true, prefs.getBoolean(PreferenceKeys.onboardingCompleted))
     }
 }

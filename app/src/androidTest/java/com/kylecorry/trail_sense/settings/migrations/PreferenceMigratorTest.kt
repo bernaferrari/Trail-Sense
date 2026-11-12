@@ -8,9 +8,9 @@ import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.preferences.Preference
 import com.kylecorry.andromeda.preferences.getIntArray
 import com.kylecorry.andromeda.preferences.putIntArray
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.AppState
 import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dem.colors.ElevationColorStrategy
 import com.kylecorry.trail_sense.shared.dem.map_layers.ElevationMapTileSource
@@ -111,7 +111,7 @@ class PreferenceMigratorTest {
 
     @Test
     fun migration3To4ConvertsThePathColorToALong() {
-        val key = context.getString(R.string.pref_backtrack_path_color)
+        val key = PreferenceKeys.backtrackPathColor
         prefs.putInt(key, 12345)
 
         migrate(3)
@@ -243,27 +243,27 @@ class PreferenceMigratorTest {
 
         assertFalse(prefs.contains("pref_use_legacy_compass_2"))
         // The source is whatever this device supports, so only the fact that one was chosen is checked
-        assertTrue(prefs.contains(context.getString(R.string.pref_compass_source)))
+        assertTrue(prefs.contains(PreferenceKeys.compassSource))
     }
 
     @Test
     fun migration14To15WritesTheImplicitUnitDefaultsToDisk() {
         val unitKeys = listOf(
-            R.string.pref_use_24_hour,
-            R.string.pref_distance_units,
-            R.string.pref_weight_units,
-            R.string.pref_pressure_units,
-            R.string.pref_temperature_units
-        ).map { context.getString(it) }
+            PreferenceKeys.use24Hour,
+            PreferenceKeys.distanceUnits,
+            PreferenceKeys.weightUnits,
+            PreferenceKeys.pressureUnits,
+            PreferenceKeys.temperatureUnits
+        )
         // An explicit choice must survive the defaults being written
-        prefs.putString(context.getString(R.string.pref_distance_units), "meters")
-        unitKeys.filter { it != context.getString(R.string.pref_distance_units) }
+        prefs.putString(PreferenceKeys.distanceUnits, "meters")
+        unitKeys.filter { it != PreferenceKeys.distanceUnits }
             .forEach { assertFalse(it, prefs.contains(it)) }
 
         migrate(14)
 
         unitKeys.forEach { assertTrue(it, prefs.contains(it)) }
-        assertEquals("meters", prefs.getString(context.getString(R.string.pref_distance_units)))
+        assertEquals("meters", prefs.getString(PreferenceKeys.distanceUnits))
     }
 
     @Test
@@ -286,8 +286,8 @@ class PreferenceMigratorTest {
 
     @Test
     fun migration16To17ReplacesTheOldToolQuickActions() {
-        val leftKey = context.getString(R.string.pref_navigation_quick_action_left)
-        val arrayKey = context.getString(R.string.pref_tool_quick_actions)
+        val leftKey = PreferenceKeys.navigationQuickActionLeft
+        val arrayKey = PreferenceKeys.toolQuickActions
         prefs.putString(leftKey, "7")
         prefs.putIntArray(arrayKey, listOf(0, 99))
 
@@ -381,12 +381,12 @@ class PreferenceMigratorTest {
 
     @Test
     fun migration24To25MovesTheNearbyDistanceToTheViewDistance() {
-        prefs.putString(context.getString(R.string.pref_max_beacon_distance), "5000")
+        prefs.putString(PreferenceKeys.maxBeaconDistance, "5000")
 
         migrate(24)
 
         assertEquals("5000", prefs.getString("pref_navigation_view_distance"))
-        assertEquals(true, prefs.getBoolean(context.getString(R.string.pref_nearby_linear_only)))
+        assertEquals(true, prefs.getBoolean(PreferenceKeys.nearbyLinearOnly))
     }
 
     @Test
@@ -435,7 +435,7 @@ class PreferenceMigratorTest {
 
     @Test
     fun migration27To28HidesNavigationLabelsForReturningUsersOnly() {
-        val key = context.getString(R.string.pref_use_bottom_navigation_labels)
+        val key = PreferenceKeys.useBottomNavigationLabels
 
         AppState.isReturningUser = false
         migrate(27)
@@ -450,7 +450,7 @@ class PreferenceMigratorTest {
 
     @Test
     fun migration29To30OptsReturningUsersOutOfTheDailyOdometerReset() {
-        val key = context.getString(R.string.pref_odometer_reset_daily)
+        val key = PreferenceKeys.odometerResetDaily
         AppState.isReturningUser = true
 
         migrate(29)
@@ -460,7 +460,7 @@ class PreferenceMigratorTest {
 
     @Test
     fun migration29To30LeavesNewUsersOnTheDefault() {
-        val key = context.getString(R.string.pref_odometer_reset_daily)
+        val key = PreferenceKeys.odometerResetDaily
         AppState.isReturningUser = false
 
         migrate(29)
@@ -470,7 +470,7 @@ class PreferenceMigratorTest {
 
     @Test
     fun migration29To30DoesNotOverrideAnExplicitChoice() {
-        val key = context.getString(R.string.pref_odometer_reset_daily)
+        val key = PreferenceKeys.odometerResetDaily
         AppState.isReturningUser = true
         prefs.putBoolean(key, true)
 
@@ -521,7 +521,7 @@ class PreferenceMigratorTest {
 
     @Test
     fun migration36To37ConvertsAutomaticLocationToGpsSource() {
-        val key = context.getString(R.string.pref_auto_location)
+        val key = PreferenceKeys.autoLocation
         prefs.putBoolean(key, true)
 
         migrate(36)
@@ -531,7 +531,7 @@ class PreferenceMigratorTest {
 
     @Test
     fun migration36To37ConvertsDisabledAutomaticLocationToManualSource() {
-        val key = context.getString(R.string.pref_auto_location)
+        val key = PreferenceKeys.autoLocation
         prefs.putBoolean(key, false)
 
         migrate(36)

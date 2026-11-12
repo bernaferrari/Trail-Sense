@@ -6,7 +6,7 @@ import com.kylecorry.andromeda.preferences.StringEnumPreference
 import com.kylecorry.andromeda.preferences.FloatPreference
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARPathAppearance
 
@@ -14,7 +14,7 @@ class AugmentedRealityPreferences(context: Context) : PreferenceRepo(context) {
 
     var beaconViewDistance by FloatPreference(
         cache,
-        context.getString(R.string.pref_augmented_reality_view_distance),
+        PreferenceKeys.augmentedRealityViewDistance,
         1000f
     )
 
@@ -28,51 +28,51 @@ class AugmentedRealityPreferences(context: Context) : PreferenceRepo(context) {
 
     var pathViewDistance by FloatPreference(
         cache,
-        context.getString(R.string.pref_augmented_reality_view_distance_paths),
+        PreferenceKeys.augmentedRealityViewDistancePaths,
         20f
     )
 
     var useGyroOnlyAfterCalibration by BooleanPreference(
         cache,
-        context.getString(R.string.pref_ar_use_gyro_only_after_calibration),
+        PreferenceKeys.arUseGyroOnlyAfterCalibration,
         false
     )
 
     var adjustForPathElevation by BooleanPreference(
         cache,
-        context.getString(R.string.pref_ar_adjust_for_path_elevation),
+        PreferenceKeys.arAdjustForPathElevation,
         false
     )
 
     // Layer visibility
     var showBeaconLayer by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_ar_beacon_layer),
+        PreferenceKeys.showArBeaconLayer,
         true
     )
 
     var showPathLayer by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_ar_path_layer),
+        PreferenceKeys.showArPathLayer,
         true
     )
 
     val pathAppearance by StringEnumPreference(
         cache,
-        context.getString(R.string.pref_ar_path_appearance),
+        PreferenceKeys.arPathAppearance,
         ARPathAppearance.entries.associateBy { it.id },
         ARPathAppearance.Ribbon
     )
 
     var showAstronomyLayer by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_ar_astronomy_layer),
+        PreferenceKeys.showArAstronomyLayer,
         true
     )
 
     var showGridLayer by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_ar_grid_layer),
+        PreferenceKeys.showArGridLayer,
         true
     )
 
@@ -80,31 +80,31 @@ class AugmentedRealityPreferences(context: Context) : PreferenceRepo(context) {
 
     var showStars by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_ar_stars),
+        PreferenceKeys.showArStars,
         true
     )
 
     var showConstellations by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_ar_constellations),
+        PreferenceKeys.showArConstellations,
         true
     )
 
     var showAstronomyBelowHorizon by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_ar_astronomy_below_horizon),
+        PreferenceKeys.showArAstronomyBelowHorizon,
         false
     )
 
     var showLowBrightnessObjects by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_ar_low_brightness),
+        PreferenceKeys.showArLowBrightness,
         false
     )
 
     var increaseExposureAtNight by BooleanPreference(
         cache,
-        context.getString(R.string.pref_increase_ar_exposure_at_night),
+        PreferenceKeys.increaseArExposureAtNight,
         true
     )
 }

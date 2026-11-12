@@ -16,8 +16,8 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.sol.units.WeightUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MAX_BOTTOM_NAVIGATION_ITEMS
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.views.TrailSenseColorStyle
 import com.kylecorry.trail_sense.shared.views.TrailSensePalette
@@ -105,37 +105,37 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     val useWidgetIconCompatibilityMode by BooleanPreference(
         cache,
-        context.getString(R.string.pref_widget_icon_compatibility),
+        PreferenceKeys.widgetIconCompatibility,
         false
     )
 
     val useLegacyFilePicker by BooleanPreference(
         cache,
-        context.getString(R.string.pref_use_legacy_file_picker),
+        PreferenceKeys.useLegacyFilePicker,
         false
     )
 
     val useLargeTileCache by BooleanPreference(
         cache,
-        context.getString(R.string.pref_large_tile_cache),
+        PreferenceKeys.largeTileCache,
         false
     )
 
     var isCliffHeightEnabled by BooleanPreference(
         cache,
-        context.getString(R.string.pref_cliff_height_enabled),
+        PreferenceKeys.cliffHeightEnabled,
         false
     )
 
     val arePluginsEnabled by BooleanPreference(
         cache,
-        context.getString(R.string.pref_plugins_enabled),
+        PreferenceKeys.pluginsEnabled,
         false
     )
 
     val distanceUnits by StringEnumPreference(
         cache,
-        getString(R.string.pref_distance_units),
+        PreferenceKeys.distanceUnits,
         mapOf(
             "meters" to DistanceUnits.Meters,
             "feet_miles" to DistanceUnits.Feet
@@ -146,7 +146,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     val weightUnits by StringEnumPreference(
         cache,
-        getString(R.string.pref_weight_units),
+        PreferenceKeys.weightUnits,
         mapOf(
             "kg" to WeightUnits.Kilograms,
             "lbs" to WeightUnits.Pounds,
@@ -165,7 +165,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     val pressureUnits by StringEnumPreference(
         cache,
-        getString(R.string.pref_pressure_units),
+        PreferenceKeys.pressureUnits,
         mapOf(
             "hpa" to PressureUnits.Hpa,
             "in" to PressureUnits.Inhg,
@@ -179,7 +179,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     val temperatureUnits by StringEnumPreference(
         cache,
-        getString(R.string.pref_temperature_units),
+        PreferenceKeys.temperatureUnits,
         mapOf(
             "c" to TemperatureUnits.Celsius,
             "f" to TemperatureUnits.Fahrenheit
@@ -190,7 +190,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     val coordinateFormat by StringEnumPreference(
         cache,
-        getString(R.string.pref_coordinate_format),
+        PreferenceKeys.coordinateFormat,
         mapOf(
             "dd" to BuiltInCoordinateFormat.DecimalDegrees,
             "ddm" to BuiltInCoordinateFormat.DegreesDecimalMinutes,
@@ -205,14 +205,14 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     val use24HourTime by BooleanPreference(
         cache,
-        getString(R.string.pref_use_24_hour),
+        PreferenceKeys.use24Hour,
         Resources.uses24HourClock(context),
         saveDefault = true
     )
 
     val addLeadingZeroToTime by BooleanPreference(
         cache,
-        getString(R.string.pref_include_leading_zero),
+        PreferenceKeys.includeLeadingZero,
         false
     )
 
@@ -233,7 +233,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     private var _theme: Theme by StringEnumPreference(
         cache,
-        context.getString(R.string.pref_theme),
+        PreferenceKeys.theme,
         mapOf(
             "light" to Theme.Light,
             "dark" to Theme.Dark,
@@ -260,7 +260,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     private var _useDynamicColors by BooleanPreference(
         cache,
-        context.getString(R.string.pref_use_dynamic_colors),
+        PreferenceKeys.useDynamicColors,
         true
     )
 
@@ -270,7 +270,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
      */
     var palette: TrailSensePalette
         get() {
-            val stored = cache.getString(context.getString(R.string.pref_theme_palette))
+            val stored = cache.getString(PreferenceKeys.themePalette)
             val palette = when {
                 stored != null -> TrailSensePalette.from(stored)
                 _useDynamicColors -> TrailSensePalette.Wallpaper
@@ -283,21 +283,21 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
             }
         }
         set(value) {
-            cache.putString(context.getString(R.string.pref_theme_palette), value.id)
+            cache.putString(PreferenceKeys.themePalette, value.id)
             _useDynamicColors = value == TrailSensePalette.Wallpaper
         }
 
     /** How the app's own colors become a palette; wallpaper colors are used as Android gives them. */
     var colorStyle: TrailSenseColorStyle
-        get() = TrailSenseColorStyle.from(cache.getString(context.getString(R.string.pref_color_style)))
-        set(value) = cache.putString(context.getString(R.string.pref_color_style), value.id)
+        get() = TrailSenseColorStyle.from(cache.getString(PreferenceKeys.colorStyle))
+        set(value) = cache.putString(PreferenceKeys.colorStyle, value.id)
 
     val useDynamicColors: Boolean
         get() = palette == TrailSensePalette.Wallpaper
 
     private val _useDynamicColorsOnCompass by BooleanPreference(
         cache,
-        context.getString(R.string.pref_use_dynamic_colors_on_compass),
+        PreferenceKeys.useDynamicColorsOnCompass,
         false
     )
 
@@ -306,46 +306,46 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     var useCompactMode by BooleanPreference(
         cache,
-        context.getString(R.string.pref_use_compact_mode),
+        PreferenceKeys.useCompactMode,
         false
     )
 
     var useShowAllBottomNavigationLabels by BooleanPreference(
         preferences = cache,
-        context.getString(R.string.pref_use_bottom_navigation_labels),
+        PreferenceKeys.useBottomNavigationLabels,
         defaultValue = true
     )
 
     val nightModeFullscreen by BooleanPreference(
         cache,
-        context.getString(R.string.pref_night_mode_fullscreen),
+        PreferenceKeys.nightModeFullscreen,
         false
     )
 
     // Calibration
 
     override var useAutoDeclination: Boolean
-        get() = cache.getBoolean(getString(R.string.pref_auto_declination)) ?: true
-        set(value) = cache.putBoolean(getString(R.string.pref_auto_declination), value)
+        get() = cache.getBoolean(PreferenceKeys.autoDeclination) ?: true
+        set(value) = cache.putBoolean(PreferenceKeys.autoDeclination, value)
 
     override var declinationOverride: Float
-        get() = (cache.getString(getString(R.string.pref_declination_override))
+        get() = (cache.getString(PreferenceKeys.declinationOverride)
             ?: "0.0").toFloatCompat() ?: 0.0f
         set(value) = cache.putString(
-            getString(R.string.pref_declination_override),
+            PreferenceKeys.declinationOverride,
             value.toString()
         )
 
     var altitudeOverride: Float
         get() {
-            val raw = cache.getString(getString(R.string.pref_altitude_override)) ?: "0.0"
+            val raw = cache.getString(PreferenceKeys.altitudeOverride) ?: "0.0"
             return raw.toFloatCompat() ?: 0.0f
         }
-        set(value) = cache.putString(getString(R.string.pref_altitude_override), value.toString())
+        set(value) = cache.putString(PreferenceKeys.altitudeOverride, value.toString())
 
     val altimeterMode: AltimeterMode
         get() {
-            var raw = cache.getString(getString(R.string.pref_altimeter_calibration_mode))
+            var raw = cache.getString(PreferenceKeys.altimeterCalibrationMode)
 
             if (raw == null) {
                 if (useAutoAltitude && weather.hasBarometer) {
@@ -368,38 +368,38 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     var altimeterSamples: Int by IntPreference(
         cache,
-        context.getString(R.string.pref_altimeter_accuracy),
+        PreferenceKeys.altimeterAccuracy,
         4
     )
 
     var seaLevelPressureOverride: Float
         get() = cache.getFloat(
-            getString(R.string.pref_sea_level_pressure_override)
+            PreferenceKeys.seaLevelPressureOverride
         ) ?: SensorManager.PRESSURE_STANDARD_ATMOSPHERE
         set(value) = cache.putFloat(
-            getString(R.string.pref_sea_level_pressure_override),
+            PreferenceKeys.seaLevelPressureOverride,
             value
         )
 
     private var useAutoAltitude: Boolean
-        get() = cache.getBoolean(getString(R.string.pref_auto_altitude)) ?: true
-        set(value) = cache.putBoolean(getString(R.string.pref_auto_altitude), value)
+        get() = cache.getBoolean(PreferenceKeys.autoAltitude) ?: true
+        set(value) = cache.putBoolean(PreferenceKeys.autoAltitude, value)
 
     val odometerDistanceThreshold: Distance
         get() = Distance.meters(15f)
 
     var isLowPowerModeOn: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_low_power_mode)) ?: false
-        set(value) = cache.putBoolean(context.getString(R.string.pref_low_power_mode), value)
+        get() = cache.getBoolean(PreferenceKeys.lowPowerMode) ?: false
+        set(value) = cache.putBoolean(PreferenceKeys.lowPowerMode, value)
 
     val lowPowerModeDisablesWeather: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_low_power_mode_weather)) ?: true
+        get() = cache.getBoolean(PreferenceKeys.lowPowerModeWeather) ?: true
 
     val lowPowerModeDisablesBacktrack: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_low_power_mode_backtrack)) ?: true
+        get() = cache.getBoolean(PreferenceKeys.lowPowerModeBacktrack) ?: true
 
     val mapSite: MapSite by StringEnumPreference(
-        cache, context.getString(R.string.pref_map_url_source), mapOf(
+        cache, PreferenceKeys.mapUrlSource, mapOf(
             "apple" to MapSite.Apple,
             "bing" to MapSite.Bing,
             "caltopo" to MapSite.Caltopo,
@@ -410,7 +410,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     var toolSort: ToolSortType by IntEnumPreference(
         cache,
-        context.getString(R.string.pref_tool_sort),
+        PreferenceKeys.toolSort,
         mapOf(
             1 to ToolSortType.Name,
             2 to ToolSortType.Category
@@ -420,7 +420,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
 
     var toolQuickActions: List<Int>
         get() {
-            return cache.getIntArray(context.getString(R.string.pref_tool_quick_actions))
+            return cache.getIntArray(PreferenceKeys.toolQuickActions)
                 ?: listOf(
                     Tools.QUICK_ACTION_FLASHLIGHT,
                     Tools.QUICK_ACTION_WHISTLE,
@@ -429,7 +429,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
         }
         set(value) {
             cache.putIntArray(
-                context.getString(R.string.pref_tool_quick_actions),
+                PreferenceKeys.toolQuickActions,
                 value
             )
         }
@@ -437,7 +437,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
     var bottomNavigationTools: List<Long>
         get() {
             val maxLength = MAX_BOTTOM_NAVIGATION_ITEMS - 1
-            return (cache.getIntArray(context.getString(R.string.pref_bottom_navigation_tools))
+            return (cache.getIntArray(PreferenceKeys.bottomNavigationTools)
                 ?.map { it.toLong() }
                 // Four tabs with Tools (the family's bar): the three most used, everything else one tap away.
                 ?: listOf(
@@ -450,7 +450,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
         }
         set(value) {
             cache.putIntArray(
-                context.getString(R.string.pref_bottom_navigation_tools),
+                PreferenceKeys.bottomNavigationTools,
                 value.map { it.toInt() }
             )
         }
@@ -459,7 +459,7 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
         get() {
             // Navigation and Weather already have bottom-bar tabs, so the pins start with the next most loved
             // tools instead of repeating them.
-            return cache.getLongArray(context.getString(R.string.pref_pinned_tools)) ?: listOf(
+            return cache.getLongArray(PreferenceKeys.pinnedTools) ?: listOf(
                 Tools.BEACONS,
                 Tools.PATHS,
                 Tools.ASTRONOMY,
@@ -467,12 +467,12 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
             )
         }
         set(value) {
-            cache.putLongArray(context.getString(R.string.pref_pinned_tools), value)
+            cache.putLongArray(PreferenceKeys.pinnedTools, value)
         }
 
     var toolWidgets: List<String>
         get() {
-            val value = cache.getString(context.getString(R.string.pref_tool_widgets))?.split(",")
+            val value = cache.getString(PreferenceKeys.toolWidgets)?.split(",")
             if (value != null) {
                 return value
             }
@@ -485,12 +485,12 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
                 .distinct()
         }
         set(value) {
-            cache.putString(context.getString(R.string.pref_tool_widgets), value.joinToString(","))
+            cache.putString(PreferenceKeys.toolWidgets, value.joinToString(","))
         }
 
     val notificationGroupingBehavior by StringEnumPreference(
         cache,
-        context.getString(R.string.pref_notification_group_behavior),
+        PreferenceKeys.notificationGroupBehavior,
         mapOf(
             "1" to NotificationSubsystem.GroupBehavior.System,
             "2" to NotificationSubsystem.GroupBehavior.UngroupAll,

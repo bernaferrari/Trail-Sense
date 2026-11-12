@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Duration.Companion.seconds
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -448,7 +449,7 @@ private fun CalibrateGPSContent(viewModel: CalibrateGPSViewModel) {
                             onSelect = { selected ->
                                 if (selected != powerMode) {
                                     cache.putString(
-                                        context.getString(R.string.pref_gps_power_usage),
+                                        PreferenceKeys.gpsPowerUsage,
                                         selected.id.toString()
                                     )
                                     powerMode = selected
@@ -466,7 +467,7 @@ private fun CalibrateGPSContent(viewModel: CalibrateGPSViewModel) {
                         range = 0..100,
                         onValueChange = { updated ->
                             smoothing = updated
-                            cache.putInt(context.getString(R.string.pref_gps_smoothing), updated)
+                            cache.putInt(PreferenceKeys.gpsSmoothing, updated)
                         },
                         position = position
                     )

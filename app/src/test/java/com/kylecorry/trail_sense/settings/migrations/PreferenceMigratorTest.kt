@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.settings.migrations
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Duration.Companion.minutes
-import android.content.Context
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.AppState
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
 
 class PreferenceMigratorTest {
 
@@ -47,62 +45,61 @@ class PreferenceMigratorTest {
     @Test
     fun migratesBacktrackFrequencyForExistingUsers() {
         val settings = InMemoryPreferences()
-        val context = backtrackContext()
-        settings.putBoolean("backtrack_enabled", false)
+                settings.putBoolean(PreferenceKeys.backtrackEnabled, false)
 
-        PreferenceMigrator.migrations.first { it.fromVersion == 34 }.action(context, settings)
+        PreferenceMigrator.migrations.first { it.fromVersion == 34 }.action(mock(), settings)
 
-        assertEquals(15.minutes, settings.getDuration("backtrack_frequency"))
+        assertEquals(15.minutes, settings.getDuration(PreferenceKeys.backtrackFrequency))
     }
 
     @Test
     fun doesNotMigrateBacktrackFrequencyForNewUsers() {
         val settings = InMemoryPreferences()
 
-        PreferenceMigrator.migrations.first { it.fromVersion == 34 }.action(backtrackContext(), settings)
+        PreferenceMigrator.migrations.first { it.fromVersion == 34 }.action(mock(), settings)
 
-        assertFalse(settings.contains("backtrack_frequency"))
+        assertFalse(settings.contains(PreferenceKeys.backtrackFrequency))
     }
 
     @Test
     fun migrationPreservesExistingBacktrackFrequency() {
         val settings = InMemoryPreferences()
-        settings.putBoolean("backtrack_enabled", true)
-        settings.putDuration("backtrack_frequency", 5.minutes)
+        settings.putBoolean(PreferenceKeys.backtrackEnabled, true)
+        settings.putDuration(PreferenceKeys.backtrackFrequency, 5.minutes)
 
-        PreferenceMigrator.migrations.first { it.fromVersion == 34 }.action(backtrackContext(), settings)
+        PreferenceMigrator.migrations.first { it.fromVersion == 34 }.action(mock(), settings)
 
-        assertEquals(5.minutes, settings.getDuration("backtrack_frequency"))
+        assertEquals(5.minutes, settings.getDuration(PreferenceKeys.backtrackFrequency))
     }
 
     @Test
     fun migratesWeatherFrequencyForExistingUsers() {
         val settings = InMemoryPreferences()
-        settings.putBoolean("monitor_weather", false)
+        settings.putBoolean(PreferenceKeys.monitorWeather, false)
 
-        PreferenceMigrator.migrations.first { it.fromVersion == 35 }.action(weatherContext(), settings)
+        PreferenceMigrator.migrations.first { it.fromVersion == 35 }.action(mock(), settings)
 
-        assertEquals(15.minutes, settings.getDuration("weather_frequency"))
+        assertEquals(15.minutes, settings.getDuration(PreferenceKeys.weatherUpdateFrequency))
     }
 
     @Test
     fun doesNotMigrateWeatherFrequencyForNewUsers() {
         val settings = InMemoryPreferences()
 
-        PreferenceMigrator.migrations.first { it.fromVersion == 35 }.action(weatherContext(), settings)
+        PreferenceMigrator.migrations.first { it.fromVersion == 35 }.action(mock(), settings)
 
-        assertFalse(settings.contains("weather_frequency"))
+        assertFalse(settings.contains(PreferenceKeys.weatherUpdateFrequency))
     }
 
     @Test
     fun migrationPreservesExistingWeatherFrequency() {
         val settings = InMemoryPreferences()
-        settings.putBoolean("monitor_weather", true)
-        settings.putDuration("weather_frequency", 5.minutes)
+        settings.putBoolean(PreferenceKeys.monitorWeather, true)
+        settings.putDuration(PreferenceKeys.weatherUpdateFrequency, 5.minutes)
 
-        PreferenceMigrator.migrations.first { it.fromVersion == 35 }.action(weatherContext(), settings)
+        PreferenceMigrator.migrations.first { it.fromVersion == 35 }.action(mock(), settings)
 
-        assertEquals(5.minutes, settings.getDuration("weather_frequency"))
+        assertEquals(5.minutes, settings.getDuration(PreferenceKeys.weatherUpdateFrequency))
     }
 
     @Test
@@ -120,9 +117,9 @@ class PreferenceMigratorTest {
             open?.let { settings.putBoolean("pref_navigation_keep_unlocked", it) }
 
             PreferenceMigrator.migrations.first { it.fromVersion == 38 }
-                .action(lockScreenContext(), settings)
+                .action(mock(), settings)
 
-            assertEquals(expected, settings.getString("pref_navigation_lock_screen_mode"))
+            assertEquals(expected, settings.getString(PreferenceKeys.navigationLockScreenMode))
             assertFalse(settings.contains("pref_navigation_show_on_lock_screen"))
             assertFalse(settings.contains("pref_navigation_keep_unlocked"))
         }
@@ -262,26 +259,5 @@ class PreferenceMigratorTest {
     private fun assertVersion(expected: Int) {
         // An unset version means the install has not been migrated yet
         assertEquals(expected, prefs.getInt(PreferenceMigrator.VERSION_KEY) ?: 0)
-    }
-
-    private fun backtrackContext(): Context {
-        return mock<Context>().also {
-            whenever(it.getString(R.string.pref_backtrack_enabled)).thenReturn("backtrack_enabled")
-            whenever(it.getString(R.string.pref_backtrack_frequency)).thenReturn("backtrack_frequency")
-        }
-    }
-
-    private fun lockScreenContext(): Context {
-        return mock<Context>().also {
-            whenever(it.getString(R.string.pref_navigation_lock_screen_mode))
-                .thenReturn("pref_navigation_lock_screen_mode")
-        }
-    }
-
-    private fun weatherContext(): Context {
-        return mock<Context>().also {
-            whenever(it.getString(R.string.pref_monitor_weather)).thenReturn("monitor_weather")
-            whenever(it.getString(R.string.pref_weather_update_frequency)).thenReturn("weather_frequency")
-        }
     }
 }

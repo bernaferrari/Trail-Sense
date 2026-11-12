@@ -3,12 +3,13 @@ package com.kylecorry.trail_sense.settings.infrastructure
 import android.content.Context
 import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 
 class TidePreferences(context: Context) : PreferenceRepo(context), ITidePreferences {
 
     override var showNearestTide by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_nearest_tide),
+        PreferenceKeys.showNearestTide,
         false
     )
 

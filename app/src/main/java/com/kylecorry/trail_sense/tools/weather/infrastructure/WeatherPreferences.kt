@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.time.decodeStoredLocalDate
 
 import com.kylecorry.trail_sense.shared.time.nowLocal
@@ -13,7 +14,6 @@ import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.andromeda.preferences.FloatPreference
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.sol.math.Range
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlin.time.Duration
@@ -28,73 +28,73 @@ class WeatherPreferences(private val context: Context) : IWeatherPreferences {
         get() = Sensors.hasBarometer(context)
 
     override var shouldMonitorWeather: Boolean
-        get() = Sensors.hasBarometer(context) && (cache.getBoolean(context.getString(R.string.pref_monitor_weather))
+        get() = Sensors.hasBarometer(context) && (cache.getBoolean(PreferenceKeys.monitorWeather)
             ?: false)
         set(value) {
-            cache.putBoolean(context.getString(R.string.pref_monitor_weather), value)
+            cache.putBoolean(PreferenceKeys.monitorWeather, value)
         }
 
     override var pressureSmoothing: Float
         get() {
-            val raw = (cache.getInt(context.getString(R.string.pref_barometer_pressure_smoothing))
+            val raw = (cache.getInt(PreferenceKeys.barometerPressureSmoothing)
                 ?: 150) / 1000f
             return raw * 100
         }
         set(value) {
             val scaled = (value * 10).coerceIn(0f, 1000f)
             cache.putInt(
-                context.getString(R.string.pref_barometer_pressure_smoothing),
+                PreferenceKeys.barometerPressureSmoothing,
                 scaled.toInt()
             )
         }
 
     override var weatherUpdateFrequency: Duration
         get() {
-            return cache.getDuration(context.getString(R.string.pref_weather_update_frequency))
+            return cache.getDuration(PreferenceKeys.weatherUpdateFrequency)
                 ?: 30.minutes
         }
         set(value) {
-            cache.putDuration(context.getString(R.string.pref_weather_update_frequency), value)
+            cache.putDuration(PreferenceKeys.weatherUpdateFrequency, value)
         }
 
     override val shouldShowDailyWeatherNotification: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_daily_weather_notification))
+        get() = cache.getBoolean(PreferenceKeys.dailyWeatherNotification)
             ?: true
 
     override val shouldShowPressureInNotification: Boolean
         get() = cache.getBoolean(
-            context.getString(R.string.pref_show_pressure_in_notification)
+            PreferenceKeys.showPressureInNotification
         ) ?: false
 
     override val shouldShowTemperatureInNotification: Boolean
         get() = cache.getBoolean(
-            context.getString(R.string.pref_show_temperature_in_notification)
+            PreferenceKeys.showTemperatureInNotification
         ) ?: true
 
     override val useSeaLevelPressure: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_use_sea_level_pressure)) ?: true
+        get() = cache.getBoolean(PreferenceKeys.useSeaLevelPressure) ?: true
 
     override val seaLevelFactorInTemp: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_adjust_for_temperature)) ?: false
+        get() = cache.getBoolean(PreferenceKeys.adjustForTemperature) ?: false
 
     override var barometerOffset by FloatPreference(
         cache,
-        context.getString(R.string.pref_barometer_offset),
+        PreferenceKeys.barometerOffset,
         0f
     )
 
     override val pressureHistory: Duration
         get() {
-            val raw = cache.getString(context.getString(R.string.pref_pressure_history)) ?: "48"
+            val raw = cache.getString(PreferenceKeys.pressureHistory) ?: "48"
             return (raw.toLong()).hours
         }
 
     override val sendStormAlerts: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_send_storm_alert)) ?: true
+        get() = cache.getBoolean(PreferenceKeys.sendStormAlert) ?: true
 
     override val hourlyForecastChangeThreshold: Float
         get() {
-            return when (cache.getString(context.getString(R.string.pref_forecast_sensitivity))) {
+            return when (cache.getString(PreferenceKeys.forecastSensitivity)) {
                 "low" -> HPA_FORECAST_LOW
                 "high" -> HPA_FORECAST_HIGH
                 else -> HPA_FORECAST_MEDIUM
@@ -103,7 +103,7 @@ class WeatherPreferences(private val context: Context) : IWeatherPreferences {
 
     override val stormAlertThreshold: Float
         get() {
-            return when (cache.getString(context.getString(R.string.pref_storm_alert_sensitivity))) {
+            return when (cache.getString(PreferenceKeys.stormAlertSensitivity)) {
                 "low" -> HPA_STORM_LOW
                 "high" -> HPA_STORM_HIGH
                 else -> HPA_STORM_MEDIUM
@@ -127,30 +127,30 @@ class WeatherPreferences(private val context: Context) : IWeatherPreferences {
 
     override var dailyForecastTime: LocalTime
         get() {
-            val raw = (cache.getString(context.getString(R.string.pref_daily_weather_time))
+            val raw = (cache.getString(PreferenceKeys.dailyWeatherTime)
                 ?: LocalTime(7, 0).toString())
             return LocalTime.parse(raw)
         }
         set(value) {
-            cache.putString(context.getString(R.string.pref_daily_weather_time), value.toString())
+            cache.putString(PreferenceKeys.dailyWeatherTime, value.toString())
         }
 
     override val leftButton: Int
         get() {
-            val id = cache.getString(context.getString(R.string.pref_weather_quick_action_left))
+            val id = cache.getString(PreferenceKeys.weatherQuickActionLeft)
                 ?.toIntCompat()
             return id ?: (Tools.CLOUDS.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET)
         }
 
     override val rightButton: Int
         get() {
-            val id = cache.getString(context.getString(R.string.pref_weather_quick_action_right))
+            val id = cache.getString(PreferenceKeys.weatherQuickActionRight)
                 ?.toIntCompat()
             return id ?: (Tools.TEMPERATURE_ESTIMATION.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET)
         }
 
     override val showColoredNotificationIcon: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_weather_show_detailed_icon))
+        get() = cache.getBoolean(PreferenceKeys.weatherShowDetailedIcon)
             ?: true
 
     override val useAlarmForStormAlert: Boolean
@@ -162,19 +162,19 @@ class WeatherPreferences(private val context: Context) : IWeatherPreferences {
 
     val showPressureForecast by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_pressure_forecast),
+        PreferenceKeys.showPressureForecast,
         false
     )
 
     private val useAlarmForStormAlertInternal by BooleanPreference(
         cache,
-        context.getString(R.string.pref_weather_use_alarm_for_storm_alert),
+        PreferenceKeys.weatherUseAlarmForStormAlert,
         false
     )
 
     private val muteStormAlarmAtNight by BooleanPreference(
         cache,
-        context.getString(R.string.pref_weather_mute_storm_alarm_at_night),
+        PreferenceKeys.weatherMuteStormAlarmAtNight,
         true
     )
 

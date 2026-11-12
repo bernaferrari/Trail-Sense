@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Clock
 
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
@@ -150,7 +151,7 @@ fun FlashlightScreen(
             return null
         }
 
-        val instant = cache.getInstant(context.getString(R.string.pref_flashlight_timeout_instant))
+        val instant = cache.getInstant(PreferenceKeys.flashlightTimeoutInstant)
         val duration = if (instant != null && instant > Clock.System.now()) {
             (instant - (Clock.System.now()))
         } else {
@@ -212,7 +213,7 @@ fun FlashlightScreen(
                 context,
                 context.getString(R.string.strobe_warning_title),
                 context.getString(R.string.strobe_warning_content),
-                context.getString(R.string.pref_fine_with_strobe),
+                PreferenceKeys.fineWithStrobe,
                 considerShownIfCancelled = false,
             ) { _, agreed ->
                 val frequency = if (selection == 10) 200 else selection

@@ -4,7 +4,7 @@ import android.content.Context
 import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.andromeda.preferences.IntPreference
 import com.kylecorry.andromeda.preferences.StringEnumPreference
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.compass.CompassSource
 import com.kylecorry.trail_sense.shared.sensors.compass.CompassUpdateFrequency
@@ -15,13 +15,13 @@ class CompassPreferences(context: Context) : PreferenceRepo(context), ICompassPr
 
     override var compassSmoothing by IntPreference(
         cache,
-        context.getString(R.string.pref_compass_filter_amt),
+        PreferenceKeys.compassFilterAmt,
         1
     )
 
     private var _useTrueNorthPref by BooleanPreference(
         cache,
-        context.getString(R.string.pref_use_true_north),
+        PreferenceKeys.useTrueNorth,
         true
     )
 
@@ -33,14 +33,14 @@ class CompassPreferences(context: Context) : PreferenceRepo(context), ICompassPr
 
     override var source by StringEnumPreference(
         cache,
-        context.getString(R.string.pref_compass_source),
+        PreferenceKeys.compassSource,
         CompassSource.entries.associateBy { it.id },
         CompassSource.CustomRotationVector
     )
 
     val updateFrequency by StringEnumPreference(
         cache,
-        context.getString(R.string.pref_compass_update_frequency),
+        PreferenceKeys.compassUpdateFrequency,
         CompassUpdateFrequency.entries.associateBy { it.id },
         CompassUpdateFrequency.Fast
     )

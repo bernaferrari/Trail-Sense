@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.settings.migrations
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Duration.Companion.minutes
 
 import android.content.Context
@@ -10,7 +11,6 @@ import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.preferences.getIntArray
 import com.kylecorry.andromeda.preferences.putIntArray
 import com.kylecorry.luna.text.toIntCompat
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.AppState
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -115,15 +115,15 @@ class PreferenceMigrator private constructor() {
             },
             PreferenceMigration(3, 4) { context, prefs ->
                 try {
-                    val color = prefs.getInt(context.getString(R.string.pref_backtrack_path_color))
+                    val color = prefs.getInt(PreferenceKeys.backtrackPathColor)
                         ?: return@PreferenceMigration
-                    prefs.remove(context.getString(R.string.pref_backtrack_path_color))
+                    prefs.remove(PreferenceKeys.backtrackPathColor)
                     prefs.putLong(
-                        context.getString(R.string.pref_backtrack_path_color),
+                        PreferenceKeys.backtrackPathColor,
                         color.toLong()
                     )
                 } catch (e: Exception) {
-                    prefs.remove(context.getString(R.string.pref_backtrack_path_color))
+                    prefs.remove(PreferenceKeys.backtrackPathColor)
                 }
             },
             PreferenceMigration(4, 5) { _, prefs ->
@@ -232,14 +232,14 @@ class PreferenceMigrator private constructor() {
             PreferenceMigration(16, 17) { context, prefs ->
                 // Replace the old tool quick actions with the generic tool quick action
                 val individualQuickActionPrefs = listOf(
-                    context.getString(R.string.pref_navigation_quick_action_left),
-                    context.getString(R.string.pref_navigation_quick_action_right),
-                    context.getString(R.string.pref_astronomy_quick_action_left),
-                    context.getString(R.string.pref_astronomy_quick_action_right),
-                    context.getString(R.string.pref_weather_quick_action_left),
-                    context.getString(R.string.pref_weather_quick_action_right),
+                    PreferenceKeys.navigationQuickActionLeft,
+                    PreferenceKeys.navigationQuickActionRight,
+                    PreferenceKeys.astronomyQuickActionLeft,
+                    PreferenceKeys.astronomyQuickActionRight,
+                    PreferenceKeys.weatherQuickActionLeft,
+                    PreferenceKeys.weatherQuickActionRight,
                 )
-                val toolQuickActionPrefs = context.getString(R.string.pref_tool_quick_actions)
+                val toolQuickActionPrefs = PreferenceKeys.toolQuickActions
 
                 val replacementMap = mapOf(
                     7 to Tools.OFFLINE_MAPS.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET,
@@ -422,13 +422,13 @@ class PreferenceMigrator private constructor() {
             },
             PreferenceMigration(24, 25) { context, prefs ->
                 val viewDistanceKey = "pref_navigation_view_distance"
-                val nearbyDistanceKey = context.getString(R.string.pref_max_beacon_distance)
+                val nearbyDistanceKey = PreferenceKeys.maxBeaconDistance
                 val nearbyDistance = prefs.getString(nearbyDistanceKey)
                 if (nearbyDistance != null) {
                     prefs.putString(viewDistanceKey, nearbyDistance)
                 }
-                val linearOnlyKey = context.getString(R.string.pref_nearby_linear_only)
-                val nearbyRadarKey = context.getString(R.string.pref_nearby_radar)
+                val linearOnlyKey = PreferenceKeys.nearbyLinearOnly
+                val nearbyRadarKey = PreferenceKeys.nearbyRadar
                 val wasNearbyRadarEnabled = prefs.getBoolean(nearbyRadarKey) ?: true
                 if (wasNearbyRadarEnabled) {
                     prefs.putBoolean(linearOnlyKey, true)
@@ -492,7 +492,7 @@ class PreferenceMigrator private constructor() {
             },
             PreferenceMigration(27, 28) { context, prefs ->
                 if (AppState.isReturningUser) {
-                    prefs.putBoolean(context.getString(R.string.pref_use_bottom_navigation_labels), false)
+                    prefs.putBoolean(PreferenceKeys.useBottomNavigationLabels, false)
                 }
 
             },
@@ -500,7 +500,7 @@ class PreferenceMigrator private constructor() {
                 PedometerPreferenceMigrationWorker.start(context)
             },
             PreferenceMigration(29, 30) { context, prefs ->
-                val key = context.getString(R.string.pref_odometer_reset_daily)
+                val key = PreferenceKeys.odometerResetDaily
                 if (AppState.isReturningUser && !prefs.contains(key)) {
                     prefs.putBoolean(key, false)
                 }
@@ -550,23 +550,23 @@ class PreferenceMigrator private constructor() {
                 prefs.remove("pref_require_satellites")
             },
             PreferenceMigration(34, 35) { context, prefs ->
-                val backtrackEnabledKey = context.getString(R.string.pref_backtrack_enabled)
-                val backtrackFrequencyKey = context.getString(R.string.pref_backtrack_frequency)
+                val backtrackEnabledKey = PreferenceKeys.backtrackEnabled
+                val backtrackFrequencyKey = PreferenceKeys.backtrackFrequency
                 // If the user enabled backtrack in the past but didn't change the frequency, default to the original 15 minutes so they aren't surprised
                 if (prefs.contains(backtrackEnabledKey) && !prefs.contains(backtrackFrequencyKey)) {
                     prefs.putDuration(backtrackFrequencyKey, 15.minutes)
                 }
             },
             PreferenceMigration(35, 36) { context, prefs ->
-                val weatherMonitorEnabledKey = context.getString(R.string.pref_monitor_weather)
-                val weatherFrequencyKey = context.getString(R.string.pref_weather_update_frequency)
+                val weatherMonitorEnabledKey = PreferenceKeys.monitorWeather
+                val weatherFrequencyKey = PreferenceKeys.weatherUpdateFrequency
                 // If the user enabled the weather monitor in the past but didn't change the frequency, default to the original 15 minutes so they aren't surprised
                 if (prefs.contains(weatherMonitorEnabledKey) && !prefs.contains(weatherFrequencyKey)) {
                     prefs.putDuration(weatherFrequencyKey, 15.minutes)
                 }
             },
             PreferenceMigration(36, 37) { context, prefs ->
-                val key = context.getString(R.string.pref_auto_location)
+                val key = PreferenceKeys.autoLocation
                 val source = if (prefs.getBoolean(key) == false) {
                     GPSLocationSource.Manual
                 } else {
@@ -629,7 +629,7 @@ class PreferenceMigrator private constructor() {
             PreferenceMigration(38, 39) { context, prefs ->
                 val showWhileNavigatingKey = "pref_navigation_show_on_lock_screen"
                 val showWhileOpenKey = "pref_navigation_keep_unlocked"
-                val modeKey = context.getString(R.string.pref_navigation_lock_screen_mode)
+                val modeKey = PreferenceKeys.navigationLockScreenMode
                 // Showing while open also covers navigating, so it takes priority
                 val mode = when {
                     prefs.getBoolean(showWhileOpenKey) == true -> "open"

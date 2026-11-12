@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.time.today
 
 import kotlin.time.Clock
@@ -23,7 +24,6 @@ import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.data.DataUtils
@@ -83,17 +83,17 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
     override val weatherChanged: ISubscription = _weatherChanged
 
     private val invalidationPrefKeys = listOf(
-        R.string.pref_use_sea_level_pressure,
-        R.string.pref_barometer_pressure_smoothing,
-        R.string.pref_adjust_for_temperature,
-        R.string.pref_forecast_sensitivity,
-        R.string.pref_storm_alert_sensitivity,
-        R.string.pref_altimeter_calibration_mode,
-        R.string.pref_pressure_history,
-        R.string.pref_temperature_smoothing,
-        R.string.pref_barometer_offset,
-        R.string.pref_pressure_units
-    ).map { context.getString(it) }
+        PreferenceKeys.useSeaLevelPressure,
+        PreferenceKeys.barometerPressureSmoothing,
+        PreferenceKeys.adjustForTemperature,
+        PreferenceKeys.forecastSensitivity,
+        PreferenceKeys.stormAlertSensitivity,
+        PreferenceKeys.altimeterCalibrationMode,
+        PreferenceKeys.pressureHistory,
+        PreferenceKeys.temperatureSmoothing,
+        PreferenceKeys.barometerOffset,
+        PreferenceKeys.pressureUnits
+    )
 
     init {
         sharedPrefs.onEachChange { key ->
@@ -312,7 +312,7 @@ class WeatherSubsystem private constructor(private val context: Context) : IWeat
 
     private fun forecastSource(): ForecastSource {
         val raw = PreferencesSubsystem.getInstance(context).preferences.getString(
-            context.getString(R.string.pref_weather_forecast_source)
+            PreferenceKeys.weatherForecastSource
         )
         return when (raw) {
             "2" -> ForecastSource.Zambretti

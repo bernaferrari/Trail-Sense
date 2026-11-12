@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
 import android.content.Context
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.IDismissibleAlerter
 import com.kylecorry.trail_sense.shared.commands.generic.Command
@@ -38,7 +38,7 @@ class StormAlertCommand(
         fun create(context: Context): StormAlertCommand {
             val prefs = PreferencesSubsystem.getInstance(context).preferences
             return StormAlertCommand(
-                PreferencesFlag(prefs, context.getString(R.string.pref_just_sent_alert)),
+                PreferencesFlag(prefs, PreferenceKeys.justSentAlert),
                 UserPreferences(context).weather,
                 StormAlerter(context)
             )

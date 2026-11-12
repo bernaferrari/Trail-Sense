@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -215,13 +216,13 @@ private fun CalibrateBarometerContent(viewModel: CalibrateBarometerViewModel) {
     val chartData = viewModel.chartData
     val barometerOffset = viewModel.barometerOffset
     var useSeaLevelPressure by remember {
-        mutableStateOf(context.getBoolean(cache, R.string.pref_use_sea_level_pressure, true))
+        mutableStateOf(cache.booleanOr(PreferenceKeys.useSeaLevelPressure, true))
     }
     var pressureSmoothing by remember {
-        mutableStateOf(cache.getInt(context.getString(R.string.pref_barometer_pressure_smoothing)) ?: 150)
+        mutableStateOf(cache.getInt(PreferenceKeys.barometerPressureSmoothing) ?: 150)
     }
     var adjustForTemperature by remember {
-        mutableStateOf(context.getBoolean(cache, R.string.pref_adjust_for_temperature, false))
+        mutableStateOf(cache.booleanOr(PreferenceKeys.adjustForTemperature, false))
     }
     val formatOffset = { offset: Float ->
         formatService.formatPressure(
@@ -278,7 +279,7 @@ private fun CalibrateBarometerContent(viewModel: CalibrateBarometerViewModel) {
                     checked = useSeaLevelPressure,
                     onCheckedChange = {
                         useSeaLevelPressure = it
-                        context.putBoolean(cache, R.string.pref_use_sea_level_pressure, it)
+                        cache.putBoolean(PreferenceKeys.useSeaLevelPressure, it)
                         viewModel.updateChart()
                     },
                     position = position
@@ -292,7 +293,7 @@ private fun CalibrateBarometerContent(viewModel: CalibrateBarometerViewModel) {
                         checked = adjustForTemperature,
                         onCheckedChange = {
                             adjustForTemperature = it
-                            context.putBoolean(cache, R.string.pref_adjust_for_temperature, it)
+                            cache.putBoolean(PreferenceKeys.adjustForTemperature, it)
                             viewModel.updateChart()
                         },
                         position = position
@@ -308,7 +309,7 @@ private fun CalibrateBarometerContent(viewModel: CalibrateBarometerViewModel) {
                     range = 0..1000,
                     onValueChange = {
                         pressureSmoothing = it
-                        cache.putInt(context.getString(R.string.pref_barometer_pressure_smoothing), it)
+                        cache.putInt(PreferenceKeys.barometerPressureSmoothing, it)
                     },
                     position = position
                 )

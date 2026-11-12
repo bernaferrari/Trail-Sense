@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.flashlight.infrastructure
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Duration.Companion.seconds
 import com.kylecorry.andromeda.torch.isTorchAvailable
 
@@ -16,7 +17,6 @@ import com.kylecorry.andromeda.torch.deviceTorch
 import com.kylecorry.andromeda.torch.TorchState
 import com.kylecorry.andromeda.torch.torchStates
 import com.kylecorry.sol.math.interpolation.Interpolation
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.flashlight.FlashlightToolRegistration
@@ -203,7 +203,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
     private fun setTimeout() {
         if (prefs.flashlight.shouldTimeout) {
             cache.putInstant(
-                context.getString(R.string.pref_flashlight_timeout_instant),
+                PreferenceKeys.flashlightTimeoutInstant,
                 kotlin.time.Clock.System.now().plus(prefs.flashlight.timeout)
             )
         } else {
@@ -212,7 +212,7 @@ class FlashlightSubsystem private constructor(private val context: Context) : IF
     }
 
     private fun clearTimeout() {
-        cache.remove(context.getString(R.string.pref_flashlight_timeout_instant))
+        cache.remove(PreferenceKeys.flashlightTimeoutInstant)
     }
 
     companion object {

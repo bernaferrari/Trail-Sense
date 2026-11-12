@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.any
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -238,7 +239,7 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
 
     private fun setPressureUnits(units: String) {
         PreferencesSubsystem.getInstance(TestUtils.context).preferences.putString(
-            string(R.string.pref_pressure_units),
+            PreferenceKeys.pressureUnits,
             units
         )
     }

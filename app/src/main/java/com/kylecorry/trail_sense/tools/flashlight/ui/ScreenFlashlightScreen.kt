@@ -5,6 +5,7 @@ package com.kylecorry.trail_sense.tools.flashlight.ui
 
 import com.kylecorry.andromeda.torch.screenBrightness
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
 
 import androidx.activity.compose.LocalActivity
@@ -169,7 +170,7 @@ fun ScreenFlashlightToolScreen(offerController: @Composable (Any) -> Unit = {}) 
         ScreenFlashlightState(
             torch = ScreenTorch(screenBrightness(window)),
             cache = PreferencesSubsystem.getInstance(context).preferences,
-            brightnessKey = context.getString(R.string.pref_screen_torch_brightness)
+            brightnessKey = PreferenceKeys.screenTorchBrightness
         )
     }
     offerController(state)

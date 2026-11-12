@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.tides.ui
 import android.content.Context
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
@@ -33,7 +34,7 @@ class ShowTideDisclaimerCommand(
             context,
             context.getString(R.string.tides),
             message,
-            context.getString(R.string.pref_tide_disclaimer_seen),
+            PreferenceKeys.tideDisclaimerSeen,
             considerShownIfCancelled = true,
             cancelText = context.getString(R.string.tool_user_guide_title)
         ) { showGuide, _ ->

@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.preferences.onChange
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -81,9 +82,9 @@ fun CalibrateCompassToolScreen() {
     // The compass restarts when its north, smoothing or source changes while the page is shown.
     DisposableEffect(viewModel, lifecycleOwner, cache) {
         val resetPrefs = listOf(
-            context.getString(R.string.pref_use_true_north),
-            context.getString(R.string.pref_compass_filter_amt),
-            context.getString(R.string.pref_compass_source)
+            PreferenceKeys.useTrueNorth,
+            PreferenceKeys.compassFilterAmt,
+            PreferenceKeys.compassSource
         )
         val changes = cache.onChange.asLiveData()
         val observer = Observer<String> {
@@ -272,7 +273,7 @@ private fun CalibrateCompassContent(viewModel: CalibrateCompassViewModel, cache:
     var source by remember { mutableStateOf(prefs.compass.source.id) }
     var smoothing by remember { mutableStateOf(prefs.compass.compassSmoothing) }
     var useTrueNorth by remember {
-        mutableStateOf(context.getBoolean(cache, R.string.pref_use_true_north, true))
+        mutableStateOf(cache.booleanOr(PreferenceKeys.useTrueNorth, true))
     }
     var useAutoDeclination by remember { mutableStateOf(prefs.useAutoDeclination) }
     var showCalibrationDialog by remember { mutableStateOf(false) }
@@ -314,7 +315,7 @@ private fun CalibrateCompassContent(viewModel: CalibrateCompassViewModel, cache:
                         onClick = {
                             context.pickOption(sourceTitle, compassSourceOptions, source) {
                                 source = it
-                                context.putString(cache, R.string.pref_compass_source, it)
+                                cache.putString(PreferenceKeys.compassSource, it)
                                 viewModel.resetCompass()
                             }
                         },
@@ -329,7 +330,7 @@ private fun CalibrateCompassContent(viewModel: CalibrateCompassViewModel, cache:
                         range = 1..100,
                         onValueChange = {
                             smoothing = it
-                            cache.putInt(context.getString(R.string.pref_compass_filter_amt), it)
+                            cache.putInt(PreferenceKeys.compassFilterAmt, it)
                             viewModel.resetCompass()
                         },
                         position = position

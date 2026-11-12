@@ -8,7 +8,7 @@ import com.kylecorry.andromeda.preferences.FloatPreference
 import com.kylecorry.andromeda.preferences.StringEnumPreference
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.settings.infrastructure.ICompassStylePreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -22,7 +22,7 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
 
     private var _showCalibrationOnNavigateDialog by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_calibrate_on_navigate_dialog),
+        PreferenceKeys.showCalibrateOnNavigateDialog,
         true
     )
 
@@ -34,7 +34,7 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
 
     private val screenLockMode by StringEnumPreference(
         cache,
-        context.getString(R.string.pref_navigation_lock_screen_mode),
+        PreferenceKeys.navigationLockScreenMode,
         ScreenLockMode.entries.associateBy { it.id },
         ScreenLockMode.Never
     )
@@ -47,42 +47,42 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
 
     /** The dial's waves: 12 (one per 30°) or 8 (one per 45°). */
     val dialLobes: Int
-        get() = cache.getString(context.getString(R.string.pref_navigation_dial_lobes))?.toIntOrNull()?.takeIf { it == 8 || it == 12 } ?: 12
+        get() = cache.getString(PreferenceKeys.navigationDialLobes)?.toIntOrNull()?.takeIf { it == 8 || it == 12 } ?: 12
 
     override val useLinearCompass: Boolean
-        get() = cache.getBoolean(context.getString(R.string.pref_show_linear_compass)) ?: false
+        get() = cache.getBoolean(PreferenceKeys.showLinearCompass) ?: false
 
     val showMultipleBeacons: Boolean
-        get() = !sensors.hasCompass() || cache.getBoolean(context.getString(R.string.pref_display_multi_beacons)) ?: true
+        get() = !sensors.hasCompass() || cache.getBoolean(PreferenceKeys.displayMultiBeacons) ?: true
 
     val showNearbyBeaconsOnlyOnLinearCompass by BooleanPreference(
         cache,
-        context.getString(R.string.pref_nearby_linear_only),
+        PreferenceKeys.nearbyLinearOnly,
         false
     )
 
     val numberOfVisibleBeacons: Int
         get() {
-            val raw = cache.getString(context.getString(R.string.pref_num_visible_beacons)) ?: "10"
+            val raw = cache.getString(PreferenceKeys.numVisibleBeacons) ?: "10"
             return raw.toIntOrNull() ?: 10
         }
 
     override val showDialTicksWhenNoCompass by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_dial_ticks_when_no_compass),
+        PreferenceKeys.showDialTicksWhenNoCompass,
         false
     )
 
     val highDetailMode by BooleanPreference(
         cache,
-        context.getString(R.string.pref_navigation_high_detail_mode),
+        PreferenceKeys.navigationHighDetailMode,
         false
     )
 
     var maxBeaconDistance: Float
         get() {
             val raw =
-                cache.getString(context.getString(R.string.pref_max_beacon_distance)) ?: "0.5"
+                cache.getString(PreferenceKeys.maxBeaconDistance) ?: "0.5"
             return Distance.kilometers(raw.toFloatCompat() ?: 0.5f)
                 .meters()
                 .value
@@ -91,7 +91,7 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
         set(value) {
             val meters = Distance.meters(value.coerceIn(1f, 25000000f))
             cache.putString(
-                context.getString(R.string.pref_max_beacon_distance),
+                PreferenceKeys.maxBeaconDistance,
                 meters.convertTo(DistanceUnits.Kilometers).value.toString()
             )
         }
@@ -104,21 +104,21 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
 
     val leftButton: Int
         get() {
-            val id = cache.getString(context.getString(R.string.pref_navigation_quick_action_left))
+            val id = cache.getString(PreferenceKeys.navigationQuickActionLeft)
                 ?.toIntCompat()
             return id ?: (Tools.PATHS.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET)
         }
 
     val rightButton: Int
         get() {
-            val id = cache.getString(context.getString(R.string.pref_navigation_quick_action_right))
+            val id = cache.getString(PreferenceKeys.navigationQuickActionRight)
                 ?.toIntCompat()
             return id ?: (Tools.OFFLINE_MAPS.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET)
         }
 
     var speedometerMode by StringEnumPreference(
         cache,
-        context.getString(R.string.pref_navigation_speedometer_type),
+        PreferenceKeys.navigationSpeedometerType,
         mapOf(
             "average" to SpeedometerMode.Backtrack,
             "instant_pedometer" to SpeedometerMode.CurrentPace,
@@ -130,25 +130,25 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
 
     val drawDialBezel by BooleanPreference(
         cache,
-        context.getString(R.string.pref_navigation_draw_compass_dial_bezel),
+        PreferenceKeys.navigationDrawCompassDialBezel,
         false
     )
 
     val showAzimuthIndicator by BooleanPreference(
         cache,
-        context.getString(R.string.pref_navigation_show_azimuth_indicator),
+        PreferenceKeys.navigationShowAzimuthIndicator,
         true
     )
 
     var lockBearingToLocation by BooleanPreference(
         cache,
-        context.getString(R.string.pref_lock_bearing_to_location),
+        PreferenceKeys.lockBearingToLocation,
         false
     )
 
     var bearingDistance: Distance
         get() {
-            val raw = cache.getString(context.getString(R.string.pref_bearing_distance)) ?: "5.0"
+            val raw = cache.getString(PreferenceKeys.bearingDistance) ?: "5.0"
             return Distance.meters(
                 Distance.kilometers(raw.toFloatCompat() ?: 5.0f)
                     .meters()
@@ -161,7 +161,7 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
                 .coerceIn(1f, Destination.Bearing.maxBearingDistance.value)
                 .let { Distance.meters(it).convertTo(DistanceUnits.Kilometers).value }
             cache.putString(
-                context.getString(R.string.pref_bearing_distance),
+                PreferenceKeys.bearingDistance,
                 km.toString()
             )
         }

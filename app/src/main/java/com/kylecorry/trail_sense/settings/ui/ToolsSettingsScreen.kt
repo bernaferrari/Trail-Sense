@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -74,7 +75,7 @@ fun ToolsSettingsToolScreen() {
                     onClick = {
                         context.pickOption(context.getString(R.string.default_widget_theme), widgetThemeOptions, widgetTheme) {
                             widgetTheme = it
-                            context.putString(cache, R.string.pref_default_widget_theme, it)
+                            cache.putString(PreferenceKeys.defaultWidgetTheme, it)
                             Tools.triggerWidgetUpdate(context, null)
                         }
                     },
@@ -219,7 +220,7 @@ private fun Context.widgetThemeOptions(): List<SettingsOption> {
 }
 
 private fun Context.getDefaultWidgetTheme(cache: Preferences): String {
-    val key = getString(R.string.pref_default_widget_theme)
+    val key = PreferenceKeys.defaultWidgetTheme
     val current = cache.getString(key)
     if (current != null) {
         return current

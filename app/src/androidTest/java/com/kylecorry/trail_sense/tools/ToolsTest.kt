@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
@@ -30,9 +31,9 @@ class ToolsTest : ToolTestBase(0L) {
         }
 
         val prefs = PreferencesSubsystem.getInstance(TestUtils.context).preferences
-        prefs.putBoolean(TestUtils.context.getString(R.string.pref_use_dynamic_colors), true)
+        prefs.putBoolean(PreferenceKeys.useDynamicColors, true)
         prefs.putBoolean(
-            TestUtils.context.getString(R.string.pref_use_dynamic_colors_on_compass),
+            PreferenceKeys.useDynamicColorsOnCompass,
             true
         )
 

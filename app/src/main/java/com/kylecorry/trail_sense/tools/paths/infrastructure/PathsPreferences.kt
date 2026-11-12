@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
 
@@ -29,38 +30,38 @@ class PathsPreferences(private val context: Context) : IPathPreferences {
 
     var pathSort: PathSortMethod by IntEnumPreference(
         cache,
-        context.getString(R.string.pref_path_sort),
+        PreferenceKeys.pathSort,
         PathSortMethod.entries.associateBy { it.id.toInt() },
         PathSortMethod.MostRecent
     )
 
     var backtrackEnabled by BooleanPreference(
         cache,
-        context.getString(R.string.pref_backtrack_enabled),
+        PreferenceKeys.backtrackEnabled,
         false
     )
 
     var backtrackSaveCellHistory by BooleanPreference(
         cache,
-        context.getString(R.string.pref_backtrack_save_cell),
+        PreferenceKeys.backtrackSaveCell,
         true
     )
 
     override val keepBacktrackPathOnStop by BooleanPreference(
         cache,
-        context.getString(R.string.pref_backtrack_keep_on_stop),
+        PreferenceKeys.backtrackKeepOnStop,
         true
     )
 
     val backtrackKeepDeviceAwake by BooleanPreference(
         cache,
-        context.getString(R.string.pref_backtrack_keep_awake),
+        PreferenceKeys.backtrackKeepAwake,
         false
     )
 
     private val backtrackGPSPowerMode by StringEnumPreference(
         cache,
-        context.getString(R.string.pref_backtrack_gps_power_usage),
+        PreferenceKeys.backtrackGpsPowerUsage,
         GPSPowerMode.entries.associateBy { it.id.toString() },
         GPSPowerMode.Inherit
     )
@@ -69,37 +70,37 @@ class PathsPreferences(private val context: Context) : IPathPreferences {
         get() = backtrackGPSPowerMode.powerUsage ?: gps.powerMode.powerUsage ?: GPSPowerUsage.High
 
     var backtrackRecordFrequency: Duration
-        get() = cache.getDuration(context.getString(R.string.pref_backtrack_frequency))
+        get() = cache.getDuration(PreferenceKeys.backtrackFrequency)
             ?: 1.minutes
         set(value) {
-            cache.putDuration(context.getString(R.string.pref_backtrack_frequency), value)
+            cache.putDuration(PreferenceKeys.backtrackFrequency, value)
         }
 
     var backtrackMinimumDistance: Distance
         get() {
-            val meters = cache.getFloat(context.getString(R.string.pref_backtrack_min_distance))
+            val meters = cache.getFloat(PreferenceKeys.backtrackMinDistance)
                 ?: DEFAULT_BACKTRACK_MIN_DISTANCE_METERS
             return Distance.meters(meters)
         }
         set(value) {
             cache.putFloat(
-                context.getString(R.string.pref_backtrack_min_distance),
+                PreferenceKeys.backtrackMinDistance,
                 value.meters().value
             )
         }
 
     var defaultPathColor: AppColor
         get() {
-            val id = cache.getLong(context.getString(R.string.pref_backtrack_path_color))
+            val id = cache.getLong(PreferenceKeys.backtrackPathColor)
             return AppColor.values().firstOrNull { it.id == id } ?: AppColor.Gray
         }
         set(value) {
-            cache.putLong(context.getString(R.string.pref_backtrack_path_color), value.id)
+            cache.putLong(PreferenceKeys.backtrackPathColor, value.id)
         }
 
     private val backtrackPathLineStyle: LineStyle
         get() {
-            return when (cache.getString(context.getString(R.string.pref_backtrack_path_style))) {
+            return when (cache.getString(PreferenceKeys.backtrackPathStyle)) {
                 "solid" -> LineStyle.Solid
                 "arrow" -> LineStyle.Arrow
                 "dashed" -> LineStyle.Dashed
@@ -120,26 +121,26 @@ class PathsPreferences(private val context: Context) : IPathPreferences {
 
     override var backtrackHistory: Duration
         get() {
-            val days = cache.getInt(context.getString(R.string.pref_backtrack_history_days)) ?: 7
+            val days = cache.getInt(PreferenceKeys.backtrackHistoryDays) ?: 7
             return (days.toLong()).days
         }
         set(value) {
             val d = value.inWholeDays.toInt()
             cache.putInt(
-                context.getString(R.string.pref_backtrack_history_days),
+                PreferenceKeys.backtrackHistoryDays,
                 if (d > 0) d else 1
             )
         }
 
     override val simplifyPathOnImport by BooleanPreference(
         cache,
-        context.getString(R.string.pref_auto_simplify_paths),
+        PreferenceKeys.autoSimplifyPaths,
         true
     )
 
     override val useFastPathRendering by BooleanPreference(
         cache,
-        context.getString(R.string.pref_fast_path_rendering),
+        PreferenceKeys.fastPathRendering,
         false
     )
 
@@ -149,7 +150,7 @@ class PathsPreferences(private val context: Context) : IPathPreferences {
     override val elevationSmoothing: Float
         get() {
             val scale = elevationSmoothingScale
-            val scaled = cache.getInt(context.getString(R.string.pref_elevation_smoothing))
+            val scaled = cache.getInt(PreferenceKeys.elevationSmoothing)
                 ?: (HikingService.DEFAULT_ELEVATION_SMOOTHING * scale).toInt()
             return scaled / scale.toFloat()
         }

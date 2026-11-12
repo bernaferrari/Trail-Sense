@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.settings.infrastructure
 import android.content.Context
 import com.kylecorry.andromeda.preferences.StringEnumPreference
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSAccuracyFilter
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSPowerMode
@@ -12,16 +12,16 @@ class GPSPreferences(context: Context) : PreferenceRepo(context), IGPSPreference
 
     override var locationSource by StringEnumPreference(
         cache,
-        getString(R.string.pref_auto_location),
+        PreferenceKeys.autoLocation,
         GPSLocationSource.entries.associateBy { it.id },
         GPSLocationSource.GPS
     )
 
     override var accuracyFilter: GPSAccuracyFilter
         get() {
-            val accuracy = cache.getFloat(getString(R.string.pref_gps_accuracy_meters))
+            val accuracy = cache.getFloat(PreferenceKeys.gpsAccuracyMeters)
                 ?: GPSAccuracyFilter.Default.minAccuracy!!
-            val wait = cache.getInt(getString(R.string.pref_gps_accuracy_wait_seconds))
+            val wait = cache.getInt(PreferenceKeys.gpsAccuracyWaitSeconds)
                 ?: GPSAccuracyFilter.Default.maxAccuracyWait!!.inWholeSeconds.toInt()
             if (accuracy <= 0 || wait <= 0) {
                 return GPSAccuracyFilter.None
@@ -32,20 +32,20 @@ class GPSPreferences(context: Context) : PreferenceRepo(context), IGPSPreference
             val accuracy = value.minAccuracy
             val maxWait = value.maxAccuracyWait
             if (accuracy == null || maxWait == null) {
-                cache.putFloat(getString(R.string.pref_gps_accuracy_meters), 0f)
-                cache.putInt(getString(R.string.pref_gps_accuracy_wait_seconds), 0)
+                cache.putFloat(PreferenceKeys.gpsAccuracyMeters, 0f)
+                cache.putInt(PreferenceKeys.gpsAccuracyWaitSeconds, 0)
                 return
             }
             val wait = maxWait.inWholeSeconds.toInt()
             cache.putFloat(
-                getString(R.string.pref_gps_accuracy_meters),
+                PreferenceKeys.gpsAccuracyMeters,
                 accuracy.coerceIn(
                     GPSAccuracyFilter.MIN_ACCURACY_METERS.toFloat(),
                     GPSAccuracyFilter.MAX_ACCURACY_METERS.toFloat()
                 )
             )
             cache.putInt(
-                getString(R.string.pref_gps_accuracy_wait_seconds),
+                PreferenceKeys.gpsAccuracyWaitSeconds,
                 wait.coerceIn(
                     GPSAccuracyFilter.MIN_WAIT_SECONDS,
                     GPSAccuracyFilter.MAX_WAIT_SECONDS
@@ -54,19 +54,19 @@ class GPSPreferences(context: Context) : PreferenceRepo(context), IGPSPreference
         }
 
     override val smoothing: Int
-        get() = (cache.getInt(getString(R.string.pref_gps_smoothing)) ?: 0).coerceIn(0, 100)
+        get() = (cache.getInt(PreferenceKeys.gpsSmoothing) ?: 0).coerceIn(0, 100)
 
     override val powerMode by StringEnumPreference(
         cache,
-        getString(R.string.pref_gps_power_usage),
+        PreferenceKeys.gpsPowerUsage,
         GPSPowerMode.entries.associateBy { it.id.toString() },
         GPSPowerMode.High
     )
 
     override var locationOverride: Coordinate
         get() {
-            val latStr = cache.getString(getString(R.string.pref_latitude_override)) ?: "0.0"
-            val lngStr = cache.getString(getString(R.string.pref_longitude_override)) ?: "0.0"
+            val latStr = cache.getString(PreferenceKeys.latitudeOverride) ?: "0.0"
+            val lngStr = cache.getString(PreferenceKeys.longitudeOverride) ?: "0.0"
 
             val lat = latStr.toDoubleOrNull() ?: 0.0
             val lng = lngStr.toDoubleOrNull() ?: 0.0
@@ -74,11 +74,11 @@ class GPSPreferences(context: Context) : PreferenceRepo(context), IGPSPreference
             return Coordinate(lat, lng)
         }
         set(value) {
-            cache.putString(getString(R.string.pref_latitude_override), value.latitude.toString())
-            cache.putString(getString(R.string.pref_longitude_override), value.longitude.toString())
+            cache.putString(PreferenceKeys.latitudeOverride, value.latitude.toString())
+            cache.putString(PreferenceKeys.longitudeOverride, value.longitude.toString())
         }
 
     override val hasLocationOverride: Boolean
-        get() = cache.contains(getString(R.string.pref_latitude_override)) &&
-                cache.contains(getString(R.string.pref_longitude_override))
+        get() = cache.contains(PreferenceKeys.latitudeOverride) &&
+                cache.contains(PreferenceKeys.longitudeOverride)
 }

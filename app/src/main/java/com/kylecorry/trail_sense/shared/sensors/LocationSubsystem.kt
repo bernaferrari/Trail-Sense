@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.sensors
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
@@ -8,7 +9,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.altimeter.CachingAltimeterWrapper
@@ -65,16 +65,16 @@ class LocationSubsystem private constructor(private val context: Context) {
     init {
         val locationChangedPrefs = listOf(
             CacheGPSModule.LAST_GPS,
-            context.getString(R.string.pref_latitude_override),
-            context.getString(R.string.pref_longitude_override),
-            context.getString(R.string.pref_auto_location),
+            PreferenceKeys.latitudeOverride,
+            PreferenceKeys.longitudeOverride,
+            PreferenceKeys.autoLocation,
             // TODO: Technically not true - this should probably by another broadcast
-            context.getString(R.string.pref_coordinate_format)
+            PreferenceKeys.coordinateFormat
         )
         val elevationChangedPrefs = listOf(
             CachingAltimeterWrapper.LAST_UPDATE_KEY,
-            context.getString(R.string.pref_altitude_override),
-            context.getString(R.string.pref_altimeter_calibration_mode)
+            PreferenceKeys.altitudeOverride,
+            PreferenceKeys.altimeterCalibrationMode
         )
         prefs.onEachChange { key ->
             if (locationChangedPrefs.contains(key)) {

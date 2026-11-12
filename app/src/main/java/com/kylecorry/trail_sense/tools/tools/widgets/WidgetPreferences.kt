@@ -4,7 +4,7 @@ import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.preferences.preferences
 import com.kylecorry.luna.text.toLongCompat
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.data.Identifiable
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.withId
@@ -40,7 +40,7 @@ class WidgetPreferences(
     fun getTheme(): WidgetTheme {
         val colorId =
             prefs.getLong(getThemeKey(appWidgetId))
-                ?: appPrefs.getString(context.getString(R.string.pref_default_widget_theme))
+                ?: appPrefs.getString(PreferenceKeys.defaultWidgetTheme)
                     ?.toLongCompat()
                 ?: WidgetTheme.System.id
         return WidgetTheme.entries.withId(colorId) ?: WidgetTheme.System

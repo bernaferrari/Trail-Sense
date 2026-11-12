@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.infrastructure
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Clock
 
 
@@ -9,7 +10,6 @@ import com.kylecorry.luna.concurrency.BackgroundTask
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dem.DEM
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -105,7 +105,7 @@ class Navigator private constructor(context: Context) {
 
     init {
         listenTask.start()
-        val lockBearingKey = context.getString(R.string.pref_lock_bearing_to_location)
+        val lockBearingKey = PreferenceKeys.lockBearingToLocation
         PreferencesSubsystem.getInstance(context).preferences.onEachChange { key ->
             if (key == lockBearingKey) {
                 bearingInvalidationKey.update { it + 1 }

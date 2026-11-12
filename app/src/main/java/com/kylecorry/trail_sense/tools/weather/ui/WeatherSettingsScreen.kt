@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Clock
 
 import androidx.activity.compose.LocalActivity
@@ -12,7 +13,6 @@ import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import kotlinx.coroutines.launch
 
-import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -88,8 +88,8 @@ fun WeatherSettingsToolScreen() {
             isNotificationBlocked = {
                 Notify.isChannelBlocked(appContext, CurrentWeatherAlerter.WEATHER_CHANNEL_ID)
             },
-            flagKeys = WeatherFlag.entries.associateWith { appContext.getString(it.key) },
-            choiceKeys = WeatherChoice.entries.associateWith { appContext.getString(it.key) }
+            flagKeys = WeatherFlag.entries.associateWith { it.key },
+            choiceKeys = WeatherChoice.entries.associateWith { it.key }
         )
     }
     val userPrefs = remember(appContext) { UserPreferences(appContext) }
@@ -478,25 +478,25 @@ private fun android.content.Context.weatherOptions(
 }
 
 /** The weather switches stored directly under a preference key; some restart the monitor when changed. */
-internal enum class WeatherFlag(@StringRes val key: Int, val default: Boolean, val restartsMonitor: Boolean = false) {
-    MonitorWeather(R.string.pref_monitor_weather, true),
-    ShowPressureInNotification(R.string.pref_show_pressure_in_notification, false, restartsMonitor = true),
-    ShowTemperatureInNotification(R.string.pref_show_temperature_in_notification, true, restartsMonitor = true),
-    DailyWeatherNotification(R.string.pref_daily_weather_notification, true, restartsMonitor = true),
-    StormAlerts(R.string.pref_send_storm_alert, true),
-    UseAlarmForStormAlert(R.string.pref_weather_use_alarm_for_storm_alert, false),
-    MuteStormAlarmAtNight(R.string.pref_weather_mute_storm_alarm_at_night, true),
-    ShowDetailedIcon(R.string.pref_weather_show_detailed_icon, true)
+internal enum class WeatherFlag(val key: String, val default: Boolean, val restartsMonitor: Boolean = false) {
+    MonitorWeather(PreferenceKeys.monitorWeather, true),
+    ShowPressureInNotification(PreferenceKeys.showPressureInNotification, false, restartsMonitor = true),
+    ShowTemperatureInNotification(PreferenceKeys.showTemperatureInNotification, true, restartsMonitor = true),
+    DailyWeatherNotification(PreferenceKeys.dailyWeatherNotification, true, restartsMonitor = true),
+    StormAlerts(PreferenceKeys.sendStormAlert, true),
+    UseAlarmForStormAlert(PreferenceKeys.weatherUseAlarmForStormAlert, false),
+    MuteStormAlarmAtNight(PreferenceKeys.weatherMuteStormAlarmAtNight, true),
+    ShowDetailedIcon(PreferenceKeys.weatherShowDetailedIcon, true)
 }
 
 /** The weather pickers stored directly as a string under a preference key. */
-internal enum class WeatherChoice(@StringRes val key: Int, val default: String?) {
+internal enum class WeatherChoice(val key: String, val default: String?) {
     /** The quick actions start from the preference's own parsing, so they have no plain default. */
-    LeftQuickAction(R.string.pref_weather_quick_action_left, null),
-    RightQuickAction(R.string.pref_weather_quick_action_right, null),
-    PressureHistory(R.string.pref_pressure_history, "48"),
-    ForecastSensitivity(R.string.pref_forecast_sensitivity, "medium"),
-    StormSensitivity(R.string.pref_storm_alert_sensitivity, "medium")
+    LeftQuickAction(PreferenceKeys.weatherQuickActionLeft, null),
+    RightQuickAction(PreferenceKeys.weatherQuickActionRight, null),
+    PressureHistory(PreferenceKeys.pressureHistory, "48"),
+    ForecastSensitivity(PreferenceKeys.forecastSensitivity, "medium"),
+    StormSensitivity(PreferenceKeys.stormAlertSensitivity, "medium")
 }
 
 internal sealed interface WeatherSettingsEvent {

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.test_utils
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.preferences.SessionStateSubsystem
 import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityWindowInfo
@@ -341,14 +342,14 @@ object TestUtils {
         val migrator = PreferenceMigrator.getInstance()
         migrator.migrate(context)
 
-        prefs.putString(context.getString(R.string.pref_distance_units), "feet_miles")
-        prefs.putString(context.getString(R.string.pref_weight_units), "lbs")
-        prefs.putBoolean(context.getString(R.string.pref_use_24_hour), false)
-        prefs.putBoolean(context.getString(R.string.pref_onboarding_completed), true)
-        prefs.putBoolean(context.getString(R.string.pref_main_disclaimer_shown_key), true)
-        prefs.putBoolean(context.getString(R.string.pref_cliff_height_enabled), true)
-        prefs.putString(context.getString(R.string.pref_altimeter_calibration_mode), "gps")
-        prefs.putInt(context.getString(R.string.pref_altimeter_accuracy), 1)
+        prefs.putString(PreferenceKeys.distanceUnits, "feet_miles")
+        prefs.putString(PreferenceKeys.weightUnits, "lbs")
+        prefs.putBoolean(PreferenceKeys.use24Hour, false)
+        prefs.putBoolean(PreferenceKeys.onboardingCompleted, true)
+        prefs.putBoolean(PreferenceKeys.mainDisclaimerShownKey, true)
+        prefs.putBoolean(PreferenceKeys.cliffHeightEnabled, true)
+        prefs.putString(PreferenceKeys.altimeterCalibrationMode, "gps")
+        prefs.putInt(PreferenceKeys.altimeterAccuracy, 1)
         val userPrefs = UserPreferences(context)
         userPrefs.gps.accuracyFilter = GPSAccuracyFilter.None
         // The settings tool is the fastest to get to idle, which allows the tests to run faster

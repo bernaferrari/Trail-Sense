@@ -16,7 +16,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import kotlinx.serialization.Serializable
 
@@ -84,20 +84,20 @@ object Onboarding {
 
     fun isCompleted(context: Context): Boolean {
         val prefs = PreferencesSubsystem.getInstance(context).preferences
-        return prefs.getBoolean(context.getString(R.string.pref_onboarding_completed)) == true
+        return prefs.getBoolean(PreferenceKeys.onboardingCompleted) == true
     }
 
     fun complete(context: Context) {
         val prefs = PreferencesSubsystem.getInstance(context).preferences
-        prefs.putBoolean(context.getString(R.string.pref_main_disclaimer_shown_key), true)
-        prefs.putBoolean(context.getString(R.string.pref_onboarding_completed), true)
+        prefs.putBoolean(PreferenceKeys.mainDisclaimerShownKey, true)
+        prefs.putBoolean(PreferenceKeys.onboardingCompleted, true)
     }
 
     fun saveUnitSystem(context: Context, useMetric: Boolean) {
         val prefs = PreferencesSubsystem.getInstance(context).preferences
-        prefs.putString(context.getString(R.string.pref_distance_units), if (useMetric) "meters" else "feet_miles")
-        prefs.putString(context.getString(R.string.pref_pressure_units), if (useMetric) "hpa" else "in")
-        prefs.putString(context.getString(R.string.pref_temperature_units), if (useMetric) "c" else "f")
-        prefs.putString(context.getString(R.string.pref_weight_units), if (useMetric) "kg" else "lbs")
+        prefs.putString(PreferenceKeys.distanceUnits, if (useMetric) "meters" else "feet_miles")
+        prefs.putString(PreferenceKeys.pressureUnits, if (useMetric) "hpa" else "in")
+        prefs.putString(PreferenceKeys.temperatureUnits, if (useMetric) "c" else "f")
+        prefs.putString(PreferenceKeys.weightUnits, if (useMetric) "kg" else "lbs")
     }
 }

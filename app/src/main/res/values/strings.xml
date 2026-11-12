@@ -23,7 +23,6 @@
     <string name="connected_plugins">Connected plugins</string>
     <string name="available_plugins">Available plugins</string>
     <string name="plugin_name">Plugin: %s</string>
-    <string name="pref_plugins_settings" translatable="false">pref_plugins_settings</string>
     <!--Dialogs-->
     <string name="copied_to_clipboard_toast">Copied to clipboard</string>
     <string name="plugin_connect_title">Connect plugin?</string>
@@ -57,7 +56,6 @@
     <string name="location_updated_label">Updated</string>
     <string name="location_datum_value">%s datum</string>
     <string name="navigation_elevation_value">%s elevation</string>
-    <string name="pref_navigation_dial_lobes" translatable="false">pref_navigation_dial_lobes</string>
     <string name="navigation_dial_shape">Dial shape</string>
     <string name="navigation_dial_shape_12">12 waves · 30°</string>
     <string name="navigation_dial_shape_8">8 waves · 45°</string>
@@ -343,42 +341,8 @@
     <string name="about_privacy_summary">Trail Sense can\'t reach the internet, so what you record stays on your device.</string>
     <string name="continue_button">CONTINUE</string>
     <!--Preference Keys (DO NOT TRANSLATE)-->
-    <string name="pref_use_true_north" translatable="false">use_true_north</string>
-    <string name="pref_use_sea_level_pressure" translatable="false">use_sea_level_pressure</string>
-    <string name="pref_send_storm_alert" translatable="false">send_storm_alert</string>
-    <string name="pref_pressure_units" translatable="false">pressure_units</string>
-    <string name="pref_distance_units" translatable="false">distance_units</string>
-    <string name="pref_just_sent_alert" translatable="false">just_sent_alert</string>
-    <string name="pref_use_24_hour" translatable="false">use_24_hour</string>
-    <string name="pref_include_leading_zero" translatable="false">pref_leading_zero</string>
-    <string name="pref_sun_time_mode" translatable="false">sun_time_mode</string>
-    <string name="pref_onboarding_completed" translatable="false">onboarding_completed</string>
-    <string name="pref_compass_filter_amt" translatable="false">pref_compass_filter_amt</string>
-    <string name="pref_theme" translatable="false">pref_theme</string>
-    <string name="pref_night_mode_fullscreen" translatable="false">pref_night_mode_fullscreen</string>
-    <string name="pref_display_multi_beacons" translatable="false">pref_display_multi_beacons</string>
-    <string name="pref_nearby_linear_only" translatable="false">pref_nearby_linear_only</string>
-    <string name="pref_storm_alert_sensitivity" translatable="false">pref_storm_alert_sensitivity</string>
-    <string name="pref_show_sun_moon_compass" translatable="false">pref_show_sun_moon_compass_2</string>
-    <string name="pref_show_linear_compass" translatable="false">pref_show_linear_compass</string>
-    <string name="pref_pressure_history" translatable="false">pref_pressure_history</string>
-    <string name="pref_monitor_weather" translatable="false">pref_monitor_weather</string>
-    <string name="pref_ruler_calibration" translatable="false">pref_ruler_calibration</string>
-    <string name="pref_ruler_flip_direction" translatable="false">pref_ruler_flip_direction</string>
-    <string name="pref_num_visible_beacons" translatable="false">pref_num_visible_beacons</string>
-    <string name="pref_center_sun_and_moon" translatable="false">pref_center_sun_and_moon</string>
-    <string name="pref_forecast_sensitivity" translatable="false">pref_forecast_sensitivity</string>
-    <string name="pref_coordinate_format" translatable="false">pref_coordinate_format</string>
-    <string name="pref_sunset_alerts" translatable="false">pref_sunset_alerts</string>
-    <string name="pref_sunrise_alerts" translatable="false">pref_sunrise_alerts</string>
-    <string name="pref_sunset_alert_time" translatable="false">pref_sunset_alert_time</string>
-    <string name="pref_sunrise_alert_time" translatable="false">pref_sunrise_alert_time</string>
-    <string name="pref_sunset_alert_last_sent_date" translatable="false">sunset_alert_last_sent_date</string>
-    <string name="pref_sunrise_alert_last_sent_date" translatable="false">sunrise_alert_last_sent_date</string>
     <string name="pref_compass_sensor" translatable="false">pref_compass_calibration</string>
     <string name="pref_holder_altitude" translatable="false">pref_holder_altitude</string>
-    <string name="pref_auto_altitude" translatable="false">pref_auto_altitude</string>
-    <string name="pref_altitude_override" translatable="false">pref_altitude_override</string>
     <string name="pref_altitude_from_gps_btn" translatable="false">pref_altitude_from_gps_btn</string>
     <string name="pref_altitude_override_sea_level" translatable="false">pref_altitude_override_sea_level</string>
     <string name="pref_altimeter_calibration" translatable="false">pref_altimeter_calibration</string>
@@ -386,30 +350,17 @@
     <string name="pref_barometer_calibration" translatable="false">pref_barometer_calibration</string>
     <string name="pref_holder_azimuth" translatable="false">pref_holder_azimuth</string>
     <string name="pref_holder_declination" translatable="false">pref_holder_declination</string>
-    <string name="pref_declination_override" translatable="false">pref_declination_override</string>
-    <string name="pref_auto_declination" translatable="false">pref_auto_declination</string>
     <string name="pref_declination_override_gps_btn" translatable="false">pref_declination_override_gps_btn</string>
     <string name="pref_holder_location" translatable="false">pref_holder_location</string>
-    <string name="pref_auto_location" translatable="false">pref_auto_location</string>
     <string name="pref_holder_pressure" translatable="false">pref_holder_pressure</string>
-    <string name="pref_show_pressure_in_notification" translatable="false">pref_show_pressure_in_notification</string>
     <string name="pref_open_source_licenses" translatable="false">pref_open_source_licenses</string>
     <string name="pref_gps_request_permission" translatable="false">pref_gps_request_permission</string>
-    <string name="pref_latitude_override" translatable="false">pref_latitude_override</string>
-    <string name="pref_longitude_override" translatable="false">pref_longitude_override</string>
     <string name="pref_calibrate_compass_btn" translatable="false">pref_calibrate_compass_btn</string>
     <string name="pref_app_version" translatable="false">pref_app_version</string>
     <string name="pref_category_licenses" translatable="false">pref_category_licenses</string>
-    <string name="pref_show_calibrate_on_navigate_dialog" translatable="false">pref_show_calibrate_on_navigate_dialog</string>
     <string name="pref_github" translatable="false">pref_github</string>
     <string name="pref_email" translatable="false">pref_email</string>
-    <string name="pref_temperature_units" translatable="false">pref_temperature_units</string>
-    <string name="pref_adjust_for_temperature" translatable="false">pref_adjust_for_temperature</string>
     <string name="pref_temperature_holder" translatable="false">pref_temperature_holder</string>
-    <string name="pref_weather_update_frequency" translatable="false">pref_weather_update_frequency_seconds</string>
-    <string name="pref_altimeter_calibration_mode" translatable="false">pref_altimeter_calibration_mode</string>
-    <string name="pref_sea_level_pressure_override" translatable="false">pref_sea_level_pressure_override</string>
-    <string name="pref_max_beacon_distance" translatable="false">pref_max_beacon_distance</string>
     <string name="error_occurred">An error occurred</string>
     <string name="crash_title">Trail Sense stopped unexpectedly</string>
     <string name="crash_message">Sorry about that. Sending a report helps get it fixed. It opens your email app with the details, and nothing is sent until you choose to.</string>
@@ -431,7 +382,6 @@
     <string name="navigation_nearby_category">Nearby</string>
     <string name="tool_bubble_level_title">Bubble Level</string>
     <string name="tool_bubble_level_summary">Determine if surfaces are flat</string>
-    <string name="pref_bubble_level_threshold" translatable="false">pref_bubble_level_threshold</string>
     <string name="pref_bubble_level_threshold_title">Level threshold</string>
     <string name="other">Other</string>
     <string name="category_food">Food</string>
@@ -496,7 +446,6 @@
     <string name="water_purification_step_2">Bring water to a rolling boil</string>
     <string name="water_purification_step_3">Start the timer</string>
     <string name="clock_waiting_for_gps">Updating time from GPS…</string>
-    <string name="pref_fine_with_strobe" translatable="false">pref_fine_with_strobe</string>
     <string name="strobe_warning_title">Flashing lights</string>
     <string name="strobe_warning_content">The strobe feature contains flashing lights, which may be dangerous for some users.</string>
     <string name="tool_battery_title">Battery</string>
@@ -540,14 +489,6 @@
     <string name="map_scale_title">Map scale</string>
     <string name="map_scale_ratio">Ratio</string>
     <string name="map_scale_verbal">Verbal</string>
-    <string name="pref_min_uncalibrated_temp_c" translatable="false">pref_min_uncalibrated_temp_c</string>
-    <string name="pref_min_calibrated_temp_c" translatable="false">pref_min_calibrated_temp_c</string>
-    <string name="pref_max_uncalibrated_temp_c" translatable="false">pref_max_uncalibrated_temp_c</string>
-    <string name="pref_max_calibrated_temp_c" translatable="false">pref_max_calibrated_temp_c</string>
-    <string name="pref_min_uncalibrated_temp_f" translatable="false">pref_min_uncalibrated_temp_f</string>
-    <string name="pref_min_calibrated_temp_f" translatable="false">pref_min_calibrated_temp_f</string>
-    <string name="pref_max_uncalibrated_temp_f" translatable="false">pref_max_uncalibrated_temp_f</string>
-    <string name="pref_max_calibrated_temp_f" translatable="false">pref_max_calibrated_temp_f</string>
     <string name="max_temp_calibrated">Max ambient temperature (calibrated)</string>
     <string name="max_temp_uncalibrated">Max phone temperature (uncalibrated)</string>
     <string name="min_temp_calibrated">Min ambient temperature (calibrated)</string>
@@ -557,10 +498,8 @@
     <string name="backtrack_notification_channel_description">Backtrack location updates</string>
     <string name="create_beacon">New place</string>
     <string name="edit_beacon">Edit place</string>
-    <string name="pref_backtrack_enabled" translatable="false">pref_backtrack_enabled</string>
     <string name="waypoint_time_format">%1$s, %2$s</string>
     <string name="pref_backtrack_enabled_summary">Record location history</string>
-    <string name="pref_backtrack_frequency" translatable="false">pref_backtrack_frequency_seconds</string>
     <string name="pref_backtrack_frequency_title">Backtrack interval</string>
     <string name="location_input_help_title">Supported location formats</string>
     <string name="location_input_help">Decimal degrees (ex. 1.00, -2.00)\n\nDegrees decimal minutes (ex. 1°23.12\'N, 3°12.1\'W)\n\nDegrees minutes seconds (ex. 1°23\'12.1\"N, 3°12\'1.2\"W)\n\nUTM (ex. 03T 12345E 67890N)\n\nMGRS (ex. 27PXM 09601 05579)\n\nUSNG (ex. 14S NJ 39521 41744)\n\nOSGB (ex. TG 51409 13177)</string>
@@ -574,9 +513,6 @@
     <string name="battery_power_usb">USB</string>
     <string name="battery_power_wireless">Wireless</string>
     <string name="charging_wireless">Charging (%s)</string>
-    <string name="pref_low_power_mode" translatable="false">pref_low_power_mode</string>
-    <string name="pref_low_power_mode_weather" translatable="false">pref_low_power_mode_weather</string>
-    <string name="pref_low_power_mode_backtrack" translatable="false">pref_low_power_mode_backtrack</string>
     <string name="pref_low_power_mode_title">Power saving mode</string>
     <string name="low_power_mode_on_message">Power saving mode on, some features may be disabled.</string>
     <string name="unsaved_changes">Unsaved changes</string>
@@ -645,7 +581,6 @@
     <string name="unavailable">Unavailable</string>
     <string name="quality_poor">Poor</string>
     <string name="quality_good">Good</string>
-    <string name="pref_backtrack_save_cell" translatable="false">pref_backtrack_save_cell</string>
     <string name="time_ago">%s ago</string>
     <string name="network_5g">5G</string>
     <string name="network_4g">4G</string>
@@ -677,7 +612,6 @@
     <string name="guide_light_meter_description">How to determine the beam distance of flashlights</string>
     <string name="todays_forecast">Today\'s forecast</string>
     <string name="tomorrows_forecast">Tomorrow\'s forecast</string>
-    <string name="pref_daily_weather_notification" translatable="false">pref_daily_weather_notification</string>
     <string name="pref_daily_weather_notification_title">Daily weather notification</string>
     <string name="always_on">Always on</string>
     <string name="service_update_frequency">Updates every %s</string>
@@ -686,8 +620,6 @@
     <string name="moderate">Moderate</string>
     <string name="low">Low</string>
     <string name="no_gps_signal">No GPS Signal</string>
-    <string name="pref_navigation_quick_action_left" translatable="false">pref_navigation_quick_action_left</string>
-    <string name="pref_navigation_quick_action_right" translatable="false">pref_navigation_quick_action_right</string>
     <string name="none">None</string>
     <string name="left_quick_action">Left quick action</string>
     <string name="right_quick_action">Right quick action</string>
@@ -700,17 +632,13 @@
     <string name="time_not_set">Time not set</string>
     <string name="pref_daily_weather_time_holder" translatable="false">pref_daily_weather_time_holder</string>
     <string name="pref_daily_weather_time_title">Daily weather time</string>
-    <string name="pref_daily_weather_time" translatable="false">pref_daily_weather_time</string>
     <string name="screen_flashlight">Screen</string>
-    <string name="pref_navigation_speedometer_type" translatable="false">pref_navigation_speedometer_type</string>
     <string name="speedometer">Speedometer</string>
     <string name="since_time">since %s</string>
     <string name="pedometer">Pedometer</string>
     <string name="pref_stride_length_title">Stride length</string>
     <string name="pref_stride_length_holder" translatable="false">pref_stride_length_holder</string>
-    <string name="pref_stride_length" translatable="false">pref_stride_length</string>
     <string name="pref_odometer_request_permission" translatable="false">pref_odometer_request_permission</string>
-    <string name="pref_nearby_radar" translatable="false">pref_nearby_radar</string>
     <string name="pref_nearby_radius_holder" translatable="false">pref_nearby_radius_holder</string>
     <string name="pref_view_distance_beacons_holder" translatable="false">pref_view_distance_beacons_holder</string>
     <string name="no_tides">No tides</string>
@@ -735,18 +663,9 @@
     <string name="import_gpx">Import GPX</string>
     <string name="sleep_timer">Sleep timer</string>
     <string name="pref_odometer_reset_daily_title">Reset daily</string>
-    <string name="pref_odometer_reset_daily" translatable="false">pref_odometer_reset_daily</string>
     <string name="search">Search</string>
-    <string name="pref_weather_quick_action_left" translatable="false">pref_weather_quick_action_left</string>
-    <string name="pref_weather_quick_action_right" translatable="false">pref_weather_quick_action_right</string>
-    <string name="pref_astronomy_quick_action_left" translatable="false">pref_astronomy_quick_action_left</string>
-    <string name="pref_astronomy_quick_action_right" translatable="false">pref_astronomy_quick_action_right</string>
     <string name="actual_frequency_disclaimer">The actual frequency may vary as some devices have background limits in place.</string>
-    <string name="pref_weather_show_detailed_icon" translatable="false">pref_weather_show_detailed_icon</string>
     <string name="pref_weather_show_detailed_icon_title">Show colored notification icon</string>
-    <string name="pref_backtrack_path_color" translatable="false">pref_backtrack_path_color</string>
-    <string name="pref_backtrack_path_style" translatable="false">pref_backtrack_path_dotted</string>
-    <string name="pref_beacon_default_color" translatable="false">pref_beacon_default_color</string>
     <!--Path line styles-->
     <string name="solid">Solid</string>
     <string name="dotted">Dotted</string>
@@ -766,7 +685,6 @@
     <string name="camera_permission_denied">Camera permission denied, unable to turn on camera features. You can enable it in settings.</string>
     <string name="activity_recognition_permission_denied">Physical activity permission denied, unable to turn on pedometer features. You can enable it in settings.</string>
     <string name="last_signal_beacon_name">Last signal - %1$s (%2$s)</string>
-    <string name="pref_show_last_signal_beacon" translatable="false">pref_show_last_signal_beacon</string>
     <string name="pref_show_last_signal_beacon_title">Last signal place</string>
     <string name="pref_show_last_signal_beacon_summary">Saves a place at the last cell signal location</string>
     <string name="noon">Noon</string>
@@ -777,12 +695,10 @@
     <string name="battery_history">Battery history - last %s</string>
     <string name="humidity_history">Humidity history - last %s</string>
     <string name="temperature_history">Temperature history - last %s</string>
-    <string name="pref_nmea_altitude" translatable="false">pref_nmea_altitude</string>
     <string name="pref_barometer_info_holder" translatable="false">pref_barometer_info_holder</string>
     <string name="pref_barometer_info_summary">The pressure may differ from that of nearby stations</string>
     <string name="pref_nmea_elevation_title">NMEA elevation correction</string>
     <string name="pref_nmea_elevation_summary">Use NMEA (satellite) to correct elevations, rather than built-in model</string>
-    <string name="pref_barometer_pressure_smoothing" translatable="false">pref_barometer_pressure_smoothing</string>
     <string name="convert">Convert</string>
     <string name="distance">Distance</string>
     <string name="coordinates_tab">Coordinates</string>
@@ -792,24 +708,20 @@
     <string name="moved_to">Moved to %s</string>
     <string name="preview">Preview</string>
     <string name="map_perspective_instructions">Outline the map</string>
-    <string name="pref_navigation_lock_screen_presence" translatable="false">pref_navigation_show_on_lock_screen</string>
     <string name="pref_navigation_lock_screen_presence_title">Show on lock screen while navigating</string>
     <string name="pref_navigation_lock_screen_when_open_title">Show on lock screen while open</string>
     <string name="pref_temperature_settings" translatable="false">pref_temperature_settings</string>
-    <string name="pref_cell_signal_refresh_cache" translatable="false">pref_cell_signal_refresh_cache</string>
     <string name="pref_cell_signal_refresh_cache_title">Refresh signal cache</string>
     <string name="pref_cell_signal_refresh_cache_summary">Forces loading the latest signal strengths</string>
     <string name="pref_cell_signal_settings" translatable="false">pref_cell_signal_settings</string>
     <string name="import_map">Import map</string>
     <string name="sensor_gyroscope">Gyroscope</string>
     <string name="roll_pitch_yaw">Roll: %1$s, Pitch: %2$s, Yaw: %3$s</string>
-    <string name="pref_backtrack_history_days" translatable="false">pref_backtrack_history_days</string>
     <string name="pref_backtrack_history_days_title">Backtrack history</string>
     <plurals name="number_days">
         <item quantity="one">%d day</item>
         <item quantity="other">%d days</item>
     </plurals>
-    <string name="pref_privacy_screenshot_protection" translatable="false">pref_privacy_screenshot_protection</string>
     <string name="pref_privacy_screenshot_protection_title">Prevent screenshots</string>
     <string name="units">Units</string>
     <string name="choose_your_units">Choose your units</string>
@@ -821,30 +733,18 @@
     <string name="metric_units_summary">Kilometers, meters, Celsius, hPa, kilograms</string>
     <string name="us_customary_units_summary">Miles, feet, Fahrenheit, inHg, pounds</string>
     <string name="privacy">Privacy</string>
-    <string name="pref_privacy_settings" translatable="false">pref_privacy_settings</string>
-    <string name="pref_unit_settings" translatable="false">pref_unit_settings</string>
-    <string name="pref_experimental_metal_direction" translatable="false">pref_experimental_metal_direction</string>
     <string name="pref_experimental_metal_direction_title">Show metal direction</string>
-    <string name="pref_experimental_settings" translatable="false">pref_experimental_settings</string>
-    <string name="pref_sensor_settings" translatable="false">pref_sensor_settings</string>
     <string name="location_mocked">Using mocked location</string>
     <string name="location_not_mocked">Using actual location</string>
-    <string name="pref_tiles_enabled" translatable="false">pref_tiles_enabled</string>
-    <string name="pref_battery_log_enabled" translatable="false">pref_battery_log_enabled</string>
     <string name="pref_tiles_enabled_title">System tiles</string>
     <string name="pref_tiles_battery_log">Battery log</string>
     <string name="pref_tiles_enabled_summary">May prevent battery saver apps from completely stopping Trail Sense</string>
     <string name="pref_dialog_battery_log_summary">The battery log is disabled, history and time until empty may be unavailable. You can re-enable this in settings</string>
     <string name="pref_tiles_enabled_battery_log_summary">Logs battery percentage every hour to estimate time until empty</string>
-    <string name="pref_flashlight_toggle_with_volume" translatable="false">pref_flashlight_toggle_with_volume</string>
     <string name="pref_flashlight_toggle_with_volume_summary">While Trail Sense is open</string>
     <string name="pref_flashlight_toggle_with_volume_title">Toggle with volume buttons</string>
-    <string name="pref_low_resolution_maps" translatable="false">pref_low_resolution_maps</string>
-    <string name="pref_low_resolution_pdf_maps" translatable="false">pref_low_resolution_pdf_maps</string>
-    <string name="pref_copy_trail_maps_to_app_storage" translatable="false">pref_copy_trail_maps_to_app_storage</string>
     <string name="pref_copy_trail_maps_title">Copy maps to Trail Sense</string>
     <string name="pref_copy_trail_maps_summary">On import. When off, the original file is used and must be kept on your device.</string>
-    <string name="pref_auto_low_power" translatable="false">pref_auto_low_power</string>
     <string name="pref_auto_low_power_summary">When your battery is low</string>
     <string name="pref_auto_low_power_title">Automatic power saving</string>
     <string name="daylight">Daylight</string>
@@ -859,7 +759,6 @@
     <string name="destination_elevation">Destination elevation</string>
     <string name="clear_cache">Clear cache</string>
     <string name="pref_gps_clear_cache" translatable="false">pref_gps_clear_cache</string>
-    <string name="pref_map_url_source" translatable="false">pref_map_url_source</string>
     <string name="pref_map_url_source_title">Location share map</string>
     <string name="liter_format">%s l</string>
     <string name="milliliter_format">%s ml</string>
@@ -930,12 +829,10 @@
     <string name="coordinate_format_usng">USNG</string>
     <string name="coordinate_format_osgb">OSGB</string>
     <string name="sort">Sort</string>
-    <string name="pref_pack_item_sort" translatable="false">pref_pack_item_sort</string>
     <string name="pack_sort_percent_low_to_high">Percent packed (low to high)</string>
     <string name="pack_sort_percent_high_to_low">Percent packed (high to low)</string>
     <string name="pack_sort_weight_low_to_high">Weight (low to high)</string>
     <string name="pack_sort_weight_high_to_low">Weight (high to low)</string>
-    <string name="pref_weight_units" translatable="false">pref_weight_units</string>
     <string name="weight_per_item">Weight per item</string>
     <string name="humidity">Humidity</string>
     <!--    The %s is the name of the sensor-->
@@ -953,7 +850,6 @@
     <string name="camera">Camera</string>
     <string name="no_permission">Permission not granted</string>
     <string name="diagnostics">Diagnostics</string>
-    <string name="pref_diagnostics" translatable="false">pref_diagnostics</string>
     <string name="battery_usage_restricted">Battery usage restricted</string>
     <string name="overridden">Overridden</string>
     <string name="on">On</string>
@@ -974,7 +870,6 @@
     <string name="gps_unavailable_resolution">Enable location or change your location source to \'Device Only\' or \'High Accuracy\'</string>
     <!--Severity: Title   Affected tools (list of tools)  Resolution (text)-->
     <string name="diagnostic_message_template">%1$s: %2$s\n\n### Affected tools\n%3$s\n\n### Resolution\n%4$s</string>
-    <string name="pref_main_disclaimer_shown_key" translatable="false">pref_show_disclaimer_message_4_2021</string>
     <string name="autofill">Autofill</string>
     <string name="lightning_dangerously_close">Lightning dangerously close</string>
     <string name="auto">Auto</string>
@@ -1002,9 +897,6 @@
     <string name="solar_eclipses">Solar eclipses</string>
     <string name="solar_eclipse">Solar eclipse</string>
     <string name="astronomy_alerts">Astronomy alerts</string>
-    <string name="pref_send_lunar_eclipse_alerts" translatable="false">pref_send_lunar_eclipse_alerts</string>
-    <string name="pref_send_solar_eclipse_alerts" translatable="false">pref_send_solar_eclipse_alerts</string>
-    <string name="pref_send_meteor_shower_alerts" translatable="false">pref_send_meteor_shower_alerts</string>
     <plurals name="waypoints_to_be_deleted">
         <item quantity="one">%d waypoint will be deleted</item>
         <item quantity="other">%d waypoints will be deleted</item>
@@ -1032,7 +924,6 @@
     <string name="pref_export_weather_csv" translatable="false">pref_export_weather_csv</string>
     <string name="pref_export_weather_csv_title">Export weather readings</string>
     <string name="weather_exported">Weather exported</string>
-    <string name="pref_show_nearest_tide" translatable="false">pref_show_nearest_tide</string>
     <string name="pref_show_nearest_tide_title">Show closest tide</string>
     <!--This is in markdown formatting - the first %s is either Sun or Moon-->
     <string name="sun_moon_position_template">### %1$s\n**Altitude**: %2$s\n\n**Azimuth**: %3$s</string>
@@ -1061,7 +952,6 @@
     <string name="line_style">Line style</string>
     <string name="path_color">Path color</string>
     <string name="temporary">Temporary</string>
-    <string name="pref_path_sort" translatable="false">pref_path_sort</string>
     <string name="sort_by">Sort: %s</string>
     <string name="most_recent">Most recent</string>
     <string name="longest">Longest</string>
@@ -1082,7 +972,6 @@
     <string name="simplify">Simplify</string>
     <string name="simplifying">Simplifying</string>
     <string name="simplification_quality">Simplification quality</string>
-    <string name="pref_auto_simplify_paths" translatable="false">pref_auto_simplify_paths</string>
     <string name="pref_auto_simplify_paths_title">Simplify paths on import</string>
     <string name="saving">Saving</string>
     <string name="change_map_projection">Change projection</string>
@@ -1100,10 +989,7 @@
     <string name="clinometer_measure_distance_instructions">
         To measure the distance to a target that is %s tall:\n\n1. Align the clinometer to the base of the target\n2. Tap the screen and hold\n3. Realign the clinometer to the top of the target\n4. Release to lock and see the distance to the target
     </string>
-    <string name="pref_clinometer_lock_with_volume_buttons" translatable="false">pref_clinometer_lock_with_volume_buttons</string>
     <string name="pref_clinometer_lock_with_volume_buttons_title">Lock with volume buttons</string>
-    <string name="pref_clinometer_baseline_distance" translatable="false">pref_clinometer_baseline_distance</string>
-    <string name="pref_clinometer_baseline_distance_units" translatable="false">pref_clinometer_baseline_distance_units</string>
     <string name="pref_clinometer_baseline_distance_holder" translatable="false">pref_clinometer_baseline_distance_holder</string>
     <string name="pref_clinometer_baseline_distance_title">Baseline distance</string>
     <string name="height">Height</string>
@@ -1118,7 +1004,6 @@
     <string name="compass_accuracy">Compass accuracy</string>
     <string name="compass_unavailable">Compass unavailable</string>
     <string name="gps_unavailable">GPS unavailable</string>
-    <string name="pref_error_settings" translatable="false">pref_error_settings</string>
     <string name="gps_timeouts">GPS timeouts</string>
     <string name="qr_code_scanner">QR Code Scanner</string>
     <string name="no_qr_code_found">No QR code detected</string>
@@ -1133,9 +1018,6 @@
     <string name="share_ellipsis">Share…</string>
     <string name="night">Night</string>
     <string name="qr_text_too_long">Text is too long, QR code was truncated</string>
-    <string name="pref_flashlight_should_timeout" translatable="false">pref_flashlight_should_timeout</string>
-    <string name="pref_flashlight_timeout" translatable="false">pref_flashlight_timeout</string>
-    <string name="pref_flashlight_timeout_instant" translatable="false">pref_flashlight_timeout_instant</string>
     <string name="pref_flashlight_should_timeout_title">Automatically turn off</string>
     <string name="pref_flashlight_timeout_title">Turn off after</string>
     <string name="view">View</string>
@@ -1154,8 +1036,6 @@
     <string name="onboarding_explore">- Designed for hiking, backpacking, camping, and geocaching\n\n- Save places and navigate to them\n\n- Follow paths\n\n- Retrace your steps with backtrack\n\n- Plan what to pack\n\n- Be alerted before the sun sets\n\n- Predict the weather\n\n- Use your phone as a flashlight\n\n- And much more!</string>
     <string name="average_speed">Average speed</string>
     <string name="steps">Steps</string>
-    <string name="pref_pedometer_enabled" translatable="false">pref_pedometer_enabled</string>
-    <string name="pref_distance_alert" translatable="false">pref_distance_alert</string>
     <string name="distance_alert">Distance alert</string>
     <string name="remove_distance_alert">Remove distance alert (%s)?</string>
     <string name="distance_alert_distance_reached">You have reached %s</string>
@@ -1174,9 +1054,7 @@
     <string name="reset_distance_title">Reset distance?</string>
     <string name="navigating_to_nearest_path_point">Navigating to nearest path point</string>
     <string name="beacons">Places</string>
-    <string name="pref_start_on_boot" translatable="false">pref_start_on_boot</string>
     <string name="pref_start_on_boot_title">Start on boot</string>
-    <string name="pref_enable_analog_clock" translatable="false">pref_enable_analog_clock</string>
     <string name="pref_enable_analog_title">Analog clock</string>
     <string name="bearing">Bearing</string>
     <string name="pref_only_navigate_path_points" translatable="false">pref_only_navigate_path_points</string>
@@ -1195,7 +1073,6 @@
     <string name="point">Point</string>
     <string name="point_added">Point added to path</string>
     <string name="tide_diurnal">Diurnal</string>
-    <string name="pref_tide_disclaimer_seen" translatable="false">pref_tide_disclaimer_seen</string>
     <string name="tide_instructions">Use an official tide table to enter reference tides for the length of your trip.</string>
     <string name="tide_user_guide_recommendation">Official tide table websites can be found in the user guide.</string>
     <string name="tide_semidiurnal">Semidiurnal</string>
@@ -1216,9 +1093,6 @@
     <string name="path_slope">Slope</string>
     <string name="aspect">Aspect</string>
     <string name="camera_unavailable">Camera unavailable</string>
-    <string name="pref_torch_brightness" translatable="false">pref_torch_brightness</string>
-    <string name="pref_screen_torch_brightness" translatable="false">pref_flashlight_brightness</string>
-    <string name="pref_beacon_sort" translatable="false">pref_beacon_sort</string>
     <!-- As in clear sky (weather) -->
     <string name="clouds_clear">Clear</string>
     <!--Adjective: Worked by hand, not automatically or electronically-->
@@ -1247,11 +1121,9 @@
     <!--As in, Precipitation Later-->
     <string name="later">Later</string>
     <string name="now">Now</string>
-    <string name="pref_show_map_previews" translatable="false">pref_show_map_previews</string>
     <string name="pref_show_map_previews_title">Show map previews</string>
     <string name="smoothing">Smoothing</string>
     <string name="pref_altimeter_accuracy_holder" translatable="false">pref_altimeter_accuracy_holder</string>
-    <string name="pref_altimeter_accuracy" translatable="false">pref_altimeter_accuracy</string>
     <!--    The number of samples-->
     <string name="samples">Samples</string>
     <!--    Examples of the sensors you can adjust settings for-->
@@ -1266,8 +1138,6 @@
     <string name="next_24_hours">Next 24 hours</string>
     <string name="tool_climate">Climate</string>
     <string name="tool_climate_summary">View historic temperatures</string>
-    <string name="pref_temperature_smoothing" translatable="false">pref_temperature_smoothing</string>
-    <string name="pref_thermometer_source" translatable="false">pref_thermometer_source</string>
     <!--The source of the readings / provider.-->
     <string name="source">Source</string>
     <string name="pref_holder_temperature_chart" translatable="false">pref_holder_temperature_chart</string>
@@ -1290,12 +1160,9 @@
     <string name="at_time">at %s</string>
     <!-- The time that the last lightning strike occurred at. Ex. Last strike at 1:00 -->
     <string name="last_lightning_strike_at">Last strike at %s</string>
-    <string name="pref_show_temperature_in_notification" translatable="false">pref_show_temperature_in_notification</string>
     <string name="historic_temperatures">Historic temperatures</string>
     <!--    The %d is the number of years of data used to calculate the average.-->
     <string name="historic_temperatures_full_disclaimer" tools:ignore="PluralsCandidate">Temperatures are based on a %d year average of historical data and may not reflect the current weather conditions.</string>
-    <string name="pref_historic_temperatures_disclaimer_shown" translatable="false">pref_historic_temperatures_disclaimer_shown</string>
-    <string name="pref_map_sort" translatable="false">pref_map_sort</string>
     <string name="blank">Blank</string>
     <!--    Center point-->
     <string name="center">Center</string>
@@ -1316,14 +1183,12 @@
     <string name="map_calibration_error_same_location">Enter two different real-world locations.</string>
     <string name="map_calibration_error_implausible_scale">The calibration scale looks implausible. Check both map points and coordinates.</string>
     <string name="map_calibration_shown" translatable="false">map_calibration_shown</string>
-    <string name="pref_compass_source" translatable="false">pref_compass_source</string>
     <string name="compass_source_mag_gyro">Magnetometer + Gyro</string>
     <string name="compass_source_legacy_ts">Legacy (Trail Sense)</string>
     <string name="compass_source_legacy_android">Legacy (Android)</string>
     <string name="accelerometer">Accelerometer</string>
     <!-- Indicates the source of the data -->
     <string name="data_source">Source: %s</string>
-    <string name="pref_keep_map_facing_up" translatable="false">pref_keep_map_facing_up</string>
     <string name="pref_keep_map_facing_up_title">Keep map facing up</string>
     <string name="pref_keep_map_facing_up_summary">The map will align with the top of the screen instead of True North.</string>
     <string name="daylight_duration">%s daylight</string>
@@ -1380,7 +1245,6 @@
     <string name="pref_debug_weather_timing" translatable="false">pref_debug_weather_timing</string>
     <string name="backup">Backup</string>
     <string name="restore">Restore</string>
-    <string name="pref_backup_settings" translatable="false">pref_backup_settings</string>
     <string name="pref_backup_action" translatable="false">pref_backup_action</string>
     <string name="pref_restore_action" translatable="false">pref_restore_action</string>
     <!--    %s is the app name (Trail Sense)-->
@@ -1396,11 +1260,9 @@
     <string name="restore_failure_newer_version">This backup was created with a newer version of %s. Please update the app and try again.</string>
     <!--    A mode for the camera to use zero shutter lag-->
     <string name="zero_shutter_lag">Zero shutter lag</string>
-    <string name="pref_use_zero_shutter_lag" translatable="false">pref_use_zero_shutter_lag</string>
     <string name="my_location">My location</string>
     <string name="destination">Destination</string>
     <string name="target">Target</string>
-    <string name="pref_cliff_height_enabled" translatable="false">pref_cliff_height_enabled</string>
     <string name="triangulate_destination_location_1_instructions">Record your location and the direction to the destination.</string>
     <!--%s is the recommended distance between locations. Ex. 30 m-->
     <string name="triangulate_destination_location_2_instructions">Move at least %s from the first location and record your location and the direction to the destination again.</string>
@@ -1425,10 +1287,7 @@
     <string name="unpin">Unpin</string>
     <string name="pin">Pin</string>
     <string name="tool_long_press_hint_toast">Long press a tool to see more options</string>
-    <string name="pref_tool_sort" translatable="false">pref_tool_sort</string>
     <string name="pref_tool_quick_action_header_key" translatable="false">pref_tool_quick_action_header_key</string>
-    <string name="pref_tool_quick_actions" translatable="false">pref_tool_quick_actions</string>
-    <string name="pref_pinned_tools" translatable="false">pref_pinned_tools</string>
     <!--The first %s is the device model, the second %s is the sensor name, and the third %s is the app name (Trail Sense)-->
     <string name="missing_sensor_message_1">Your %1$s does not have a built-in %2$s sensor. Unfortunately, this means that some features in %3$s won\’t be available.</string>
     <string name="is_there_a_way_to_fix_this">Is there a way to fix this?</string>
@@ -1441,56 +1300,39 @@
     <string name="pref_altimeter_clear_cache_holder" translatable="false">pref_altimeter_clear_cache_holder</string>
     <string name="continuous_calibration">Continuous calibration</string>
     <string name="continuous_calibration_description">Calibrates whenever there is a GPS fix</string>
-    <string name="pref_altimeter_continuous_calibration" translatable="false">pref_altimeter_continuous_calibration</string>
     <string name="service_restart">Service restart</string>
     <string name="service_restart_channel_description">A notification to restart services</string>
     <string name="restart_services_title">Restart services</string>
     <string name="restart_services_message">Background services could not be restarted. Tap to restart.</string>
-    <string name="pref_altimeter_forced_recalibration_interval" translatable="false">pref_altimeter_forced_recalibration_interval</string>
     <string name="fused_altimeter_force_calibration">Force calibration interval</string>
     <string name="pref_fused_altimeter_force_calibration_holder" translatable="false">pref_fused_altimeter_force_calibration_holder</string>
     <!--    %s is the interval, ex. 1 h-->
     <string name="fused_altimeter_force_calibration_summary">Forces a GPS calibration every %s</string>
-    <string name="pref_use_dynamic_colors" translatable="false">pref_use_dynamic_colors</string>
-    <string name="pref_theme_palette" translatable="false">pref_theme_palette</string>
-    <string name="pref_color_style" translatable="false">pref_color_style</string>
     <string name="dynamic_colors">Dynamic colors</string>
     <string name="compact_mode">Compact mode</string>
     <string name="pref_show_all_bottom_navigation_labels">Show all bottom navigation labels</string>
-    <string name="pref_use_dynamic_colors_on_compass" translatable="false">pref_use_dynamic_colors_on_compass</string>
-    <string name="pref_use_bottom_navigation_labels" translatable="false">pref_use_bottom_navigation_labels</string>
-    <string name="pref_use_compact_mode" translatable="false">pref_use_compact_mode</string>
     <string name="compass_dynamic_colors">Compass dynamic colors</string>
     <string name="compass_dynamic_colors_summary">Use dynamic colors for cardinal directions</string>
     <string name="screen_flashlight_full_name">Screen flashlight</string>
     <string name="view_in_3d">View in 3D</string>
     <string name="locate">Locate</string>
     <string name="not_visible">Not visible</string>
-    <string name="pref_fast_path_rendering" translatable="false">pref_fast_path_rendering</string>
     <string name="fast_path_rendering">Fast path rendering</string>
     <string name="fast_path_rendering_summary">Improves performance at the cost of appearance</string>
     <string name="view_distance">View distance</string>
-    <string name="pref_augmented_reality_view_distance" translatable="false">pref_augmented_reality_view_distance</string>
-    <string name="pref_show_dial_ticks_when_no_compass" translatable="false">pref_show_dial_ticks_when_no_compass</string>
     <string name="show_dial_ticks_on_nearby_radar">Show dial ticks</string>
     <string name="show_dial_ticks_on_nearby_radar_summary">Your device does not have a compass, but you can still see what direction places are.</string>
     <string name="pref_tool_category_holder_key" translatable="false">pref_tool_category_holder_key</string>
     <string name="augmented_reality_no_gyro_message">You can still use the Augmented Reality tool, but it will not be as accurate.</string>
     <string name="creating_beacon">Saving place</string>
     <string name="pref_view_distance_paths_holder" translatable="false">pref_view_distance_paths_holder</string>
-    <string name="pref_show_ar_path_layer" translatable="false">pref_show_ar_path_layer</string>
-    <string name="pref_augmented_reality_view_distance_paths" translatable="false">pref_augmented_reality_view_distance_paths</string>
     <string name="ar_calibration_instructions">Center the %s in the screen and press \"Calibrate\"</string>
-    <string name="pref_ar_use_gyro_only_after_calibration" translatable="false">pref_ar_use_gyro_only_after_calibration</string>
     <string name="use_gyroscope_after_calibration">Use gyroscope after calibration</string>
     <string name="use_gyroscope_after_calibration_description">Instead of the compass (avoids magnetic drift)</string>
     <string name="reset_calibration_question">Reset calibration?</string>
-    <string name="pref_ar_adjust_for_path_elevation" translatable="false">pref_ar_adjust_for_path_elevation</string>
     <!-- Whether to use path elevations on the augmented reality tool -->
     <string name="use_path_elevation">Use path elevation</string>
     <string name="pref_use_filtered_gps" translatable="false">pref_use_filtered_gps</string>
-    <string name="pref_use_metal_audio" translatable="false">pref_use_metal_audio</string>
-    <string name="pref_no_use_metal_vibration" translatable="false">pref_no_use_metal_vibration</string>
     <string name="smooth_gps_readings">Smooth GPS readings</string>
     <plurals name="map_group_summary">
         <item quantity="one">%d map</item>
@@ -1514,7 +1356,6 @@
     </plurals>
     <string name="select_from_gallery">Select from gallery</string>
     <string name="magnetometer_gyro_custom">Magnetometer + Gyro (Custom)</string>
-    <string name="pref_augmented_reality_mapper" translatable="false">pref_augmented_reality_mapper</string>
     <!--The camera projection type for augmented reality (ex. perspective)-->
     <string name="projection_type">Augmented reality projection</string>
     <!--Camera projection using intrinsics matrix-->
@@ -1532,12 +1373,9 @@
     <string name="audio_error_messsage">An error occurred while trying to play audio.</string>
     <string name="ar_calibration_instructions_hint">To calibrate the Augmented Reality tool, tap the icon in the top-left of the screen and follow the instructions that appear.</string>
     <string name="layers">Layers</string>
-    <string name="pref_show_ar_beacon_layer" translatable="false">pref_show_ar_beacon_layer</string>
-    <string name="pref_show_ar_astronomy_layer" translatable="false">pref_show_ar_astronomy_layer</string>
     <string name="visible">Visible</string>
     <string name="show_all">Show all</string>
     <string name="hide_all">Hide all</string>
-    <string name="pref_show_ar_grid_layer" translatable="false">pref_show_ar_grid_layer</string>
     <string name="grid">Grid</string>
     <string name="ar_layer_override_message">Layer settings may be overridden by guidance, such as the Astronomy guide.</string>
     <string name="date">Date</string>
@@ -1548,7 +1386,6 @@
     <string name="no_recorded_cell_signal_nearby">No recorded cell signal nearby</string>
     <string name="navigate_to_nearest_cell_signal">Navigate to nearest cell signal</string>
     <string name="tool_quick_action_name">Tool: %s</string>
-    <string name="pref_start_camera_in_3d_view" translatable="false">pref_start_camera_in_3d_view</string>
     <string name="pref_start_camera_in_3d_view_title">Use camera for 3D viewing</string>
     <string name="pref_start_camera_in_3d_view_summary">Opens the camera when you click the view in 3D button</string>
     <string name="cloud_scanner">Cloud Scanner</string>
@@ -1571,25 +1408,20 @@
     <string name="communication">Communication</string>
     <string name="local_talk">Local Talk</string>
     <string name="quick_actions">Quick actions</string>
-    <string name="pref_bottom_navigation_tools" translatable="false">pref_bottom_navigation_tools</string>
     <string name="tool_quick_action_summary">Long press a tab, or find them on the Tools tab</string>
     <string name="widget_bottom_sheet_instructions">Long press a tab, or use the Widgets quick action</string>
     <string name="widget_pref_title">In-app widgets</string>
-    <string name="pref_tool_settings_header_key" translatable="false">pref_tool_settings_header_key</string>
     <string name="quick_actions_are_unavailable">Quick actions are unavailable</string>
     <string name="bottom_navigation_slot">Tab %d</string>
-    <string name="pref_weather_forecast_source" translatable="false">pref_weather_forecast_source</string>
     <string name="forecast_algorithm">Forecast algorithm</string>
     <string name="no_items_found">No items found</string>
     <string name="import_packing_list">Import packing list</string>
-    <string name="pref_barometer_offset" translatable="false">pref_barometer_offset</string>
     <string name="barometer_offset">Barometer offset</string>
     <string name="pref_holder_barometer_offset" translatable="false">pref_holder_barometer_offset</string>
     <string name="pref_reset_barometer_calibration_key" translatable="false">pref_reset_barometer_calibration_key</string>
     <string name="enter_the_current_pressure">Enter the current pressure</string>
     <string name="sunset">Sunset</string>
     <string name="sunrise">Sunrise</string>
-    <string name="pref_flashlight_control_screen_with_volume" translatable="false">pref_flashlight_control_screen_with_volume</string>
     <string name="pref_flashlight_control_screen_with_volume_title">Control screen flashlight brightness with volume buttons</string>
     <string name="estimate_method">Estimate method</string>
     <string name="tide_clock">Tide clock</string>
@@ -1617,13 +1449,10 @@
     <string name="imperial_teaspoons">Imperial teaspoons</string>
     <string name="imperial_tablespoons">Imperial tablespoons</string>
     <string name="automatic_backup">Automatic backup</string>
-    <string name="pref_auto_backup_enabled" translatable="false">pref_auto_backup_enabled</string>
-    <string name="pref_include_mapsforge_backups" translatable="false">pref_include_mapsforge_backups</string>
     <string name="include_mapsforge_backups">Include trail maps in backups</string>
     <string name="include_mapsforge_backups_summary">Mapsforge (.map) files can be large</string>
     <string name="select_backup_directory">Select backup directory</string>
     <string name="no_directory_selected">No directory selected</string>
-    <string name="pref_auto_backup_uri" translatable="false">pref_auto_backup_uri</string>
     <!--  %1$s is the directory name, %2$d is the number of backups to keep.  -->
     <string name="auto_backup_instructions">A backup will be created once a day to %1$s. Only the last %2$d backups will be kept.</string>
     <string name="backup_failed">Backup failed</string>
@@ -1633,7 +1462,6 @@
     <string name="widgets">Widgets</string>
     <string name="widget_updater">Widget updater</string>
     <string name="pref_tool_widgets_header_key" translatable="false">pref_tool_widgets_header_key</string>
-    <string name="pref_tool_widgets" translatable="false">pref_tool_widgets</string>
     <string name="sun_moon_chart">Sun &amp; moon chart</string>
     <string name="pressure_chart">Pressure chart</string>
     <string name="tide_chart">Tide chart</string>
@@ -1645,12 +1473,8 @@
     <string name="tide_estimation_description_lunitidal_interval_utc">Uses the moon\'s position to estimate tides. Requires the UTC lunitidal interval.</string>
     <string name="tide_estimation_description_tide_model">Uses a built-in tide model to estimate tides for the entered location or your location if none is entered.</string>
     <string name="star">Star</string>
-    <string name="pref_show_ar_stars" translatable="false">pref_show_ar_stars</string>
-    <string name="pref_show_ar_astronomy_below_horizon" translatable="false">pref_show_ar_astronomy_below_horizon</string>
     <string name="show_below_horizon">Show below horizon</string>
-    <string name="pref_show_ar_constellations" translatable="false">pref_show_ar_constellations</string>
     <string name="show_stars">Show stars and planets</string>
-    <string name="pref_show_ar_low_brightness" translatable="false">pref_show_ar_low_brightness</string>
     <string name="show_low_brightness_objects">Show low brightness stars/planets</string>
     <string name="tide">Tide</string>
     <string name="field_guide">Field Guide</string>
@@ -1812,22 +1636,9 @@
     <string name="show_on_map">Show on map</string>
     <string name="safe_mode_toast">Crashes detected, disabling some features for a few seconds.</string>
     <string name="opacity">Opacity</string>
-    <string name="pref_navigation_keep_unlocked" translatable="false">pref_navigation_keep_unlocked</string>
-    <string name="pref_photo_maps_keep_unlocked" translatable="false">pref_photo_maps_keep_unlocked</string>
-    <string name="pref_photo_maps_high_detail_mode" translatable="false">pref_photo_maps_high_detail_mode</string>
     <string name="pref_high_detail_mode_title">High detail mode</string>
     <string name="pref_high_detail_mode_summary">Loads more tiles for higher quality. Uses more memory.</string>
-    <string name="pref_map_keep_unlocked" translatable="false">pref_map_keep_unlocked</string>
-    <string name="pref_map_high_detail_mode" translatable="false">pref_map_high_detail_mode</string>
-    <string name="pref_navigation_high_detail_mode" translatable="false">pref_navigation_high_detail_mode</string>
     <string name="declination">Declination</string>
-    <string name="pref_pedometer_use_alarm_for_distance_alert" translatable="false">pref_pedometer_use_alarm_for_distance_alert</string>
-    <string name="pref_turn_back_use_alarm" translatable="false">pref_turn_back_use_alarm</string>
-    <string name="pref_water_boil_timer_use_alarm" translatable="false">pref_water_boil_timer_use_alarm</string>
-    <string name="pref_astronomy_use_alarm_for_sunset_alert" translatable="false">pref_astronomy_use_alarm_for_sunset_alert</string>
-    <string name="pref_astronomy_use_alarm_for_sunrise_alert" translatable="false">pref_astronomy_use_alarm_for_sunrise_alert</string>
-    <string name="pref_weather_use_alarm_for_storm_alert" translatable="false">pref_weather_use_alarm_for_storm_alert</string>
-    <string name="pref_weather_mute_storm_alarm_at_night" translatable="false">pref_weather_mute_storm_alarm_at_night</string>
     <string name="use_alarm_for_distance_alert">Use alarm for distance alert</string>
     <string name="use_alarm_for_turn_back_alert">Use alarm for turn back alert</string>
     <string name="use_alarm_for_water_boil_timer">Use alarm for water boil timer</string>
@@ -1851,9 +1662,7 @@
     <!--DEM = Digital Elevation Model-->
     <string name="invalid_dem_file">Invalid DEM file</string>
     <string name="built_in_dem">Built-in (low accuracy)</string>
-    <string name="pref_altimeter_dem_loaded" translatable="false">pref_altimeter_dem_loaded</string>
     <string name="digital_elevation_model_link">You can download a digital elevation model in various sizes from %s</string>
-    <string name="pref_notification_group_behavior" translatable="false">pref_notification_group_behavior</string>
     <string name="notification_grouping">Notification grouping</string>
     <string name="ungroup_all">Ungroup all</string>
     <string name="ungroup_alerts">Ungroup alerts</string>
@@ -1884,7 +1693,6 @@
     <string name="pref_offline_map_files" translatable="false">pref_offline_map_files</string>
     <string name="show_gps_accuracy">Show GPS accuracy</string>
     <string name="large_location_indicator">Large location indicator</string>
-    <string name="pref_increase_ar_exposure_at_night" translatable="false">pref_increase_ar_exposure_at_night</string>
     <string name="increase_exposure_at_night">Increase exposure at night</string>
     <string name="show_constellations">Show constellations</string>
     <string name="constellation">Constellation</string>
@@ -1942,24 +1750,19 @@
     <string name="theme_transparent_type">Transparent (%s)</string>
     <string name="widget_theme_black_text">Black text</string>
     <string name="widget_theme_white_text">White text</string>
-    <string name="pref_default_widget_theme" translatable="false">pref_default_widget_theme</string>
     <string name="default_widget_theme">Default widget theme</string>
     <string name="cancel_navigation_question">Cancel navigation?</string>
     <string name="elevation_value">Elevation: %s</string>
-    <string name="pref_show_pressure_forecast" translatable="false">pref_show_pressure_forecast</string>
     <string name="show_pressure_forecast">Show pressure forecast on chart</string>
     <!--Minute of angle (for shooting)-->
     <string name="moa_amount">%s MOA</string>
     <!--mil (for shooting)-->
     <string name="mil_amount">%s mil</string>
     <string name="uses_g1_drag_model">Uses G1 drag model</string>
-    <string name="pref_save_map_state" translatable="false">pref_save_map_state</string>
     <string name="remember_map_state">Remember map state</string>
-    <string name="pref_lock_bearing_to_location" translatable="false">pref_lock_bearing_to_location</string>
     <string name="lock_bearing_to_location">Lock bearing to location</string>
     <string name="lock_bearing_to_location_description">Lock the bearing line to your starting location</string>
     <string name="pref_show_astronomy_bands_title">Show sunrise/set bands</string>
-    <string name="pref_show_astronomy_bands" translatable="false">pref_show_astronomy_bands</string>
     <string name="settings_copied">Settings copied</string>
     <string name="copy_settings_to_other_maps">Copy settings to other maps</string>
     <string name="ruggedness">Ruggedness</string>
@@ -2014,8 +1817,6 @@
     <string name="active_all_year">Active all year</string>
     <string name="biting_flies_mosquitoes">Biting flies/mosquitoes</string>
     <string name="ecology">Ecology</string>
-    <string name="pref_navigation_draw_compass_dial_bezel" translatable="false">pref_navigation_draw_compass_dial_bezel</string>
-    <string name="pref_navigation_show_azimuth_indicator" translatable="false">pref_navigation_show_azimuth_indicator</string>
     <string name="manage_maps">Manage maps</string>
     <string name="map_type_photo">Photo</string>
     <string name="map_type_trail">Trail</string>
@@ -2027,10 +1828,8 @@
     <string name="replace_elevations_confirmation">Replace all path elevations using the digital elevation model?</string>
     <string name="scientific_name">Scientific name</string>
     <string name="field_guide_name_display">Name display</string>
-    <string name="pref_field_guide_name_display" translatable="false">pref_field_guide_name_display</string>
     <string name="built_in_pages">Built-in pages</string>
     <string name="pref_field_guide_built_in_pages_holder" translatable="false">pref_field_guide_built_in_pages_holder</string>
-    <string name="pref_field_guide_hidden_pages" translatable="false">pref_field_guide_hidden_pages</string>
     <string name="hide_field_guide_page_message">%1$s\n\nYou can unhide this page in the Field Guide settings.</string>
     <string name="common_name">Common name</string>
     <string name="both_names">Both names</string>
@@ -2045,20 +1844,14 @@
         <item quantity="other">Device clock is %d seconds fast</item>
     </plurals>
     <string name="battery_deep_sleep">Deep sleep: %1$s (last %2$s)</string>
-    <string name="pref_backtrack_min_distance" translatable="false">pref_backtrack_min_distance</string>
     <string name="pref_backtrack_min_distance_holder" translatable="false">pref_backtrack_min_distance_holder</string>
     <string name="pref_backtrack_min_distance_title">Minimum distance between points</string>
     <string name="pref_backtrack_min_distance_summary">Points closer than this to the previous point are not recorded. Set to 0 to record every point.</string>
     <string name="pref_gps_accuracy_requirement" translatable="false">pref_gps_accuracy_requirement</string>
-    <string name="pref_gps_accuracy_meters" translatable="false">pref_gps_accuracy_meters</string>
-    <string name="pref_gps_accuracy_wait_seconds" translatable="false">pref_gps_accuracy_wait_seconds</string>
     <string name="pref_gps_accuracy_requirement_title">Accuracy filter</string>
     <string name="gps_accuracy_filter_summary">%1$s accuracy, wait up to %2$s</string>
     <string name="gps_accuracy_target">Accuracy: %1$s</string>
     <string name="gps_accuracy_wait">Maximum wait: %1$s</string>
-    <string name="pref_backtrack_keep_awake" translatable="false">pref_backtrack_keep_awake</string>
-    <string name="pref_gps_power_usage" translatable="false">pref_gps_power_usage</string>
-    <string name="pref_backtrack_gps_power_usage" translatable="false">pref_backtrack_gps_power_usage</string>
     <string name="pref_gps_power_usage_title">GPS power usage</string>
     <string name="pref_backtrack_gps_power_usage_title">Backtrack GPS power usage</string>
     <string name="gps_power_usage_low">Battery saving</string>
@@ -2069,16 +1862,12 @@
     <string name="pref_backtrack_keep_awake_title">Keep device awake</string>
     <string name="pref_step_length_title">Step length</string>
     <string name="pref_step_length_holder" translatable="false">pref_step_length_holder</string>
-    <string name="pref_navigation_lock_screen_mode" translatable="false">pref_navigation_lock_screen_mode</string>
     <string name="pref_navigation_lock_screen_title">Show on lock screen</string>
     <string name="pref_navigation_lock_screen_while_navigating">While navigating</string>
     <string name="pref_navigation_lock_screen_while_open">While open</string>
-    <string name="pref_backtrack_keep_on_stop" translatable="false">pref_backtrack_keep_on_stop</string>
     <string name="pref_backtrack_keep_on_stop_title">Keep path when stopped</string>
     <string name="pref_backtrack_keep_on_stop_summary">Otherwise, the path is deleted after the Backtrack history</string>
-    <string name="pref_large_tile_cache" translatable="false">pref_large_tile_cache</string>
     <string name="pref_large_tile_cache_title">Use large map tile cache</string>
-    <string name="pref_plugins_enabled" translatable="false">pref_plugins_enabled</string>
     <string name="delete_packing_list_item">Delete item?</string>
     <string name="export_logs">Export logs</string>
     <string name="external_storage">External storage</string>
@@ -2089,9 +1878,7 @@
     <string name="created">Created</string>
     <string name="redo">Redo</string>
     <string name="average_pace">Average pace</string>
-    <string name="pref_pedometer_history_days" translatable="false">pref_pedometer_history_days</string>
     <string name="pref_pedometer_history_days_title">Step history</string>
-    <string name="pref_pedometer_average_pace_time" translatable="false">pref_pedometer_average_pace_time</string>
     <string name="pref_pedometer_average_pace_time_title">Average pace time</string>
     <string name="estimate_step_length">Estimate step length</string>
     <string name="pref_estimate_step_length_holder" translatable="false">pref_estimate_step_length_holder</string>
@@ -2117,12 +1904,9 @@
     <string name="draft">Draft</string>
     <string name="skip_elevations">Skip elevations</string>
     <string name="bottom_navigation">Bottom navigation</string>
-    <string name="pref_elevation_smoothing" translatable="false">pref_elevation_smoothing</string>
     <string name="pref_holder_elevation_smoothing_chart" translatable="false">pref_holder_elevation_smoothing_chart</string>
     <string name="elevation_smoothing">Elevation smoothing</string>
-    <string name="pref_use_legacy_file_picker" translatable="false">pref_use_legacy_file_picker</string>
     <string name="use_legacy_file_picker">Use legacy file picker</string>
-    <string name="pref_widget_icon_compatibility" translatable="false">pref_widget_icon_compatibility</string>
     <string name="widget_icon_compatibility_mode">Widget icon compatibility mode</string>
     <string name="widget_icon_compatibility_mode_summary">Fixes missing widget icons on some devices</string>
     <plurals name="step_count">
@@ -2133,7 +1917,6 @@
     <string name="location_required_for_cell_signals">Location permission is required to view nearby cell signals</string>
     <string name="navigation_cancelled">Navigation cancelled</string>
     <string name="pref_bearing_distance_holder" translatable="false">pref_bearing_distance_holder</string>
-    <string name="pref_bearing_distance" translatable="false">pref_bearing_distance</string>
     <string name="bearing_length">Bearing length</string>
     <string name="bearing_length_description">The length of the bearing line when a bearing is active</string>
     <string name="bearing_length_max">Max: %s</string>
@@ -2149,7 +1932,6 @@
     <string name="delete_image_prompt">Delete image?</string>
     <string name="image_index">Image %1$d/%2$d</string>
     <string name="last_updated">Last updated</string>
-    <string name="pref_gps_smoothing" translatable="false">pref_gps_smoothing</string>
     <string name="path_direction_to_end">Follow to end</string>
     <string name="path_direction_to_start">Follow to start</string>
     <string name="path_navigation_follow_to_point">Follow to point</string>
@@ -2157,8 +1939,6 @@
     <string name="compass_update_frequency">Update frequency</string>
     <string name="compass_update_frequency_normal">Normal</string>
     <string name="compass_update_frequency_fast">Fast</string>
-    <string name="pref_compass_update_frequency" translatable="false">pref_compass_update_frequency</string>
-    <string name="pref_ar_path_appearance" translatable="false">pref_ar_path_appearance</string>
     <string name="ar_path_appearance">Appearance</string>
     <string name="ar_path_appearance_ribbon">Ribbon</string>
     <string name="ar_path_appearance_line">Line</string>

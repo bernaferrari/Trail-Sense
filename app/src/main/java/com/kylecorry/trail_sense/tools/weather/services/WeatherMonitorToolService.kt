@@ -7,6 +7,7 @@ import com.kylecorry.andromeda.permissions.Permissions
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.extensions.tryStartForegroundOrNotify
 import com.kylecorry.trail_sense.shared.logging.Logger
@@ -26,14 +27,14 @@ class WeatherMonitorToolService(private val context: Context) : ToolService {
     private val prefs = UserPreferences(context)
     private val sharedPreferences = PreferencesSubsystem.getInstance(context).preferences
     private val stateChangePrefKeys = listOf(
-        R.string.pref_monitor_weather,
-        R.string.pref_low_power_mode,
-        R.string.pref_low_power_mode_weather
-    ).map { context.getString(it) }
+        PreferenceKeys.monitorWeather,
+        PreferenceKeys.lowPowerMode,
+        PreferenceKeys.lowPowerModeWeather
+    )
 
     private val frequencyChangePrefKeys = listOf(
-        R.string.pref_weather_update_frequency
-    ).map { context.getString(it) }
+        PreferenceKeys.weatherUpdateFrequency
+    )
 
     override val id: String = WeatherToolRegistration.SERVICE_WEATHER_MONITOR
 

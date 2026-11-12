@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Duration.Companion.days
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -75,8 +76,8 @@ fun PedometerSettingsToolScreen() {
                     Notify.isChannelBlocked(appContext, StepCounterService.CHANNEL_ID)
             },
             keys = PedometerSettingsKeys(
-                resetDaily = appContext.getString(R.string.pref_odometer_reset_daily),
-                useAlarm = appContext.getString(R.string.pref_pedometer_use_alarm_for_distance_alert)
+                resetDaily = PreferenceKeys.odometerResetDaily,
+                useAlarm = PreferenceKeys.pedometerUseAlarmForDistanceAlert
             )
         )
     }

@@ -3,57 +3,57 @@ package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps
 import android.content.Context
 import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.andromeda.preferences.IntEnumPreference
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.settings.infrastructure.PreferenceRepo
 import com.kylecorry.trail_sense.tools.offline_maps.domain.sort.MapSortMethod
 
 class PhotoMapPreferences(context: Context) : PreferenceRepo(context) {
     var autoReducePhotoMaps by BooleanPreference(
         cache,
-        context.getString(R.string.pref_low_resolution_maps),
+        PreferenceKeys.lowResolutionMaps,
         true
     )
 
     var autoReducePdfMaps by BooleanPreference(
         cache,
-        context.getString(R.string.pref_low_resolution_pdf_maps),
+        PreferenceKeys.lowResolutionPdfMaps,
         true
     )
 
     var showMapPreviews by BooleanPreference(
         cache,
-        context.getString(R.string.pref_show_map_previews),
+        PreferenceKeys.showMapPreviews,
         true
     )
 
     var mapSort: MapSortMethod by IntEnumPreference(
         cache,
-        context.getString(R.string.pref_map_sort),
+        PreferenceKeys.mapSort,
         MapSortMethod.values().associateBy { it.id.toInt() },
         MapSortMethod.MostRecent
     )
 
     var keepMapFacingUp by BooleanPreference(
         cache,
-        context.getString(R.string.pref_keep_map_facing_up),
+        PreferenceKeys.keepMapFacingUp,
         true
     )
 
     var keepScreenUnlockedWhileOpen by BooleanPreference(
         cache,
-        context.getString(R.string.pref_photo_maps_keep_unlocked),
+        PreferenceKeys.photoMapsKeepUnlocked,
         false
     )
 
     var highDetailMode by BooleanPreference(
         cache,
-        context.getString(R.string.pref_photo_maps_high_detail_mode),
+        PreferenceKeys.photoMapsHighDetailMode,
         true
     )
 
     val copyTrailMapsToAppStorage by BooleanPreference(
         cache,
-        context.getString(R.string.pref_copy_trail_maps_to_app_storage),
+        PreferenceKeys.copyTrailMapsToAppStorage,
         true
     )
 }
