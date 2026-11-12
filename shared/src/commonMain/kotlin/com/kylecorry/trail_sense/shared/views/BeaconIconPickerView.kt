@@ -1,12 +1,11 @@
 package com.kylecorry.trail_sense.shared.views
 
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -24,14 +23,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.systemString
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.tools.beacons.domain.icon
 
 @Composable
@@ -47,9 +49,9 @@ fun BeaconIconPickerDialog(
     TrailSenseDialog(
         onDismissRequest = onDismiss,
         title = title,
-        confirmText = androidx.compose.ui.res.stringResource(android.R.string.ok),
+        confirmText = systemString(SystemString.Ok),
         onConfirm = { onIconPicked(icon) },
-        dismissText = androidx.compose.ui.res.stringResource(android.R.string.cancel)
+        dismissText = systemString(SystemString.Cancel)
     ) {
         BeaconIconPickerContent(
             selectedIcon = icon,
@@ -113,7 +115,7 @@ private fun BeaconIconButton(
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 painter = rememberVectorPainter(icon?.icon ?: TrailIcons.Bubble),
-                contentDescription = icon?.name ?: stringResource(R.string.none),
+                contentDescription = icon?.name ?: appString(Res.string.none),
                 tint = if (selected) {
                     MaterialTheme.colorScheme.onPrimaryContainer
                 } else {

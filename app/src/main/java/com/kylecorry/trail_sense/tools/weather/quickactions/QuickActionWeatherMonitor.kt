@@ -1,12 +1,12 @@
 package com.kylecorry.trail_sense.tools.weather.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import androidx.lifecycle.lifecycleScope
 
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.permissions.RemoveBatteryRestrictionsAlerter
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 
 class QuickActionWeatherMonitor(
     btn: QuickActionButtonView,
-    host: TrailSenseDestinationHost
+    host: AndroidDestinationHost
 ) : ToolServiceQuickAction(
     btn,
     host,

@@ -3,8 +3,6 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
-
-
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Canvas
@@ -30,7 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -47,14 +44,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.sol.units.Reading
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import kotlin.time.Instant
 import kotlin.math.max
 import kotlin.math.roundToInt
+import kotlin.time.Instant
 
 /** How a live reading is doing. Shown as a tone change on the hero, never as a border. */
 enum class CalibrationTone { Neutral, Good, Moderate, Poor }
@@ -68,12 +66,12 @@ fun Quality.toCalibrationTone(): CalibrationTone = when (this) {
 
 /**
  * Back from a calibration or tool settings page, the same way the system back gesture goes (so an
- * [androidx.activity.compose.BackHandler] on the page still gets a say).
+ * back handler on the page still gets a say).
  */
 @Composable
 fun rememberGoBack(): () -> Unit {
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-    return remember(dispatcher) { { dispatcher?.onBackPressed() } }
+    val back = rememberSystemBack()
+    return remember(back) { { back?.invoke() } }
 }
 
 /**

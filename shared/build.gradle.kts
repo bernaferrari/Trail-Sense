@@ -29,6 +29,8 @@ kotlin {
             api(libs.sol)
             // Navigation 3 keys and the app's back stack
             api(libs.androidx.navigation3.runtime)
+            // System back (gesture, button) as common navigation events
+            implementation(libs.cmp.navigationevent.compose)
             api(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.atomicfu)
@@ -38,6 +40,8 @@ kotlin {
             implementation(compose.foundation)
             implementation(libs.cmp.material3)
             implementation(compose.ui)
+            // @Preview on common composables (Android Studio renders them from the Android target)
+            implementation(libs.cmp.ui.tooling.preview)
             implementation(compose.materialIconsExtended)
             // Google Sans Flex (OFL), the family's M3 Expressive typeface
             implementation(compose.components.resources)

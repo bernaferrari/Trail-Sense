@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.field_guide.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -31,7 +32,6 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
@@ -43,7 +43,7 @@ import kotlin.time.Clock
  * Records a sighting on a field guide page picked from a searchable list, at the current location, as upstream's
  * "Record sighting" quick action did (#3860). Long press opens the field guide.
  */
-class QuickActionRecordSighting(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+class QuickActionRecordSighting(btn: QuickActionButtonView, host: AndroidDestinationHost) :
     QuickActionButton(btn, host) {
 
     private val repo by lazy { FieldGuideRepo.getInstance(host.context) }

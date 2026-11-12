@@ -5,12 +5,6 @@
 
 package com.kylecorry.trail_sense.shared.views.compose
 
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.toShape
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.NoPhotography
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -26,8 +20,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +31,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -42,14 +39,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import com.kylecorry.trail_sense.R
+import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
+import com.kylecorry.trail_sense.shared.text.appString
 
 /*
  * Instrument kit: the pieces every full-bleed tool (level, clinometer, ruler, flashlight, magnifier…) shares, so
@@ -63,9 +62,7 @@ import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
  */
 @Composable
 fun rememberTrailSenseBack(): (() -> Unit)? {
-    val hostBack = LocalTrailSenseBack.current
-    val owner = LocalOnBackPressedDispatcherOwner.current
-    return hostBack ?: remember(owner) { owner?.let { { it.onBackPressedDispatcher.onBackPressed() } } }
+    return LocalTrailSenseBack.current ?: rememberSystemBack()
 }
 
 /**
@@ -101,7 +98,7 @@ fun TrailSenseInstrumentTopBar(
     val navigation: @Composable () -> Unit = {
         if (onBack != null) {
             IconButton(onClick = onBack) {
-                Icon(TrailSenseIcons.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                Icon(TrailSenseIcons.Filled.ArrowBack, contentDescription = appString(Res.string.back))
             }
         }
     }
@@ -322,28 +319,4 @@ fun Modifier.trailSensePressScale(interactionSource: InteractionSource, pressedS
 @Composable
 fun BoxScope.TrailSenseInstrumentMessage(content: @Composable () -> Unit) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { content() }
-}
-
-/**
- * What a camera instrument shows instead of the preview when it can't use the camera: the kit's empty state, with
- * one way to the app's settings.
- */
-@Composable
-fun TrailSenseCameraUnavailable(
-    modifier: Modifier = Modifier,
-    description: String = stringResource(R.string.camera_unavailable_description)
-) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState(
-        icon = Icons.Rounded.NoPhotography,
-        title = stringResource(R.string.no_camera_access),
-        description = description,
-        actionLabel = stringResource(R.string.open_settings),
-        onAction = {
-            com.kylecorry.andromeda.core.tryOrNothing {
-                context.startActivity(com.kylecorry.andromeda.core.system.Intents.appSettings(context))
-            }
-        },
-        modifier = modifier
-    )
 }

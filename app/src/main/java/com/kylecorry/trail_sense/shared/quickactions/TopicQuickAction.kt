@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.QuickActionButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 /** A quick action that follows a feature's [state] while it is shown: on, off, or (optionally hidden) unavailable. */
 abstract class TopicQuickAction(
     btn: QuickActionButtonView,
-    host: TrailSenseDestinationHost,
+    host: AndroidDestinationHost,
     private val hideWhenUnavailable: Boolean = false
 ) :
     QuickActionButton(btn, host) {

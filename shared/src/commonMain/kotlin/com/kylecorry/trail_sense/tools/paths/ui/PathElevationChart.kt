@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -28,10 +27,11 @@ import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
@@ -67,7 +67,7 @@ fun PathElevationChart(
         Steepness.Medium to status.caution,
         Steepness.High to MaterialTheme.colorScheme.error
     )
-    val noData = stringResource(R.string.no_data)
+    val noData = appString(Res.string.no_data)
     val textMeasurer = rememberTextMeasurer()
     val labelStyle = TextStyle(color = textColor, fontSize = 10.sp)
     val noDataStyle = TextStyle(color = textColor, fontSize = 14.sp)

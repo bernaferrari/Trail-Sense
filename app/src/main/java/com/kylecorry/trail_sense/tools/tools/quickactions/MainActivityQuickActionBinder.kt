@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import androidx.compose.runtime.mutableStateListOf
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.quickactions.IQuickActionBinder
@@ -10,7 +10,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 class MainActivityQuickActionBinder(
-    private val host: TrailSenseDestinationHost,
+    private val host: AndroidDestinationHost,
     private val state: MainActivityQuickActionState
 ) : IQuickActionBinder {
 

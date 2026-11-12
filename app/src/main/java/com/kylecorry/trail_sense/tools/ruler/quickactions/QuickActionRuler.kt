@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.ruler.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
@@ -18,13 +19,12 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.AppOverlay
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.ruler.ui.RulerCanvas
 
 /** Shows an 80 dp ruler along the screen's start edge, above the navigation bar, until tapped again. */
 class QuickActionRuler(
     btn: QuickActionButtonView,
-    host: TrailSenseDestinationHost,
+    host: AndroidDestinationHost,
 ) : QuickActionButton(btn, host) {
     private val prefs by lazy { UserPreferences(context) }
 

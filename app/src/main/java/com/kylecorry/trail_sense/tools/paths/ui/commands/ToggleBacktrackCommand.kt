@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import androidx.lifecycle.lifecycleScope
 
 import android.content.Context
@@ -10,7 +11,6 @@ import com.kylecorry.trail_sense.shared.commands.Command
 import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
@@ -32,7 +32,7 @@ class ToggleBacktrackCommand(
      * For callers that still hold a destination host: the Backtrack quick action (the shared QuickActionButton hands
      * it one) and Paths settings. The Compose destination host is also the screen's [ScreenEffects].
      */
-    constructor(host: TrailSenseDestinationHost, onPermissionDenied: () -> Unit = {}) : this(
+    constructor(host: AndroidDestinationHost, onPermissionDenied: () -> Unit = {}) : this(
         host.context,
         host as ScreenEffects,
         host.lifecycleOwner.lifecycleScope,

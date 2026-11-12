@@ -1,16 +1,16 @@
 package com.kylecorry.trail_sense.tools.paths.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.quickactions.ToolServiceQuickAction
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ToggleBacktrackCommand
 
-class QuickActionBacktrack(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+class QuickActionBacktrack(btn: QuickActionButtonView, host: AndroidDestinationHost) :
     ToolServiceQuickAction(
         btn,
         host,

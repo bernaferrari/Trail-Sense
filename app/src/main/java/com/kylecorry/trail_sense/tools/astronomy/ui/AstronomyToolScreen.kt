@@ -1,6 +1,7 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 
 
 
@@ -91,7 +92,6 @@ import com.kylecorry.trail_sense.shared.views.UserError
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
@@ -141,7 +141,7 @@ import com.kylecorry.trail_sense.shared.time.today
 
 @Composable
 fun AstronomyToolScreen(
-    quickActionHost: TrailSenseDestinationHost,
+    quickActionHost: AndroidDestinationHost,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.semantics.semantics
 import com.kylecorry.trail_sense.shared.time.nowLocal
@@ -63,7 +64,6 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.qr.ui.QR_SHARE_MAX_LENGTH
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -506,7 +506,7 @@ object CustomUiUtils {
 
     /** A snackbar on [host]'s screen; [onAction] runs when its action is pressed. */
     fun snackbar(
-        host: TrailSenseDestinationHost,
+        host: AndroidDestinationHost,
         text: String,
         duration: Int = SNACKBAR_SHORT,
         action: String? = null,
@@ -520,7 +520,7 @@ object CustomUiUtils {
     }
 
     fun showQR(
-        host: TrailSenseDestinationHost,
+        host: AndroidDestinationHost,
         title: String,
         qr: String
     ) {
@@ -541,7 +541,7 @@ object CustomUiUtils {
 
     /** Asks for the camera, then takes or picks a photo; null when refused or cancelled. */
     suspend fun takePhoto(
-        host: TrailSenseDestinationHost,
+        host: AndroidDestinationHost,
         size: Size? = null
     ): Uri? {
         if (!host.requestPermission(AppPermission.Camera)) return null

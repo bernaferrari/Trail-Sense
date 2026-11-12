@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import kotlin.time.Duration.Companion.minutes
 
 import androidx.lifecycle.lifecycleScope
@@ -9,7 +10,6 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import androidx.compose.material.icons.outlined.WbTwilight
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
@@ -22,7 +22,7 @@ import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.Sunset
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.launch
 
-class QuickActionSunsetAlert(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+class QuickActionSunsetAlert(btn: QuickActionButtonView, host: AndroidDestinationHost) :
     ToolServiceQuickAction(
         btn,
         host,

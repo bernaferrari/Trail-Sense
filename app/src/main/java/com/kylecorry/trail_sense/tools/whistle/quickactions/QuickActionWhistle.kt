@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.tools.whistle.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import androidx.lifecycle.lifecycleScope
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.annotation.SuppressLint
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.andromeda.sound.SoundPlayer
@@ -14,7 +14,7 @@ import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 import com.kylecorry.trail_sense.tools.whistle.infrastructure.Whistle
 import kotlinx.coroutines.launch
 
-class QuickActionWhistle(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+class QuickActionWhistle(btn: QuickActionButtonView, host: AndroidDestinationHost) :
     QuickActionButton(btn, host) {
 
     private var whistle: SoundPlayer? = null

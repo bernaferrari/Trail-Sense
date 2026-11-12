@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.beacons.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import kotlin.time.Clock
 
 import androidx.lifecycle.lifecycleScope
@@ -8,7 +9,6 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.screenControllerAs
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
@@ -24,7 +24,7 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.Beacon
 import com.kylecorry.trail_sense.tools.beacons.ui.list.BeaconListControllerHost
 import kotlinx.coroutines.launch
 
-class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+class QuickActionPlaceBeacon(btn: QuickActionButtonView, host: AndroidDestinationHost) :
     QuickActionButton(btn, host) {
 
     override fun onCreate() {

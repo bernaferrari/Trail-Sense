@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.packs.ui.mappers
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
 

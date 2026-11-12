@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.QuickActionButton
 
 class QuickActionOpenTool(
     button: QuickActionButtonView,
-    host: TrailSenseDestinationHost,
+    host: AndroidDestinationHost,
     private val route: Route,
     private val icon: ImageVector
 ) :

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.permissions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 
 import kotlinx.coroutines.launch
@@ -10,9 +11,8 @@ import android.os.Build
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
-class BackgroundLocationAlerter(private val host: TrailSenseDestinationHost) : IAlerter {
+class BackgroundLocationAlerter(private val host: AndroidDestinationHost) : IAlerter {
 
     override fun alert() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {

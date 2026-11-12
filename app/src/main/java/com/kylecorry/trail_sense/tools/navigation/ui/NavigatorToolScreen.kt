@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -48,7 +49,6 @@ import com.kylecorry.trail_sense.shared.debugging.DebugElevationsCommand
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationScreenLock
@@ -84,7 +84,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
 @Composable
 fun NavigatorToolScreen(
     route: Route.Navigation,
-    quickActionHost: TrailSenseDestinationHost,
+    quickActionHost: AndroidDestinationHost,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current

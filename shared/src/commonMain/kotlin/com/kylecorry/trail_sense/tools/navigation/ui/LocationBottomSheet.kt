@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,14 +29,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.systemString
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
@@ -107,7 +108,7 @@ private fun LocationSheetContent(
     val scheme = MaterialTheme.colorScheme
     Column(modifier = modifier) {
         Text(
-            text = stringResource(R.string.location),
+            text = appString(Res.string.location),
             style = MaterialTheme.typography.titleMedium,
             color = scheme.onSurfaceVariant
         )
@@ -133,12 +134,12 @@ private fun LocationSheetContent(
                 .padding(top = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            state.accuracy?.let { LocationFact(it, stringResource(R.string.location_accuracy_label), Modifier.weight(1f).testTag("accuracy")) }
-            state.satellites?.let { LocationFact(it, stringResource(R.string.location_satellites_label), Modifier.weight(1f).testTag("satellites")) }
-            state.time?.let { LocationFact(it, stringResource(R.string.location_updated_label), Modifier.weight(1f).testTag("time")) }
+            state.accuracy?.let { LocationFact(it, appString(Res.string.location_accuracy_label), Modifier.weight(1f).testTag("accuracy")) }
+            state.satellites?.let { LocationFact(it, appString(Res.string.location_satellites_label), Modifier.weight(1f).testTag("satellites")) }
+            state.time?.let { LocationFact(it, appString(Res.string.location_updated_label), Modifier.weight(1f).testTag("time")) }
         }
         Text(
-            text = stringResource(R.string.location_datum_value, state.datum),
+            text = appString(Res.string.location_datum_value, state.datum),
             style = MaterialTheme.typography.bodySmall,
             color = scheme.onSurfaceVariant,
             modifier = Modifier
@@ -153,7 +154,7 @@ private fun LocationSheetContent(
         ) {
             if (onCopy != null) {
                 TrailSenseButton(
-                    text = stringResource(android.R.string.copy),
+                    text = systemString(SystemString.Copy),
                     onClick = onCopy,
                     icon = Icons.Rounded.ContentCopy,
                     style = TrailSenseButtonStyle.Tonal,
@@ -161,7 +162,7 @@ private fun LocationSheetContent(
                 )
             }
             TrailSenseButton(
-                text = stringResource(R.string.share_ellipsis).removeSuffix("…").removeSuffix("..."),
+                text = appString(Res.string.share_ellipsis).removeSuffix("…").removeSuffix("..."),
                 onClick = onShare,
                 icon = Icons.Default.Share,
                 modifier = Modifier
@@ -198,7 +199,7 @@ private fun LocationSheetContentPreview() {
                 accuracy = "± 5 m",
                 satellites = "8",
                 time = "1 min ago",
-                datum = stringResource(R.string.wgs84)
+                datum = appString(Res.string.wgs84)
             ),
             onFormatClick = {},
             onShare = {}

@@ -1,20 +1,18 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.lifecycle.LifecycleOwner
+import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 
 /**
- * The shown screen's link to the app: its context, the navigator, its lifecycle and route, and the platform
- * [ScreenEffects]. Screens themselves read these from the composition (LocalContext, LocalNavigator,
- * LocalLifecycleOwner, LocalScreenEffects); the host is what quick actions, volume actions and the activity reach.
+ * The shown screen's link to the app: the navigator, its lifecycle and route, and the platform [ScreenEffects].
+ * Screens themselves read these from the composition (LocalNavigator, LocalLifecycleOwner, LocalScreenEffects);
+ * the host is what quick actions, volume actions and the activity reach. Platforms extend it with what their own
+ * chrome needs (on Android, the activity context).
  */
 interface TrailSenseDestinationHost : ScreenEffects {
-    val context: Context
     val navigator: TrailSenseNavigator
     val lifecycleOwner: LifecycleOwner
     /** The screen this host shows, with its arguments. */

@@ -70,7 +70,7 @@ import com.kylecorry.trail_sense.shared.commands.ComposedCommand
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavDisplay
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
 import com.kylecorry.trail_sense.main.theme.TrailSenseAppTheme
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.AppHostDialogs
 import com.kylecorry.trail_sense.shared.views.compose.AppHostOverlays
@@ -109,7 +109,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
 
     private val themeProvider = ThemeProvider()
     private var rootNavigator: TrailSenseNavigator? = null
-    private var activeDestinationHost: TrailSenseDestinationHost? = null
+    private var activeDestinationHost: AndroidDestinationHost? = null
 
     private val permissions = mutableListOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -236,18 +236,18 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
         lastKnownDestinationHost = activeDestinationHost?.javaClass?.simpleName
     }
 
-    fun registerDestinationHost(host: TrailSenseDestinationHost) {
+    fun registerDestinationHost(host: AndroidDestinationHost) {
         activeDestinationHost = host
         lastKnownDestinationHost = host.javaClass.simpleName
     }
 
-    fun unregisterDestinationHost(host: TrailSenseDestinationHost) {
+    fun unregisterDestinationHost(host: AndroidDestinationHost) {
         if (activeDestinationHost == host) {
             activeDestinationHost = null
         }
     }
 
-    fun getActiveDestinationHost(): TrailSenseDestinationHost? {
+    fun getActiveDestinationHost(): AndroidDestinationHost? {
         return activeDestinationHost
     }
 

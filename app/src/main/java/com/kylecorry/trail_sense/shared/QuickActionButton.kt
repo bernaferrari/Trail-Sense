@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.shared
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -10,7 +10,7 @@ import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
 
 abstract class QuickActionButton(
     protected val button: QuickActionButtonView,
-    protected val host: TrailSenseDestinationHost
+    protected val host: AndroidDestinationHost
 ) {
     protected val context: Context by lazy { host.context }
     private var wasStateSet = false

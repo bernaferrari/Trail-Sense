@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.tools.flashlight.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
@@ -14,7 +14,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class QuickActionFlashlight(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+class QuickActionFlashlight(btn: QuickActionButtonView, host: AndroidDestinationHost) :
     TopicQuickAction(btn, host, hideWhenUnavailable = true) {
 
     private val flashlight by lazy { FlashlightSubsystem.getInstance(context) }

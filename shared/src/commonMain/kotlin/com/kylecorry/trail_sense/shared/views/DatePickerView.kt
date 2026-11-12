@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.views
 
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -12,18 +11,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlinx.datetime.LocalDate
 
@@ -58,7 +57,7 @@ fun DatePickerContent(
         ) {
             Icon(
                 imageVector = TrailIcons.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.previous),
+                contentDescription = appString(Res.string.previous),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.rotate(180f)
             )
@@ -83,7 +82,7 @@ fun DatePickerContent(
         ) {
             Icon(
                 imageVector = TrailIcons.Date,
-                contentDescription = stringResource(R.string.date),
+                contentDescription = appString(Res.string.date),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -97,7 +96,7 @@ fun DatePickerContent(
             ) {
                 Icon(
                     imageVector = TrailIcons.Search,
-                    contentDescription = stringResource(R.string.search),
+                    contentDescription = appString(Res.string.search),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -111,7 +110,7 @@ fun DatePickerContent(
         ) {
             Icon(
                 imageVector = TrailIcons.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.next),
+                contentDescription = appString(Res.string.next),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

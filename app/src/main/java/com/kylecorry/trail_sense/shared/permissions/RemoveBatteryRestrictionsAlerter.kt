@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.permissions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 
 import kotlinx.coroutines.launch
@@ -10,9 +11,8 @@ import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
-class RemoveBatteryRestrictionsAlerter(private val host: TrailSenseDestinationHost) : IAlerter {
+class RemoveBatteryRestrictionsAlerter(private val host: AndroidDestinationHost) : IAlerter {
 
     override fun alert() {
         val context = host.context

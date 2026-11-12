@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.tools.ui
 
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -32,7 +32,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
  */
 @Composable
 fun ToolsHomeScreen(
-    quickActionHost: TrailSenseDestinationHost,
+    quickActionHost: AndroidDestinationHost,
     onController: (ToolSearchFocusable?) -> Unit
 ) {
     val context = LocalContext.current

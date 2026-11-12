@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.main.errors
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.copy
 
 import androidx.compose.foundation.layout.Arrangement
@@ -47,7 +48,6 @@ import com.kylecorry.andromeda.core.system.CurrentApp
 import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.navigation.Route
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 
 @Composable
 internal fun ErrorHandlerScreen(
@@ -165,7 +165,7 @@ private fun ErrorTextAction(
 
 /** The page shown after a tool crashed ([Route.ErrorHandler]): report it, reopen the tool, or restart. */
 @Composable
-fun ErrorHandlerToolScreen(host: TrailSenseDestinationHost, route: Route.ErrorHandler) {
+fun ErrorHandlerToolScreen(host: AndroidDestinationHost, route: Route.ErrorHandler) {
     val toolId = route.toolId
     val errorDetails = route.error
     val appNavigator = host.navigator

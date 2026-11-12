@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.tools.infrastructure
 import androidx.lifecycle.lifecycleScope
 
 import android.os.Bundle
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.trail_sense.shared.FeatureState
@@ -25,7 +25,7 @@ fun ToolService.getFeatureState(): FeatureState {
 }
 
 fun Tools.observe(
-    host: TrailSenseDestinationHost,
+    host: AndroidDestinationHost,
     toolBroadCastId: String,
     onReceiveBroadcast: suspend (data: Bundle) -> Unit
 ) {

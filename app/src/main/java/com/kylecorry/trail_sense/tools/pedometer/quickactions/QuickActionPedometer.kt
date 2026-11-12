@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.pedometer.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 
 import kotlinx.coroutines.launch
@@ -10,14 +11,13 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.quickactions.TopicQuickAction
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import kotlinx.coroutines.flow.Flow
 
-class QuickActionPedometer(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+class QuickActionPedometer(btn: QuickActionButtonView, host: AndroidDestinationHost) :
     TopicQuickAction(btn, host, hideWhenUnavailable = false) {
 
     private val pedometer = PedometerSubsystem.getInstance(context)

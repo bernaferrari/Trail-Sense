@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.shared.quickactions
 
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.views.QuickActionNone
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -10,7 +10,7 @@ class QuickActionFactory {
     fun create(
         id: Int,
         button: QuickActionButtonView,
-        host: TrailSenseDestinationHost
+        host: AndroidDestinationHost
     ): QuickActionButton {
         val quickActions = Tools.getQuickActions(host.context)
         val action = quickActions.firstOrNull { it.id == id }

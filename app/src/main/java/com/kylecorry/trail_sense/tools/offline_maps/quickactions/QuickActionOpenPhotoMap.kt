@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import androidx.lifecycle.lifecycleScope
 
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -7,7 +8,6 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
@@ -20,7 +20,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.selection.
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import kotlinx.coroutines.launch
 
-class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: TrailSenseDestinationHost) : QuickActionButton(
+class QuickActionOpenPhotoMap(button: QuickActionButtonView, host: AndroidDestinationHost) : QuickActionButton(
     button, host
 ) {
     private val mapService = MapService.getInstance(host.context)

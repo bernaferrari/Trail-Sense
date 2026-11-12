@@ -1,11 +1,11 @@
 package com.kylecorry.trail_sense.shared.sharing
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import kotlinx.coroutines.launch
 
 import androidx.lifecycle.lifecycleScope
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
@@ -18,7 +18,7 @@ import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.LocationS
 object Share {
 
     fun shareLocation(
-        host: TrailSenseDestinationHost,
+        host: AndroidDestinationHost,
         location: Coordinate,
         format: BuiltInCoordinateFormat = UserPreferences(host.context).coordinateFormat,
         title: String = host.context.getString(R.string.location)
@@ -42,7 +42,7 @@ object Share {
     }
 
     fun share(
-        host: TrailSenseDestinationHost,
+        host: AndroidDestinationHost,
         title: String,
         actions: List<ShareAction>,
         subtitle: String? = null,
@@ -81,7 +81,7 @@ object Share {
     }
 
     fun actions(
-        host: TrailSenseDestinationHost,
+        host: AndroidDestinationHost,
         title: String,
         actions: List<ActionItem>,
         subtitle: String? = null,

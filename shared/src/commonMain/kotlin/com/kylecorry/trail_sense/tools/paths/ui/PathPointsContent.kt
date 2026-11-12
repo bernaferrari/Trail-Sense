@@ -8,16 +8,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appPluralString
+import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
@@ -44,7 +43,7 @@ fun PathPointsContent(
     if (points.isEmpty()) {
         TrailSenseEmptyState(
             icon = Icons.Rounded.Place,
-            title = stringResource(R.string.no_data),
+            title = appString(Res.string.no_data),
             modifier = modifier.testTag("path_points_list")
         )
         return
@@ -61,7 +60,7 @@ fun PathPointsContent(
     ) {
         item(key = "header") {
             TrailSenseGroupHeader(
-                pluralStringResource(R.plurals.path_points_count, points.size, points.size)
+                appPluralString(Res.plurals.path_points_count, points.size, points.size)
             )
         }
         itemsIndexed(
@@ -90,8 +89,8 @@ private fun PathPointsContentPreview() {
     TrailSenseTheme {
         PathPointsContent(
             points = emptyList(),
-            formatService = FormatService.getInstance(LocalContext.current),
-            baseDistanceUnits = UserPreferences(LocalContext.current).baseDistanceUnits,
+            formatService = FormatService.getInstance(),
+            baseDistanceUnits = getAppService<UserPreferences>().baseDistanceUnits,
             onCreateBeacon = {},
             onDelete = {},
             onNavigate = {},

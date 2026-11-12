@@ -1,25 +1,23 @@
 package com.kylecorry.trail_sense.settings.ui
 
-import androidx.compose.ui.platform.LocalContext
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
 
 @Composable
 fun CellSignalSettingsToolScreen() {
-    val context = LocalContext.current
-    val prefs = remember { UserPreferences(context).cellSignal }
+    val prefs = remember { getAppService<UserPreferences>().cellSignal }
     var populateCache by remember { mutableStateOf(prefs.populateCache) }
     SingleSwitchSettingsScreen(
-        title = stringResource(R.string.cell_signal),
-        label = stringResource(R.string.pref_cell_signal_refresh_cache_title),
-        summary = stringResource(R.string.pref_cell_signal_refresh_cache_summary),
+        title = appString(Res.string.cell_signal),
+        label = appString(Res.string.pref_cell_signal_refresh_cache_title),
+        summary = appString(Res.string.pref_cell_signal_refresh_cache_summary),
         checked = populateCache,
         onCheckedChange = {
             populateCache = it
@@ -31,12 +29,11 @@ fun CellSignalSettingsToolScreen() {
 
 @Composable
 fun ClockSettingsToolScreen() {
-    val context = LocalContext.current
-    val prefs = remember { UserPreferences(context).clock }
+    val prefs = remember { getAppService<UserPreferences>().clock }
     var showAnalogClock by remember { mutableStateOf(prefs.showAnalogClock) }
     SingleSwitchSettingsScreen(
-        title = stringResource(R.string.tool_clock_title),
-        label = stringResource(R.string.pref_enable_analog_title),
+        title = appString(Res.string.tool_clock_title),
+        label = appString(Res.string.pref_enable_analog_title),
         checked = showAnalogClock,
         onCheckedChange = {
             showAnalogClock = it
@@ -48,12 +45,11 @@ fun ClockSettingsToolScreen() {
 
 @Composable
 fun TideSettingsToolScreen() {
-    val context = LocalContext.current
-    val prefs = remember { UserPreferences(context).tides }
+    val prefs = remember { getAppService<UserPreferences>().tides }
     var showNearestTide by remember { mutableStateOf(prefs.showNearestTide) }
     SingleSwitchSettingsScreen(
-        title = stringResource(R.string.tides),
-        label = stringResource(R.string.pref_show_nearest_tide_title),
+        title = appString(Res.string.tides),
+        label = appString(Res.string.pref_show_nearest_tide_title),
         checked = showNearestTide,
         onCheckedChange = {
             showNearestTide = it
@@ -65,13 +61,12 @@ fun TideSettingsToolScreen() {
 
 @Composable
 fun TurnBackSettingsToolScreen() {
-    val context = LocalContext.current
-    val prefs = remember { UserPreferences(context).turnBack }
+    val prefs = remember { getAppService<UserPreferences>().turnBack }
     var useAlarm by remember { mutableStateOf(prefs.useAlarm) }
     SingleSwitchSettingsScreen(
-        title = stringResource(R.string.tool_turn_back),
-        label = stringResource(R.string.use_alarm_for_turn_back_alert),
-        footer = stringResource(R.string.alarm_description),
+        title = appString(Res.string.tool_turn_back),
+        label = appString(Res.string.use_alarm_for_turn_back_alert),
+        footer = appString(Res.string.alarm_description),
         checked = useAlarm,
         onCheckedChange = {
             useAlarm = it
@@ -83,13 +78,12 @@ fun TurnBackSettingsToolScreen() {
 
 @Composable
 fun WaterBoilSettingsToolScreen() {
-    val context = LocalContext.current
-    val prefs = remember { UserPreferences(context).waterBoilTimer }
+    val prefs = remember { getAppService<UserPreferences>().waterBoilTimer }
     var useAlarm by remember { mutableStateOf(prefs.useAlarm) }
     SingleSwitchSettingsScreen(
-        title = stringResource(R.string.water_boil_timer),
-        label = stringResource(R.string.use_alarm_for_water_boil_timer),
-        footer = stringResource(R.string.alarm_description),
+        title = appString(Res.string.water_boil_timer),
+        label = appString(Res.string.use_alarm_for_water_boil_timer),
+        footer = appString(Res.string.alarm_description),
         checked = useAlarm,
         onCheckedChange = {
             useAlarm = it

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.whitenoise.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import kotlinx.coroutines.launch
 
 import androidx.lifecycle.lifecycleScope
@@ -10,12 +11,11 @@ import com.kylecorry.andromeda.core.coroutines.BackgroundMinimumState
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.whitenoise.WhiteNoiseToolRegistration
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoiseService
 
-class QuickActionWhiteNoise(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+class QuickActionWhiteNoise(btn: QuickActionButtonView, host: AndroidDestinationHost) :
     QuickActionButton(btn, host) {
 
     private val stateListener: (Bundle) -> Unit = {

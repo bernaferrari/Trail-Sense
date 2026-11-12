@@ -39,7 +39,7 @@ class TrailSenseComposeDestinationHost(
     override val route: Route,
     override val lifecycleOwner: LifecycleOwner,
     private val requestRuntimePermissions: (Array<String>, () -> Unit) -> Unit
-) : TrailSenseDestinationHost, ScreenEffects {
+) : AndroidDestinationHost, ScreenEffects {
 
     override val navigator: TrailSenseNavigator
         get() = activity.navigator ?: error("The app navigator is not available")

@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.settings.ui
 
-import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.DarkMode
@@ -12,20 +13,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.R
+import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.UserPreferences.Theme
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.views.TrailSenseColorStyle
 import com.kylecorry.trail_sense.shared.views.TrailSensePalette
+import com.kylecorry.trail_sense.shared.views.colorStyle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAppearancePicker
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import com.kylecorry.trail_sense.shared.views.palette
-import com.kylecorry.trail_sense.shared.views.colorStyle
 
 /** When the app is light or dark. Night vision and the black background sit on top of it. */
 enum class ThemeMode { System, Light, Dark, Sun }
@@ -87,9 +87,9 @@ fun ThemeAppearanceControls(
     }
     val modes = listOf(
         // WiFi Weakspot's set: each mode with its icon; the chosen one trades it for a check.
-        TrailSenseChoice(ThemeMode.System, stringResource(R.string.theme_mode_auto), Icons.Rounded.BrightnessAuto),
-        TrailSenseChoice(ThemeMode.Light, stringResource(R.string.theme_light), Icons.Rounded.LightMode),
-        TrailSenseChoice(ThemeMode.Dark, stringResource(R.string.theme_dark), Icons.Rounded.DarkMode)
+        TrailSenseChoice(ThemeMode.System, appString(Res.string.theme_mode_auto), Icons.Rounded.BrightnessAuto),
+        TrailSenseChoice(ThemeMode.Light, appString(Res.string.theme_light), Icons.Rounded.LightMode),
+        TrailSenseChoice(ThemeMode.Dark, appString(Res.string.theme_dark), Icons.Rounded.DarkMode)
     )
     // Eight choices in two even rows: the wallpaper, then seven clearly different hues.
     val palettes = listOf(
@@ -103,25 +103,25 @@ fun ThemeAppearanceControls(
         TrailSensePalette.Pink
     ).filter { it != TrailSensePalette.Wallpaper || wallpaperAvailable }
     val paletteNames = mapOf(
-        TrailSensePalette.Wallpaper to stringResource(R.string.theme_palette_wallpaper),
-        TrailSensePalette.Orange to stringResource(R.string.theme_palette_orange),
-        TrailSensePalette.Amber to stringResource(R.string.theme_palette_amber),
-        TrailSensePalette.Lime to stringResource(R.string.theme_palette_lime),
-        TrailSensePalette.Green to stringResource(R.string.theme_palette_green),
-        TrailSensePalette.Teal to stringResource(R.string.theme_palette_teal),
-        TrailSensePalette.Cyan to stringResource(R.string.theme_palette_cyan),
-        TrailSensePalette.Blue to stringResource(R.string.theme_palette_blue),
-        TrailSensePalette.Indigo to stringResource(R.string.theme_palette_indigo),
-        TrailSensePalette.Purple to stringResource(R.string.theme_palette_purple),
-        TrailSensePalette.Pink to stringResource(R.string.theme_palette_pink)
+        TrailSensePalette.Wallpaper to appString(Res.string.theme_palette_wallpaper),
+        TrailSensePalette.Orange to appString(Res.string.theme_palette_orange),
+        TrailSensePalette.Amber to appString(Res.string.theme_palette_amber),
+        TrailSensePalette.Lime to appString(Res.string.theme_palette_lime),
+        TrailSensePalette.Green to appString(Res.string.theme_palette_green),
+        TrailSensePalette.Teal to appString(Res.string.theme_palette_teal),
+        TrailSensePalette.Cyan to appString(Res.string.theme_palette_cyan),
+        TrailSensePalette.Blue to appString(Res.string.theme_palette_blue),
+        TrailSensePalette.Indigo to appString(Res.string.theme_palette_indigo),
+        TrailSensePalette.Purple to appString(Res.string.theme_palette_purple),
+        TrailSensePalette.Pink to appString(Res.string.theme_palette_pink)
     )
     val styleNames = mapOf(
-        TrailSenseColorStyle.Expressive to stringResource(R.string.color_style_expressive),
-        TrailSenseColorStyle.Vibrant to stringResource(R.string.color_style_vibrant),
-        TrailSenseColorStyle.Tonal to stringResource(R.string.color_style_tonal),
-        TrailSenseColorStyle.Muted to stringResource(R.string.color_style_muted)
+        TrailSenseColorStyle.Expressive to appString(Res.string.color_style_expressive),
+        TrailSenseColorStyle.Vibrant to appString(Res.string.color_style_vibrant),
+        TrailSenseColorStyle.Tonal to appString(Res.string.color_style_tonal),
+        TrailSenseColorStyle.Muted to appString(Res.string.color_style_muted)
     )
-    val sunSummary = stringResource(R.string.theme_mode_sun_summary)
+    val sunSummary = appString(Res.string.theme_mode_sun_summary)
     // One group: modes, colours (and style), then night vision, 2 dp apart like any group's rows.
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
     TrailSenseAppearancePicker(
@@ -144,14 +144,14 @@ fun ThemeAppearanceControls(
             onPaletteChanged()
         },
         styleLabel = { styleNames.getValue(it) },
-        styleTitle = stringResource(R.string.color_style)
+        styleTitle = appString(Res.string.color_style)
     )
     TrailSenseRowGroup(footer = sunSummary.takeIf { choice.mode == ThemeMode.Sun && !choice.night }) {
         row { position ->
             SettingsSwitchRow(
-                label = stringResource(R.string.theme_night_vision),
+                label = appString(Res.string.theme_night_vision),
                 icon = Icons.Rounded.ModeNight,
-                summary = stringResource(R.string.theme_night_vision_summary),
+                summary = appString(Res.string.theme_night_vision_summary),
                 checked = choice.night,
                 onCheckedChange = { update(choice.copy(night = it)) },
                 // It continues the appearance cards above, so its top corners stay tight.
@@ -161,8 +161,8 @@ fun ThemeAppearanceControls(
         if (choice.night) {
             row { position ->
                 SettingsSwitchRow(
-                    label = stringResource(R.string.pref_night_mode_fullscreen_title),
-                    summary = stringResource(R.string.pref_night_mode_fullscreen_summary),
+                    label = appString(Res.string.pref_night_mode_fullscreen_title),
+                    summary = appString(Res.string.pref_night_mode_fullscreen_summary),
                     checked = fullscreen,
                     onCheckedChange = {
                         fullscreen = it

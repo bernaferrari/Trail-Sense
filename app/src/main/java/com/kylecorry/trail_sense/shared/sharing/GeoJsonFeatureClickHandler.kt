@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.sharing
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import android.os.Bundle
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonPoint
@@ -20,7 +20,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 object GeoJsonFeatureClickHandler {
 
     fun handleFeatureClick(
-        host: TrailSenseDestinationHost,
+        host: AndroidDestinationHost,
         feature: GeoJsonFeature
     ) {
         val layerId = feature.getLayerId()

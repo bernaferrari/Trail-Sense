@@ -1,11 +1,5 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
-import com.kylecorry.trail_sense.shared.time.toLocalTime
-
-import com.kylecorry.trail_sense.shared.time.toLocalDate
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -19,15 +13,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import com.kylecorry.andromeda.signal.CellNetwork
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.sensors.CellSignalUtils
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+import com.kylecorry.trail_sense.shared.time.toLocalTime
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
@@ -48,17 +46,16 @@ fun PathPointRow(
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val title = point.time?.let { date ->
-        stringResource(
-            R.string.waypoint_time_format,
+        appString(Res.string.waypoint_time_format,
             formatService.formatRelativeDate(date.toLocalDate()),
             formatService.formatTime(date.toLocalTime(), false)
         )
-    } ?: stringResource(R.string.waypoint)
+    } ?: appString(Res.string.waypoint)
     val subtitle = getPathPointSubtitle(
         point,
         formatService,
         baseDistanceUnits,
-        stringResource(R.string.slope_amount, formatService.formatPercentage(point.slope))
+        appString(Res.string.slope_amount, formatService.formatPercentage(point.slope))
     )
     val cellNetwork = point.cellSignal?.network?.id?.let { id ->
         CellNetwork.values().firstOrNull { it.id == id }
@@ -79,7 +76,7 @@ fun PathPointRow(
             ) {
                 Icon(
                     painter = rememberVectorPainter(TrailIcons.MenuDots),
-                    contentDescription = stringResource(R.string.details),
+                    contentDescription = appString(Res.string.details),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -88,28 +85,28 @@ fun PathPointRow(
                 onDismissRequest = { menuOpen = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.path_navigation_follow_to_point)) },
+                    text = { Text(appString(Res.string.path_navigation_follow_to_point)) },
                     onClick = {
                         menuOpen = false
                         onNavigate(point)
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.path_navigation_direct)) },
+                    text = { Text(appString(Res.string.path_navigation_direct)) },
                     onClick = {
                         menuOpen = false
                         onNavigateDirect(point)
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.create_beacon)) },
+                    text = { Text(appString(Res.string.create_beacon)) },
                     onClick = {
                         menuOpen = false
                         onCreateBeacon(point)
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.delete)) },
+                    text = { Text(appString(Res.string.delete)) },
                     onClick = {
                         menuOpen = false
                         onDelete(point)

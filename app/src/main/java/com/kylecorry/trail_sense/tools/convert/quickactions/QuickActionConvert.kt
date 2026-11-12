@@ -1,16 +1,16 @@
 package com.kylecorry.trail_sense.tools.convert.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.tools.convert.ui.showConvertQuickSheet
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.QuickActionButton
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
-class QuickActionConvert(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+class QuickActionConvert(btn: QuickActionButtonView, host: AndroidDestinationHost) :
     QuickActionButton(btn, host) {
     override fun onCreate() {
         super.onCreate()

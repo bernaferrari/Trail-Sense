@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.sensors.quickactions
 
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.andromeda.core.sensors.read
 
 import androidx.lifecycle.lifecycleScope
@@ -8,7 +9,6 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDestinationHost
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.sense.altitude.FusedAltimeter
 import com.kylecorry.andromeda.sense.readAll
@@ -25,7 +25,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import kotlinx.coroutines.launch
 
-class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: TrailSenseDestinationHost) :
+class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: AndroidDestinationHost) :
     QuickActionButton(btn, host) {
 
     private val prefs by lazy { UserPreferences(host.context) }
