@@ -479,3 +479,16 @@ sky_sections
 overview
 shelter
 water
+tool_category_signaling
+distance
+tool_category_angles
+time
+power
+communication
+books
+guide_map_layers
+general
+guide_clear_search
+no_results
+sky_guides_no_results
+tool_user_guide_title

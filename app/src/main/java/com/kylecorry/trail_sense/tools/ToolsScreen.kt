@@ -68,7 +68,7 @@ fun ToolsScreen(
     val context = LocalContext.current
     val allTools = remember { Tools.getTools(context) }
     val toolSearch = remember { ToolSearch(context) }
-    val sorter = remember { CategoricalToolSort(context) }
+    val sorter = remember { CategoricalToolSort() }
     val searchFocusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     var filter by remember { mutableStateOf("") }
@@ -182,9 +182,7 @@ fun ToolsScreen(
             }
             items(categories, key = { "category_${it.categoryName}" }) { group ->
                 Column {
-                    if (group.categoryName != null) {
-                        TrailSenseGroupHeader(group.categoryName)
-                    }
+                    group.categoryName?.let { TrailSenseGroupHeader(it) }
                     TrailSenseTileGrid(
                         group.tools.map { it.tile(onToolClick, onToolLongClick) },
                         titleSize = titleSize

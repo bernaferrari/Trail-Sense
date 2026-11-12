@@ -41,7 +41,6 @@ class ShowTideDisclaimerCommand(
         ) { showGuide, _ ->
             if (showGuide) {
                 UserGuideUtils.openGuide(
-                    context,
                     appNavigator,
                     RawTexts.guide_tool_tides
                 )

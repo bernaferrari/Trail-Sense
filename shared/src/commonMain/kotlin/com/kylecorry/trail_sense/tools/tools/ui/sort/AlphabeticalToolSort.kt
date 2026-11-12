@@ -1,10 +1,9 @@
 package com.kylecorry.trail_sense.tools.tools.ui.sort
 
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolDescriptor
 
 class AlphabeticalToolSort : ToolSort {
-    override fun sort(tools: List<Tool>): List<CategorizedTools> {
+    override fun <T : ToolDescriptor> sort(tools: List<T>): List<CategorizedTools<T>> {
         return listOf(CategorizedTools(null, tools.sortedBy { it.name }))
     }
-
 }

@@ -165,7 +165,7 @@ fun CloudToolScreen(route: Route.Clouds) {
         subtitle = subtitle,
         clouds = clouds ?: emptyList(),
         onGuideClick = {
-            UserGuideUtils.showGuide(context, navigator, RawTexts.guide_tool_clouds)
+            UserGuideUtils.showGuide(navigator, RawTexts.guide_tool_clouds)
         },
         onCameraClick = ::addFromCamera,
         onFileClick = {

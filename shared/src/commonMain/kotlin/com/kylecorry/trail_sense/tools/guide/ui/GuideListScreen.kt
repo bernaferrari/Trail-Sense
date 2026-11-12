@@ -3,9 +3,13 @@
 
 package com.kylecorry.trail_sense.tools.guide.ui
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.appString
+
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 
-import androidx.compose.ui.platform.LocalContext
 
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.material.icons.Icons
@@ -19,8 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.icons.trail.KeyboardArrowRight
 import com.kylecorry.trail_sense.shared.icons.trail.OpenBook
@@ -53,17 +55,17 @@ internal fun GuideListScreen(
     val total = guides.sumOf { it.guides.size }
 
     TrailSensePage(
-        title = stringResource(R.string.tool_user_guide_title),
+        title = appString(Res.string.tool_user_guide_title),
         onBack = { dispatcher?.invoke() },
-        backLabel = stringResource(R.string.back)
+        backLabel = appString(Res.string.back)
     ) {
         // One question: how does this tool work? Search answers it; the guides follow, shelved by category.
         item(key = "search") {
             TrailSenseSearchBar(
                 value = query,
                 onValueChange = { query = it },
-                placeholder = stringResource(R.string.search),
-                clearContentDescription = stringResource(android.R.string.cancel)
+                placeholder = appString(Res.string.search),
+                clearContentDescription = systemString(SystemString.Cancel)
             )
         }
 
@@ -71,9 +73,9 @@ internal fun GuideListScreen(
             item(key = "empty") {
                 TrailSenseEmptyState(
                     icon = Icons.Default.SearchOff,
-                    title = stringResource(R.string.no_results),
-                    description = stringResource(R.string.sky_guides_no_results, query),
-                    actionLabel = stringResource(R.string.guide_clear_search),
+                    title = appString(Res.string.no_results),
+                    description = appString(Res.string.sky_guides_no_results, query),
+                    actionLabel = appString(Res.string.guide_clear_search),
                     onAction = { query = "" },
                     modifier = Modifier
                         .fillParentMaxHeight(0.9f)
@@ -169,10 +171,9 @@ private fun filterGuides(
 /** Every user guide, by category; tapping one opens it. */
 @Composable
 fun GuideListToolScreen() {
-    val context = LocalContext.current
     val navigator = LocalNavigator.current
     GuideListScreen(
-        guides = Guides.guides(context),
+        guides = Guides.guides(),
         onOpenGuide = {
             tryOrNothing {
                 navigator.navigate(Route.Guide(name = it.name, contents = it.contents))

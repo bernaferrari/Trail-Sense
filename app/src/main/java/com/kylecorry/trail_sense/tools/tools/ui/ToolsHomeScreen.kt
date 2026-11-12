@@ -122,7 +122,6 @@ private fun showToolActions(
             context.getString(R.string.unpin) -> viewModel.unpin(tool.id)
             context.getString(R.string.pin) -> viewModel.pin(tool.id)
             context.getString(R.string.tool_user_guide_title) -> UserGuideUtils.showGuide(
-                context,
                 navigator,
                 tool.guideId!!
             )

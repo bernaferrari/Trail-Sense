@@ -30,7 +30,6 @@ class ShowMapsDisclaimerCommand(
         ) { showUserGuide, _ ->
             if (showUserGuide && appNavigator.currentRoute != null) {
                 UserGuideUtils.showGuide(
-                    context,
                     appNavigator,
                     RawTexts.guide_tool_offline_maps
                 )

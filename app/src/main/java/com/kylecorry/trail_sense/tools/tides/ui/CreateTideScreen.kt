@@ -210,7 +210,6 @@ fun CreateTideToolScreen(route: Route.CreateTide) {
         },
         onHelp = {
             UserGuideUtils.showGuide(
-                context,
                 navigator,
                 RawTexts.guide_tool_tides
             )

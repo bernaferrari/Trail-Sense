@@ -245,7 +245,6 @@ fun ThermometerSettingsToolScreen() {
                     label = stringResource(R.string.tool_user_guide_title),
                     onClick = {
                         UserGuideUtils.showGuide(
-                            context,
                             navigator,
                             RawTexts.guide_tool_settings
                         )

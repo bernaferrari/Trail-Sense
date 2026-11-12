@@ -94,7 +94,7 @@ fun PhotoMapsToolScreen(
         val map = viewModel.map
         when (action) {
             MapContextualAction.Calibrate -> viewModel.calibrate()
-            MapContextualAction.Guide -> UserGuideUtils.openGuide(context, navigator, RawTexts.guide_tool_offline_maps)
+            MapContextualAction.Guide -> UserGuideUtils.openGuide(navigator, RawTexts.guide_tool_offline_maps)
             MapContextualAction.Rename -> map?.let {
                 scope.launch {
                     viewModel.getLatest(it)?.let { latest ->

@@ -444,7 +444,6 @@ fun CliffHeightToolScreen() {
     CliffHeightScreen(
         onOpenGuide = {
             UserGuideUtils.showGuide(
-                context,
                 navigator,
                 RawTexts.guide_tool_cliff_height
             )

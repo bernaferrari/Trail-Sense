@@ -26,7 +26,7 @@ class ToolUserGuideTest : ToolTestBase(ToolIds.USER_GUIDE) {
         isVisible(searchBox)
 
         // Verify it shows each guide
-        val guides = Guides.guides(context)
+        val guides = Guides.guides()
             .flatMap { it.guides }
             // TODO: Open each guide, maybe by navigating directly to them
             .take(2)

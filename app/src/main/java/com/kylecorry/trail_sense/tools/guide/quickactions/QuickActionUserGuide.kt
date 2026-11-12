@@ -22,9 +22,9 @@ class QuickActionUserGuide(btn: QuickActionButtonView, host: AndroidDestinationH
             it.isOpen(host.navigator.currentRoute)
         }
         if (activeTool?.guideId != null) {
-            UserGuideUtils.showGuide(context, host.navigator, activeTool.guideId)
+            UserGuideUtils.showGuide(host.navigator, activeTool.guideId)
         } else {
-            UserGuideUtils.showGuide(context, host.navigator, RawTexts.guide_tool_tools)
+            UserGuideUtils.showGuide(host.navigator, RawTexts.guide_tool_tools)
         }
     }
 
