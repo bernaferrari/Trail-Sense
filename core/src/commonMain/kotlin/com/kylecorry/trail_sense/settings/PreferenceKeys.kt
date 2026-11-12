@@ -114,7 +114,6 @@ object PreferenceKeys {
     const val minUncalibratedTempF = "pref_min_uncalibrated_temp_f"
     const val monitorWeather = "pref_monitor_weather"
     const val navigationDialLobes = "pref_navigation_dial_lobes"
-    const val navigationDrawCompassDialBezel = "pref_navigation_draw_compass_dial_bezel"
     const val navigationHighDetailMode = "pref_navigation_high_detail_mode"
     const val navigationKeepUnlocked = "pref_navigation_keep_unlocked"
     const val navigationLockScreenMode = "pref_navigation_lock_screen_mode"

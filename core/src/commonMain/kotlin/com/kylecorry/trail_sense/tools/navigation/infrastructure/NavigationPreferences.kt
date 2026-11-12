@@ -127,12 +127,6 @@ class NavigationPreferences(
         SpeedometerMode.GPS
     )
 
-    val drawDialBezel by BooleanPreference(
-        cache,
-        PreferenceKeys.navigationDrawCompassDialBezel,
-        false
-    )
-
     val showAzimuthIndicator by BooleanPreference(
         cache,
         PreferenceKeys.navigationShowAzimuthIndicator,
