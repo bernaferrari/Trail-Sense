@@ -281,7 +281,7 @@ fun WeatherToolScreen(
 
             // Humidity
             HumidityWeatherField(weather.observation?.humidity) { showHumidityChart() },
-            CloudWeatherField(weather.clouds, context),
+            CloudWeatherField(weather.clouds),
 
             // System
             PressureSystemWeatherField(weather.observation?.pressure),

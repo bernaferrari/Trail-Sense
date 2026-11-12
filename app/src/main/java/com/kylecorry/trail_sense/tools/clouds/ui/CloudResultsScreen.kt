@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
 import com.kylecorry.trail_sense.shared.time.toInstant
 
 import com.kylecorry.trail_sense.shared.time.toLocalDateTime
@@ -293,7 +295,7 @@ private fun CloudResultsScreen(
 ) {
     val context = LocalContext.current
     val details = remember(context) { CloudDetailsService(context) }
-    val detailsModal = remember(context) { CloudDetailsModal(context) }
+    val detailsModal = remember(context) { CloudDetailsModal(AppHost.from(context)) }
     var selectedCloudImage by remember { mutableStateOf<CloudGenus?>(null) }
 
     selectedCloudImage?.let { cloud ->

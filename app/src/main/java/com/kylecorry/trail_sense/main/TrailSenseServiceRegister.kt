@@ -48,6 +48,8 @@ import com.kylecorry.andromeda.sound.ToneGenerator
 import com.kylecorry.trail_sense.shared.images.AndroidBundledImages
 import com.kylecorry.trail_sense.shared.images.BundledImages
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.shared.io.AndroidAppImages
+import com.kylecorry.trail_sense.shared.images.AppImages
 import com.kylecorry.trail_sense.shared.logging.AndroidLogger
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.map_layers.MapLayerLoader
@@ -123,6 +125,7 @@ object TrailSenseServiceRegister {
         )
         DependencyRegistry.addSingleton<SensorService>(AndroidSensorService(appContext))
         DependencyRegistry.addSingleton(FileSubsystem.getInstance(appContext))
+        DependencyRegistry.addSingleton(AppImages::class) { AndroidAppImages(FileSubsystem.getInstance(appContext)) }
         DependencyRegistry.addSingleton(AppDatabase.getInstance(appContext))
         DependencyRegistry.addSingleton(SensorSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton<ISensorSubsystem>(SensorSubsystem.getInstance(appContext))

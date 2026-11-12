@@ -4,6 +4,8 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.activity.compose.LocalActivity
@@ -176,7 +178,7 @@ fun CloudToolScreen(route: Route.Clouds) {
             }
         },
         onManualClick = { navigator.navigate(Route.CloudResults()) },
-        onCloudClick = { CloudDetailsModal(context).show(it.value.genus) },
+        onCloudClick = { CloudDetailsModal(AppHost.from(context)).show(it.value.genus) },
         onCloudImageClick = { viewModel.selectedCloudImage = it.value.genus },
         onDeleteCloud = { reading ->
             scope.launch {
