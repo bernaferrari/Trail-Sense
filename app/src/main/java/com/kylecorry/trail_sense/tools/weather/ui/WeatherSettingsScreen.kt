@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -423,7 +425,7 @@ fun WeatherSettingsToolScreen() {
             hint = stringResource(R.string.frequency),
             onDurationPicked = {
                 if (it != null) {
-                    ChangeWeatherFrequencyCommand(context) { frequency ->
+                    ChangeWeatherFrequencyCommand(AppHost.from(context)) { frequency ->
                         viewModel.onUpdateFrequencyChanged(frequency)
                     }.execute(it)
                 }

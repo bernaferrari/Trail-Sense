@@ -206,23 +206,19 @@ object WeatherToolRegistration : ToolRegistration {
         )
     }
 
-    const val BROADCAST_WEATHER_MONITOR_ENABLED = "weather-broadcast-weather-monitor-enabled"
-    const val BROADCAST_WEATHER_MONITOR_DISABLED = "weather-broadcast-weather-monitor-disabled"
-    const val BROADCAST_WEATHER_MONITOR_STATE_CHANGED =
-        "weather-broadcast-weather-monitor-state-changed"
-    const val BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED =
-        "paths-broadcast-weather-monitor-frequency-changed"
-    const val BROADCAST_WEATHER_PREDICTION_CHANGED = "weather-broadcast-weather-prediction-changed"
+    const val BROADCAST_WEATHER_MONITOR_ENABLED = WeatherBroadcasts.MONITOR_ENABLED
+    const val BROADCAST_WEATHER_MONITOR_DISABLED = WeatherBroadcasts.MONITOR_DISABLED
+    const val BROADCAST_WEATHER_MONITOR_STATE_CHANGED = WeatherBroadcasts.MONITOR_STATE_CHANGED
+    const val BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED = WeatherBroadcasts.MONITOR_FREQUENCY_CHANGED
+    const val BROADCAST_WEATHER_PREDICTION_CHANGED = WeatherBroadcasts.PREDICTION_CHANGED
 
-    const val BROADCAST_PARAM_WEATHER_MONITOR_FREQUENCY =
-        "paths-broadcast-param-weather-monitor-frequency"
-
+    const val BROADCAST_PARAM_WEATHER_MONITOR_FREQUENCY = WeatherBroadcasts.PARAM_MONITOR_FREQUENCY
 
     const val ACTION_PAUSE_WEATHER_MONITOR = "weather-action-pause-weather-monitor"
     const val ACTION_RESUME_WEATHER_MONITOR = "weather-action-resume-weather-monitor"
     const val ACTION_REFRESH_WEATHER_WIDGET = "weather-action-refresh-weather-widget"
 
-    const val SERVICE_WEATHER_MONITOR = "weather-service-weather-monitor"
+    const val SERVICE_WEATHER_MONITOR = WeatherBroadcasts.SERVICE_WEATHER_MONITOR
 
     const val WIDGET_WEATHER = "weather-widget-weather"
     const val WIDGET_PRESSURE_TENDENCY = "weather-widget-pressure-tendency"

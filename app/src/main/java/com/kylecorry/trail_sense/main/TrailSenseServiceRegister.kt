@@ -48,6 +48,10 @@ import com.kylecorry.andromeda.sound.ToneGenerator
 import com.kylecorry.trail_sense.shared.images.AndroidBundledImages
 import com.kylecorry.trail_sense.shared.images.BundledImages
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.shared.permissions.BatteryRestrictionPrompt
+import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
+import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorRestarter
+import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorScheduler
 import com.kylecorry.trail_sense.shared.io.AndroidAppImages
 import com.kylecorry.trail_sense.shared.images.AppImages
 import com.kylecorry.trail_sense.shared.logging.AndroidLogger
@@ -144,6 +148,12 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton<IBeaconService>(BeaconService(appContext))
         DependencyRegistry.addSingleton(IWeatherSubsystem::class) { WeatherSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IWeatherRepo::class) { WeatherRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(WeatherMonitorRestarter::class) {
+            WeatherMonitorRestarter { WeatherMonitorScheduler.restart(appContext) }
+        }
+        DependencyRegistry.addSingleton(BatteryRestrictionPrompt::class) {
+            BatteryRestrictionPrompt { alerter -> RequestRemoveBatteryRestrictionCommand(appContext, alerter).execute() }
+        }
         DependencyRegistry.addSingleton(ITideTableRepo::class) { TideTableRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(INoteRepo::class) { NoteRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(ILightningRepo::class) { LightningRepo.getInstance(appContext) }

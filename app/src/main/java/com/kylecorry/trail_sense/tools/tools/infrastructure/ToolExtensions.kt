@@ -6,21 +6,10 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
-import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import kotlinx.coroutines.launch
-
-fun ToolService.getFeatureState(): FeatureState {
-    return if (isBlocked()) {
-        FeatureState.Unavailable
-    } else if (isRunning()) {
-        FeatureState.On
-    } else {
-        FeatureState.Off
-    }
-}
 
 fun Tools.observe(
     host: AndroidDestinationHost,

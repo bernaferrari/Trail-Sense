@@ -2,9 +2,12 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
+import com.kylecorry.sol.math.MathExtensions.toRadians
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+
 import com.kylecorry.trail_sense.shared.views.compose.chartHeight
 
-import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.expandVertically
@@ -55,9 +58,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -68,6 +69,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModel
+import com.kylecorry.trail_sense.shared.dialogs.showComposeContentDialog
+import com.kylecorry.trail_sense.shared.permissions.BatteryRestrictionPrompt
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -77,9 +82,7 @@ import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.sol.units.Temperature
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FeatureState
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
@@ -88,10 +91,7 @@ import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
 import com.kylecorry.trail_sense.shared.alerts.ResettableLoadingIndicator
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.permissions.RequestRemoveBatteryRestrictionCommand
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
@@ -110,7 +110,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcastEffect
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
-import com.kylecorry.trail_sense.tools.weather.WeatherToolRegistration
+import com.kylecorry.trail_sense.tools.weather.WeatherBroadcasts
 import com.kylecorry.trail_sense.tools.weather.domain.CurrentWeather
 import com.kylecorry.trail_sense.tools.weather.domain.WeatherObservation
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherLogger
@@ -150,24 +150,24 @@ fun WeatherToolScreen(
     modifier: Modifier = Modifier,
     bindQuickActions: (left: ComposeQuickActionButtonView, right: ComposeQuickActionButtonView) -> Unit = { _, _ -> }
 ) {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
+    val host = AppHost.current()
+    val strings = LocalAppStrings.current
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
-    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val prefs = remember { getAppService<UserPreferences>() }
     val viewModel = viewModel {
         WeatherViewModel(
             weatherSubsystem = getAppService<IWeatherSubsystem>(),
             prefs = prefs,
-            monitorService = getAppService<ToolCatalog>().getService(WeatherToolRegistration.SERVICE_WEATHER_MONITOR)!!,
+            monitorService = getAppService<ToolCatalog>().getService(WeatherBroadcasts.SERVICE_WEATHER_MONITOR)!!,
             createLogger = { indicator ->
                 WeatherLogger(30.seconds, 500.milliseconds, indicator)
             }
         )
     }
-    val formatService = remember(context) { FormatService.getInstance(context) }
+    val formatService = remember { FormatService.getInstance() }
     val temperatureUnits = remember(prefs) { prefs.temperatureUnits }
-    val views = remember { createWeatherViews(context) }
+    val views = remember { createWeatherViews() }
     val lifecycleOwner = LocalLifecycleOwner.current
     var showWeatherFrequencyPicker by remember { mutableStateOf(false) }
     var pressureMarker by remember { mutableStateOf<Pair<Duration, Float>?>(null) }
@@ -194,10 +194,10 @@ fun WeatherToolScreen(
         }
     }
 
-    ToolBroadcastEffect(WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_STATE_CHANGED) {
+    ToolBroadcastEffect(WeatherBroadcasts.MONITOR_STATE_CHANGED) {
         viewModel.updateStatusBar()
     }
-    ToolBroadcastEffect(WeatherToolRegistration.BROADCAST_WEATHER_MONITOR_FREQUENCY_CHANGED) {
+    ToolBroadcastEffect(WeatherBroadcasts.MONITOR_FREQUENCY_CHANGED) {
         viewModel.updateStatusBar()
     }
 
@@ -211,10 +211,10 @@ fun WeatherToolScreen(
             return
         }
         val readingDuration = (Clock.System.now() - (readings.first().time))
-        CustomUiUtils.showComposeContentDialog(
-            context = context,
-            title = context.getString(
-                R.string.humidity_history,
+        showComposeContentDialog(
+            host = host,
+            title = strings.get(
+                Res.string.humidity_history,
                 formatService.formatDuration(readingDuration, true)
             )
         ) {
@@ -237,10 +237,10 @@ fun WeatherToolScreen(
             return
         }
         val readingDuration = (Clock.System.now() - (readings.first().time))
-        CustomUiUtils.showComposeContentDialog(
-            context = context,
-            title = context.getString(
-                R.string.temperature_history,
+        showComposeContentDialog(
+            host = host,
+            title = strings.get(
+                Res.string.temperature_history,
                 formatService.formatDuration(readingDuration, true)
             )
         ) {
@@ -260,7 +260,7 @@ fun WeatherToolScreen(
         }
     }
 
-    val weatherItems = remember(weather, history, context) {
+    val weatherItems = remember(weather, history) {
         if (weather == null) {
             return@remember emptyList()
         }
@@ -311,8 +311,8 @@ fun WeatherToolScreen(
                     formatService.formatWeather(it)
                 }
                 Alerts.dialog(
-                    context,
-                    context.getString(R.string.weather),
+                    host,
+                    strings.get(Res.string.weather),
                     conditions,
                     cancelText = null
                 )
@@ -322,8 +322,8 @@ fun WeatherToolScreen(
         views.weatherTitle.condition = prediction.primaryHourly
         val arrival =
             formatService.formatWeatherArrival(prediction.hourlyArrival)
-        val then = context.getString(
-            R.string.then_weather,
+        val then = strings.get(
+            Res.string.then_weather,
             formatService.formatWeather(prediction.primaryDaily).lowercase()
         )
 
@@ -347,14 +347,13 @@ fun WeatherToolScreen(
             Pressure.from(pressure, units),
             Units.getDecimalPlaces(units)
         )
-        stringResource(
-            R.string.pressure_reading_time_ago,
+        appString(Res.string.pressure_reading_time_ago,
             formatted,
             formatService.formatDuration(timeAgo, false)
         )
     }
 
-    val weatherFrequencyTitle = stringResource(R.string.pref_weather_update_frequency_title)
+    val weatherFrequencyTitle = appString(Res.string.pref_weather_update_frequency_title)
     WeatherHost(
         views = views,
         weatherItems = weatherItems,
@@ -373,13 +372,12 @@ fun WeatherToolScreen(
         onToggleMonitor = {
             scope.launch {
                 when (viewModel.toggleMonitor()) {
-                    FeatureState.Off -> RequestRemoveBatteryRestrictionCommand(
-                        context,
+                    FeatureState.Off -> getAppService<BatteryRestrictionPrompt>().request(
                         WeatherBatteryRestrictionsAlerter(effects, scope)
-                    ).execute()
+                    )
 
                     FeatureState.Unavailable -> effects.showMessage(
-                        context.getString(R.string.weather_monitoring_disabled)
+                        strings.get(Res.string.weather_monitoring_disabled)
                     )
 
                     FeatureState.On -> Unit
@@ -395,11 +393,11 @@ fun WeatherToolScreen(
         DurationPickerDialog(
             title = weatherFrequencyTitle,
             duration = prefs.weather.weatherUpdateFrequency,
-            message = stringResource(R.string.actual_frequency_disclaimer),
-            hint = stringResource(R.string.frequency),
+            message = appString(Res.string.actual_frequency_disclaimer),
+            hint = appString(Res.string.frequency),
             onDurationPicked = {
                 if (it != null) {
-                    ChangeWeatherFrequencyCommand(context) { viewModel.updateStatusBar() }.execute(it)
+                    ChangeWeatherFrequencyCommand(host) { viewModel.updateStatusBar() }.execute(it)
                 }
                 showWeatherFrequencyPicker = false
             },
@@ -584,7 +582,7 @@ private fun WeatherHost(
     // A standard page: the large title, and the two quick actions (clouds, temperature) in the bar instead of
     // floating in the forecast's corners.
     TrailSensePage(
-        title = stringResource(R.string.weather),
+        title = appString(Res.string.weather),
         modifier = modifier.testTag("weather_list"),
         actions = {
             listOf(views.weatherTitle.leftButton, views.weatherTitle.rightButton)
@@ -605,11 +603,11 @@ private fun WeatherHost(
                     val isOn = monitorState == FeatureState.On
                     TrailSenseEmptyState(
                         icon = TrailIcons.Weather,
-                        title = stringResource(R.string.weather_empty_title),
-                        description = stringResource(
-                            if (isOn) R.string.weather_empty_recording else R.string.weather_empty_description
+                        title = appString(Res.string.weather_empty_title),
+                        description = appString(
+                            if (isOn) Res.string.weather_empty_recording else Res.string.weather_empty_description
                         ),
-                        actionLabel = if (isOn) null else stringResource(R.string.weather_empty_action),
+                        actionLabel = if (isOn) null else appString(Res.string.weather_empty_action),
                         onAction = if (isOn) null else onToggleMonitor,
                         actionModifier = Modifier.testTag("play_btn"),
                         modifier = Modifier.testTag("chart")
@@ -703,7 +701,7 @@ private fun WeatherPressureSection(
             .fillMaxWidth()
             .then(if (pressure != null) Modifier.testTag("weather_item_1") else Modifier)
     ) {
-        TrailSenseGroupHeader(stringResource(R.string.pressure))
+        TrailSenseGroupHeader(appString(Res.string.pressure))
         val reading = pressure?.trailingText
         val number = reading?.substringBeforeLast(' ')
         val unit = reading?.substringAfterLast(' ', "")?.takeIf { reading.contains(' ') }
@@ -724,7 +722,7 @@ private fun WeatherPressureSection(
                 )
             }
             Text(
-                number ?: stringResource(R.string.sky_pressure_waiting),
+                number ?: appString(Res.string.sky_pressure_waiting),
                 style = (if (number != null) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.titleLarge)
                     .copy(fontFeatureSettings = "tnum"),
                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
@@ -746,19 +744,19 @@ private fun WeatherPressureSection(
         if (number != null && tendencyText != null) {
             // One line: the change that matters, in emphasis, then what it means. (It used to say "rising" in
             // words, then the rate in the smallest type under it.)
-            val rate = stringResource(
+            val rate = appString(
                 when {
-                    tendencyDirection > 0 -> R.string.sky_pressure_rate_rising
-                    tendencyDirection < 0 -> R.string.sky_pressure_rate_falling
-                    else -> R.string.sky_pressure_rate_steady
+                    tendencyDirection > 0 -> Res.string.sky_pressure_rate_rising
+                    tendencyDirection < 0 -> Res.string.sky_pressure_rate_falling
+                    else -> Res.string.sky_pressure_rate_steady
                 },
                 tendencyText
             )
-            val outlook = stringResource(
+            val outlook = appString(
                 when {
-                    tendencyDirection > 0 -> R.string.sky_pressure_outlook_rising
-                    tendencyDirection < 0 -> R.string.sky_pressure_outlook_falling
-                    else -> R.string.sky_pressure_outlook_steady
+                    tendencyDirection > 0 -> Res.string.sky_pressure_outlook_rising
+                    tendencyDirection < 0 -> Res.string.sky_pressure_outlook_falling
+                    else -> Res.string.sky_pressure_outlook_steady
                 }
             )
             Text(
@@ -798,7 +796,7 @@ private fun WeatherPressureSection(
             WeatherChartAxis(data, formatService)
         } else {
             Text(
-                stringResource(R.string.weather_chart_empty),
+                appString(Res.string.weather_chart_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = scheme.onSurfaceVariant,
                 modifier = Modifier
@@ -835,13 +833,13 @@ private fun WeatherChartAxis(data: WeatherPressureChartData, formatService: Form
             .padding(top = TrailSenseSpacing.sm, start = com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartGutter)
     ) {
         Text(
-            stringResource(R.string.time_ago, formatService.formatDuration(span, short = true)),
+            appString(Res.string.time_ago, formatService.formatDuration(span, short = true)),
             style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f)
         )
         Text(
-            stringResource(R.string.now),
+            appString(Res.string.now),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary
@@ -867,7 +865,7 @@ private fun WeatherPressureChart(
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         if (data.isEmpty()) {
             Text(
-                text = stringResource(R.string.no_data),
+                text = appString(Res.string.no_data),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -878,9 +876,9 @@ private fun WeatherPressureChart(
         // Word axes (High, Normal, Low for this window) live in the frame's gutter, so no line ever crosses them.
         com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartFrame(
             yLabels = listOf(
-                stringResource(R.string.sky_axis_high),
-                stringResource(R.string.sky_axis_normal),
-                stringResource(R.string.sky_axis_low)
+                appString(Res.string.sky_axis_high),
+                appString(Res.string.sky_axis_normal),
+                appString(Res.string.sky_axis_low)
             ),
             modifier = Modifier.fillMaxSize()
         ) {
@@ -994,14 +992,14 @@ private fun WeatherMonitorRow(
     modifier: Modifier = Modifier
 ) {
     val isOn = state == FeatureState.On
-    val subtitle = stringResource(if (isOn) R.string.on else R.string.off) + (frequency?.let {
+    val subtitle = appString(if (isOn) Res.string.on else Res.string.off) + (frequency?.let {
         " · ${formatService.formatDuration(it, short = true, includeSeconds = true)}"
     } ?: "")
-    val label = stringResource(if (isOn) R.string.stop else R.string.start)
+    val label = appString(if (isOn) Res.string.stop else Res.string.start)
 
     Box(modifier.testTag("weather_play_bar")) {
     TrailSenseListItem(
-        title = stringResource(R.string.weather_monitor),
+        title = appString(Res.string.weather_monitor),
         subtitle = subtitle,
         icon = rememberVectorPainter(TrailIcons.Update),
         position = TrailSenseGroupPosition.Single,
@@ -1131,7 +1129,7 @@ private fun WeatherHeroCard(
     }
 }
 
-private fun createWeatherViews(context: Context): WeatherViews {
+private fun createWeatherViews(): WeatherViews {
     return WeatherViews(
         weatherTitle = WeatherTitleState()
     )
@@ -1188,14 +1186,14 @@ private fun weatherPressureChartPoints(
 private fun WeatherHostPreview() {
     TrailSenseTheme {
         WeatherHost(
-            views = createWeatherViews(LocalContext.current),
+            views = createWeatherViews(),
             weatherItems = emptyList(),
             pressureChartData = WeatherPressureChartData(),
             pressureMarkerText = null,
             isWeatherUpdating = false,
             monitorState = FeatureState.Off,
             monitorFrequency = 15.minutes,
-            formatService = FormatService.getInstance(LocalContext.current),
+            formatService = FormatService.getInstance(),
             onChangeMonitorFrequency = {},
             onPressureMarkerSelected = { _, _ -> },
             onToggleMonitor = {}
@@ -1280,7 +1278,7 @@ private fun PressureGaugeIcon(hpa: Float, color: Color, modifier: Modifier = Mod
         drawArc(color.copy(alpha = 0.28f), start, sweep, false, topLeft, arcSize, style = cap)
         drawArc(color, start, sweep * animated, false, topLeft, arcSize, style = cap)
         val center = androidx.compose.ui.geometry.Offset(topLeft.x + arcSize.width / 2f, topLeft.y + arcSize.height / 2f)
-        val angle = Math.toRadians((start + sweep * animated).toDouble())
+        val angle = (start + sweep * animated).toDouble().toRadians()
         val length = arcSize.width / 2f * 0.62f
         drawLine(
             color,
