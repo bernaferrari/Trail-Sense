@@ -20,11 +20,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import java.io.Serializable
-import java.math.BigDecimal
-import java.math.RoundingMode
+import kotlin.math.abs
+import kotlin.math.floor
 
-abstract class SimpleConverterPage<T : Serializable>(private val defaultFrom: T, private val defaultTo: T) :
+abstract class SimpleConverterPage<T : Enum<T>>(private val defaultFrom: T, private val defaultTo: T) :
     ConverterPage {
 
     abstract val units: List<T>
@@ -63,7 +62,7 @@ interface ConverterPage {
  * input with 1 in it, so there's an answer from the start; tapping the answer makes it the input.
  */
 @Composable
-fun <T : Serializable> SimpleConvertScreen(
+fun <T : Enum<T>> SimpleConvertScreen(
     units: List<T>,
     defaultFrom: T,
     defaultTo: T,
@@ -186,10 +185,37 @@ fun <T : Serializable> SimpleConvertScreen(
     }
 }
 
-/** A value as plain, editable digits: at most 4 decimals, no grouping, '.' as the separator. */
-private fun plain(value: Float): String {
+/** A value as plain, editable digits: at most 4 decimals (rounded half up), no grouping, '.' as the separator. */
+internal fun plain(value: Float): String {
     if (!value.isFinite()) return ""
-    return BigDecimal(value.toDouble()).setScale(4, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+    val magnitude = abs(value.toDouble())
+    val text = if (magnitude < 1e14) {
+        val scaled = floor(magnitude * 10_000 + 0.5).toLong()
+        val fraction = (scaled % 10_000).toString().padStart(4, '0').trimEnd('0')
+        val whole = (scaled / 10_000).toString()
+        if (fraction.isEmpty()) whole else "$whole.$fraction"
+    } else {
+        // A float this large has no fractional part; write out its digits instead of an exponent.
+        expandExponent(magnitude.toString())
+    }
+    return if (value < 0 && text != "0") "-$text" else text
+}
+
+/** "1.25E15" -> "1250000000000000"; text without an exponent is returned as is. */
+private fun expandExponent(text: String): String {
+    val parts = text.uppercase().split('E')
+    if (parts.size != 2) return text.removeSuffix(".0")
+    val mantissa = parts[0]
+    val exponent = parts[1].toInt()
+    val whole = mantissa.substringBefore('.')
+    val fraction = mantissa.substringAfter('.', "").trimEnd('0')
+    val digits = whole + fraction
+    val pointAt = whole.length + exponent
+    return if (pointAt >= digits.length) {
+        (digits + "0".repeat(pointAt - digits.length)).trimStart('0').ifEmpty { "0" }
+    } else {
+        digits.substring(0, pointAt).trimStart('0').ifEmpty { "0" }
+    }
 }
 
 /** The unit's symbol, from a formatted amount: what's left once the number is taken out ("1 ft" -> "ft"). */

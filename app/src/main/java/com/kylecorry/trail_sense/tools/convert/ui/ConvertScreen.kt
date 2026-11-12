@@ -58,11 +58,11 @@ fun ConvertScreen(
     val pages = remember(context) {
         listOf(
             CoordinateConverterPage(context),
-            DistanceConverterPage(context),
-            TemperatureConverterPage(context),
-            VolumeConverterPage(context),
-            WeightConverterPage(context),
-            TimeConverterPage(context)
+            DistanceConverterPage(),
+            TemperatureConverterPage(),
+            VolumeConverterPage(),
+            WeightConverterPage(),
+            TimeConverterPage()
         )
     }
     val names = listOf(

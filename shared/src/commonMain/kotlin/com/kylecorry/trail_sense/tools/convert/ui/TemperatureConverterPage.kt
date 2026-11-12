@@ -1,21 +1,22 @@
 package com.kylecorry.trail_sense.tools.convert.ui
 
-import android.content.Context
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.TemperatureUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 
-class TemperatureConverterPage(private val context: Context) :
+class TemperatureConverterPage :
     SimpleConverterPage<TemperatureUnits>(TemperatureUnits.Celsius, TemperatureUnits.Fahrenheit) {
 
-    private val formatService by lazy { FormatService.getInstance(context) }
+    private val formatService by lazy { FormatService.getInstance() }
 
     override fun getUnitName(unit: TemperatureUnits): String {
         return when (unit) {
-            TemperatureUnits.Fahrenheit -> context.getString(R.string.fahrenheit)
-            TemperatureUnits.Celsius -> context.getString(R.string.celsius)
+            TemperatureUnits.Fahrenheit -> getAppService<AppStrings>().get(Res.string.fahrenheit)
+            TemperatureUnits.Celsius -> getAppService<AppStrings>().get(Res.string.celsius)
         }
     }
 

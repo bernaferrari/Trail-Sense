@@ -1,5 +1,10 @@
 package com.kylecorry.trail_sense.onboarding
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -53,14 +58,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMarkdown
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
@@ -79,7 +81,7 @@ fun UnitSystemOnboardingScreen(
     modifier: Modifier = Modifier
 ) {
     OnboardingFrame(
-        nextText = stringResource(R.string.next),
+        nextText = appString(Res.string.next),
         onNext = onNext,
         modifier = modifier
     ) {
@@ -89,41 +91,41 @@ fun UnitSystemOnboardingScreen(
                 .height(196.dp)
         )
         Text(
-            text = stringResource(R.string.app_name),
+            text = appString(Res.string.app_name),
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(top = TrailSenseSpacing.xl)
         )
         Text(
-            text = stringResource(R.string.onboarding_setup_intro),
+            text = appString(Res.string.onboarding_setup_intro),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = TrailSenseSpacing.sm)
         )
 
         TrailSenseGroupHeader(
-            stringResource(R.string.units),
+            appString(Res.string.units),
             modifier = Modifier.padding(top = TrailSenseSpacing.lg)
         )
         Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
             TrailSenseGroupCard(TrailSenseGroupPosition(isFirst = true, isLast = false)) {
                 TrailSenseConnectedChoice(
                     options = listOf(
-                        TrailSenseChoice(true, stringResource(R.string.metric)),
-                        TrailSenseChoice(false, stringResource(R.string.us_customary))
+                        TrailSenseChoice(true, appString(Res.string.metric)),
+                        TrailSenseChoice(false, appString(Res.string.us_customary))
                     ),
                     selected = useMetric,
                     onSelect = onUnitSystemChanged,
-                    label = stringResource(R.string.units)
+                    label = appString(Res.string.units)
                 )
             }
             // What the choice changes, as three readings that roll over to the other system.
             Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                 val cells = listOf(
-                    Triple(if (useMetric) "12.4" else "7.7", if (useMetric) "km" else "mi", stringResource(R.string.distance)),
-                    Triple(if (useMetric) "21°" else "70°", if (useMetric) "C" else "F", stringResource(R.string.temperature)),
-                    Triple(if (useMetric) "1013" else "29.9", if (useMetric) "hPa" else "inHg", stringResource(R.string.pressure))
+                    Triple(if (useMetric) "12.4" else "7.7", if (useMetric) "km" else "mi", appString(Res.string.distance)),
+                    Triple(if (useMetric) "21°" else "70°", if (useMetric) "C" else "F", appString(Res.string.temperature)),
+                    Triple(if (useMetric) "1013" else "29.9", if (useMetric) "hPa" else "inHg", appString(Res.string.pressure))
                 )
                 cells.forEachIndexed { index, (value, unit, label) ->
                     UnitPreviewValue(
@@ -138,7 +140,7 @@ fun UnitSystemOnboardingScreen(
             }
         }
         Text(
-            text = stringResource(R.string.units_setup_description),
+            text = appString(Res.string.units_setup_description),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = TrailSenseSpacing.lg, end = TrailSenseSpacing.lg, top = TrailSenseSpacing.sm)
@@ -161,12 +163,12 @@ fun UnitSystemOnboardingScreen(
                 }
                 Column {
                     Text(
-                        text = stringResource(R.string.privacy_and_location),
+                        text = appString(Res.string.privacy_and_location),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = stringResource(R.string.onboarding_private_by_design),
+                        text = appString(Res.string.onboarding_private_by_design),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -316,7 +318,7 @@ fun OnboardingScreen(
     modifier: Modifier = Modifier
 ) {
     OnboardingFrame(
-        nextText = page.nextButtonText ?: stringResource(R.string.next),
+        nextText = page.nextButtonText ?: appString(Res.string.next),
         onNext = onNext,
         modifier = modifier
     ) {
@@ -390,12 +392,11 @@ private fun OnboardingPageContents(
 @Preview(showBackground = true)
 @Composable
 private fun OnboardingScreenPreview() {
-    val context = LocalContext.current
     TrailSenseTheme {
         OnboardingScreen(
             page = OnboardingPage(
-                title = context.getString(R.string.explore),
-                contents = context.getString(R.string.onboarding_explore),
+                title = getAppService<AppStrings>().get(Res.string.explore),
+                contents = getAppService<AppStrings>().get(Res.string.onboarding_explore),
                 image = TrailSenseIcons.Filled.Hiking
             ),
             onNext = {}
