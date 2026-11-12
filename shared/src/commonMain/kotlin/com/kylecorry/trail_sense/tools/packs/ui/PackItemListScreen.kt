@@ -3,6 +3,14 @@
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.packs.ui
+
+import org.jetbrains.compose.resources.StringResource
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.foundation.layout.Spacer
@@ -52,16 +60,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
@@ -69,12 +73,10 @@ import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.tools.packs.infrastructure.IPackRepo
 import com.kylecorry.trail_sense.settings.infrastructure.PackPreferences
 import com.kylecorry.sol.units.Weight
 import com.kylecorry.sol.units.WeightUnits
-import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.ViewModel
@@ -96,37 +98,28 @@ import com.kylecorry.trail_sense.tools.packs.domain.PackService
 import com.kylecorry.trail_sense.tools.packs.domain.sort.CategoryPackItemSort
 import com.kylecorry.trail_sense.tools.packs.domain.sort.PackedPercentPackItemSort
 import com.kylecorry.trail_sense.tools.packs.domain.sort.WeightPackItemSort
-import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
-import com.kylecorry.trail_sense.tools.packs.ui.commands.ExportPackingListCommand
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryStringMapper
-import java.lang.Double.max
+import kotlin.math.max
 import kotlin.math.floor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.dialogs.item
-import com.kylecorry.trail_sense.shared.dialogs.number
-import com.kylecorry.trail_sense.shared.dialogs.text
 
 @Composable
-fun PackItemListToolScreen(route: Route.PackItemList) {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
+fun PackItemListToolScreen(route: Route.PackItemList, files: PackingListFiles) {
+    val host = AppHost.current()
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
-    // The activity is the app's IntentResultRetriever, which the CSV file picker needs.
-    val resultRetriever = LocalActivity.current as IntentResultRetriever
-    val prefs = remember(appContext) { UserPreferences(appContext) }
+    val prefs = remember { getAppService<UserPreferences>() }
     val viewModel = viewModel {
         PackItemListViewModel(
             packId = route.packId,
-            itemRepo = PackRepo.getInstance(appContext),
+            itemRepo = getAppService<IPackRepo>(),
             prefs = prefs.packs,
             weightUnits = { prefs.weightUnits }
         )
     }
-    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
+    val formatService = remember { FormatService.getInstance() }
     val dispatcher = rememberSystemBack()
 
     LaunchedEffect(viewModel) {
@@ -139,7 +132,7 @@ fun PackItemListToolScreen(route: Route.PackItemList) {
     PackItemScreen(
         title = viewModel.pack?.name.orEmpty(),
         items = viewModel.sortedItems,
-        totalPercentPacked = stringResource(R.string.percent_packed, formatService.formatPercentage(packedPercent)),
+        totalPercentPacked = appString(Res.string.percent_packed, formatService.formatPercentage(packedPercent)),
         totalPackedWeight = if (totalWeight != null) {
             formatService.formatWeight(totalWeight, Units.getDecimalPlaces(totalWeight.units), false)
         } else {
@@ -151,10 +144,9 @@ fun PackItemListToolScreen(route: Route.PackItemList) {
         loaded = viewModel.loaded,
         onSort = {
             val options = PackItemListViewModel.SORTS
-            Pickers.item(
-                context,
-                context.getString(R.string.sort),
-                options.map { context.getString(sortTitle(it)) },
+            Pickers.item(host,
+                getAppService<AppStrings>().get(Res.string.sort),
+                options.map { getAppService<AppStrings>().get(sortTitle(it)) },
                 options.indexOf(viewModel.sort)
             ) {
                 if (it != null) viewModel.changeSort(options[it])
@@ -162,12 +154,11 @@ fun PackItemListToolScreen(route: Route.PackItemList) {
         },
         onRename = {
             viewModel.pack?.let { pack ->
-                Pickers.text(
-                    context,
-                    context.getString(R.string.rename),
+                Pickers.text(host,
+                    getAppService<AppStrings>().get(Res.string.rename),
                     null,
                     pack.name,
-                    hint = context.getString(R.string.name)
+                    hint = getAppService<AppStrings>().get(Res.string.name)
                 ) {
                     if (it != null) viewModel.renamePack(pack, it)
                 }
@@ -175,14 +166,13 @@ fun PackItemListToolScreen(route: Route.PackItemList) {
         },
         onExport = {
             viewModel.pack?.let {
-                ExportPackingListCommand(context, resultRetriever, scope, effects).execute(it)
+                files.export(it)
             }
         },
         onDeletePack = {
             viewModel.pack?.let { pack ->
-                Alerts.dialog(
-                    context,
-                    context.getString(R.string.delete_pack),
+                Alerts.dialog(host,
+                    getAppService<AppStrings>().get(Res.string.delete_pack),
                     pack.name
                 ) { cancelled ->
                     if (!cancelled) viewModel.deletePack(pack)
@@ -190,10 +180,9 @@ fun PackItemListToolScreen(route: Route.PackItemList) {
             }
         },
         onClearAmounts = {
-            Alerts.dialog(
-                context,
-                context.getString(R.string.clear_amounts),
-                context.getString(R.string.action_inventory_clear_confirm)
+            Alerts.dialog(host,
+                getAppService<AppStrings>().get(Res.string.clear_amounts),
+                getAppService<AppStrings>().get(Res.string.action_inventory_clear_confirm)
             ) { cancelled ->
                 if (!cancelled) viewModel.clearAmounts()
             }
@@ -202,34 +191,31 @@ fun PackItemListToolScreen(route: Route.PackItemList) {
         onItemClick = { navigator.navigate(Route.CreatePackItem(packId = route.packId, editItemId = it.id)) },
         onItemCheckedChange = viewModel::toggleItem,
         onAddAmount = { item ->
-            Pickers.number(
-                context,
-                context.getString(R.string.add),
+            Pickers.number(host,
+                getAppService<AppStrings>().get(Res.string.add),
                 null,
                 null,
                 allowNegative = false,
-                hint = context.getString(R.string.dialog_item_amount)
+                hint = getAppService<AppStrings>().get(Res.string.dialog_item_amount)
             ) {
                 if (it != null) viewModel.addAmount(item, it.toDouble())
             }
         },
         onSubtractAmount = { item ->
-            Pickers.number(
-                context,
-                context.getString(R.string.subtract),
+            Pickers.number(host,
+                getAppService<AppStrings>().get(Res.string.subtract),
                 null,
                 null,
                 allowNegative = false,
-                hint = context.getString(R.string.dialog_item_amount)
+                hint = getAppService<AppStrings>().get(Res.string.dialog_item_amount)
             ) {
                 if (it != null) viewModel.addAmount(item, -it.toDouble())
             }
         },
         onEditItem = { navigator.navigate(Route.CreatePackItem(packId = route.packId, editItemId = it.id)) },
         onDeleteItem = { item ->
-            Alerts.dialog(
-                context,
-                context.getString(R.string.delete_packing_list_item),
+            Alerts.dialog(host,
+                getAppService<AppStrings>().get(Res.string.delete_packing_list_item),
                 item.name
             ) { cancelled ->
                 if (!cancelled) viewModel.deleteItem(item)
@@ -240,13 +226,13 @@ fun PackItemListToolScreen(route: Route.PackItemList) {
     )
 }
 
-private fun sortTitle(sort: String): Int {
+private fun sortTitle(sort: String): StringResource {
     return when (sort) {
-        "category" -> R.string.category
-        "percent_asc" -> R.string.pack_sort_percent_low_to_high
-        "percent_desc" -> R.string.pack_sort_percent_high_to_low
-        "weight_asc" -> R.string.pack_sort_weight_low_to_high
-        else -> R.string.pack_sort_weight_high_to_low
+        "category" -> Res.string.category
+        "percent_asc" -> Res.string.pack_sort_percent_low_to_high
+        "percent_desc" -> Res.string.pack_sort_percent_high_to_low
+        "weight_asc" -> Res.string.pack_sort_weight_low_to_high
+        else -> Res.string.pack_sort_weight_high_to_low
     }
 }
 
@@ -405,8 +391,7 @@ private fun PackItemScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null
 ) {
-    val context = LocalContext.current
-    val categoryNames = remember(context) { ItemCategoryStringMapper() }
+    val categoryNames = remember { ItemCategoryStringMapper() }
 
     // Group consecutive items by category, preserving the sorted order.
     val groups = remember(items) {
@@ -425,20 +410,20 @@ private fun PackItemScreen(
     TrailSensePage(
         title = title,
         onBack = onBack,
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier.testTag("inventory_list_title"),
         actions = {
             IconButton(onClick = onSort, modifier = Modifier.testTag("inventory_sort_btn")) {
-                Icon(Icons.AutoMirrored.Rounded.Sort, contentDescription = stringResource(R.string.sort))
+                Icon(Icons.AutoMirrored.Rounded.Sort, contentDescription = appString(Res.string.sort))
             }
             PacksOverflowMenu(
-                contentDescription = stringResource(R.string.packs_more_options),
+                contentDescription = appString(Res.string.packs_more_options),
                 modifier = Modifier.testTag("inventory_menu_btn"),
                 actions = listOf(
-                    PacksMenuAction(stringResource(R.string.rename), onRename),
-                    PacksMenuAction(stringResource(R.string.clear_amounts), onClearAmounts),
-                    PacksMenuAction(stringResource(R.string.export), onExport),
-                    PacksMenuAction(stringResource(R.string.delete), onDeletePack)
+                    PacksMenuAction(appString(Res.string.rename), onRename),
+                    PacksMenuAction(appString(Res.string.clear_amounts), onClearAmounts),
+                    PacksMenuAction(appString(Res.string.export), onExport),
+                    PacksMenuAction(appString(Res.string.delete), onDeletePack)
                 )
             )
         },
@@ -449,7 +434,7 @@ private fun PackItemScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
-                text = { Text(stringResource(R.string.add)) }
+                text = { Text(appString(Res.string.add)) }
             )
         }
     ) {
@@ -460,9 +445,9 @@ private fun PackItemScreen(
                 TrailSenseEmptyState(
                     icon = TrailIcons.ToolPack,
                     illustration = { PackEmptyIllustration() },
-                    title = stringResource(R.string.inventory_empty_text),
-                    description = stringResource(R.string.packs_items_empty_description),
-                    actionLabel = stringResource(R.string.create_item_title),
+                    title = appString(Res.string.inventory_empty_text),
+                    description = appString(Res.string.packs_items_empty_description),
+                    actionLabel = appString(Res.string.create_item_title),
                     actionIcon = TrailIcons.Add,
                     onAction = onAddItem,
                     actionModifier = Modifier.testTag("add_btn"),
@@ -605,7 +590,7 @@ private fun PackHeroCard(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = stringResource(R.string.packs_items_packed, packedCount.first, packedCount.second),
+                        text = appString(Res.string.packs_items_packed, packedCount.first, packedCount.second),
                         style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
                         color = content.copy(alpha = 0.82f)
                     )
@@ -623,7 +608,7 @@ private fun PackHeroCard(
                 // One quiet line, not a card inside the card.
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        stringResource(R.string.weight),
+                        appString(Res.string.weight),
                         style = MaterialTheme.typography.bodyMedium,
                         color = content.copy(alpha = 0.82f),
                         modifier = Modifier.weight(1f)
@@ -651,9 +636,8 @@ private fun PackItemRow(
     onEditItem: () -> Unit,
     onDeleteItem: () -> Unit
 ) {
-    val context = LocalContext.current
-    val formatService = remember(context) { FormatService.getInstance(context) }
-    val categoryName = remember(context, item.category) { ItemCategoryStringMapper().getString(item.category) }
+    val formatService = remember { FormatService.getInstance() }
+    val categoryName = remember(item.category) { ItemCategoryStringMapper().getString(item.category) }
     val count = formatItemCount(item)
     val packedWeight = item.weight?.let {
         item.packedWeight?.let { weight ->
@@ -701,13 +685,13 @@ private fun PackItemRow(
                 }
             }
             PacksOverflowMenu(
-                contentDescription = stringResource(R.string.packs_more_options),
+                contentDescription = appString(Res.string.packs_more_options),
                 modifier = Modifier.testTag("item_menu"),
                 actions = listOf(
-                    PacksMenuAction(stringResource(R.string.add), onAddAmount),
-                    PacksMenuAction(stringResource(R.string.subtract), onSubtractAmount),
-                    PacksMenuAction(stringResource(R.string.edit), onEditItem),
-                    PacksMenuAction(stringResource(R.string.delete), onDeleteItem)
+                    PacksMenuAction(appString(Res.string.add), onAddAmount),
+                    PacksMenuAction(appString(Res.string.subtract), onSubtractAmount),
+                    PacksMenuAction(appString(Res.string.edit), onEditItem),
+                    PacksMenuAction(appString(Res.string.delete), onDeleteItem)
                 )
             )
         }
@@ -740,7 +724,7 @@ private fun PackItemRow(
             if (item.isOptional) {
                 Text("·", style = supporting, color = supportingColor)
                 Text(
-                    text = stringResource(R.string.packing_list_optional),
+                    text = appString(Res.string.packing_list_optional),
                     modifier = Modifier.testTag("item_optional"),
                     style = supporting,
                     color = supportingColor,

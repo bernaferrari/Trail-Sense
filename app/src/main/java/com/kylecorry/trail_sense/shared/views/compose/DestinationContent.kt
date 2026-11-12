@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
+import com.kylecorry.trail_sense.tools.packs.ui.commands.rememberPackingListFiles
 import com.kylecorry.trail_sense.tools.astronomy.quickactions.bindAstronomyQuickActions
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.share.rememberBeaconShare
 import androidx.compose.runtime.Composable
@@ -249,8 +250,8 @@ fun DestinationContent(
             Route.TideList -> TideListToolScreen()
             is Route.CreateTide -> CreateTideToolScreen(route)
             Route.Climate -> ClimateToolScreen()
-            Route.PackList -> PackListToolScreen()
-            is Route.PackItemList -> PackItemListToolScreen(route)
+            Route.PackList -> PackListToolScreen(rememberPackingListFiles())
+            is Route.PackItemList -> PackItemListToolScreen(route, rememberPackingListFiles())
             is Route.CreatePackItem -> CreateItemToolScreen(route)
             Route.FieldGuide -> FieldGuideToolScreen()
             is Route.FieldGuidePage -> FieldGuidePageToolScreen(route)

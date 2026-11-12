@@ -4,6 +4,16 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.appPluralString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.views.PackEmptyIllustration
@@ -15,7 +25,6 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
@@ -46,22 +55,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.trail_sense.tools.packs.infrastructure.IPackRepo
-import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
@@ -75,24 +79,16 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
-import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
-import com.kylecorry.trail_sense.tools.packs.ui.commands.ExportPackingListCommand
-import com.kylecorry.trail_sense.tools.packs.ui.commands.ImportPackingListCommand
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.dialogs.text
 
 @Composable
-fun PackListToolScreen() {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
+fun PackListToolScreen(files: PackingListFiles) {
+    val host = AppHost.current()
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
-    // The activity is the app's IntentResultRetriever, which the CSV file picker needs.
-    val resultRetriever = LocalActivity.current as IntentResultRetriever
-    val viewModel = viewModel { PackListViewModel(PackRepo.getInstance(appContext)) }
+    val viewModel = viewModel { PackListViewModel(getAppService<IPackRepo>()) }
     val dispatcher = rememberSystemBack()
 
     LifecycleResumeEffect(viewModel) {
@@ -111,47 +107,43 @@ fun PackListToolScreen() {
         loaded = viewModel.loaded,
         summaries = viewModel.summaries,
         onImportPack = {
-            ImportPackingListCommand(context, resultRetriever, scope, effects, navigator).execute()
+            files.import()
         },
         onCreatePack = {
-            Pickers.text(
-                context,
-                context.getString(R.string.new_packing_list),
+            Pickers.text(host,
+                getAppService<AppStrings>().get(Res.string.new_packing_list),
                 null,
                 null,
-                hint = context.getString(R.string.name)
+                hint = getAppService<AppStrings>().get(Res.string.name)
             ) {
                 if (it != null) viewModel.createPack(it)
             }
         },
         onOpenPack = { tryOrNothing { navigator.navigate(Route.PackItemList(it.id)) } },
         onRenamePack = { pack ->
-            Pickers.text(
-                context,
-                context.getString(R.string.rename),
+            Pickers.text(host,
+                getAppService<AppStrings>().get(Res.string.rename),
                 null,
                 pack.name,
-                hint = context.getString(R.string.name)
+                hint = getAppService<AppStrings>().get(Res.string.name)
             ) {
                 if (it != null) viewModel.renamePack(pack, it)
             }
         },
         onCopyPack = { pack ->
-            Pickers.text(
-                context,
-                context.getString(R.string.new_packing_list),
+            Pickers.text(host,
+                getAppService<AppStrings>().get(Res.string.new_packing_list),
                 null,
                 null,
-                hint = context.getString(R.string.name)
+                hint = getAppService<AppStrings>().get(Res.string.name)
             ) {
                 if (it != null) viewModel.copyPack(pack, it)
             }
         },
-        onExportPack = { ExportPackingListCommand(context, resultRetriever, scope, effects).execute(it) },
+        onExportPack = files::export,
         onDeletePack = { pack ->
-            Alerts.dialog(
-                context,
-                context.getString(R.string.delete_pack),
+            Alerts.dialog(host,
+                getAppService<AppStrings>().get(Res.string.delete_pack),
                 pack.name
             ) { cancelled ->
                 if (!cancelled) viewModel.deletePack(pack)
@@ -262,9 +254,9 @@ private fun PackListScreen(
     var isCreateMenuOpen by remember { mutableStateOf(false) }
 
     TrailSensePage(
-        title = stringResource(R.string.packing_lists),
+        title = appString(Res.string.packing_lists),
         onBack = onBack,
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier.testTag("pack_list_title"),
         contentPadding = PaddingValues(
             start = TrailSenseSpacing.lg,
@@ -284,14 +276,14 @@ private fun PackListScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
-                    text = { Text(stringResource(R.string.add)) }
+                    text = { Text(appString(Res.string.add)) }
                 )
                 DropdownMenu(
                     expanded = isCreateMenuOpen,
                     onDismissRequest = { isCreateMenuOpen = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.new_packing_list)) },
+                        text = { Text(appString(Res.string.new_packing_list)) },
                         leadingIcon = { Icon(TrailIcons.Add, contentDescription = null) },
                         onClick = {
                             isCreateMenuOpen = false
@@ -299,7 +291,7 @@ private fun PackListScreen(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.import_packing_list)) },
+                        text = { Text(appString(Res.string.import_packing_list)) },
                         leadingIcon = { Icon(TrailIcons.ImportExport, contentDescription = null) },
                         onClick = {
                             isCreateMenuOpen = false
@@ -319,16 +311,16 @@ private fun PackListScreen(
                 TrailSenseEmptyState(
                     icon = TrailIcons.ToolPack,
                     illustration = { PackEmptyIllustration() },
-                    title = stringResource(R.string.no_packing_lists),
-                    description = stringResource(R.string.packs_empty_description),
+                    title = appString(Res.string.no_packing_lists),
+                    description = appString(Res.string.packs_empty_description),
                     modifier = Modifier
                         .fillParentMaxHeight(0.9f)
                         .testTag("empty_text"),
-                    actionLabel = stringResource(R.string.new_packing_list),
+                    actionLabel = appString(Res.string.new_packing_list),
                     actionIcon = Icons.Rounded.Add,
                     onAction = onCreatePack,
                     actionModifier = Modifier.testTag("add_btn"),
-                    secondaryActionLabel = stringResource(R.string.import_packing_list),
+                    secondaryActionLabel = appString(Res.string.import_packing_list),
                     onSecondaryAction = onImportPack
                 )
             }
@@ -391,7 +383,7 @@ private fun PackListItem(
             if (summary != null && summary.itemCount > 0) {
                 Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
                     Text(
-                        stringResource(R.string.places_percent, percent.roundToInt()),
+                        appString(Res.string.places_percent, percent.roundToInt()),
                         style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                         fontWeight = FontWeight.SemiBold,
                         color = if (done) status.good else scheme.onSurface
@@ -403,13 +395,13 @@ private fun PackListItem(
                 }
             }
             PacksOverflowMenu(
-                contentDescription = stringResource(R.string.packs_more_options),
+                contentDescription = appString(Res.string.packs_more_options),
                 modifier = Modifier.testTag("pack_list_item_menu"),
                 actions = listOf(
-                    PacksMenuAction(stringResource(R.string.rename)) { onRenamePack(pack) },
-                    PacksMenuAction(stringResource(android.R.string.copy)) { onCopyPack(pack) },
-                    PacksMenuAction(stringResource(R.string.export)) { onExportPack(pack) },
-                    PacksMenuAction(stringResource(R.string.delete)) { onDeletePack(pack) }
+                    PacksMenuAction(appString(Res.string.rename)) { onRenamePack(pack) },
+                    PacksMenuAction(systemString(SystemString.Copy)) { onCopyPack(pack) },
+                    PacksMenuAction(appString(Res.string.export)) { onExportPack(pack) },
+                    PacksMenuAction(appString(Res.string.delete)) { onDeletePack(pack) }
                 )
             )
         }
@@ -426,7 +418,7 @@ private fun PackListItem(
         )
         if (summary != null) {
             Text(
-                text = pluralStringResource(R.plurals.places_packs_items, summary.itemCount, summary.itemCount),
+                text = appPluralString(Res.plurals.places_packs_items, summary.itemCount, summary.itemCount),
                 style = MaterialTheme.typography.bodyMedium,
                 color = scheme.onSurfaceVariant
             )
