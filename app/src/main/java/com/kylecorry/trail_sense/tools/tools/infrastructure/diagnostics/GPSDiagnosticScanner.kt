@@ -1,9 +1,5 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
-import com.kylecorry.trail_sense.shared.sensors.flow
-
-import com.kylecorry.trail_sense.shared.navigation.Route
-
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
@@ -12,9 +8,12 @@ import com.kylecorry.andromeda.sense.location.GPS
 import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.sensors.CustomGPS
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.flow
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -23,7 +22,7 @@ class GPSDiagnosticScanner(private val gps: GpsSensor? = null) : ToolDiagnosticS
     override fun quickScan(context: Context): List<ToolDiagnosticResult> {
         val issues = mutableListOf<ToolDiagnosticResult>()
         val prefs = UserPreferences(context)
-        val sensorService = SensorService(context)
+        val sensorService = getAppService<SensorService>()
 
         // Permissions
         if (!sensorService.hasLocationPermission()) {
@@ -100,7 +99,7 @@ class GPSDiagnosticScanner(private val gps: GpsSensor? = null) : ToolDiagnosticS
     }
 
     override fun fullScan(context: Context): Flow<List<ToolDiagnosticResult>> {
-        val gps = this.gps ?: SensorService(context).getGPS(tag = "GPSDiagnosticScanner")
+        val gps = this.gps ?: getAppService<SensorService>().getGPS(tag = "GPSDiagnosticScanner")
         return gps.flow.map {
             val issues = mutableListOf<ToolDiagnosticResult>()
 

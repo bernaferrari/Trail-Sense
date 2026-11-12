@@ -49,7 +49,7 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: AndroidD
                 ) { elevation, cancelled ->
                     if (!cancelled && elevation != null) {
                         host.lifecycleOwner.lifecycleScope.launch {
-                            val sensorService = SensorService(host.context)
+                            val sensorService = getAppService<SensorService>()
                             if (mode == UserPreferences.AltimeterMode.Barometer) {
                                 val barometer = sensorService.getBarometer()
                                 barometer.read()
@@ -71,7 +71,7 @@ class QuickActionRecalibrateAltimeter(btn: QuickActionButtonView, host: AndroidD
             UserPreferences.AltimeterMode.GPSBarometer,
             UserPreferences.AltimeterMode.DigitalElevationModelBarometer -> {
                 host.lifecycleOwner.lifecycleScope.launch {
-                    val sensorService = SensorService(host.context)
+                    val sensorService = getAppService<SensorService>()
                     val altimeter = sensorService.getAltimeter(tag = "QuickActionRecalibrateAltimeter")
 
                     val job = launch {

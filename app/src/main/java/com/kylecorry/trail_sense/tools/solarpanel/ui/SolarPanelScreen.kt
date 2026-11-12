@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.solarpanel.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 
@@ -130,7 +131,7 @@ fun SolarPanelScreen(
     var sensorsOn by remember { mutableStateOf(false) }
     KeepScreenOn(sensorsOn)
     val solarPanelService = remember { SolarPanelService() }
-    val sensorService = remember { SensorService(context) }
+    val sensorService = remember { getAppService<SensorService>() }
     val gps = remember { sensorService.getGPS() }
     val compass = remember { sensorService.getCompass() }
     val orientation = remember { Level(sensorService.getOrientation()) }

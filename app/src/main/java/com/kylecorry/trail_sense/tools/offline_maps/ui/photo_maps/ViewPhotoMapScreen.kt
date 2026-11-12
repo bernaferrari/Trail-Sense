@@ -280,7 +280,7 @@ private class ViewPhotoMapRenderer(
     private val isBound: Boolean
         get() = photoMapViews != null
 
-    private val sensorService by lazy { SensorService(context) }
+    private val sensorService by lazy { getAppService<SensorService>() }
     private val gps by lazy { sensorService.getGPS() }
     private val altimeter by lazy { sensorService.getAltimeter() }
     private val compass by lazy { sensorService.getCompass() }

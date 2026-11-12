@@ -89,16 +89,19 @@ import kotlin.time.Duration
 // Ex. SensorPurpose.Background, SensorPurpose.Calibration, SensorPurpose.Diagnostics
 // Using those, it can adjust settings to be more appropriate for the use case
 
-class SensorService(ctx: Context) {
+/**
+ * Picks Android sensors, or stand-ins when the device or the user's settings rule one out.
+ */
+class AndroidSensorService(ctx: Context) : SensorService {
 
     private var context = ctx.applicationContext
     private val userPrefs by lazy { UserPreferences(context) }
     private val gpsSourceSelector by lazy { GPSSourceSelector(context) }
 
-    fun getGPS(
-        frequency: Duration = DEFAULT_GPS_FREQUENCY,
-        useCache: Boolean = false,
-        tag: String? = null
+    override fun getGPS(
+        frequency: Duration,
+        useCache: Boolean,
+        tag: String?
     ): ISatelliteGPS {
         return when (gpsSourceSelector.getSource(useCache)) {
             GPSSource.Override -> OverrideGPS(context, frequency.inWholeMilliseconds)
@@ -108,19 +111,8 @@ class SensorService(ctx: Context) {
         }
     }
 
-    fun getGPSFromAltimeter(altimeter: Altimeter): GpsSensor? {
-        return if (altimeter is GpsSensor) {
-            altimeter
-        } else if (altimeter is AltimeterWrapper && altimeter.altimeter is GpsSensor) {
-            altimeter.altimeter as GpsSensor
-        } else if (altimeter is AltimeterWrapper && altimeter.altimeter is AltimeterWrapper) {
-            getGPSFromAltimeter(altimeter.altimeter)
-        } else {
-            null
-        }
-    }
 
-    fun hasLocationPermission(background: Boolean = false): Boolean {
+    override fun hasLocationPermission(background: Boolean): Boolean {
         return if (background) {
             Permissions.isBackgroundLocationEnabled(context)
         } else {
@@ -128,7 +120,7 @@ class SensorService(ctx: Context) {
         }
     }
 
-    fun getPedometer(): Pedometer {
+    override fun getPedometer(): Pedometer {
         return if (Permissions.canRecognizeActivity(context)) {
             AndroidPedometer(context, ENVIRONMENT_SENSOR_DELAY)
         } else {
@@ -136,7 +128,7 @@ class SensorService(ctx: Context) {
         }
     }
 
-    fun getSpeedometer(gps: GpsSensor? = null, tag: String? = null): Speedometer {
+    override fun getSpeedometer(gps: GpsSensor?, tag: String?): Speedometer {
         return when (userPrefs.navigation.speedometerMode) {
             NavigationPreferences.SpeedometerMode.Backtrack -> BacktrackSpeedometer(context)
             NavigationPreferences.SpeedometerMode.GPS -> gps ?: getGPS(tag = tag)
@@ -176,11 +168,11 @@ class SensorService(ctx: Context) {
         )
     }
 
-    fun getAltimeter(
-        preferGPS: Boolean = false,
-        gps: GpsSensor? = null,
-        frequency: Duration = DEFAULT_GPS_FREQUENCY,
-        tag: String? = null
+    override fun getAltimeter(
+        preferGPS: Boolean,
+        gps: GpsSensor?,
+        frequency: Duration,
+        tag: String?
     ): Altimeter {
         if (preferGPS) {
             return CachingAltimeterWrapper(
@@ -247,7 +239,7 @@ class SensorService(ctx: Context) {
         }
     }
 
-    fun hasCompass(): Boolean {
+    override fun hasCompass(): Boolean {
         return !isCompassForcedUnavailable() && Sensors.hasCompass(context)
     }
 
@@ -255,14 +247,14 @@ class SensorService(ctx: Context) {
         return userPrefs.debug.compassUnavailable
     }
 
-    fun hasGyroscope(): Boolean {
+    override fun hasGyroscope(): Boolean {
         return Sensors.hasGyroscope(context)
     }
 
     // TODO: Expose a way to see that a disturbance is present
-    fun getCompass(
-        orientationSensor: OrientationSensor? = null,
-        delay: Int = MOTION_SENSOR_DELAY
+    override fun getCompass(
+        orientationSensor: OrientationSensor?,
+        delay: Int
     ): CompassSensor {
         if (isCompassForcedUnavailable()) {
             return MockCompass()
@@ -273,16 +265,16 @@ class SensorService(ctx: Context) {
         )
     }
 
-    fun getOrientation(delay: Int = MOTION_SENSOR_DELAY): OrientationSensor {
+    override fun getOrientation(delay: Int): OrientationSensor {
         return CompassProvider(context, userPrefs.compass).getOrientationSensor(delay)
     }
 
-    fun getDeviceOrientationSensor(): DeviceOrientation {
+    override fun getDeviceOrientationSensor(): DeviceOrientation {
         // While not technically an environment sensor, it doesn't need to update often - and can match their rate
         return DeviceOrientation(getGravity(ENVIRONMENT_SENSOR_DELAY))
     }
 
-    fun getBarometer(calibrated: Boolean = true): Barometer {
+    override fun getBarometer(calibrated: Boolean): Barometer {
         if (!userPrefs.weather.hasBarometer) {
             return MockBarometer()
         }
@@ -299,7 +291,7 @@ class SensorService(ctx: Context) {
         }
     }
 
-    fun getThermometer(calibrated: Boolean = true): Thermometer {
+    override fun getThermometer(calibrated: Boolean): Thermometer {
         val thermometer = when (userPrefs.thermometer.source) {
             ThermometerSource.Historic -> HistoricThermometer(context)
             ThermometerSource.Sensor -> getThermometerSensor()
@@ -326,7 +318,7 @@ class SensorService(ctx: Context) {
         return AndroidBattery(context)
     }
 
-    fun getHygrometer(): Hygrometer {
+    override fun getHygrometer(): Hygrometer {
         if (Sensors.hasHygrometer(context)) {
             return AndroidHygrometer(context, ENVIRONMENT_SENSOR_DELAY)
         }
@@ -334,7 +326,7 @@ class SensorService(ctx: Context) {
         return MockHygrometer()
     }
 
-    fun getCellSignal(removeUnregisteredSignals: Boolean = true): CellSignalSensor {
+    override fun getCellSignal(removeUnregisteredSignals: Boolean): CellSignalSensor {
         if (!hasLocationPermission()) {
             return MockCellSignalSensor()
         }
@@ -347,7 +339,7 @@ class SensorService(ctx: Context) {
         )
     }
 
-    fun getGravity(delay: Int = MOTION_SENSOR_DELAY): Accelerometer {
+    override fun getGravity(delay: Int): Accelerometer {
         return if (Sensors.hasSensor(context, Sensor.TYPE_GRAVITY)) {
             GravitySensor(context, delay)
         } else {
@@ -355,9 +347,9 @@ class SensorService(ctx: Context) {
         }
     }
 
-    fun getMagnetometer(
-        filtered: Boolean = false,
-        delay: Int = MOTION_SENSOR_DELAY
+    override fun getMagnetometer(
+        filtered: Boolean,
+        delay: Int
     ): Magnetometer {
         return if (filtered) {
             LowPassMagnetometer(AndroidMagnetometer(context, delay))
@@ -366,7 +358,7 @@ class SensorService(ctx: Context) {
         }
     }
 
-    fun getGyroscope(delay: Int = MOTION_SENSOR_DELAY): OrientationSensor {
+    override fun getGyroscope(delay: Int): OrientationSensor {
         if (!Sensors.hasGyroscope(context)) {
             return MockGyroscope()
         }
@@ -376,24 +368,16 @@ class SensorService(ctx: Context) {
         return AndroidGyroscope(context, delay)
     }
 
-    fun getAccelerometer(delay: Int = MOTION_SENSOR_DELAY): Accelerometer {
+    override fun getAccelerometer(delay: Int): Accelerometer {
         return AndroidAccelerometer(context, delay)
     }
 
-    fun getLightSensor(): LightSensor {
+    override fun getLightSensor(): LightSensor {
         return AndroidLightSensor(context, ENVIRONMENT_SENSOR_DELAY)
     }
 
-    companion object {
-        const val MOTION_SENSOR_DELAY = SensorManager.SENSOR_DELAY_UI
-        private const val ENVIRONMENT_SENSOR_DELAY = SensorManager.SENSOR_DELAY_NORMAL
-        val DEFAULT_GPS_FREQUENCY: Duration = 1.seconds
-        val NAVIGATION_GPS_FREQUENCY: Duration = 200.milliseconds
-        val SINGLE_FIX_GPS_FREQUENCY: Duration = 20.milliseconds
-        // Long enough for the GPS to get a fix which satisfies the user's accuracy filter
-        val GPS_READ_TIMEOUT: kotlin.time.Duration = 30.seconds
-        // Used where the user is waiting on a reading they can cancel
-        val EXTENDED_GPS_READ_TIMEOUT: kotlin.time.Duration = 1.minutes
+    private companion object {
+        const val ENVIRONMENT_SENSOR_DELAY = SensorManager.SENSOR_DELAY_NORMAL
     }
 
 }

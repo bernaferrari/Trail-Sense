@@ -114,7 +114,7 @@ fun SensorDetailsToolScreen() {
     val appContext = context.applicationContext
     // The sensors run in the ViewModel while the page is resumed; their rows are formatted here, in the
     // composition, every time a reading changes (or every half second).
-    val viewModel = viewModel { SensorDetailsViewModel(SensorService(appContext), appContext) }
+    val viewModel = viewModel { SensorDetailsViewModel(getAppService<SensorService>(), appContext) }
     val formatter = remember(context, viewModel) { SensorDetailsFormatter(context, viewModel) }
 
     LifecycleResumeEffect(viewModel) {

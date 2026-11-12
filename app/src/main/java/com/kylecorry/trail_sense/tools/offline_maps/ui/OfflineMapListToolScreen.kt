@@ -151,10 +151,10 @@ fun OfflineMapListToolScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     val prefs = remember { UserPreferences(context) }
-    val gps = remember { SensorService(context).getGPS() }
+    val gps = remember { getAppService<SensorService>().getGPS() }
     val viewModel = viewModel {
         val appContext = context.applicationContext
-        val appGps = SensorService(appContext).getGPS()
+        val appGps = getAppService<SensorService>().getGPS()
         OfflineMapListViewModel(
             MapService.getInstance(appContext),
             UserPreferences(appContext).photoMaps,

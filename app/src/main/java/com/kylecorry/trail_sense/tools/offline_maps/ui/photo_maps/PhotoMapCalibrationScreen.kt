@@ -193,7 +193,7 @@ internal fun PhotoMapCalibrationToolScreen(
 
     // Sensors: the user's location and heading on the map
     DisposableEffect(lifecycleOwner, calibrationMap) {
-        val sensorService = SensorService(context)
+        val sensorService = getAppService<SensorService>()
         val gps = sensorService.getGPS()
         val compass = sensorService.getCompass()
         val declinationStrategy = GPSDeclinationStrategy(gps)
@@ -217,7 +217,7 @@ internal fun PhotoMapCalibrationToolScreen(
 
     LifecycleResumeEffect(calibrationMap) {
         // Populate the last known location
-        val gps = SensorService(context).getGPS()
+        val gps = getAppService<SensorService>().getGPS()
         calibrationMap.useDensityPixelsForZoom = !prefs.photoMaps.highDetailMode
         calibrationMap.userLocation = gps.location
         calibrationMap.userLocationAccuracy = gps.horizontalAccuracy?.let { Distance.meters(it) }
@@ -594,7 +594,7 @@ private class PhotoMapCalibrationPanelState(
 ) {
 
     private val formatService by lazy { FormatService.getInstance(context) }
-    private val sensorService by lazy { SensorService(context) }
+    private val sensorService by lazy { getAppService<SensorService>() }
     private val gps by lazy { sensorService.getGPS() }
 
     private var coordinateText by mutableStateOf("")

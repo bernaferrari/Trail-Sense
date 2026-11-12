@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import kotlin.time.Duration.Companion.minutes
 
 import kotlin.time.Duration.Companion.hours
@@ -662,7 +663,7 @@ private fun TideLocationInput(
     val context = LocalContext.current
     val formatter = remember { FormatService.getInstance(context) }
     val sensors = remember { SensorSubsystem.getInstance(context) }
-    val gps = remember { SensorService(context).getGPS() }
+    val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     var locationText by remember(location, formatter) {
         mutableStateOf(location?.let { formatter.formatLocation(it) }.orEmpty())

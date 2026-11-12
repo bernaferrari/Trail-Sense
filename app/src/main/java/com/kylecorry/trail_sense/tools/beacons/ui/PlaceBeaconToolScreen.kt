@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.lifecycleScope
@@ -148,7 +149,7 @@ fun PlaceBeaconToolScreen(
         )
     }
     val formatter = remember(appContext) { FormatService.getInstance(appContext) }
-    val sensors = remember(appContext) { SensorService(appContext) }
+    val sensors = remember(appContext) { getAppService<SensorService>() }
     val compass = remember(sensors) { sensors.getCompass() }
     val hasCompass = remember(sensors) { sensors.hasCompass() }
     var compassBearingText by remember { mutableStateOf("") }
@@ -688,7 +689,7 @@ private fun CoordinateInput(
     val context = LocalContext.current
     val formatter = remember { FormatService.getInstance(context) }
     val sensors = remember { SensorSubsystem.getInstance(context) }
-    val gps = remember { SensorService(context).getGPS() }
+    val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     // The text is the user's: it starts from the coordinate and is replaced only when the coordinate changes from
     // outside (GPS, a picked beacon), never in response to their own typing.
@@ -819,7 +820,7 @@ private fun ElevationInput(
     val context = LocalContext.current
     val formatter = remember { FormatService.getInstance(context) }
     val sensors = remember { SensorSubsystem.getInstance(context) }
-    val gps = remember { SensorService(context).getGPS() }
+    val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     val units = remember {
         formatter.sortDistanceUnits(DistanceUtils.elevationDistanceUnits)

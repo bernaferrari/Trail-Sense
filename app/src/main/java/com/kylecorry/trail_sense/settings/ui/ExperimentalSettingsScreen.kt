@@ -1,23 +1,20 @@
 package com.kylecorry.trail_sense.settings.ui
 
-import com.kylecorry.trail_sense.main.MainActivity
-
 import android.content.Context
-
-import androidx.activity.compose.LocalActivity
-
-import androidx.compose.ui.platform.LocalContext
-
 import android.os.Build
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.NotificationGroupBehavior
@@ -25,8 +22,8 @@ import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 @Composable
 fun ExperimentalSettingsToolScreen() {
@@ -36,7 +33,7 @@ fun ExperimentalSettingsToolScreen() {
     val cache = remember { PreferencesSubsystem.getInstance(context).preferences }
     val userPrefs = remember { UserPreferences(context) }
     val hasMetalDirectionSupport = remember {
-        Sensors.hasGyroscope(context) && SensorService(context).hasCompass()
+        Sensors.hasGyroscope(context) && getAppService<SensorService>().hasCompass()
     }
     val showForecastSource = remember {
         Tools.isToolAvailable(context, ToolIds.WEATHER) && isDebug()

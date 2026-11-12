@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.time.toLocalDateTime
 
 import com.kylecorry.trail_sense.shared.time.nowLocal
@@ -488,7 +489,7 @@ private fun CoordinateInput(
     val context = LocalContext.current
     val formatter = remember { FormatService.getInstance(context) }
     val sensors = remember { SensorSubsystem.getInstance(context) }
-    val gps = remember { SensorService(context).getGPS() }
+    val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     var locationText by remember(location, formatter) {
         mutableStateOf(location?.let { formatter.formatLocation(it) }.orEmpty())
@@ -611,7 +612,7 @@ private fun ElevationInput(
     val context = LocalContext.current
     val formatter = remember { FormatService.getInstance(context) }
     val sensors = remember { SensorSubsystem.getInstance(context) }
-    val gps = remember { SensorService(context).getGPS() }
+    val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     val units = remember {
         formatter.sortDistanceUnits(DistanceUtils.elevationDistanceUnits)

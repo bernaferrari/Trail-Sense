@@ -23,37 +23,38 @@ import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.canvas.TextAlign
 import com.kylecorry.andromeda.canvas.TextMode
-import com.kylecorry.luna.signals.SchmittTrigger
-import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.sense.orientation.OrientationSensor
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.hooks.Hooks
+import com.kylecorry.luna.signals.SchmittTrigger
+import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.sol.math.Euler
-import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.Quaternion
 import com.kylecorry.sol.math.Vector3
 import com.kylecorry.sol.math.geometry.Rectangle
 import com.kylecorry.sol.math.geometry.Size
+import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.camera.AugmentedRealityUtils
 import com.kylecorry.trail_sense.shared.canvas.InteractionUtils
 import com.kylecorry.trail_sense.shared.canvas.PixelCircle
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.safeRoundPlaces
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.text
 import com.kylecorry.trail_sense.shared.textDimensions
 import com.kylecorry.trail_sense.shared.views.CameraState
-import com.kylecorry.trail_sense.shared.views.cameraGestures
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.cameraGestures
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.calibration.IARCalibrator
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.mapper.CameraAnglePixelMapper
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.mapper.CameraAnglePixelMapperFactory
@@ -61,10 +62,10 @@ import com.kylecorry.trail_sense.tools.augmented_reality.domain.mapper.SimplePer
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.ARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.AugmentedRealityCoordinate
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARLayer
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 // TODO: Notify location change
 // TODO: This needs a parent view that has the camera, this, and any buttons (like the freeform button)
@@ -114,7 +115,7 @@ class AugmentedRealityView(val context: Context) {
 
     // Sensors / preferences
     private val userPrefs = UserPreferences(context)
-    private val sensors = SensorService(context)
+    private val sensors = getAppService<SensorService>()
     private var calibrationBearingOffset: Float = 0f
     private var compassSensorDelay = SensorService.MOTION_SENSOR_DELAY
     var geomagneticOrientationSensor =

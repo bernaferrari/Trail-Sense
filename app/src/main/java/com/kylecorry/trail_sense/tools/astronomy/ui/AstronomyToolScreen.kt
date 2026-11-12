@@ -1,6 +1,7 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 
 
@@ -155,7 +156,7 @@ fun AstronomyToolScreen(
     val errorBanner = (LocalActivity.current as? MainActivity)?.errorBanner
     val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel = viewModel {
-        AstronomyViewModel(SensorService(appContext), UserPreferences(appContext))
+        AstronomyViewModel(getAppService<SensorService>(), UserPreferences(appContext))
     }
     val prefs = remember(appContext) { UserPreferences(appContext) }
     val formatService = remember(appContext) { FormatService.getInstance(appContext) }

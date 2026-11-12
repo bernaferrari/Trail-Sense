@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -69,7 +70,7 @@ fun NavigationSettingsToolScreen() {
             prefs = userPrefs.navigation,
             cache = PreferencesSubsystem.getInstance(appContext).preferences,
             keys = NavigationSettingsKeys.from(appContext),
-            hasCompass = SensorService(appContext).hasCompass(),
+            hasCompass = getAppService<SensorService>().hasCompass(),
             baseDistanceUnits = userPrefs.baseDistanceUnits
         )
     }

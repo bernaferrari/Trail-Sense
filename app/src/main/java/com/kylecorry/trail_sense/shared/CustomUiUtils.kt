@@ -1,19 +1,5 @@
 package com.kylecorry.trail_sense.shared
 
-import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
-import androidx.compose.ui.semantics.testTagsAsResourceId
-import androidx.compose.ui.semantics.semantics
-import com.kylecorry.trail_sense.shared.time.nowLocal
-
-import com.kylecorry.trail_sense.shared.time.today
-
-import com.kylecorry.trail_sense.shared.views.compose.AppPermission
-
-import androidx.lifecycle.lifecycleScope
-
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
@@ -27,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,17 +30,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.luna.text.toFloatCompat
 import com.kylecorry.sol.math.MathExtensions.roundPlaces
 import com.kylecorry.sol.units.Distance
@@ -62,31 +49,40 @@ import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.tools.qr.ui.QR_SHARE_MAX_LENGTH
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
-import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
-import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
-import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
-import kotlin.math.floor
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
-import androidx.compose.ui.graphics.toArgb
-import com.kylecorry.trail_sense.shared.views.TrailSenseColors
-import com.kylecorry.trail_sense.shared.views.useDynamicColors
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.dialogs.date
 import com.kylecorry.trail_sense.shared.dialogs.dialog
 import com.kylecorry.trail_sense.shared.dialogs.item
 import com.kylecorry.trail_sense.shared.dialogs.snackbar
 import com.kylecorry.trail_sense.shared.dialogs.time
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.time.nowLocal
+import com.kylecorry.trail_sense.shared.time.today
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
+import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.useDynamicColors
+import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
+import com.kylecorry.trail_sense.tools.qr.ui.QR_SHARE_MAX_LENGTH
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
+import kotlin.math.floor
+import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 
 object CustomUiUtils {
     /** Snackbar lengths for [snackbar], the same values as Material's Snackbar.LENGTH_SHORT and LENGTH_LONG. */
@@ -271,7 +267,7 @@ object CustomUiUtils {
     ) {
         val context = LocalContext.current
         val formatter = remember(context) { FormatService.getInstance(context) }
-        val sensorService = remember(context) { SensorService(context) }
+        val sensorService = remember(context) { getAppService<SensorService>() }
         val altimeter = remember(sensorService) { sensorService.getAltimeter() }
         val location = remember(context) { LocationSubsystem.getInstance(context) }
         val scope = rememberCoroutineScope()

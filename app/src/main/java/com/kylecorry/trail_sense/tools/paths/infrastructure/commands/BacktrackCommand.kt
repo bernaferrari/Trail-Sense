@@ -26,7 +26,7 @@ class BacktrackCommand(private val context: Context) : CoroutineCommand {
 
     private val prefs = UserPreferences(context)
 
-    private val sensorService = SensorService(context)
+    private val sensorService = getAppService<SensorService>()
     private val gps = sensorService.getGPS(SensorService.SINGLE_FIX_GPS_FREQUENCY, tag = TAG)
     private val altimeter = sensorService.getAltimeter(gps = gps)
     private val cellSignalSensor =

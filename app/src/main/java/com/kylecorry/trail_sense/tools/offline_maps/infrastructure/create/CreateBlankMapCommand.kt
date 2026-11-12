@@ -295,7 +295,7 @@ private fun BlankMapCoordinateInput(
     val context = LocalContext.current
     val formatter = remember { FormatService.getInstance(context) }
     val sensors = remember { SensorSubsystem.getInstance(context) }
-    val gps = remember { SensorService(context).getGPS() }
+    val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     var coordinateText by remember(coordinate, formatter) {
         mutableStateOf(coordinate?.let { formatter.formatLocation(it) }.orEmpty())

@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import kotlin.time.Duration.Companion.minutes
 
 import android.content.Context
@@ -155,7 +156,7 @@ fun PathsToolScreen(
             pathService = PathService.getInstance(appContext),
             preferences = UserPreferences(appContext).paths,
             backtrack = Tools.getService(appContext, PathsToolRegistration.SERVICE_BACKTRACK),
-            gps = SensorService(appContext).getGPS()
+            gps = getAppService<SensorService>().getGPS()
         )
     }
     val prefs = remember(appContext) { UserPreferences(appContext) }

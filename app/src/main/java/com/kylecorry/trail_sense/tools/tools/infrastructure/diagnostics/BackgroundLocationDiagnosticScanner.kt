@@ -2,13 +2,14 @@ package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 class BackgroundLocationDiagnosticScanner : ToolDiagnosticScanner {
     override fun quickScan(context: Context): List<ToolDiagnosticResult> {
-        val sensorService = SensorService(context)
+        val sensorService = getAppService<SensorService>()
 
         if (!sensorService.hasLocationPermission(true)) {
             return listOf(

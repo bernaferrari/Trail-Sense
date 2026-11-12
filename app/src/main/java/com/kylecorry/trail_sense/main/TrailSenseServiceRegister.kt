@@ -28,6 +28,7 @@ import com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persista
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.preferences.SessionStateSubsystem
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.AndroidSensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.text.AndroidAppStrings
@@ -64,7 +65,7 @@ object TrailSenseServiceRegister {
                 )
             )
         )
-        DependencyRegistry.addSingleton(SensorService(appContext))
+        DependencyRegistry.addSingleton<SensorService>(AndroidSensorService(appContext))
         DependencyRegistry.addSingleton(FileSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton(AppDatabase.getInstance(appContext))
         DependencyRegistry.addSingleton(SensorSubsystem.getInstance(appContext))

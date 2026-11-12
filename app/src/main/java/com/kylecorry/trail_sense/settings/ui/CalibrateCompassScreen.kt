@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.preferences.onChange
 
@@ -75,7 +76,7 @@ fun CalibrateCompassToolScreen() {
         CalibrateCompassViewModel(
             prefs = UserPreferences(context),
             formatService = FormatService.getInstance(context),
-            sensorService = SensorService(context)
+            sensorService = getAppService<SensorService>()
         )
     }
     val lifecycleOwner = LocalLifecycleOwner.current

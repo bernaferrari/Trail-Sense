@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Duration.Companion.seconds
 
@@ -107,7 +108,7 @@ fun CalibrateGPSToolScreen() {
     val viewModel = viewModel {
         CalibrateGPSViewModel(
             prefs = UserPreferences(context),
-            sensorService = SensorService(context),
+            sensorService = getAppService<SensorService>(),
             formatService = FormatService.getInstance(context),
             isGpsAvailable = { GPS.isAvailable(context) },
             createRealGps = { source ->

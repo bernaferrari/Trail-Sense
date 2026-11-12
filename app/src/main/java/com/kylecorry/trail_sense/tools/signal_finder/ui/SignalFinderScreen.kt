@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.signal_finder.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -147,7 +148,7 @@ fun SignalFinderToolScreen() {
     val appNavigator = LocalNavigator.current
     // The location permission banner belongs to the activity.
     val errorBanner = context.findMainActivity()?.errorBanner
-    val viewModel = viewModel { SignalFinderViewModel(SensorService(appContext)) }
+    val viewModel = viewModel { SignalFinderViewModel(getAppService<SensorService>()) }
     val formatter = remember(appContext) { FormatService.getInstance(appContext) }
     val prefs = remember(appContext) { UserPreferences(appContext) }
     val disclaimer = remember(context) {

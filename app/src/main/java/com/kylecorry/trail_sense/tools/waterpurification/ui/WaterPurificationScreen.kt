@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.waterpurification.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -480,7 +481,7 @@ internal enum class TimeSelection {
 @Composable
 fun WaterPurificationToolScreen() {
     val context = LocalContext.current.applicationContext
-    val altimeter = remember(context) { SensorService(context).getAltimeter() }
+    val altimeter = remember(context) { getAppService<SensorService>().getAltimeter() }
     val formatService = remember(context) { FormatService.getInstance(context) }
     val cache = remember(context) { PreferencesSubsystem.getInstance(context).preferences }
     val boilTime = remember(altimeter) { BoilTime(altimeter) }

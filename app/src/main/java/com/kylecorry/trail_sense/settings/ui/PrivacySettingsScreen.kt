@@ -1,26 +1,23 @@
 package com.kylecorry.trail_sense.settings.ui
 
 import android.content.Context
-
 import androidx.activity.compose.LocalActivity
-
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-
-import androidx.compose.ui.platform.LocalContext
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
@@ -87,5 +84,5 @@ fun PrivacySettingsToolScreen() {
 
 private fun Context.isLocationMocked(prefs: UserPreferences): Boolean {
     return prefs.gps.locationSource == GPSLocationSource.Manual ||
-        !SensorService(this).hasLocationPermission()
+        !getAppService<SensorService>().hasLocationPermission()
 }

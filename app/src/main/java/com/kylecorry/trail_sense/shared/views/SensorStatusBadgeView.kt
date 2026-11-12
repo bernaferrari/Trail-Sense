@@ -1,16 +1,18 @@
 package com.kylecorry.trail_sense.shared.views
 
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
-import androidx.compose.foundation.shape.CircleShape
-import com.kylecorry.trail_sense.shared.colors.AppColor
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,34 +21,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.core.sensors.Sensor
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import com.kylecorry.trail_sense.tools.diagnostics.status.GpsStatusBadgeProvider
-import com.kylecorry.trail_sense.tools.diagnostics.status.StatusBadge
 import com.kylecorry.trail_sense.tools.diagnostics.status.SensorStatusBadgeProvider
+import com.kylecorry.trail_sense.tools.diagnostics.status.StatusBadge
 
 class SensorStatusBadgeView(
     private val context: Context
@@ -55,7 +56,7 @@ class SensorStatusBadgeView(
     private var gpsBadge by mutableStateOf<StatusBadge?>(null)
     private var compassBadge by mutableStateOf<StatusBadge?>(null)
     private var showGpsBadge by mutableStateOf(false)
-    private var showCompassBadge by mutableStateOf(SensorService(context).hasCompass())
+    private var showCompassBadge by mutableStateOf(getAppService<SensorService>().hasCompass())
 
     private var gpsStatusBadgeProvider: GpsStatusBadgeProvider? = null
     private var compassStatusBadgeProvider: SensorStatusBadgeProvider? = null

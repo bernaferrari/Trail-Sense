@@ -1,28 +1,27 @@
 package com.kylecorry.trail_sense.shared.sensors
 
-import com.kylecorry.trail_sense.settings.PreferenceKeys
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.minutes
-
-
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.shared.preferences.onEachChange
 import com.kylecorry.trail_sense.shared.sensors.altimeter.CachingAltimeterWrapper
-import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
+import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
-import com.kylecorry.trail_sense.shared.preferences.onEachChange
 
 class LocationSubsystem private constructor(private val context: Context) {
 
-    private val sensorService by lazy { SensorService(context) }
+    private val sensorService by lazy { getAppService<SensorService>() }
     private val sensorSubsystem by lazy { SensorSubsystem.getInstance(context) }
 
     private val prefs by lazy { PreferencesSubsystem.getInstance(context).preferences }

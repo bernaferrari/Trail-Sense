@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.triangulate.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.foundation.background
@@ -185,12 +186,12 @@ fun TriangulateToolScreen(
     val viewModel = viewModel {
         TriangulateViewModel(
             preferences = PreferencesSubsystem.getInstance(appContext).preferences,
-            sensorService = SensorService(appContext)
+            sensorService = getAppService<SensorService>()
         )
     }
     val formatService = remember(appContext) { FormatService.getInstance(appContext) }
     val prefs = remember(appContext) { UserPreferences(appContext) }
-    val hasCompass = remember(appContext) { SensorService(appContext).hasCompass() }
+    val hasCompass = remember(appContext) { getAppService<SensorService>().hasCompass() }
 
     LifecycleResumeEffect(viewModel) {
         viewModel.onResume()
@@ -977,7 +978,7 @@ private fun CoordinateInput(
     val context = LocalContext.current
     val formatter = remember { FormatService.getInstance(context) }
     val sensors = remember { SensorSubsystem.getInstance(context) }
-    val gps = remember { SensorService(context).getGPS() }
+    val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     var coordinateText by remember(coordinate, formatter) {
         mutableStateOf(coordinate?.let { formatter.formatLocation(it) }.orEmpty())

@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Clock
 
@@ -81,7 +82,7 @@ fun ThermometerSettingsToolScreen() {
         ThermometerSettingsViewModel(
             prefs = UserPreferences(appContext),
             cache = PreferencesSubsystem.getInstance(appContext).preferences,
-            sensorService = SensorService(appContext),
+            sensorService = getAppService<SensorService>(),
             weather = WeatherSubsystem.getInstance(appContext),
             keys = ThermometerPreferenceKeys(
                 source = PreferenceKeys.thermometerSource,

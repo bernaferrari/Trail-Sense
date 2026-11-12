@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import kotlin.time.Duration.Companion.days
 
@@ -116,7 +117,7 @@ private enum class WindSpeedUnit(val distance: DistanceUnits, val time: TimeUnit
 @Composable
 fun TemperatureEstimationToolScreen() {
     val context = LocalContext.current
-    val sensorService = remember { SensorService(context) }
+    val sensorService = remember { getAppService<SensorService>() }
     val thermometer = remember { sensorService.getThermometer() }
     val prefs = remember { UserPreferences(context) }
     val location = remember { LocationSubsystem.getInstance(context) }

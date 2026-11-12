@@ -1,17 +1,15 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics
 
-import com.kylecorry.trail_sense.shared.sensors.flow
-
-import com.kylecorry.andromeda.sense.magnetometer.AndroidMagnetometer
-
-import com.kylecorry.trail_sense.shared.navigation.Route
-
 import android.content.Context
 import android.hardware.SensorManager
 import com.kylecorry.andromeda.core.sensors.Quality
+import com.kylecorry.andromeda.sense.magnetometer.AndroidMagnetometer
 import com.kylecorry.andromeda.sense.magnetometer.Magnetometer
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.flow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
@@ -20,7 +18,7 @@ import kotlinx.coroutines.flow.onStart
 
 class MagnetometerDiagnosticScanner : ToolDiagnosticScanner {
     override fun quickScan(context: Context): List<ToolDiagnosticResult> {
-        return if (!SensorService(context).hasCompass()) {
+        return if (!getAppService<SensorService>().hasCompass()) {
             listOf(
                 ToolDiagnosticResult(
                     MAGNETOMETER_UNAVAILABLE,

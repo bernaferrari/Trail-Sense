@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import kotlin.time.Duration.Companion.minutes
 
 import android.content.Context
@@ -200,7 +201,7 @@ fun PathOverviewToolScreen(
     val density = LocalDensity.current
     val viewModel = viewModel {
         val userPrefs = UserPreferences(appContext)
-        val sensorService = SensorService(appContext)
+        val sensorService = getAppService<SensorService>()
         val gps = sensorService.getGPS()
         PathOverviewViewModel(
             pathId = route.pathId,

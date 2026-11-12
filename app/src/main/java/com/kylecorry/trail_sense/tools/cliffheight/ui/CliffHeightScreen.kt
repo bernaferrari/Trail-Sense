@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.cliffheight.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import kotlin.time.Duration
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
@@ -96,7 +97,7 @@ internal fun CliffHeightScreen(
     val service = remember { CliffHeightService() }
     val formatter = remember { FormatService.getInstance(context) }
     val prefs = remember { UserPreferences(context) }
-    val gps = remember { SensorService(context).getGPS() }
+    val gps = remember { getAppService<SensorService>().getGPS() }
     val units = remember { prefs.baseDistanceUnits }
     val location = remember { gps.location.takeIf { it != Coordinate.zero } }
     val singlePressDuration = remember { 200.milliseconds }

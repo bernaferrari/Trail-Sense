@@ -53,7 +53,7 @@ import kotlinx.coroutines.flow.onEach
 
 class StepCounterService : AndromedaService() {
 
-    private val pedometer by lazy { SensorService(this).getPedometer() }
+    private val pedometer by lazy { getAppService<SensorService>().getPedometer() }
     private val stepTrackerService = getAppService<StepTrackerService>()
     private val formatService by lazy { FormatService.getInstance(this) }
     private val prefs by lazy { UserPreferences(this) }

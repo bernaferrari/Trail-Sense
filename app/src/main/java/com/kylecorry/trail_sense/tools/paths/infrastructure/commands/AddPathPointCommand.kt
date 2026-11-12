@@ -1,22 +1,22 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.commands
 
-import kotlin.time.Clock
-
 import android.content.Context
 import com.kylecorry.andromeda.sense.readAll
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import kotlin.time.Clock
 
 class AddPathPointCommand(
     context: Context,
     private val pathId: Long
 ) : CoroutineCommand {
 
-    private val sensorService = SensorService(context)
+    private val sensorService = getAppService<SensorService>()
     private val gps = sensorService.getGPS(SensorService.SINGLE_FIX_GPS_FREQUENCY, tag = TAG)
     private val altimeter = sensorService.getAltimeter(gps = gps)
 

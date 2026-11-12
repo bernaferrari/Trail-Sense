@@ -4,6 +4,7 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.time.today
 
 import com.kylecorry.trail_sense.shared.time.toLocalTime
@@ -138,7 +139,7 @@ fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
     }
     val formatService = remember(appContext) { FormatService.getInstance(appContext) }
     val tideFormatter = remember(appContext) { TideFormatter(appContext) }
-    val gps = remember(appContext) { SensorService(appContext).getGPS() }
+    val gps = remember(appContext) { getAppService<SensorService>().getGPS() }
     var location by remember { mutableStateOf(gps.location) }
 
     // Loads each time the page is shown, so an edit made in the editor shows on return.

@@ -1,24 +1,24 @@
 package com.kylecorry.trail_sense.settings
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
 import com.kylecorry.trail_sense.settings.backup.AutomaticBackupDiagnosticScanner
 import com.kylecorry.trail_sense.settings.backup.BackupFailedAlerter
 import com.kylecorry.trail_sense.settings.backup.BackupToolService
 import com.kylecorry.trail_sense.settings.quickactions.QuickActionSettings
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnostic
 import com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionToolWidgets
 import com.kylecorry.trail_sense.tools.tools.services.WidgetUpdateToolService
@@ -96,7 +96,7 @@ object SettingsToolRegistration : ToolRegistration {
                 )
             ),
             singletons = listOf(
-                { SensorService(it) }
+                { getAppService<SensorService>() }
             )
         )
     }

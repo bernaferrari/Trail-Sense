@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.light.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import android.graphics.Paint
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
@@ -121,7 +122,7 @@ fun LightMeterScreen(
 ) {
     val context = LocalContext.current
     val formatter = remember { FormatService.getInstance(context) }
-    val lightSensor = remember { SensorService(context).getLightSensor() }
+    val lightSensor = remember { getAppService<SensorService>().getLightSensor() }
     val distanceUnits = remember {
         formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
     }

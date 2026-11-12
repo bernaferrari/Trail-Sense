@@ -1,15 +1,15 @@
 package com.kylecorry.trail_sense.tools.solarpanel
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object SolarPanelAlignerToolRegistration : ToolRegistration {
@@ -22,7 +22,7 @@ object SolarPanelAlignerToolRegistration : ToolRegistration {
             ToolCategory.Power,
             context.getString(R.string.tool_solar_panel_summary),
             guideId = R.raw.guide_tool_solar_panel_aligner,
-            isAvailable = { SensorService(it).hasCompass() },
+            isAvailable = { getAppService<SensorService>().hasCompass() },
             diagnostics = listOf(
                 ToolDiagnosticFactory.gps(context),
                 *ToolDiagnosticFactory.tilt(context),

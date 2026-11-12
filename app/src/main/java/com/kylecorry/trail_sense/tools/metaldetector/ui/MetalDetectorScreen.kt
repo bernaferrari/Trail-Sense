@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.metaldetector.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import androidx.compose.runtime.SideEffect
 import androidx.compose.material3.SliderState
 import kotlin.time.Duration.Companion.milliseconds
@@ -146,7 +147,7 @@ fun MetalDetectorToolScreen(
     val appContext = context.applicationContext
     val viewModel = viewModel {
         MetalDetectorViewModel(
-            sensors = SensorService(appContext),
+            sensors = getAppService<SensorService>(),
             prefs = UserPreferences(appContext),
             haptics = HapticSubsystem.getInstance(appContext)
         )
@@ -877,7 +878,7 @@ private fun AccuracyBadge(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val hasCompass = remember { SensorService(context).hasCompass() }
+    val hasCompass = remember { getAppService<SensorService>().hasCompass() }
     if (!hasCompass) {
         return
     }

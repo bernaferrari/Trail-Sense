@@ -4,6 +4,7 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import androidx.lifecycle.ViewModel
@@ -78,7 +79,7 @@ fun TideListToolScreen() {
     val appContext = context.applicationContext
     val navigator = LocalNavigator.current
     val viewModel = viewModel {
-        val gps = SensorService(appContext).getGPS()
+        val gps = getAppService<SensorService>().getGPS()
         TideListViewModel(
             tideRepo = TideTableRepo.getInstance(appContext),
             tideTypeCommand = CurrentTideTypeCommand(TideService(appContext)),

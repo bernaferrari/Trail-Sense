@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.onboarding
 
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.alerts.MissingSensorAlert
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -16,7 +17,7 @@ object OnboardingPages {
                 TrailSenseIcons.Filled.Gavel,
                 context.getString(R.string.i_agree)
             ),
-            if (SensorService(context).hasCompass()) {
+            if (getAppService<SensorService>().hasCompass()) {
                 null
             } else {
                 OnboardingPage(

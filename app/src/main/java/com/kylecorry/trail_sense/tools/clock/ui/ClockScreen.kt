@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.clock.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.time.toJavaSeconds
 import com.kylecorry.trail_sense.shared.time.toInstant
 import com.kylecorry.trail_sense.shared.time.minus
@@ -120,7 +121,7 @@ fun ClockToolScreen() {
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
     val formatService = remember { FormatService.getInstance(context) }
-    val sensorService = remember { SensorService(context) }
+    val sensorService = remember { getAppService<SensorService>() }
     val gps = remember { sensorService.getGPS() }
     val prefs = remember { UserPreferences(context) }
 

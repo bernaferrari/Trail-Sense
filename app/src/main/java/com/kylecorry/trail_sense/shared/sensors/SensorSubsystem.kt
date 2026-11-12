@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.sensors
 
-
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.andromeda.permissions.Permissions
@@ -8,6 +7,7 @@ import com.kylecorry.andromeda.sense.readAll
 import com.kylecorry.sol.math.MathExtensions.real
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.permissions.canGetLocationCustom
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
@@ -20,7 +20,7 @@ import com.kylecorry.trail_sense.shared.sensors.gps.modules.CacheGPSModule
 import kotlin.time.Duration
 
 class SensorSubsystem private constructor(private val context: Context) {
-    private val sensorService by lazy { SensorService(context) }
+    private val sensorService by lazy { getAppService<SensorService>() }
     private val userPrefs by lazy { UserPreferences(context) }
     private val prefs by lazy { PreferencesSubsystem.getInstance(context).preferences }
     private val gpsSourceSelector by lazy { GPSSourceSelector(context) }

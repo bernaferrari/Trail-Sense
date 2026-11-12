@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.level.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
 
 import androidx.compose.animation.animateColorAsState
@@ -86,7 +87,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
     KeepScreenOn()
     val formatService = remember { FormatService.getInstance(context) }
     val threshold = remember { UserPreferences(context).bubbleLevel.threshold }
-    val gravity = remember { SensorService(context).getGravity() }
+    val gravity = remember { getAppService<SensorService>().getGravity() }
     val throttle = remember { Throttle(20) }
     // The up vector in the phone's frame (what a gravity sensor reports): +z out of the screen, +x right, +y top.
     var gx by remember { mutableFloatStateOf(0f) }

@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.toKotlinDuration
 import com.kylecorry.andromeda.core.sensors.read
@@ -87,7 +88,7 @@ fun CalibrateAltimeterToolScreen() {
         CalibrateAltimeterViewModel(
             prefs = UserPreferences(appContext),
             cache = PreferencesSubsystem.getInstance(appContext).preferences,
-            sensorService = SensorService(appContext),
+            sensorService = getAppService<SensorService>(),
             gps = CustomGPS(appContext),
             keys = AltimeterPreferenceKeys(
                 mode = PreferenceKeys.altimeterCalibrationMode,

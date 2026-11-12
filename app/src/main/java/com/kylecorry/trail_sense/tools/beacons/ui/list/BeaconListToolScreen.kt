@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.tools.beacons.domain.icon
 import kotlin.time.Clock
 
@@ -170,7 +171,7 @@ fun BeaconListToolScreen(
             route = route,
             beaconService = BeaconService(appContext),
             preferences = UserPreferences(appContext).beacons,
-            gps = SensorService(appContext).getGPS(),
+            gps = getAppService<SensorService>().getGPS(),
             importer = BeaconGpxImporter(appContext)
         )
     }

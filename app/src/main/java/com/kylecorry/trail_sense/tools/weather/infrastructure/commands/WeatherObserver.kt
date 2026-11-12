@@ -28,7 +28,7 @@ internal class WeatherObserver(
     private val timeout: kotlin.time.Duration = SensorService.GPS_READ_TIMEOUT
 ) : IWeatherObserver {
 
-    private val sensorService by lazy { SensorService(context) }
+    private val sensorService by lazy { getAppService<SensorService>() }
     private val prefs by lazy { UserPreferences(context) }
     private val altimeter by lazy {
         sensorService.getAltimeter(
