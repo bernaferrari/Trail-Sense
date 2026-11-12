@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.sensors.altimeter
 
+import com.kylecorry.trail_sense.shared.dem.ElevationModel
+
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.sense.location.GpsSensor
 import com.kylecorry.luna.concurrency.BackgroundTask
@@ -9,7 +11,6 @@ import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.dem.DEM
 import com.kylecorry.trail_sense.shared.logging.Logger
 import kotlin.time.Instant
 
@@ -23,7 +24,7 @@ class DigitalElevationModel(private val gps: GpsSensor) : SharedSensor(),
                 val gpsIsValid = gps.hasValidReading
                 val fixTimeElapsedNanos = gps.eventTimeElapsedNanos
                 val fixTime = gps.timestamp
-                demAltitude = DEM.getElevation(location).elevation
+                demAltitude = getAppService<ElevationModel>().getElevation(location).elevation
                 if (isLookupFailing) {
                     isLookupFailing = false
                     getAppService<Logger>().info(TAG, "DEM elevation lookup recovered")
