@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.tools.notes.infrastructure
 
-import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 
 interface INoteRepo {
-    fun getNotes(): LiveData<List<Note>>
+    fun getNotes(): Flow<List<Note>>
 
     suspend fun getNote(id: Long): Note?
 

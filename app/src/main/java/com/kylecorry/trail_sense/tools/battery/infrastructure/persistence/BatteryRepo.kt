@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.battery.infrastructure.persistence
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.preferences.FloatPreference
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
@@ -17,7 +17,7 @@ class BatteryRepo private constructor(context: Context) : IBatteryRepo {
     private val prefs = PreferencesSubsystem.getInstance(context).preferences
     private var maxCapacityPref by FloatPreference(prefs, "pref_max_battery_capacity", 0f)
 
-    override fun get(): LiveData<List<BatteryReading>> {
+    override fun get(): Flow<List<BatteryReading>> {
         return batteryDao.get().map { it.map { reading -> reading.toBatteryReading() } }
     }
 

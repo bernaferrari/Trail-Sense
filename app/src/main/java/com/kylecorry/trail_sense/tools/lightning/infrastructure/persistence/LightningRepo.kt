@@ -4,8 +4,8 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
@@ -46,7 +46,7 @@ class LightningRepo private constructor(private val dao: LightningStrikeDao) : I
         dao.getAllSync().map { it.toReading() }
     }
 
-    override fun getAllLive(): LiveData<List<Reading<LightningStrike>>> {
+    override fun getAllLive(): Flow<List<Reading<LightningStrike>>> {
         return dao.getAll().map {
             it.map { reading -> reading.toReading() }
         }

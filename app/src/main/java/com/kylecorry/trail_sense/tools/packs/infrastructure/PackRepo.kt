@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.packs.infrastructure
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
@@ -18,13 +18,13 @@ class PackRepo private constructor(context: Context) : IPackRepo {
         inventoryItemDao.getFromPackAsync(packId).map { mapper.mapToPackItem(it) }
     }
 
-    override fun getItemsFromPack(packId: Long): LiveData<List<PackItem>> {
+    override fun getItemsFromPack(packId: Long): Flow<List<PackItem>> {
         return inventoryItemDao.getFromPack(packId).map {
             it.map { item -> mapper.mapToPackItem(item) }
         }
     }
 
-    override fun getPacks(): LiveData<List<Pack>> {
+    override fun getPacks(): Flow<List<Pack>> {
         return packDao.getAll().map { it.map { mapper.mapToPack(it) } }
     }
 

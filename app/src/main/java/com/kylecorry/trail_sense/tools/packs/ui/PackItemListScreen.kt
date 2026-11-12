@@ -82,7 +82,6 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.channels.Channel
@@ -290,7 +289,7 @@ internal class PackItemListViewModel(
             pack = withContext(Dispatchers.IO) { itemRepo.getPack(packId) }
         }
         viewModelScope.launch {
-            itemRepo.getItemsFromPack(packId).asFlow().collect {
+            itemRepo.getItemsFromPack(packId).collect {
                 items = it
                 updateItems()
                 loaded = true

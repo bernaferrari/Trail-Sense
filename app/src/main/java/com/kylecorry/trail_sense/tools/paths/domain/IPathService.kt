@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.paths.domain
 
-import androidx.lifecycle.LiveData
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.main.persistence.ICleanable
 import com.kylecorry.trail_sense.shared.grouping.persistence.IGroupLoader
@@ -18,7 +17,7 @@ interface IPathService : ICleanable {
     suspend fun getPath(id: Long): Path?
     suspend fun getGroup(id: Long?): PathGroup?
 
-    fun getLivePath(id: Long): LiveData<Path?>
+    fun getLivePath(id: Long): Flow<Path?>
     suspend fun addPath(path: Path): Long
     suspend fun addGroup(group: PathGroup): Long
     suspend fun deletePath(path: Path)
@@ -31,12 +30,12 @@ interface IPathService : ICleanable {
     suspend fun getLastWaypoint(path: Long): PathPoint?
 
     suspend fun getMostRecentPathIdWithElevationChange(minChange: Float): Long?
-    fun getWaypointsLive(path: Long): LiveData<List<PathPoint>>
+    fun getWaypointsLive(path: Long): Flow<List<PathPoint>>
     suspend fun getWaypointsWithCellSignal(): List<PathPoint>
     suspend fun addWaypointsToPath(points: List<PathPoint>, pathId: Long)
     suspend fun updateWaypointElevations(path: Long, elevations: Map<Long, Float>)
     suspend fun addWaypoint(point: PathPoint): Long
     suspend fun deleteWaypoint(point: PathPoint)
 
-    fun getRecentAltitudesLive(since: Instant): LiveData<List<Reading<Float>>>
+    fun getRecentAltitudesLive(since: Instant): Flow<List<Reading<Float>>>
 }

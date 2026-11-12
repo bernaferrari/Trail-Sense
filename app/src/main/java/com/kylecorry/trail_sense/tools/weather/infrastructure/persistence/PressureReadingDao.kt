@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.persistence
 
-import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -11,7 +11,7 @@ import androidx.room.Update
 @Dao
 interface PressureReadingDao {
     @Query("SELECT * FROM pressures")
-    fun getAll(): LiveData<List<PressureReadingEntity>>
+    fun getAll(): Flow<List<PressureReadingEntity>>
 
     @Query("SELECT * FROM pressures")
     suspend fun getAllSync(): List<PressureReadingEntity>

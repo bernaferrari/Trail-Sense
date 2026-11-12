@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.battery.infrastructure.persistence
 
-import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -11,7 +11,7 @@ import kotlin.time.Instant
 @Dao
 interface BatteryDao {
     @Query("SELECT * FROM battery")
-    fun get(): LiveData<List<BatteryReadingEntity>>
+    fun get(): Flow<List<BatteryReadingEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(reading: BatteryReadingEntity): Long

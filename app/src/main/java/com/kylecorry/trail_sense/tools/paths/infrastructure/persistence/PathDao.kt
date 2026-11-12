@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -24,7 +23,7 @@ interface PathDao {
     suspend fun getAllInGroup(parentId: Long?): List<PathEntity>
 
     @Query("SELECT * FROM paths WHERE _id = :id LIMIT 1")
-    fun getLive(id: Long): LiveData<PathEntity?>
+    fun getLive(id: Long): Flow<PathEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(path: PathEntity): Long

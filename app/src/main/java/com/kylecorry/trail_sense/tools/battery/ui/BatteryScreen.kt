@@ -83,6 +83,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -99,6 +100,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.kylecorry.andromeda.battery.AndroidBattery
 import com.kylecorry.andromeda.battery.BatteryChargingMethod
 import com.kylecorry.andromeda.battery.BatteryChargingStatus
@@ -277,14 +279,12 @@ fun BatteryToolScreen(
         tip.manage?.invoke(context)
     }
 
-    DisposableEffect(lifecycleOwner, batteryRepo) {
-        val observer = androidx.lifecycle.Observer<List<BatteryReading>> { allReadings ->
-            rawReadings = allReadings.sortedBy { it.time }
-            updateReadings()
-        }
-        batteryRepo.get().observe(lifecycleOwner, observer)
-        onDispose {
-            batteryRepo.get().removeObserver(observer)
+    LaunchedEffect(lifecycleOwner, batteryRepo) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            batteryRepo.get().collect { allReadings ->
+                rawReadings = allReadings.sortedBy { it.time }
+                updateReadings()
+            }
         }
     }
 

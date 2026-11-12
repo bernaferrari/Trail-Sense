@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.notes.infrastructure
 
-import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -12,7 +12,7 @@ import com.kylecorry.trail_sense.tools.notes.domain.Note
 @Dao
 interface NoteDao {
     @Query("SELECT * FROM notes")
-    fun getAll(): LiveData<List<Note>>
+    fun getAll(): Flow<List<Note>>
 
     @Query("SELECT * FROM notes WHERE _id = :id LIMIT 1")
     suspend fun get(id: Long): Note?

@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.packs.infrastructure
 
-import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 
@@ -9,9 +9,9 @@ interface IPackRepo {
 
     suspend fun getItemsFromPackAsync(packId: Long): List<PackItem>
 
-    fun getItemsFromPack(packId: Long): LiveData<List<PackItem>>
+    fun getItemsFromPack(packId: Long): Flow<List<PackItem>>
 
-    fun getPacks(): LiveData<List<Pack>>
+    fun getPacks(): Flow<List<Pack>>
 
     suspend fun getPack(packId: Long): Pack?
 

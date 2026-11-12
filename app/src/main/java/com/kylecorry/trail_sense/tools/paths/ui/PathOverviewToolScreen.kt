@@ -12,7 +12,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.viewModelScope
@@ -733,13 +732,13 @@ internal class PathOverviewViewModel(
         Tools.subscribe(PathsToolRegistration.BROADCAST_BACKTRACK_STATE_CHANGED, onBacktrackChanged)
         refreshRecording()
         viewModelScope.launch {
-            pathService.getLivePath(pathId).asFlow().collect {
+            pathService.getLivePath(pathId).collect {
                 path = it
                 updateParent(it)
             }
         }
         viewModelScope.launch {
-            pathService.getWaypointsLive(pathId).asFlow().collectLatest {
+            pathService.getWaypointsLive(pathId).collectLatest {
                 onWaypointsChanged(it)
             }
         }

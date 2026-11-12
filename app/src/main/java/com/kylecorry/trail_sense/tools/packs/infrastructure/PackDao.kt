@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.packs.infrastructure
 
-import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -11,7 +11,7 @@ import androidx.room.Update
 @Dao
 interface PackDao {
     @Query("SELECT * FROM packs")
-    fun getAll(): LiveData<List<PackEntity>>
+    fun getAll(): Flow<List<PackEntity>>
 
     @Query("SELECT * FROM packs WHERE _id = :id LIMIT 1")
     suspend fun get(id: Long): PackEntity?

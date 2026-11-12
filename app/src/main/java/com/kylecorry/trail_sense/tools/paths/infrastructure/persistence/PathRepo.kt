@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
+import kotlinx.coroutines.flow.map
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.domain.Path
@@ -50,7 +49,7 @@ class PathRepo private constructor(context: Context) {
         return pathDao.get(id)?.toPath()
     }
 
-    fun getLive(id: Long): LiveData<Path?> {
+    fun getLive(id: Long): Flow<Path?> {
         return pathDao.getLive(id).map { it?.toPath() }
     }
 

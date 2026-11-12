@@ -3,8 +3,7 @@ package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
+import kotlinx.coroutines.flow.map
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.time.ZonedDateTimeProvider
 import com.kylecorry.andromeda.core.time.SystemZonedDateTimeProvider
@@ -125,7 +124,7 @@ class PathService(
         return pathRepo.getPathsWithParent(groupId) + pathRepo.getGroupsWithParent(groupId)
     }
 
-    override fun getLivePath(id: Long): LiveData<Path?> {
+    override fun getLivePath(id: Long): Flow<Path?> {
         return pathRepo.getLive(id)
     }
 
@@ -221,7 +220,7 @@ class PathService(
         return waypointRepo.getMostRecentPathIdWithElevationChange(minChange)
     }
 
-    override fun getWaypointsLive(path: Long): LiveData<List<PathPoint>> {
+    override fun getWaypointsLive(path: Long): Flow<List<PathPoint>> {
         return waypointRepo.getAllInPathLive(path)
     }
 
@@ -274,7 +273,7 @@ class PathService(
         }
     }
 
-    override fun getRecentAltitudesLive(since: Instant): LiveData<List<Reading<Float>>> {
+    override fun getRecentAltitudesLive(since: Instant): Flow<List<Reading<Float>>> {
         val recent = waypointRepo.getAllLive(since)
         return recent.map {
             it.filter { point -> point.elevation != null && point.time != null }

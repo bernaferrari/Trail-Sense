@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence
 
-import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -11,7 +11,7 @@ import androidx.room.Update
 @Dao
 interface CloudReadingDao {
     @Query("SELECT * FROM clouds")
-    fun getAll(): LiveData<List<CloudReadingEntity>>
+    fun getAll(): Flow<List<CloudReadingEntity>>
 
     @Query("SELECT * FROM clouds")
     suspend fun getAllSync(): List<CloudReadingEntity>

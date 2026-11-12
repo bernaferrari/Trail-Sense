@@ -56,7 +56,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,8 +70,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.Flow
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -101,7 +100,7 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun NotesScreen(
-    notes: LiveData<List<Note>>,
+    notes: Flow<List<Note>>,
     lifecycleOwner: LifecycleOwner,
     onAdd: () -> Unit,
     onEdit: (Note) -> Unit,
@@ -110,21 +109,11 @@ fun NotesScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null
 ) {
-    var items by remember { mutableStateOf(emptyList<Note>()) }
-    var loaded by remember { mutableStateOf(false) }
+    val loadedNotes by notes.collectAsStateWithLifecycle(initialValue = null, lifecycleOwner = lifecycleOwner)
+    val items = remember(loadedNotes) { loadedNotes.orEmpty().sortedByDescending { note -> note.createdOn } }
+    val loaded = loadedNotes != null
     val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val back: () -> Unit = onBack ?: { dispatcher?.onBackPressed() }
-
-    DisposableEffect(notes, lifecycleOwner) {
-        val observer = Observer<List<Note>> {
-            items = it.orEmpty().sortedByDescending { note -> note.createdOn }
-            loaded = true
-        }
-        notes.observe(lifecycleOwner, observer)
-        onDispose {
-            notes.removeObserver(observer)
-        }
-    }
 
     TrailSensePage(
         title = stringResource(R.string.tool_notes_title),

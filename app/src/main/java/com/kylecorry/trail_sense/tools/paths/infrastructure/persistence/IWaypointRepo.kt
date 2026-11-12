@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
-import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import kotlin.time.Instant
 
@@ -19,11 +19,11 @@ interface IWaypointRepo {
 
     suspend fun getAll(): List<PathPoint>
 
-    fun getAllLive(since: Instant? = null): LiveData<List<PathPoint>>
+    fun getAllLive(since: Instant? = null): Flow<List<PathPoint>>
 
     suspend fun getAllInPaths(pathIds: List<Long>): List<PathPoint>
 
-    fun getAllInPathLive(pathId: Long): LiveData<List<PathPoint>>
+    fun getAllInPathLive(pathId: Long): Flow<List<PathPoint>>
 
     suspend fun getFirstInPath(pathId: Long): PathPoint?
 

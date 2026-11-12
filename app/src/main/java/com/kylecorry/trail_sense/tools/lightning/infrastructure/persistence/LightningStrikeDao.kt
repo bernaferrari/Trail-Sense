@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence
 
-import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -11,7 +11,7 @@ import androidx.room.Update
 @Dao
 interface LightningStrikeDao {
     @Query("SELECT * FROM lightning")
-    fun getAll(): LiveData<List<LightningStrikeEntity>>
+    fun getAll(): Flow<List<LightningStrikeEntity>>
 
     @Query("SELECT * FROM lightning")
     suspend fun getAllSync(): List<LightningStrikeEntity>

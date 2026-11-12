@@ -6,8 +6,8 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import com.kylecorry.luna.concurrency.onIO
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -58,7 +58,7 @@ class WeatherRepo private constructor(context: Context) : IReadingRepo<RawWeathe
         pressureDao.getAllSync().map { it.toWeatherObservation() }
     }
 
-    override fun getAllLive(): LiveData<List<Reading<RawWeatherObservation>>> {
+    override fun getAllLive(): Flow<List<Reading<RawWeatherObservation>>> {
         return pressureDao.getAll().map {
             it.map { reading -> reading.toWeatherObservation() }
         }

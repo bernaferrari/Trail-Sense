@@ -4,10 +4,6 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import com.kylecorry.andromeda.core.sensors.SharedSensor
 import com.kylecorry.andromeda.core.sensors.Speedometer
 import com.kylecorry.luna.concurrency.onMain
@@ -32,18 +28,14 @@ class BacktrackSpeedometer(private val context: Context) : SharedSensor(), Speed
     private val pathService by lazy { PathService.getInstance(context) }
     private val prefs by lazy { UserPreferences(context) }
 
-    private val mainHandler = Handler(Looper.getMainLooper())
-
     private val scope = CoroutineScope(Dispatchers.Default)
     private var loadJob: Job? = null
-
-    private var path: LiveData<List<PathPoint>>? = null
 
     private var _speed: Speed? = null
     private var lastPointTime: Instant? = null
 
-    private var pathObserver = Observer<List<PathPoint>> {
-        val waypoints = it.sortedBy { point -> point.time }
+    private fun onPathChanged(points: List<PathPoint>) {
+        val waypoints = points.sortedBy { point -> point.time }
         _speed = getSpeed(waypoints)
         lastPointTime = waypoints.lastOrNull()?.time
         notifyListeners()
@@ -111,10 +103,8 @@ class BacktrackSpeedometer(private val context: Context) : SharedSensor(), Speed
         // TODO: Listen for path changes for backtrack ID
         loadJob = scope.launch {
             val backtrack = pathService.getBacktrackPathId() ?: return@launch
-            val waypoints = pathService.getWaypointsLive(backtrack)
-            onMain {
-                path = waypoints
-                waypoints.observeForever(pathObserver)
+            pathService.getWaypointsLive(backtrack).collect { points ->
+                onMain { onPathChanged(points) }
             }
         }
     }
@@ -122,10 +112,6 @@ class BacktrackSpeedometer(private val context: Context) : SharedSensor(), Speed
     override fun stopImpl() {
         loadJob?.cancel()
         loadJob = null
-        mainHandler.post {
-            path?.removeObserver(pathObserver)
-            path = null
-        }
     }
 
     private companion object {

@@ -125,7 +125,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.lifecycleScope
@@ -540,7 +539,6 @@ internal class NavigatorViewModel(
 
         viewModelScope.launch {
             pathService.getRecentAltitudesLive(Clock.System.now().minus(MAX_ALTITUDE_FILTER_HISTORY_DURATION))
-                .asFlow()
                 .collect {
                     backtrackAltitudeReadings = it
                     updateAltitudeChart()
@@ -548,7 +546,7 @@ internal class NavigatorViewModel(
         }
 
         viewModelScope.launch {
-            weatherRepo.getAllLive().asFlow().collect { readings ->
+            weatherRepo.getAllLive().collect { readings ->
                 weatherAltitudeReadings = readings.mapNotNull { reading ->
                     if (reading.value.altitude == 0f) {
                         return@mapNotNull null

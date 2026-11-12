@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
-import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -12,16 +12,16 @@ import com.kylecorry.trail_sense.tools.paths.domain.WaypointEntity
 @Dao
 interface WaypointDao {
     @Query("SELECT * FROM waypoints")
-    fun getAll(): LiveData<List<WaypointEntity>>
+    fun getAll(): Flow<List<WaypointEntity>>
 
     @Query("SELECT * FROM waypoints WHERE createdOn > :since")
-    fun getAllSince(since: Long): LiveData<List<WaypointEntity>>
+    fun getAllSince(since: Long): Flow<List<WaypointEntity>>
 
     @Query("SELECT * FROM waypoints")
     suspend fun getAllSync(): List<WaypointEntity>
 
     @Query("SELECT * FROM waypoints WHERE pathId = :pathId")
-    fun getAllInPath(pathId: Long): LiveData<List<WaypointEntity>>
+    fun getAllInPath(pathId: Long): Flow<List<WaypointEntity>>
 
     @Query("SELECT * FROM waypoints WHERE pathId = :pathId")
     suspend fun getAllInPathSync(pathId: Long): List<WaypointEntity>

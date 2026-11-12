@@ -76,7 +76,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -194,7 +193,7 @@ internal class PackListViewModel(private val packRepo: IPackRepo) : ViewModel() 
 
     init {
         viewModelScope.launch {
-            packRepo.getPacks().asFlow().collect {
+            packRepo.getPacks().collect {
                 packs = it.sortedWith(compareBy { pack -> -pack.id })
                 loaded = true
                 loadSummaries(packs)

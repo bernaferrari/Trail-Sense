@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.packs.infrastructure
 
-import androidx.lifecycle.LiveData
+import kotlinx.coroutines.flow.Flow
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -11,7 +11,7 @@ import androidx.room.Update
 @Dao
 interface PackItemDao {
     @Query("SELECT * FROM items")
-    fun getAll(): LiveData<List<PackItemEntity>>
+    fun getAll(): Flow<List<PackItemEntity>>
 
     @Query("SELECT * FROM items WHERE _id = :id LIMIT 1")
     suspend fun get(id: Long): PackItemEntity?
@@ -20,7 +20,7 @@ interface PackItemDao {
     suspend fun getFromPackAsync(packId: Long): List<PackItemEntity>
 
     @Query("SELECT * FROM items WHERE packId = :packId")
-    fun getFromPack(packId: Long): LiveData<List<PackItemEntity>>
+    fun getFromPack(packId: Long): Flow<List<PackItemEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: PackItemEntity): Long

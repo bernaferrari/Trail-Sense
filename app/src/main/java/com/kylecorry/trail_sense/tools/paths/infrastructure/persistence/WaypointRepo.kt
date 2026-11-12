@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.map
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
@@ -55,7 +55,7 @@ class WaypointRepo private constructor(context: Context) : IWaypointRepo {
         return waypointDao.getAllSync().map { it.toPathPoint() }
     }
 
-    override fun getAllLive(since: Instant?): LiveData<List<PathPoint>> {
+    override fun getAllLive(since: Instant?): Flow<List<PathPoint>> {
         return if (since == null) {
             waypointDao.getAll()
         } else {
@@ -71,7 +71,7 @@ class WaypointRepo private constructor(context: Context) : IWaypointRepo {
         pathIds.flatMap { waypointDao.getAllInPathSync(it) }.map { it.toPathPoint() }
     }
 
-    override fun getAllInPathLive(pathId: Long): LiveData<List<PathPoint>> {
+    override fun getAllInPathLive(pathId: Long): Flow<List<PathPoint>> {
         return waypointDao.getAllInPath(pathId).map {
             it.map { waypoint -> waypoint.toPathPoint() }
         }

@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -210,7 +209,7 @@ internal class CloudViewModel(
     private val now: () -> Instant = { Clock.System.now() }
 ) : ViewModel() {
 
-    val clouds: StateFlow<List<Reading<CloudObservation>>?> = repo.getAllLive().asFlow()
+    val clouds: StateFlow<List<Reading<CloudObservation>>?> = repo.getAllLive()
         .map { all ->
             val since = now().minus(48.hours)
             all.sortedByDescending { cloud -> cloud.time }.filter { cloud -> cloud.time >= since }
