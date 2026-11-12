@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.tides.domain
 
-import kotlin.time.toJavaDuration
 
 import kotlin.time.Clock
 
@@ -41,7 +40,7 @@ class TideService(private val context: Context) {
 
     private val locationSubsystem by lazy { LocationSubsystem.getInstance(context) }
 
-    private val locationKeyCache = MemoryCachedValue<Coordinate>(duration = 10.seconds.toJavaDuration())
+    private val locationKeyCache = MemoryCachedValue<Coordinate>(duration = 10.seconds)
     private val cache =
         MemoryLRUCache<Pair<TideTable, Coordinate?>, TideTableWaterLevelCalculator>(100)
 

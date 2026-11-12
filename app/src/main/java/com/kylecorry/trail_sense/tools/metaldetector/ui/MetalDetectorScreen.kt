@@ -5,7 +5,6 @@ package com.kylecorry.trail_sense.tools.metaldetector.ui
 import androidx.compose.runtime.SideEffect
 import androidx.compose.material3.SliderState
 import kotlin.time.Duration.Companion.milliseconds
-import com.kylecorry.andromeda.core.time.once
 import kotlin.time.Duration.Companion.seconds
 
 import androidx.compose.foundation.clickable

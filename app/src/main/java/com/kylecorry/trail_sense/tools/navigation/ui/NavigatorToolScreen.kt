@@ -6,7 +6,6 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import com.kylecorry.andromeda.core.time.once
 import kotlin.time.Duration.Companion.seconds
 
 import com.kylecorry.trail_sense.shared.copy

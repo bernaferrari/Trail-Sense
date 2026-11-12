@@ -35,6 +35,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.sol)
+            api(libs.luna)
             api(libs.kotlinx.datetime)
             api(libs.kotlinx.coroutines.core)
             implementation(libs.atomicfu)

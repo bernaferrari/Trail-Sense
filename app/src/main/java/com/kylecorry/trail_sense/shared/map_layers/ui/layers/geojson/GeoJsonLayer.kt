@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson
 
 import kotlin.time.Clock
 import kotlin.time.Duration
-import com.kylecorry.andromeda.core.time.interval
 
 import android.content.Context
 import android.os.Bundle

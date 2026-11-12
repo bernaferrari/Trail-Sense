@@ -34,8 +34,8 @@ include(":core")
 rootProject.name = "Trail Sense"
 
 // Opt in while the app is being migrated to the adjacent multiplatform libraries.
-// The catalog pins sol 20.0.0 and andromeda 26.0.0, which exist only as the sibling ../sol and ../andromeda
-// checkouts until they are published. Until then, build with -PlocalMultiplatformLibraries=true; the default
+// The catalog pins sol 20.0.0, andromeda 26.0.0 and luna 3.0.0, which exist only as the sibling ../sol, ../andromeda
+// and ../luna checkouts until they are published. Until then, build with -PlocalMultiplatformLibraries=true; the default
 // (published-library) path resolves from Maven and needs those versions released first.
 if (providers.gradleProperty("localMultiplatformLibraries").orNull == "true") {
     includeBuild("../andromeda") {
@@ -54,6 +54,11 @@ if (providers.gradleProperty("localMultiplatformLibraries").orNull == "true") {
     includeBuild("../sol") {
         dependencySubstitution {
             substitute(module("com.kylecorry:sol")).using(project(":"))
+        }
+    }
+    includeBuild("../luna") {
+        dependencySubstitution {
+            substitute(module("com.kylecorry:luna")).using(project(":"))
         }
     }
 }

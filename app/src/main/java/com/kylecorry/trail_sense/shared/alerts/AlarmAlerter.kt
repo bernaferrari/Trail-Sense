@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.shared.alerts
 
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import com.kylecorry.andromeda.core.time.once
 
 import android.content.Context
 import android.media.MediaPlayer

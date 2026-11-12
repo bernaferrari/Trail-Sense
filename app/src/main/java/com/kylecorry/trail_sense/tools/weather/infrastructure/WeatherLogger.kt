@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure
 
 import kotlin.time.Duration
-import com.kylecorry.andromeda.core.time.interval
 
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
