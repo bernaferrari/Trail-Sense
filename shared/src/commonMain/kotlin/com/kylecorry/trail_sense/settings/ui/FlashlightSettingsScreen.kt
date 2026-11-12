@@ -1,30 +1,30 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+
+import com.kylecorry.trail_sense.tools.flashlight.infrastructure.IFlashlightSubsystem
+
 import kotlin.time.Duration
 
-import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
-import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 
 @Composable
 fun FlashlightSettingsToolScreen() {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
-    val prefs = remember { UserPreferences(context).flashlight }
+    val formatter = remember { FormatService.getInstance() }
+    val prefs = remember { getAppService<UserPreferences>().flashlight }
     val hasFlashlight = remember {
-        FlashlightSubsystem.getInstance(context).isAvailable()
+        getAppService<IFlashlightSubsystem>().isAvailable()
     }
     var toggleWithVolume by remember {
         mutableStateOf(prefs.toggleWithVolumeButtons)
@@ -35,17 +35,17 @@ fun FlashlightSettingsToolScreen() {
         mutableStateOf(prefs.controlScreenFlashlightWithVolumeButtons)
     }
     var showTimeoutPicker by remember { mutableStateOf(false) }
-    val timeoutTitle = stringResource(R.string.pref_flashlight_timeout_title)
-    val screenTitle = stringResource(R.string.screen_flashlight)
+    val timeoutTitle = appString(Res.string.pref_flashlight_timeout_title)
+    val screenTitle = appString(Res.string.screen_flashlight)
 
-    SettingsList(title = stringResource(R.string.flashlight_title)) {
+    SettingsList(title = appString(Res.string.flashlight_title)) {
         // Without a torch only the screen flashlight is left, so its header would have nothing to set it apart.
         if (hasFlashlight) {
             trailSenseSection("torch") {
                 row { position ->
                     SettingsSwitchRow(
-                        label = stringResource(R.string.pref_flashlight_toggle_with_volume_title),
-                        summary = stringResource(R.string.pref_flashlight_toggle_with_volume_summary),
+                        label = appString(Res.string.pref_flashlight_toggle_with_volume_title),
+                        summary = appString(Res.string.pref_flashlight_toggle_with_volume_summary),
                         checked = toggleWithVolume,
                         onCheckedChange = {
                             toggleWithVolume = it
@@ -56,7 +56,7 @@ fun FlashlightSettingsToolScreen() {
                 }
                 row { position ->
                     SettingsSwitchRow(
-                        label = stringResource(R.string.pref_flashlight_should_timeout_title),
+                        label = appString(Res.string.pref_flashlight_should_timeout_title),
                         checked = shouldTimeout,
                         onCheckedChange = {
                             shouldTimeout = it
@@ -86,7 +86,7 @@ fun FlashlightSettingsToolScreen() {
         trailSenseSection("screen", title = screenTitle.takeIf { hasFlashlight }) {
             row { position ->
                 SettingsSwitchRow(
-                    label = stringResource(R.string.pref_flashlight_control_screen_with_volume_title),
+                    label = appString(Res.string.pref_flashlight_control_screen_with_volume_title),
                     checked = controlScreenWithVolume,
                     onCheckedChange = {
                         controlScreenWithVolume = it

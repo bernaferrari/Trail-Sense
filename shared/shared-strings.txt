@@ -656,3 +656,10 @@ saving
 show_on_map
 sighting
 sightings
+flashlight_title
+pref_flashlight_control_screen_with_volume_title
+pref_flashlight_should_timeout_title
+pref_flashlight_timeout_title
+pref_flashlight_toggle_with_volume_summary
+pref_flashlight_toggle_with_volume_title
+screen_flashlight
