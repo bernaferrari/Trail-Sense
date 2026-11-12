@@ -115,6 +115,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.EditOfflineMapAt
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.MoveMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.RenameMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.ResizeMapCommand
+import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.ShowMapsDisclaimerCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.ToggleVisibilityMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapGroupAction
@@ -218,6 +219,11 @@ fun OfflineMapListToolScreen(
                 viewModel.isCreateEnabled = true
             }
         }
+    }
+
+    // The safety disclaimer is shown on the first visit, empty list or not, until it is closed once
+    LaunchedEffect(Unit) {
+        ShowMapsDisclaimerCommand(AppHost.from(context), navigator).execute()
     }
 
     // A map shared to the app is imported once

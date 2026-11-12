@@ -670,3 +670,4 @@ move
 moved_to
 no_group
 photo_maps
+photo_map_disclaimer

@@ -189,6 +189,9 @@ object PreferenceKeys {
     const val themePalette = "pref_theme_palette"
     const val thermometerSource = "pref_thermometer_source"
     const val tideDisclaimerSeen = "pref_tide_disclaimer_seen"
+
+    // Keeps the original value so people who already accepted the offline maps disclaimer aren't asked again
+    const val offlineMapsDisclaimerShown = "photo_map_disclaimer_shown_v2"
     const val tilesEnabled = "pref_tiles_enabled"
     const val toolQuickActions = "pref_tool_quick_actions"
     const val toolSort = "pref_tool_sort"

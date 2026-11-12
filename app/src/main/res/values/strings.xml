@@ -1206,7 +1206,6 @@
     <string name="map_empty_description">Add a photo, PDF or map file to see where you are, even without a signal.</string>
     <string name="add_offline_map">Add offline map</string>
     <string name="photo_map_disclaimer">Always carry a physical map for backup and verify the accuracy of Trail Sense.\n\nMap files are not included with Trail Sense and must be downloaded or calibrated from a photo. You can find maps to download at https://kylecorry.com/Trail-Sense/offline_maps.html</string>
-    <string name="photo_map_disclaimer_shown" translatable="false">photo_map_disclaimer_shown_v2</string>
     <string name="reduce_map_resolution_crop_disclaimer">Cropping the map will still reduce resolution. If you need to crop the map at a high resolution, please use a photo editor app. There are plans to fix this in the future.</string>
     <string name="reduce_map_resolution_crop_disclaimer_shown" translatable="false">reduce_map_resolution_crop_disclaimer_shown</string>
     <string name="crop_map_instructions_long">Drag the corners of the box to the corners of the map to outline. Cropping will reduce resolution of the map.</string>
