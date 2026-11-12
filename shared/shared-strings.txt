@@ -327,3 +327,12 @@ planet_neptune
 planet_saturn
 planet_uranus
 planet_venus
+estimate_stride_length
+pref_stride_length_title
+reset
+save
+saved
+start
+stop
+stride_length_stand_still
+stride_length_walk

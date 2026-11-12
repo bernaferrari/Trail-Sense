@@ -2,13 +2,6 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.shared.views.compose.AppPermission
-import kotlinx.coroutines.launch
-
-import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.expandVertically
@@ -29,33 +22,38 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.stride_length.IStrideLengthEstimator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.stride_length.StrideLengthEstimatorFactory
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun StrideLengthEstimationToolScreen() {
-    val context = LocalContext.current
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
-    val estimator = remember(context) {
+    val estimator = remember {
         StrideLengthEstimatorFactory().getEstimator()
     }
-    val formatter = remember(context) { FormatService.getInstance(context) }
-    val prefs = remember(context) { UserPreferences(context) }
+    val formatter = remember { FormatService.getInstance() }
+    val prefs = remember { getAppService<UserPreferences>() }
     val units = remember(prefs) { prefs.baseDistanceUnits }
 
     StrideLengthScreen(
@@ -65,7 +63,7 @@ fun StrideLengthEstimationToolScreen() {
         },
         onSave = {
             prefs.pedometer.strideLength = estimator.strideLength ?: Distance.meters(0f)
-            effects.showMessage(context.getString(R.string.saved))
+            effects.showMessage(getAppService<AppStrings>().get(Res.string.saved))
         },
         onPermissionDenied = {
             effects.explainPermissionDenied(AppPermission.ActivityRecognition)
@@ -146,19 +144,19 @@ private fun StrideLengthScreen(
     }
 
     val statusText = when {
-        isRunning && !hasValidReading -> stringResource(R.string.stride_length_stand_still)
-        isRunning -> stringResource(R.string.stride_length_walk)
+        isRunning && !hasValidReading -> appString(Res.string.stride_length_stand_still)
+        isRunning -> appString(Res.string.stride_length_walk)
         else -> null
     }
 
     TrailSensePage(
-        title = stringResource(R.string.estimate_stride_length),
+        title = appString(Res.string.estimate_stride_length),
         onBack = { dispatcher?.invoke() },
-        backLabel = stringResource(R.string.back)
+        backLabel = appString(Res.string.back)
     ) {
         item(key = "hero") {
             StrideLengthHero(
-                value = strideLength?.let(strideLengthText) ?: stringResource(R.string.dash),
+                value = strideLength?.let(strideLengthText) ?: appString(Res.string.dash),
                 status = statusText,
                 isRunning = isRunning
             )
@@ -168,9 +166,9 @@ private fun StrideLengthScreen(
             Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
                 TrailSenseButton(
                     text = when {
-                        !isRunning && hasValidReading -> stringResource(R.string.save)
-                        !isRunning -> stringResource(R.string.start)
-                        else -> stringResource(R.string.stop)
+                        !isRunning && hasValidReading -> appString(Res.string.save)
+                        !isRunning -> appString(Res.string.start)
+                        else -> appString(Res.string.stop)
                     },
                     onClick = {
                         when {
@@ -191,7 +189,7 @@ private fun StrideLengthScreen(
                         fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec())
                 ) {
                     TrailSenseButton(
-                        text = stringResource(R.string.reset),
+                        text = appString(Res.string.reset),
                         onClick = {
                             estimator.reset()
                             refreshState()
@@ -228,7 +226,7 @@ private fun StrideLengthHero(value: String, status: String?, isRunning: Boolean)
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
         ) {
             Text(
-                text = stringResource(R.string.pref_stride_length_title),
+                text = appString(Res.string.pref_stride_length_title),
                 style = MaterialTheme.typography.labelLarge,
                 color = content.copy(alpha = 0.8f)
             )
