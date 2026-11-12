@@ -88,6 +88,50 @@ internal class TrailSenseNavigatorTest {
     }
 
     @Test
+    fun replacingWithARouteFurtherDownTheStackKeepsItOnce() {
+        // The map list is open and a shared map file opens the importing list on top of it
+        val navigator = TrailSenseNavigator()
+        navigator.setStartRoute(Route.Map())
+        navigator.navigate(Route.OfflineMapList())
+        navigator.navigate(Route.OfflineMapList(importUri = "content://maps/1"))
+
+        navigator.replace(Route.OfflineMapList())
+
+        assertEquals(listOf(Route.Map(), Route.OfflineMapList()), navigator.backStack.toList())
+        assertTrue(navigator.popBackStack())
+        assertEquals(Route.Map(), navigator.currentRoute)
+    }
+
+    @Test
+    fun replacingTheTopWithItselfChangesNothing() {
+        val navigator = TrailSenseNavigator()
+        navigator.setStartRoute(Route.Tools)
+        navigator.navigate(Route.Settings)
+
+        navigator.replace(Route.Settings)
+
+        assertEquals(listOf(Route.Tools, Route.Settings), navigator.backStack.toList())
+    }
+
+    @Test
+    fun replacingOnAnEmptyStackStartsIt() {
+        val navigator = TrailSenseNavigator()
+        navigator.replace(Route.Tools)
+        assertEquals(listOf<Route>(Route.Tools), navigator.backStack.toList())
+    }
+
+    @Test
+    fun aRestoredStackHoldsEachRouteOnce() {
+        val navigator = TrailSenseNavigator()
+        val saved = "[" + listOf(Route.Tools, Route.Settings, Route.Tools, Route.UnitSettings)
+            .joinToString(",") { TrailSenseNavigator.encode(it) } + "]"
+
+        assertTrue(navigator.restoreState(saved))
+
+        assertEquals(listOf(Route.Settings, Route.Tools, Route.UnitSettings), navigator.backStack.toList())
+    }
+
+    @Test
     fun savesAndRestoresTheStack() {
         val navigator = TrailSenseNavigator()
         navigator.setStartRoute(Route.Tools)

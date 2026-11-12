@@ -24,6 +24,14 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            // Domain models and calculations the shared UI and navigation build on
+            api(project(":core"))
+            api(libs.sol)
+            // Navigation 3 keys and the app's back stack
+            api(libs.androidx.navigation3.runtime)
+            api(libs.kotlinx.serialization.core)
+            implementation(libs.kotlinx.serialization.json)
+
             // Compose Multiplatform artifacts
             implementation(compose.runtime)
             implementation(compose.foundation)

@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.shared.navigation
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
@@ -10,8 +8,8 @@ import kotlinx.serialization.Serializable
  * `navigate(Route.PlaceBeacon(initialLocation = here))` and a missing or mistyped argument is a compile error.
  * Routes are serializable: the back stack survives process death, and notifications and widgets carry a route.
  *
- * Routes hold only plain Kotlin values (no Android types), so this file could move to common code unchanged: a place
- * is a [RouteLocation], a content URI is its string.
+ * Routes hold only plain Kotlin values (no Android types), so they live in common code: a place is a [RouteLocation],
+ * a content URI is its string.
  */
 @Serializable
 sealed interface Route : NavKey {

@@ -11,8 +11,11 @@ import kotlin.reflect.KClass
 /**
  * The app's navigation: a Navigation 3 back stack of [Route]s that [TrailSenseNavDisplay] draws.
  *
- * Plain Kotlin and Compose state only (no Android types), so it could live in common code: screens call
- * [navigate] and [popBackStack]; the activity saves the stack with [saveState] and the system back gesture pops it.
+ * Plain Kotlin and Compose state only (no Android types): screens call [navigate] and [popBackStack]; the activity
+ * saves the stack with [saveState] and the system back gesture pops it.
+ *
+ * A route is on the stack at most once, whatever the operation: Navigation 3 keys each entry's saved state and
+ * ViewModels by its route, so two equal routes would share (and fight over) them.
  */
 class TrailSenseNavigator {
 
@@ -50,15 +53,7 @@ class TrailSenseNavigator {
      * because each Navigation 3 entry needs a unique key (its saved state is keyed by the route).
      */
     fun navigate(route: Route) {
-        val existing = backStack.indexOf(route)
-        when {
-            existing < 0 -> backStack.add(route)
-            existing == backStack.lastIndex -> Unit
-            else -> {
-                backStack.removeAt(existing)
-                backStack.add(route)
-            }
-        }
+        pushUnique(route)
         lastChangeWasTabSwitch = false
         notifyChanged()
     }
@@ -69,22 +64,22 @@ class TrailSenseNavigator {
      */
     fun switchTab(route: Route) {
         while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
-        if (backStack.isEmpty() || backStack.first()::class == route::class) {
-            if (backStack.isEmpty()) backStack.add(route) else backStack[0] = route
-        } else {
-            backStack.add(route)
+        when {
+            backStack.isEmpty() -> backStack.add(route)
+            backStack.first()::class == route::class -> backStack[0] = route
+            else -> backStack.add(route)
         }
         lastChangeWasTabSwitch = true
         notifyChanged()
     }
 
-    /** Replaces the screen on top with [route], so back skips it (a form that becomes the thing it created). */
+    /**
+     * Replaces the screen on top with [route], so back skips it (a form that becomes the thing it created). When
+     * [route] is already further down the stack, that entry moves to the top instead of being stacked a second time.
+     */
     fun replace(route: Route) {
-        if (backStack.isEmpty()) {
-            backStack.add(route)
-        } else {
-            backStack[backStack.lastIndex] = route
-        }
+        if (backStack.isNotEmpty()) backStack.removeAt(backStack.lastIndex)
+        pushUnique(route)
         lastChangeWasTabSwitch = false
         notifyChanged()
     }
@@ -120,10 +115,19 @@ class TrailSenseNavigator {
         val stack = runCatching { json.decodeFromString(stackSerializer, state) }.getOrNull()
         if (stack.isNullOrEmpty()) return false
         backStack.clear()
-        backStack.addAll(stack)
+        // A stack saved by an older build may hold a route twice: keep each route's last (most recent) place
+        backStack.addAll(stack.asReversed().distinct().asReversed())
         lastChangeWasTabSwitch = true
         notifyChanged()
         return true
+    }
+
+    /** Puts [route] on top, moving it there if it is already on the stack. */
+    private fun pushUnique(route: Route) {
+        val existing = backStack.indexOf(route)
+        if (existing == backStack.lastIndex && existing >= 0) return
+        if (existing >= 0) backStack.removeAt(existing)
+        backStack.add(route)
     }
 
     private fun notifyChanged() {
