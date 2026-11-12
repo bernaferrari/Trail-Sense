@@ -552,3 +552,12 @@ coordinate_input_invalid_location
 coordinates_tab
 volume
 weight
+cliff_again
+cliff_falling
+cliff_fell_for
+cliff_ready
+disclaimer_message_title
+height
+instructions
+tool_cliff_height_disclaimer
+tool_cliff_height_title

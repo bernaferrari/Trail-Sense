@@ -3,6 +3,14 @@
 
 package com.kylecorry.trail_sense.tools.cliffheight.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.disclaimer
+
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -48,9 +56,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -59,12 +65,9 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.BaselinePlayArrow24
 import com.kylecorry.trail_sense.shared.icons.trail.BaselineStop24
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
@@ -93,10 +96,9 @@ internal fun CliffHeightScreen(
     onOpenGuide: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val service = remember { CliffHeightService() }
-    val formatter = remember { FormatService.getInstance(context) }
-    val prefs = remember { UserPreferences(context) }
+    val formatter = remember { FormatService.getInstance() }
+    val prefs = remember { getAppService<UserPreferences>() }
     val gps = remember { getAppService<SensorService>().getGPS() }
     val units = remember { prefs.baseDistanceUnits }
     val location = remember { gps.location.takeIf { it != Coordinate.zero } }
@@ -130,13 +132,13 @@ internal fun CliffHeightScreen(
     }
 
     TrailSenseInstrumentScaffold(
-        title = stringResource(R.string.tool_cliff_height_title),
+        title = appString(Res.string.tool_cliff_height_title),
         modifier = modifier,
         actions = {
             IconButton(onClick = onOpenGuide) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                    contentDescription = stringResource(R.string.instructions)
+                    contentDescription = appString(Res.string.instructions)
                 )
             }
         }
@@ -167,9 +169,9 @@ internal fun CliffHeightScreen(
                 // The verdict, right under the cliff.
                 Text(
                     text = when {
-                        running -> stringResource(R.string.cliff_falling, elapsed)
-                        startTime != null -> stringResource(R.string.cliff_fell_for, elapsed)
-                        else -> stringResource(R.string.cliff_ready)
+                        running -> appString(Res.string.cliff_falling, elapsed)
+                        startTime != null -> appString(Res.string.cliff_fell_for, elapsed)
+                        else -> appString(Res.string.cliff_ready)
                     },
                     style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"),
                     fontWeight = FontWeight.SemiBold,
@@ -189,7 +191,7 @@ internal fun CliffHeightScreen(
                 )
 
                 Text(
-                    text = stringResource(R.string.tool_cliff_height_disclaimer),
+                    text = appString(Res.string.tool_cliff_height_disclaimer),
                     modifier = Modifier
                         .padding(horizontal = TrailSenseSpacing.sm)
                         .testTag("tide_disclaimer"),
@@ -230,11 +232,11 @@ private fun DropTimerButton(
             }
         }
     }
-    val label = stringResource(
+    val label = appString(
         when {
-            running -> R.string.stop
-            hasDropped -> R.string.cliff_again
-            else -> R.string.start
+            running -> Res.string.stop
+            hasDropped -> Res.string.cliff_again
+            else -> Res.string.start
         }
     )
     Button(
@@ -376,7 +378,7 @@ private fun CliffWell(
             horizontalAlignment = Alignment.End
         ) {
             Text(
-                text = stringResource(R.string.height),
+                text = appString(Res.string.height),
                 style = MaterialTheme.typography.titleSmall,
                 color = scheme.onSurfaceVariant
             )
@@ -423,19 +425,17 @@ private fun formatHeightValue(
 private fun formatElapsed(startTime: Instant?): String {
     val start = startTime ?: return ""
     val millis = (Clock.System.now() - start).inWholeMilliseconds.coerceAtLeast(0)
-    return String.format("%.1fs", millis / 1000f)
+    return DecimalFormatter.format(millis / 1000f, 1, true) + "s"
 }
 
 /** The cliff height tool, which shows its disclaimer once on the way in. */
 @Composable
 fun CliffHeightToolScreen() {
-    val context = LocalContext.current
     val navigator = LocalNavigator.current
     LaunchedEffect(Unit) {
-        CustomUiUtils.disclaimer(
-            context,
-            context.getString(R.string.disclaimer_message_title),
-            context.getString(R.string.tool_cliff_height_disclaimer),
+        Alerts.disclaimer(AppHost.current(),
+            getAppService<AppStrings>().get(Res.string.disclaimer_message_title),
+            getAppService<AppStrings>().get(Res.string.tool_cliff_height_disclaimer),
             "cache_dialog_tool_cliff_height",
             considerShownIfCancelled = true,
             cancelText = null
