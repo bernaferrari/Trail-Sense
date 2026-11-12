@@ -8,12 +8,13 @@ import com.kylecorry.trail_sense.shared.getUpsertedId
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
+import com.kylecorry.trail_sense.shared.UserPreferences
 
 class FieldGuideRepo private constructor(private val context: Context) {
 
     private val pageDao = AppDatabase.getInstance(context).fieldGuidePageDao()
     private val sightingDao = AppDatabase.getInstance(context).fieldGuideSightingDao()
-    private val preferences = FieldGuidePreferences(context)
+    private val preferences = UserPreferences(context).fieldGuide
     private val files = FileSubsystem.getInstance(context)
 
     suspend fun getAllPages(): List<FieldGuidePage> = onIO {

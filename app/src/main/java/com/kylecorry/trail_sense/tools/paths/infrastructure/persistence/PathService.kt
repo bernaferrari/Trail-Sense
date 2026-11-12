@@ -18,7 +18,6 @@ import com.kylecorry.trail_sense.shared.grouping.persistence.GroupDeleter
 import com.kylecorry.trail_sense.shared.grouping.persistence.GroupLoader
 import com.kylecorry.trail_sense.shared.grouping.persistence.IGroupLoader
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.tools.paths.infrastructure.PathsPreferences
 import com.kylecorry.trail_sense.tools.paths.domain.IPath
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
@@ -32,6 +31,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.time.Instant
+import com.kylecorry.trail_sense.shared.UserPreferences
 
 class PathService(
     private val pathRepo: PathRepo,
@@ -392,7 +392,7 @@ class PathService(
                 instance = PathService(
                     PathRepo.getInstance(appContext),
                     WaypointRepo.getInstance(appContext),
-                    PathsPreferences(appContext),
+                    UserPreferences(appContext).paths,
                     PreferencesSubsystem.getInstance(appContext).preferences
                 )
             }

@@ -4,12 +4,15 @@ import android.app.Application
 import android.util.Log
 import androidx.camera.camera2.Camera2Config
 import androidx.camera.core.CameraXConfig
+import com.kylecorry.trail_sense.shared.debugging.AppBuild
+import com.kylecorry.trail_sense.BuildConfig
 
 
 class TrailSenseApplication : Application(), CameraXConfig.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        AppBuild.configure(BuildConfig.DEBUG, BuildConfig.BUILD_TYPE)
         TrailSenseApplicationInitializer.initialize(this)
     }
 

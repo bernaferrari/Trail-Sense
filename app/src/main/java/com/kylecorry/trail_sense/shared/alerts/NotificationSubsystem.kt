@@ -11,20 +11,14 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 
 class NotificationSubsystem(private val context: Context) {
 
-    enum class GroupBehavior {
-        System,
-        UngroupAll,
-        UngroupHigh
-    }
-
     fun send(notificationId: Int, notification: Notification) {
         val behavior = DependencyRegistry.get<UserPreferences>().notificationGroupingBehavior
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
             val shouldUngroup = when (behavior) {
-                GroupBehavior.System -> false
-                GroupBehavior.UngroupAll -> true
-                GroupBehavior.UngroupHigh -> {
+                NotificationGroupBehavior.System -> false
+                NotificationGroupBehavior.UngroupAll -> true
+                NotificationGroupBehavior.UngroupHigh -> {
                     val channel =
                         Notify.channels(context).firstOrNull { it.id == notification.channelId }
                     channel?.importance == NotificationManager.IMPORTANCE_HIGH

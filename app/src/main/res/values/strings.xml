@@ -628,7 +628,6 @@
     <string name="high_tide">High</string>
     <string name="low_tide">Low</string>
     <string name="half_tide">Half</string>
-    <string name="last_tide_id" translatable="false">last_tide_id</string>
     <string name="time_not_set">Time not set</string>
     <string name="pref_daily_weather_time_holder" translatable="false">pref_daily_weather_time_holder</string>
     <string name="pref_daily_weather_time_title">Daily weather time</string>

@@ -20,7 +20,7 @@ import com.kylecorry.sol.science.meteorology.forecast.ForecastSource
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.alerts.NotificationSubsystem.GroupBehavior
+import com.kylecorry.trail_sense.shared.alerts.NotificationGroupBehavior
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
@@ -189,11 +189,11 @@ private fun forecastOptions(): List<SettingsOption> {
 
 private fun Context.notificationGroupingOptions(): List<SettingsOption> {
     val labels = mapOf(
-        GroupBehavior.System to getString(R.string.theme_system),
-        GroupBehavior.UngroupAll to getString(R.string.ungroup_all),
-        GroupBehavior.UngroupHigh to getString(R.string.ungroup_alerts)
+        NotificationGroupBehavior.System to getString(R.string.theme_system),
+        NotificationGroupBehavior.UngroupAll to getString(R.string.ungroup_all),
+        NotificationGroupBehavior.UngroupHigh to getString(R.string.ungroup_alerts)
     )
-    return GroupBehavior.entries.map {
+    return NotificationGroupBehavior.entries.map {
         SettingsOption(
             notificationGroupingValue(it),
             labels[it] ?: it.name
@@ -208,10 +208,10 @@ private fun forecastSourceValue(source: ForecastSource): String {
     }
 }
 
-private fun notificationGroupingValue(behavior: GroupBehavior): String {
+private fun notificationGroupingValue(behavior: NotificationGroupBehavior): String {
     return when (behavior) {
-        GroupBehavior.System -> "1"
-        GroupBehavior.UngroupAll -> "2"
-        GroupBehavior.UngroupHigh -> "3"
+        NotificationGroupBehavior.System -> "1"
+        NotificationGroupBehavior.UngroupAll -> "2"
+        NotificationGroupBehavior.UngroupHigh -> "3"
     }
 }

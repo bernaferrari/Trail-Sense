@@ -18,6 +18,8 @@ import com.kylecorry.trail_sense.shared.views.TrailSensePalette
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 import androidx.compose.material3.MaterialTheme
+import com.kylecorry.trail_sense.shared.views.palette
+import com.kylecorry.trail_sense.shared.views.colorStyle
 
 /** Bumped when the palette or color style changes, so every themed surface picks up the new colors at once. */
 object ThemeChoices {

@@ -24,6 +24,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import com.kylecorry.trail_sense.shared.views.palette
+import com.kylecorry.trail_sense.shared.views.colorStyle
 
 /** When the app is light or dark. Night vision and the black background sit on top of it. */
 enum class ThemeMode { System, Light, Dark, Sun }

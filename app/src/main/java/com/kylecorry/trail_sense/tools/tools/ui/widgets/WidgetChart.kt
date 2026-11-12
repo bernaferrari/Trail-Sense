@@ -22,6 +22,8 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.TrailSensePalette
 import com.kylecorry.trail_sense.shared.views.trailSenseColorScheme
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetTheme
+import com.kylecorry.trail_sense.shared.views.palette
+import com.kylecorry.trail_sense.shared.views.colorStyle
 
 /**
  * A widget's chart as plain drawing calls. The same calls draw it live in the app (a Compose [Canvas]) and into the

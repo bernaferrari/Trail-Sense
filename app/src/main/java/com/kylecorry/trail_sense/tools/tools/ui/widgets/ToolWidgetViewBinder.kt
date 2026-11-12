@@ -42,8 +42,8 @@ class ToolWidgetViewBinder(
             .filter { it.isEnabled(context) && it.canPlaceInApp }
             .sortedByDescending { it.size.ordinal }
 
-        // Only show the selected widgets
-        val widgets = allWidgets.filter { selectedWidgets.contains(it.id) }
+        // Only show the selected widgets; every widget until the user chooses
+        val widgets = selectedWidgets?.let { selected -> allWidgets.filter { it.id in selected } } ?: allWidgets
 
         widgets.forEach { widget ->
             val widgetId = widget.id

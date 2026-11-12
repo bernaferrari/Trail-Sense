@@ -9,14 +9,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.settings.infrastructure.ErrorPreferences
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
+import com.kylecorry.trail_sense.shared.UserPreferences
 
 @Composable
 fun ErrorSettingsToolScreen() {
     val context = LocalContext.current
-    val prefs = remember { ErrorPreferences(context) }
+    val prefs = remember { UserPreferences(context).errors }
     val errors = remember { ErrorBannerReason.values().sortedBy { it.id } }
     var values by remember {
         mutableStateOf(errors.associateWith { prefs.canShowError(it) })

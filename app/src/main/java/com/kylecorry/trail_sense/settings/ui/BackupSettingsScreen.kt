@@ -19,6 +19,7 @@ import com.kylecorry.trail_sense.settings.backup.RestoreCommand
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
+import com.kylecorry.trail_sense.settings.backup.userFriendlyAutoBackupPathName
 import kotlinx.coroutines.launch
 
 @Composable

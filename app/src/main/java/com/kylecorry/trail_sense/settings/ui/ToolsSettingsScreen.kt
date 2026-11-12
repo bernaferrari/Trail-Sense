@@ -148,7 +148,7 @@ private fun Context.pickWidgets(prefs: UserPreferences) {
     val selected = prefs.toolWidgets
 
     val selectedIndices = potentialWidgets.mapIndexedNotNull { index, widget ->
-        if (selected.contains(widget.id)) index else null
+        if (selected == null || widget.id in selected) index else null
     }
 
     Pickers.items(
