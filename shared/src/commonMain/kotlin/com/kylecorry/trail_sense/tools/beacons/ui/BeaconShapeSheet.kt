@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -37,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -45,7 +45,6 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.paneTitle
@@ -53,14 +52,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.graphics.shapes.toPath
-import androidx.compose.ui.graphics.asComposePath
-import androidx.compose.material3.toShape
 import androidx.graphics.shapes.RoundedPolygon
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.tools.beacons.domain.BeaconShape
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
+import com.kylecorry.trail_sense.shared.views.compose.toComposePath
+import com.kylecorry.trail_sense.tools.beacons.domain.BeaconShape
 
 /** The Material shape each beacon shape is drawn with. */
 fun BeaconShape.polygon(): RoundedPolygon = when (this) {
@@ -78,16 +76,16 @@ fun BeaconShape.polygon(): RoundedPolygon = when (this) {
 fun BeaconShape.toComposeShape(): Shape = polygon().toShape()
 
 @Composable
-private fun BeaconShape.label(): String = stringResource(
+private fun BeaconShape.label(): String = appString(
     when (this) {
-        BeaconShape.Cookie -> R.string.places_shape_cookie
-        BeaconShape.Circle -> R.string.places_shape_circle
-        BeaconShape.Square -> R.string.places_shape_square
-        BeaconShape.Clover -> R.string.places_shape_clover
-        BeaconShape.Sunny -> R.string.places_shape_sun
-        BeaconShape.Flower -> R.string.places_shape_flower
-        BeaconShape.Gem -> R.string.places_shape_gem
-        BeaconShape.Puffy -> R.string.places_shape_puffy
+        BeaconShape.Cookie -> Res.string.places_shape_cookie
+        BeaconShape.Circle -> Res.string.places_shape_circle
+        BeaconShape.Square -> Res.string.places_shape_square
+        BeaconShape.Clover -> Res.string.places_shape_clover
+        BeaconShape.Sunny -> Res.string.places_shape_sun
+        BeaconShape.Flower -> Res.string.places_shape_flower
+        BeaconShape.Gem -> Res.string.places_shape_gem
+        BeaconShape.Puffy -> Res.string.places_shape_puffy
     }
 )
 
@@ -109,7 +107,7 @@ fun BeaconShapeSheet(
     onColor: (AppColor) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val title = stringResource(R.string.places_shape_and_color)
+    val title = appString(Res.string.places_shape_and_color)
     val haptics = LocalHapticFeedback.current
     // The title stays in the content, centred under the live preview it names
     TrailSenseSheet(
@@ -237,9 +235,11 @@ private fun ShapeChoice(
         // The ring: the same outline, a little larger, drawn as the choice settles in.
         Canvas(Modifier.size(SHAPE_SIZE + 14.dp)) {
             if (progress > 0.01f) {
-                val native = polygon.toPath()
-                native.transform(android.graphics.Matrix().apply { setScale(size.width, size.height) })
-                drawPath(native.asComposePath(), ring.copy(alpha = progress.coerceIn(0f, 1f)), style = Stroke(width = 2.5.dp.toPx()))
+                drawPath(
+                    polygon.toComposePath(size.width, size.height),
+                    ring.copy(alpha = progress.coerceIn(0f, 1f)),
+                    style = Stroke(width = 2.5.dp.toPx())
+                )
             }
         }
         BeaconShapeMark(

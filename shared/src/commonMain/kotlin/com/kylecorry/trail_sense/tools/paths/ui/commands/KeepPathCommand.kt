@@ -1,23 +1,23 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import kotlinx.coroutines.CoroutineScope
-import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-
-class ChangePathColorCommand(
+class KeepPathCommand(
     private val scope: CoroutineScope,
-    private val pathService: IPathService
-) {
+    private val pathService: IPathService = getAppService<IPathService>()
+) : IPathCommand {
 
-    fun execute(path: Path, color: AppColor) {
+    override fun execute(path: Path) {
         scope.launch {
             withContext(Dispatchers.IO) {
-                pathService.addPath(path.copy(style = path.style.copy(color = color.color)))
+                pathService.addPath(path.copy(temporary = false))
             }
         }
     }

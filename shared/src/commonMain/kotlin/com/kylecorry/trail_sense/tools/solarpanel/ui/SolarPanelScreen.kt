@@ -3,54 +3,31 @@
 
 package com.kylecorry.trail_sense.tools.solarpanel.ui
 
-import com.kylecorry.trail_sense.main.getAppService
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.hours
-
-import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
-
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.text.font.FontWeight
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
-import com.kylecorry.trail_sense.shared.icons.trail.Arrow
-import com.kylecorry.trail_sense.shared.icons.trail.Check
-import com.kylecorry.trail_sense.shared.icons.trail.Edit
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -61,46 +38,67 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asComposePath
-import androidx.graphics.shapes.Morph
-import androidx.graphics.shapes.toPath
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.graphics.shapes.Morph
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.andromeda.sense.compass.CompassSensor
 import com.kylecorry.andromeda.sense.level.Level
 import com.kylecorry.andromeda.sense.location.GpsSensor
+import com.kylecorry.sol.math.MathExtensions.toRadians
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.sol.units.Bearing
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.declination.IDeclinationStrategy
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.icons.trail.Arrow
+import com.kylecorry.trail_sense.shared.icons.trail.Check
+import com.kylecorry.trail_sense.shared.icons.trail.Edit
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
+import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseAnimation
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
+import com.kylecorry.trail_sense.shared.views.compose.toComposePath
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import com.kylecorry.trail_sense.tools.solarpanel.domain.SolarPanelService
+import kotlin.math.absoluteValue
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import kotlin.time.Duration
-import kotlin.math.absoluteValue
 
 /**
  * The solar panel aligner as a page: when to charge is a segmented choice at the top, then one card per axis with
@@ -112,7 +110,6 @@ import kotlin.math.absoluteValue
 fun SolarPanelScreen(
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     // Awake while the sensors run (the screen is resumed).
     var sensorsOn by remember { mutableStateOf(false) }
@@ -122,8 +119,8 @@ fun SolarPanelScreen(
     val gps = remember { sensorService.getGPS() }
     val compass = remember { sensorService.getCompass() }
     val orientation = remember { Level(sensorService.getOrientation()) }
-    val formatter = remember { FormatService.getInstance(context) }
-    val prefs = remember { UserPreferences(context) }
+    val formatter = remember { FormatService.getInstance() }
+    val prefs = remember { getAppService<UserPreferences>() }
     val declination = remember { DeclinationFactory().getDeclinationStrategy(prefs, gps) }
     var position by remember { mutableStateOf<Pair<Float, Bearing>?>(null) }
     var nowDuration by remember { mutableStateOf(2.hours) }
@@ -201,7 +198,7 @@ fun SolarPanelScreen(
             delay(33)
         }
     }
-    val durationOfChargeTitle = stringResource(R.string.duration_of_charge)
+    val durationOfChargeTitle = appString(Res.string.duration_of_charge)
 
     LaunchedEffect(alignToRestOfDay, nowDuration, gpsUpdateKey) {
         position = null
@@ -216,15 +213,15 @@ fun SolarPanelScreen(
     }
 
     val modeOptions = listOf(
-        TrailSenseChoice(true, stringResource(R.string.today)),
+        TrailSenseChoice(true, appString(Res.string.today)),
         TrailSenseChoice(false, durationOfChargeTitle)
     )
 
     // One question: which way should the panel point?
     TrailSensePage(
-        title = stringResource(R.string.tool_solar_panel_title),
+        title = appString(Res.string.tool_solar_panel_title),
         onBack = rememberTrailSenseBack(),
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier
     ) {
         val currentPosition = position
@@ -252,8 +249,8 @@ fun SolarPanelScreen(
                         alignToRestOfDay,
                         nowDuration,
                         formatter,
-                        context.getString(R.string.up_to_amount),
-                        context.getString(R.string.solar_no_sun_left)
+                        { getAppService<AppStrings>().get(Res.string.up_to_amount, it) },
+                        getAppService<AppStrings>().get(Res.string.solar_no_sun_left)
                     ),
                     position = currentPosition,
                     compass = compass,
@@ -294,7 +291,7 @@ fun SolarPanelScreen(
                         trailing = {
                             Icon(
                                 painter = rememberVectorPainter(TrailIcons.Edit),
-                                contentDescription = stringResource(R.string.edit),
+                                contentDescription = appString(Res.string.edit),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -368,13 +365,13 @@ private fun SolarHero(
     )
     // The verdict says what is left to do, one axis at a time.
     val verdict = when {
-        aligned -> stringResource(R.string.solar_aligned)
-        !tiltDone -> stringResource(
-            if (altitudeDiff > 0) R.string.solar_tilt_up else R.string.solar_tilt_down,
+        aligned -> appString(Res.string.solar_aligned)
+        !tiltDone -> appString(
+            if (altitudeDiff > 0) Res.string.solar_tilt_up else Res.string.solar_tilt_down,
             formatter.formatDegrees(altitudeDiff.absoluteValue)
         )
-        else -> stringResource(
-            if (azimuthDiff < 0) R.string.solar_turn_left else R.string.solar_turn_right,
+        else -> appString(
+            if (azimuthDiff < 0) Res.string.solar_turn_left else Res.string.solar_turn_right,
             formatter.formatDegrees(azimuthDiff.absoluteValue)
         )
     }
@@ -385,7 +382,7 @@ private fun SolarHero(
     ) {
         // The one instruction, on the page instead of in a dialog that hid the panel on every visit.
         Text(
-            text = stringResource(R.string.solar_panel_instructions),
+            text = appString(Res.string.solar_panel_instructions),
             style = MaterialTheme.typography.bodyLarge,
             color = scheme.onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -451,14 +448,14 @@ private fun PanelSideView(
 
         fun ends(angle: Float): Pair<Offset, Offset> {
             // A panel tilted by `angle` from flat rises to the left of the pivot, facing the sun up to the right.
-            val r = Math.toRadians(angle.toDouble())
+            val r = angle.toDouble().toRadians()
             val dx = kotlin.math.cos(r).toFloat() * length / 2f
             val dy = kotlin.math.sin(r).toFloat() * length / 2f
             return Offset(pivot.x - dx, pivot.y - dy) to Offset(pivot.x + dx, pivot.y + dy)
         }
 
         // The sun, along the target panel's normal.
-        val normal = Math.toRadians((target - 90f).toDouble())
+        val normal = (target - 90f).toDouble().toRadians()
         val reach = (size.height * 0.95f).coerceAtMost(size.width * 0.5f)
         val sun = Offset(
             (pivot.x + kotlin.math.cos(normal).toFloat() * reach).coerceIn(28.dp.toPx(), size.width - 28.dp.toPx()),
@@ -473,13 +470,14 @@ private fun PanelSideView(
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 8.dp.toPx()))
         )
         val sunSize = 44.dp.toPx()
-        val path = sunMorph.toPath(roundness).apply {
-            transform(android.graphics.Matrix().apply {
-                setScale(sunSize, sunSize)
-                postTranslate(sun.x - sunSize / 2f, sun.y - sunSize / 2f)
-            })
-        }
-        drawPath(path.asComposePath(), sunColor)
+        val path = sunMorph.toComposePath(
+            roundness,
+            sunSize,
+            sunSize,
+            sun.x - sunSize / 2f,
+            sun.y - sunSize / 2f
+        )
+        drawPath(path, sunColor)
 
         // The target as a dashed outline of the panel, then the post and the live panel.
         val thickness = 14.dp.toPx()
@@ -542,7 +540,7 @@ private fun SolarPanelReadout(
         verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
     ) {
         SolarReadoutCard(
-            label = stringResource(R.string.tilt),
+            label = appString(Res.string.tilt),
             labelTag = "tilt_label",
             current = formatter.formatDegrees(orientation.y),
             currentTag = "current_altitude",
@@ -562,7 +560,7 @@ private fun SolarPanelReadout(
             position = TrailSenseGroupPosition(isFirst = true, isLast = false)
         )
         SolarReadoutCard(
-            label = stringResource(R.string.compass_azimuth),
+            label = appString(Res.string.compass_azimuth),
             labelTag = "azimuth_label",
             current = formatter.formatDegrees(compass.rawBearing, replace360 = true),
             currentTag = "current_azimuth",
@@ -628,13 +626,13 @@ private fun SolarReadoutCard(
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
                     Text(
-                        text = stringResource(R.string.solar_target, desired),
+                        text = appString(Res.string.solar_target, desired),
                         modifier = Modifier.testTag(desiredTag),
                         style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
                         color = scheme.onSurfaceVariant
                     )
                     Text(
-                        text = stringResource(R.string.solar_now, current),
+                        text = appString(Res.string.solar_now, current),
                         modifier = Modifier.testTag(currentTag),
                         style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
                         color = scheme.onSurfaceVariant
@@ -696,7 +694,7 @@ private fun getEnergyText(
     alignToRestOfDay: Boolean,
     nowDuration: Duration,
     formatter: FormatService,
-    upToFormat: String,
+    upTo: (energy: String) -> String,
     noSunText: String
 ): String {
     val energy = solarPanelService.getSolarEnergy(
@@ -708,7 +706,7 @@ private fun getEnergyText(
     )
     // Rounds to 0.0 (night, or the sun is behind the panel): say so in words, not "Up to 0 kWh / m²".
     if (energy < 0.05f) return noSunText
-    return upToFormat.format(formatter.formatSolarEnergy(energy))
+    return upTo(formatter.formatSolarEnergy(energy))
 }
 
 private fun getAzimuthDiff(

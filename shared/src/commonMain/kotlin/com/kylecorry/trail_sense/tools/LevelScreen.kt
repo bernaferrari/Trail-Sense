@@ -2,9 +2,6 @@
 
 package com.kylecorry.trail_sense.tools.level.ui
 
-import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
-
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -35,31 +32,32 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
-import androidx.graphics.shapes.toPath
 import com.kylecorry.luna.time.Throttle
-import com.kylecorry.trail_sense.R
+import com.kylecorry.sol.math.MathExtensions.toDegrees
+import com.kylecorry.sol.math.MathExtensions.toRadians
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.toComposePath
 import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.asin
@@ -69,6 +67,7 @@ import kotlin.math.hypot
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
+import org.jetbrains.compose.resources.StringResource
 
 /**
  * Bubble level, flat and confident: one target that works the way the phone is held.
@@ -83,10 +82,9 @@ import kotlin.math.sqrt
 @Composable
 fun LevelScreen(modifier: Modifier = Modifier) {
     // One question: is it level, and if not, which side is high?
-    val context = LocalContext.current
     KeepScreenOn()
-    val formatService = remember { FormatService.getInstance(context) }
-    val threshold = remember { UserPreferences(context).bubbleLevel.threshold }
+    val formatService = remember { FormatService.getInstance() }
+    val threshold = remember { getAppService<UserPreferences>().bubbleLevel.threshold }
     val gravity = remember { getAppService<SensorService>().getGravity() }
     val throttle = remember { Throttle(20) }
     // The up vector in the phone's frame (what a gravity sensor reports): +z out of the screen, +x right, +y top.
@@ -112,41 +110,41 @@ fun LevelScreen(modifier: Modifier = Modifier) {
 
     val magnitude = sqrt(gx * gx + gy * gy + gz * gz).coerceAtLeast(0.001f)
     // How far the screen is from facing straight up: small when the phone lies flat, near 90° when it stands.
-    val fromFlat = Math.toDegrees(acos((gz / magnitude).coerceIn(-1f, 1f).toDouble())).toFloat()
+    val fromFlat = acos((gz / magnitude).coerceIn(-1f, 1f).toDouble()).toDegrees().toFloat()
     // With a little hysteresis, so the well doesn't flicker between the two while the phone is held at 50°.
     var onEdge by remember { mutableStateOf(false) }
     if (!onEdge && fromFlat > EDGE_ENTER_DEGREES) onEdge = true
     if (onEdge && fromFlat < EDGE_EXIT_DEGREES) onEdge = false
 
     // Flat: the tilt along each axis, positive when the right side (x) or the top edge (y) is high.
-    val xAngle = Math.toDegrees(atan2(gx, gz).toDouble()).toFloat()
-    val yAngle = Math.toDegrees(atan2(gy, gz).toDouble()).toFloat()
+    val xAngle = atan2(gx, gz).toDouble().toDegrees().toFloat()
+    val yAngle = atan2(gy, gz).toDouble().toDegrees().toFloat()
     // On edge: which of the phone's four edges is down, and how far the phone is turned from standing square on it.
-    val roll = Math.toDegrees(atan2(gx, gy).toDouble()).toFloat()
+    val roll = atan2(gx, gy).toDouble().toDegrees().toFloat()
     val edge = ((roll / 90f).roundToInt() % 4 + 4) % 4
     val edgeError = roll - (roll / 90f).roundToInt() * 90f
 
     // On edge, the bubble rides along the edge toward its high end: the up direction on screen, projected on the edge.
-    val axisRadians = Math.toRadians((roll - edgeError).toDouble())
+    val axisRadians = (roll - edgeError).toDouble().toRadians()
     val planar = hypot(gx, gy).coerceAtLeast(0.001f)
     val along = ((gx * cos(axisRadians) - gy * sin(axisRadians)) / planar).toFloat().coerceIn(-1f, 1f)
-    val edgeBubble = Math.toDegrees(asin(along).toDouble()).toFloat() / EDGE_FULL_SCALE
+    val edgeBubble = asin(along).toDouble().toDegrees().toFloat() / EDGE_FULL_SCALE
 
     val tilt = if (onEdge) abs(edgeError) else fromFlat
     val isLevel = tilt <= threshold
     val formattedX = formatService.formatDegrees(abs(if (onEdge) edgeError else xAngle), 1)
     val formattedY = formatService.formatDegrees(abs(if (onEdge) 0f else yAngle), 1)
     val formattedTilt = formatService.formatDegrees(tilt, 1)
-    val levelDescription = stringResource(R.string.bubble_level_angles, formattedX, formattedY, formattedTilt)
+    val levelDescription = appString(Res.string.bubble_level_angles, formattedX, formattedY, formattedTilt)
 
-    val verdict = stringResource(
+    val verdict = appString(
         when {
-            isLevel -> R.string.level_is_level
+            isLevel -> Res.string.level_is_level
             onEdge -> edgeHighSide(edge, gx, gy)
-            abs(xAngle) >= abs(yAngle) && xAngle > 0 -> R.string.level_right_high
-            abs(xAngle) >= abs(yAngle) -> R.string.level_left_high
-            yAngle > 0 -> R.string.level_top_high
-            else -> R.string.level_bottom_high
+            abs(xAngle) >= abs(yAngle) && xAngle > 0 -> Res.string.level_right_high
+            abs(xAngle) >= abs(yAngle) -> Res.string.level_left_high
+            yAngle > 0 -> Res.string.level_top_high
+            else -> Res.string.level_bottom_high
         }
     )
 
@@ -174,7 +172,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
     )
 
     TrailSenseInstrumentScaffold(
-        title = stringResource(R.string.tool_bubble_level_title),
+        title = appString(Res.string.tool_bubble_level_title),
         largeTitle = true,
         containerColor = screenColor,
         contentColor = inkColor,
@@ -228,7 +226,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = stringResource(if (onEdge) R.string.level_hint_edge else R.string.level_hint_flat),
+                    text = appString(if (onEdge) Res.string.level_hint_edge else Res.string.level_hint_flat),
                     style = MaterialTheme.typography.bodyMedium,
                     color = inkColor.copy(alpha = 0.72f),
                     textAlign = TextAlign.Center,
@@ -241,7 +239,7 @@ fun LevelScreen(modifier: Modifier = Modifier) {
 
 
 /** On edge, the side of the phone (as you look at it standing on [edge]) that is high. */
-private fun edgeHighSide(edge: Int, gx: Float, gy: Float): Int {
+private fun edgeHighSide(edge: Int, gx: Float, gy: Float): StringResource {
     // The phone's own right (x) or top (y) points up a little when that side is high.
     val high = when (edge) {
         0 -> gx > 0 // standing on its bottom edge: its right is your right
@@ -249,7 +247,7 @@ private fun edgeHighSide(edge: Int, gx: Float, gy: Float): Int {
         1 -> gy < 0 // on its left edge: its bottom is your right
         else -> gy > 0 // on its right edge: its top is your right
     }
-    return if (high) R.string.level_right_high else R.string.level_left_high
+    return if (high) Res.string.level_right_high else Res.string.level_left_high
 }
 
 
@@ -308,7 +306,7 @@ private fun LevelTarget(
             val at = center + offset * (radius - bubbleRadius)
             // A little larger once it locks, so the cookie's scallops reach toward the ring.
             val drawn = bubbleRadius * (1f + 0.06f * lock)
-            val shape = morph.toPath(lock.coerceIn(0f, 1f)).asComposePath()
+            val shape = morph.toComposePath(lock.coerceIn(0f, 1f))
             rotate(90f * lock, at) {
                 withTransform({
                     translate(at.x - drawn, at.y - drawn)

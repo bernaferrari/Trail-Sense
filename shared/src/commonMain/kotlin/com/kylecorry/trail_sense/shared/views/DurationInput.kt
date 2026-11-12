@@ -1,11 +1,5 @@
 package com.kylecorry.trail_sense.shared.views
 
-import kotlin.time.Duration.Companion.seconds
-
-import kotlin.time.Duration.Companion.minutes
-
-import kotlin.time.Duration.Companion.hours
-
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,16 +18,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
-import kotlin.time.Duration
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.systemString
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun DurationPickerDialog(
@@ -43,7 +43,7 @@ fun DurationPickerDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     message: String? = null,
-    hint: String = stringResource(R.string.duration),
+    hint: String = appString(Res.string.duration),
     showSeconds: Boolean = false
 ) {
     var selectedDuration by remember(duration) { mutableStateOf(duration) }
@@ -51,9 +51,9 @@ fun DurationPickerDialog(
     TrailSenseDialog(
         onDismissRequest = onDismiss,
         title = title,
-        confirmText = stringResource(android.R.string.ok),
+        confirmText = systemString(SystemString.Ok),
         onConfirm = { onDurationPicked(selectedDuration) },
-        dismissText = stringResource(android.R.string.cancel)
+        dismissText = systemString(SystemString.Cancel)
     ) {
         Column(modifier = modifier.fillMaxWidth()) {
             if (!message.isNullOrBlank()) {
@@ -80,11 +80,10 @@ fun DurationInput(
     duration: Duration?,
     onDurationChange: (Duration) -> Unit,
     modifier: Modifier = Modifier,
-    hint: String = stringResource(R.string.duration),
+    hint: String = appString(Res.string.duration),
     showSeconds: Boolean = true,
     allowNegative: Boolean = false
 ) {
-    val context = LocalContext.current
     var durationText by remember(duration, showSeconds) {
         mutableStateOf(duration.toDurationText(showSeconds))
     }
@@ -92,7 +91,7 @@ fun DurationInput(
         mutableStateOf(allowNegative && duration?.isNegative() == true)
     }
     var fieldValue by remember(durationText, isNegative, showSeconds) {
-        val displayText = durationText.toDisplayDuration(context, showSeconds, isNegative)
+        val displayText = durationText.toDisplayDuration(showSeconds, isNegative)
         mutableStateOf(TextFieldValue(displayText, TextRange(displayText.length)))
     }
 
@@ -104,7 +103,7 @@ fun DurationInput(
             IconButton(
                 onClick = {
                     isNegative = !isNegative
-                    val displayText = durationText.toDisplayDuration(context, showSeconds, isNegative)
+                    val displayText = durationText.toDisplayDuration(showSeconds, isNegative)
                     fieldValue = TextFieldValue(displayText, TextRange(displayText.length))
                     onDurationChange(durationText.toDuration(isNegative))
                 },
@@ -141,7 +140,7 @@ fun DurationInput(
 
                     else -> durationText
                 }
-                val displayText = durationText.toDisplayDuration(context, showSeconds, isNegative)
+                val displayText = durationText.toDisplayDuration(showSeconds, isNegative)
                 fieldValue = TextFieldValue(displayText, TextRange(displayText.length))
                 onDurationChange(durationText.toDuration(isNegative))
             },
@@ -153,7 +152,7 @@ fun DurationInput(
                     onClick = {
                         durationText = EMPTY_DURATION_TEXT
                         isNegative = false
-                        val displayText = durationText.toDisplayDuration(context, showSeconds, false)
+                        val displayText = durationText.toDisplayDuration(showSeconds, false)
                         fieldValue = TextFieldValue(displayText, TextRange(displayText.length))
                         onDurationChange(durationText.toDuration(false))
                     }
@@ -173,7 +172,7 @@ private fun Duration?.toDurationText(showSeconds: Boolean): String {
     val hours = clamped.inWholeHours.toInt()
     val minutes = clamped.inWholeMinutes.toInt() % 60
     val seconds = if (showSeconds) clamped.inWholeSeconds.toInt() % 60 else 0
-    return "%02d%02d%02d".format(hours, minutes, seconds)
+    return listOf(hours, minutes, seconds).joinToString("") { it.toString().padStart(2, '0') }
 }
 
 private fun String.removeDigit(place: Int): String {
@@ -202,16 +201,15 @@ private fun String.toDuration(isNegative: Boolean): Duration {
 }
 
 private fun String.toDisplayDuration(
-    context: android.content.Context,
     showSeconds: Boolean,
     isNegative: Boolean
 ): String {
     val hours = substring(0, 2)
     val minutes = substring(2, 4)
     val seconds = substring(4, 6)
-    val hoursSymbol = context.getString(R.string.hours_format, "").trim()
-    val minutesSymbol = context.getString(R.string.minutes_format, "").trim()
-    val secondsSymbol = context.getString(R.string.seconds_format, "").trim()
+    val hoursSymbol = getAppService<AppStrings>().get(Res.string.hours_format, "").trim()
+    val minutesSymbol = getAppService<AppStrings>().get(Res.string.minutes_format, "").trim()
+    val secondsSymbol = getAppService<AppStrings>().get(Res.string.seconds_format, "").trim()
     val prefix = if (isNegative) "- " else ""
     return buildString {
         append(prefix)

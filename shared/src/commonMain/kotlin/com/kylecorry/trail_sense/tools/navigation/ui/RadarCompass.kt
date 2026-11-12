@@ -32,6 +32,7 @@ import com.kylecorry.sol.math.MathExtensions.toRadians
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
 import com.kylecorry.trail_sense.shared.icons.trail.ArrowTarget
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.views.compose.toComposePath
 import com.kylecorry.trail_sense.shared.views.trailSenseFont
 import kotlin.math.abs
 import kotlin.math.cos
@@ -230,7 +231,8 @@ private fun DrawScope.drawMark(
             translate(center.x, center.y - (geometry.dialRadius + px(12f))) {
                 val shape = marker.shape
                 if (shape != null) {
-                    drawPath(shape.toComposePath(px(20f)), color)
+                    val side = px(20f)
+                    drawPath(shape.toComposePath(side, dx = -side / 2f, dy = -side / 2f), color)
                 } else {
                     val w = px(11f)
                     val h = px(13f)
@@ -311,22 +313,6 @@ private fun polar(degrees: Float, radius: Float): Offset {
     return Offset(cos(radians) * radius, sin(radians) * radius)
 }
 
-/** The polygon (in a unit square) as a path [side] pixels across, centered on the origin. */
-private fun RoundedPolygon.toComposePath(side: Float): Path {
-    val path = Path()
-    cubics.forEachIndexed { index, cubic ->
-        if (index == 0) {
-            path.moveTo(cubic.anchor0X * side - side / 2f, cubic.anchor0Y * side - side / 2f)
-        }
-        path.cubicTo(
-            cubic.control0X * side - side / 2f, cubic.control0Y * side - side / 2f,
-            cubic.control1X * side - side / 2f, cubic.control1Y * side - side / 2f,
-            cubic.anchor1X * side - side / 2f, cubic.anchor1Y * side - side / 2f
-        )
-    }
-    path.close()
-    return path
-}
 
 private fun DrawScope.px(dp: Float): Float = dp * density
 

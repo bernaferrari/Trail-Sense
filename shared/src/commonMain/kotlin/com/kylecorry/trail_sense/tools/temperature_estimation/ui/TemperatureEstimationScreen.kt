@@ -57,9 +57,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -74,13 +72,12 @@ import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.sol.units.TimeUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.icons.trail.DropDownExpanded
 import com.kylecorry.trail_sense.shared.icons.trail.Thermometer
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
@@ -88,6 +85,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.Wind
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
@@ -105,6 +103,7 @@ import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
 
 private enum class WindSpeedUnit(val distance: DistanceUnits, val time: TimeUnits) {
     KilometersPerHour(DistanceUnits.Kilometers, TimeUnits.Hours),
@@ -114,12 +113,11 @@ private enum class WindSpeedUnit(val distance: DistanceUnits, val time: TimeUnit
 
 @Composable
 fun TemperatureEstimationToolScreen() {
-    val context = LocalContext.current
     val sensorService = remember { getAppService<SensorService>() }
     val thermometer = remember { sensorService.getThermometer() }
-    val prefs = remember { UserPreferences(context) }
+    val prefs = remember { getAppService<UserPreferences>() }
     val location = remember { getAppService<ILocationSubsystem>() }
-    val formatService = remember { FormatService.getInstance(context) }
+    val formatService = remember { FormatService.getInstance() }
 
     TemperatureEstimationScreen(
         prefs = prefs,
@@ -261,34 +259,34 @@ private fun TemperatureEstimationScreen(
     fun formatElevation(distance: Distance): String =
         formatService.formatDistance(distance, Units.getDecimalPlaces(distance.units), false)
 
-    val advice = answer?.let { stringResource(adviceFor(it.celsius().value)) }
+    val advice = answer?.let { appString(adviceFor(it.celsius().value)) }
     val place = when {
         answer == null -> null
-        destElevation != null -> stringResource(R.string.sky_temperature_result_at, formatElevation(destElevation))
-        else -> stringResource(R.string.sky_temperature_result_feels)
+        destElevation != null -> appString(Res.string.sky_temperature_result_at, formatElevation(destElevation))
+        else -> appString(Res.string.sky_temperature_result_feels)
     }
     val instruction = when {
-        base == null -> stringResource(R.string.sky_temperature_start)
-        destElevation != null && baseElevation == null -> stringResource(R.string.sky_temperature_add_base_elevation)
-        else -> stringResource(R.string.sky_temperature_next)
+        base == null -> appString(Res.string.sky_temperature_start)
+        destElevation != null && baseElevation == null -> appString(Res.string.sky_temperature_add_base_elevation)
+        else -> appString(Res.string.sky_temperature_next)
     }
 
     val labels = TemperatureLabels(
-        baseElevation = stringResource(R.string.sky_temperature_field_base),
-        destinationElevation = stringResource(R.string.sky_temperature_field_there),
-        currentTemperature = stringResource(R.string.sky_temperature_field_here),
-        humidity = stringResource(R.string.humidity),
-        windSpeed = stringResource(R.string.wind_speed)
+        baseElevation = appString(Res.string.sky_temperature_field_base),
+        destinationElevation = appString(Res.string.sky_temperature_field_there),
+        currentTemperature = appString(Res.string.sky_temperature_field_here),
+        humidity = appString(Res.string.humidity),
+        windSpeed = appString(Res.string.wind_speed)
     )
-    val readThermometerLabel = stringResource(R.string.sky_temperature_read_thermometer)
-    val humidityErrorText = stringResource(R.string.humidity_must_be_between_0_and_100)
-    val autoElevationNote = stringResource(R.string.sky_temperature_elevation_auto)
-    val conditionsFooter = stringResource(R.string.sky_temperature_conditions_footer)
+    val readThermometerLabel = appString(Res.string.sky_temperature_read_thermometer)
+    val humidityErrorText = appString(Res.string.humidity_must_be_between_0_and_100)
+    val autoElevationNote = appString(Res.string.sky_temperature_elevation_auto)
+    val conditionsFooter = appString(Res.string.sky_temperature_conditions_footer)
 
     TrailSensePage(
-        title = stringResource(R.string.tool_temperature_estimation_title),
+        title = appString(Res.string.tool_temperature_estimation_title),
         onBack = rememberTrailSenseBack(),
-        backLabel = stringResource(R.string.back)
+        backLabel = appString(Res.string.back)
     ) {
         item("mountain") {
             Column(
@@ -358,7 +356,7 @@ private fun TemperatureEstimationScreen(
                                 maxLines = 1
                             )
                             Text(
-                                text = stringResource(R.string.sky_temperature_link, place ?: "", advice ?: ""),
+                                text = appString(Res.string.sky_temperature_link, place ?: "", advice ?: ""),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
@@ -432,8 +430,8 @@ private fun TemperatureEstimationScreen(
                     label = "conditions_chevron"
                 )
                 TrailSenseListItem(
-                    title = stringResource(R.string.sky_temperature_more_conditions),
-                    subtitle = stringResource(R.string.sky_temperature_more_conditions_summary),
+                    title = appString(Res.string.sky_temperature_more_conditions),
+                    subtitle = appString(Res.string.sky_temperature_more_conditions_summary),
                     icon = rememberVectorPainter(TrailIcons.Wind),
                     position = if (showConditions) {
                         TrailSenseGroupPosition(isFirst = true, isLast = false)
@@ -542,12 +540,12 @@ private fun TemperatureEstimationScreen(
     }
 }
 
-private fun adviceFor(celsius: Float): Int = when {
-    celsius < 0f -> R.string.sky_temperature_advice_freezing
-    celsius < 10f -> R.string.sky_temperature_advice_cold
-    celsius < 18f -> R.string.sky_temperature_advice_cool
-    celsius < 30f -> R.string.sky_temperature_advice_warm
-    else -> R.string.sky_temperature_advice_hot
+private fun adviceFor(celsius: Float): StringResource = when {
+    celsius < 0f -> Res.string.sky_temperature_advice_freezing
+    celsius < 10f -> Res.string.sky_temperature_advice_cold
+    celsius < 18f -> Res.string.sky_temperature_advice_cool
+    celsius < 30f -> Res.string.sky_temperature_advice_warm
+    else -> Res.string.sky_temperature_advice_hot
 }
 
 // The slope the two places sit on, as fractions of the object: from the foot (lower left) to the summit.
@@ -623,10 +621,10 @@ private fun TemperatureMountain(
     val flagAlpha = if (hasDestination) 1f else breath
 
     val description = listOfNotNull(
-        stringResource(R.string.sky_temperature_here_short),
+        appString(Res.string.sky_temperature_here_short),
         hereTemperature,
         hereElevation,
-        stringResource(R.string.sky_temperature_there_short).takeIf { hasDestination },
+        appString(Res.string.sky_temperature_there_short).takeIf { hasDestination },
         thereTemperature,
         thereElevation
     ).joinToString(", ")
@@ -750,7 +748,7 @@ private fun TemperatureMountain(
         Layout(
             content = {
                 PlaceLabel(
-                    title = hereTemperature ?: stringResource(R.string.sky_temperature_here_short),
+                    title = hereTemperature ?: appString(Res.string.sky_temperature_here_short),
                     subtitle = hereElevation
                 )
                 if (hasDestination) {
@@ -761,7 +759,7 @@ private fun TemperatureMountain(
                     )
                 } else {
                     PlaceLabel(
-                        title = stringResource(R.string.sky_temperature_where_to),
+                        title = appString(Res.string.sky_temperature_where_to),
                         subtitle = null,
                         onClick = onAskDestination
                     )
