@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles
 
-import android.util.Size
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -88,10 +87,7 @@ internal class TileTest {
 
     @Test
     fun getResolution() {
-        val mockSize = mock<Size> {
-            on { width } doReturn 256
-            on { height } doReturn 256
-        }
+        val mockSize = TileSize(256, 256)
         val tile = Tile(1, 100, 16, mockSize)
         assertEquals(0.208, tile.getResolution(), 0.0005)
     }

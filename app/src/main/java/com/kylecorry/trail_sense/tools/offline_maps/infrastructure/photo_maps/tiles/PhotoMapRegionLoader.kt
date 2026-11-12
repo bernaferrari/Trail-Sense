@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.tiles
 
+import com.kylecorry.trail_sense.shared.map_layers.tiles.toSize
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
@@ -33,7 +34,7 @@ class PhotoMapRegionLoader(
 
     suspend fun load(tile: Tile): Bitmap? = onIO {
         val bounds = tile.getBounds()
-        val maxSize = tile.size
+        val maxSize = tile.size.toSize()
         val projection = if (loadPdfs) map.projection else map.imageProjection
 
         val northWest = projection.toPixels(bounds.northWest)

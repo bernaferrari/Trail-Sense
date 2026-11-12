@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.map_layers
 
+import com.kylecorry.trail_sense.shared.map_layers.tiles.toSize
 import com.kylecorry.trail_sense.shared.time.toLocalDate
 import com.kylecorry.trail_sense.shared.time.plusDays
 
@@ -52,7 +53,7 @@ class LunarEclipseTileSource : TileSource {
         return TileImageUtils.getSampledImage(
             tile.getBounds(),
             resolution,
-            tile.size,
+            tile.size.toSize(),
             Bitmap.Config.ARGB_8888,
             padding = 2,
             smoothPixelEdges = true,

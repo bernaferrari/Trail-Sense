@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles
 
-import android.util.Log
 import com.kylecorry.sol.math.MathExtensions.real
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.science.geology.CoordinateBounds
@@ -85,7 +84,7 @@ object TileMath {
     }
 
     fun getTile(lat: Double, lon: Double, zoom: Int): Tile {
-        val latRad = Math.toRadians(lat)
+        val latRad = lat * PI / 180.0
         val n = 1 shl zoom
         val x = ((lon + 180.0) / 360.0 * n).toInt()
         val y = ((1.0 - ln(tan(latRad) + 1 / cos(latRad)) / PI) / 2.0 * n).toInt()
@@ -100,7 +99,7 @@ object TileMath {
         val latitude = coordinate.latitude.coerceIn(MIN_LATITUDE, MAX_LATITUDE)
         val earthCircumference = WEB_MERCATOR_RADIUS * 2 * PI
         val sourceResolution =
-            earthCircumference * cos(Math.toRadians(latitude)) / WORLD_TILE_SIZE
+            earthCircumference * cos(latitude * PI / 180.0) / WORLD_TILE_SIZE
         return log2(sourceResolution / resolution).toFloat().real(1f)
 
     }

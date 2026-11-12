@@ -153,7 +153,7 @@ class TileLoader(
         }
         return existing?.applyOperations(
             Resize(
-                tile.size,
+                tile.size.toSize(),
                 exact = false
             ),
             Pad(

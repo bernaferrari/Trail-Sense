@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles
 
-import android.util.Size
 import com.kylecorry.sol.math.arithmetic.Arithmetic.power
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
 import com.kylecorry.sol.science.geology.CoordinateBounds
@@ -10,7 +9,7 @@ import kotlin.math.atan
 import kotlin.math.sinh
 
 data class Tile(
-    val x: Int, val y: Int, val z: Int, val size: Size = Size(
+    val x: Int, val y: Int, val z: Int, val size: TileSize = TileSize(
         TileMath.WORLD_TILE_SIZE,
         TileMath.WORLD_TILE_SIZE
     )
@@ -33,8 +32,8 @@ data class Tile(
         val latRadMin = atan(sinh(PI * (1 - 2 * (y + 1).toDouble() / n)))
         val latRadMax = atan(sinh(PI * (1 - 2 * y.toDouble() / n)))
 
-        val latMin = Math.toDegrees(latRadMin)
-        val latMax = Math.toDegrees(latRadMax)
+        val latMin = latRadMin * 180.0 / PI
+        val latMax = latRadMax * 180.0 / PI
 
         return if (lonMax <= 180) {
             CoordinateBounds(latMax, lonMax, latMin, lonMin)
@@ -73,3 +72,6 @@ data class Tile(
         )
     }
 }
+
+/** A tile's size in pixels. */
+data class TileSize(val width: Int, val height: Int)

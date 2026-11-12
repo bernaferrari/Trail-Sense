@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.shared.dem.map_layers
 
 
+import com.kylecorry.trail_sense.shared.map_layers.tiles.toSize
 import android.content.Context
 
 import android.graphics.Bitmap
@@ -81,7 +82,7 @@ class HillshadeMapTileSource : TileSource {
         return DEM.getElevationImage(
             bounds,
             resolution,
-            tile.size,
+            tile.size.toSize(),
             config = Bitmap.Config.ARGB_8888,
             padding = padding,
             oceanColor = Color.WHITE,

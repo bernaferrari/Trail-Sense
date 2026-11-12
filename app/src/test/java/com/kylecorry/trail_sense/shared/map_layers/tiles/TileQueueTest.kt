@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles
 
 import android.graphics.Bitmap
-import android.util.Size
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.units.Coordinate
@@ -106,10 +105,7 @@ internal class TileQueueTest {
             on { toPixels(any<Coordinate>()) } doReturn Vector2(10f, 10f)
         }
 
-        val mockSize = mock<Size> {
-            on { width } doReturn 256
-            on { height } doReturn 256
-        }
+        val mockSize = TileSize(256, 256)
         val mockBitmap = mock<Bitmap>()
         val tile = Tile(0, 0, 1, mockSize)
         val desiredTiles = listOf(tile)
