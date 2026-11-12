@@ -840,8 +840,6 @@ private class NavigatorDisplay(
         map.projection = AzimuthalEquidistantProjection(sensors.gps.location)
         map.resolutionPixels = userPrefs.navigation.radarCompassScale
         map.setOnScaleChangeListener(true) { resolutionPixels ->
-            val radiusMeters = resolutionPixels * map.width / 2f
-            views.radarCompass.setRadiusDistance(Distance.meters(radiusMeters))
             viewModel.setRadarScale(resolutionPixels)
         }
 
@@ -973,7 +971,6 @@ private class NavigatorDisplay(
         // Azimuth
         if (viewModel.hasCompass) {
             views.navigationTitle.title = formatService.formatDegrees(bearing, replace360 = true)
-            views.navigationTitle.shortDirection = formatService.formatDirection(CompassDirection.nearest(bearing))
             // Spelled out: the dial already shows the letters, the readout says it the way a person would.
             views.navigationTitle.direction = context.getString(
                 when (CompassDirection.nearest(bearing)) {
@@ -1158,7 +1155,6 @@ private class NavigationTitleState {
     val rightButton = ComposeQuickActionButtonView()
     var title by mutableStateOf("")
     var direction by mutableStateOf("")
-    var shortDirection by mutableStateOf("")
     var subtitle by mutableStateOf("")
     var isTitleVisible by mutableStateOf(true)
     var onSubtitleClick by mutableStateOf<(() -> Unit)?>(null)
@@ -1200,7 +1196,7 @@ private fun NavigationTitle(
         // balances it), so "40°" never sits left of centre.
         val digits = state.title.removeSuffix("°")
         val headingStyle = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum")
-        val headingColor = if (DialVariant.hub != 0) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+        val headingColor = MaterialTheme.colorScheme.onPrimaryContainer
         Row {
             Text("°", style = headingStyle, fontWeight = FontWeight.Medium, color = androidx.compose.ui.graphics.Color.Transparent, maxLines = 1)
             Text(digits, style = headingStyle, fontWeight = FontWeight.Medium, color = headingColor, maxLines = 1)
@@ -1210,32 +1206,10 @@ private fun NavigationTitle(
             text = state.direction,
             style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
             fontWeight = FontWeight.Medium,
-            color = if (DialVariant.hub != 0) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
             maxLines = 1
         )
     }
-}
-
-/** The classic readout under the dial: "336° NW", the degrees large, the direction letters beside them. */
-@Composable
-private fun NavigationClassicHeading(state: NavigationTitleState, modifier: Modifier = Modifier) {
-    if (!state.isTitleVisible) return
-    Text(
-        text = androidx.compose.ui.text.buildAnnotatedString {
-            append(state.title)
-            if (state.shortDirection.isNotEmpty()) {
-                pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Normal, color = MaterialTheme.colorScheme.onSurfaceVariant))
-                append(" ")
-                append(state.shortDirection)
-                pop()
-            }
-        },
-        modifier = modifier.testTag("navigation_title"),
-        style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onSurface,
-        maxLines = 1
-    )
 }
 
 /** Where you are: the coordinates, then altitude and speed in one quiet line. Each part opens its own detail. */
@@ -1345,17 +1319,12 @@ private fun NavigatorHost(
                         views.radarCompass.Content(radarModifier.testTag("radar_compass"))
                         // Nearby paths are a quiet hint under the dial's marks, not a stripe across it.
                         views.radarCompassMap.Content(radarModifier.then(Modifier.alpha(0.4f)))
-                        if (DialVariant.bezel != 5 || DialVariant.hub != 0) {
-                            NavigationTitle(views.navigationTitle, Modifier.align(Alignment.Center))
-                        }
+                        NavigationTitle(views.navigationTitle, Modifier.align(Alignment.Center))
                         views.mapAttribution.Content(
                             Modifier
                                 .align(Alignment.BottomCenter)
                                 .fillMaxWidth()
                         )
-                    }
-                    if (DialVariant.bezel == 5 && DialVariant.hub == 0) {
-                        NavigationClassicHeading(views.navigationTitle, Modifier.padding(top = TrailSenseSpacing.md))
                     }
                     NavigationWhereabouts(
                         views.navigationTitle,

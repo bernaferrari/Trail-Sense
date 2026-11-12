@@ -1,8 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
-import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -10,7 +8,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.ICompassLayer
@@ -20,7 +17,6 @@ abstract class BaseCompassView(
     protected val context: Context
 ) : ICompassView {
 
-    private val bitmapLoader by lazy { BitmapLoader() }
     protected val prefs by lazy { UserPreferences(context) }
     protected var renderVersion by mutableIntStateOf(0)
 
@@ -70,9 +66,6 @@ abstract class BaseCompassView(
         get() = contentVisible
         set(value) {
             contentVisible = value
-            if (!value) {
-                bitmapLoader.clear()
-            }
         }
 
     var isInvisible: Boolean
@@ -103,24 +96,8 @@ abstract class BaseCompassView(
         contentHeight = height
     }
 
-    protected open fun finalize() {
-        bitmapLoader.clear()
-    }
-
-    protected fun getBitmap(id: ImageVector, size: Int): Bitmap {
-        return bitmapLoader.load(id, size)
-    }
-
     protected fun drawCompassLayers() {
         compassLayers.forEach { it.draw(this) }
-    }
-
-    protected fun dp(value: Float): Float {
-        return Resources.dp(context, value)
-    }
-
-    protected fun sp(value: Float): Float {
-        return Resources.sp(context, value)
     }
 
     override fun addCompassLayer(layer: ICompassLayer) {
