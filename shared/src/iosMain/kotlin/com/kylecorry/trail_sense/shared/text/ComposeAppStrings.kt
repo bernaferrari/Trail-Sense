@@ -3,9 +3,11 @@ package com.kylecorry.trail_sense.shared.text
 import androidx.compose.ui.text.intl.Locale
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.PluralStringResource
+import org.jetbrains.compose.resources.StringArrayResource
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getPluralString
 import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.getStringArray
 
 /** Reads shared strings from Compose resources in the device's language. */
 class ComposeAppStrings : AppStrings {
@@ -23,6 +25,8 @@ class ComposeAppStrings : AppStrings {
         val template = runBlocking { getPluralString(resource, quantity) }
         return AndroidStringFormat.format(template, *args)
     }
+
+    override fun array(resource: StringArrayResource): List<String> = runBlocking { getStringArray(resource) }
 
     override fun system(string: SystemString): String = iosSystemString(string)
 }

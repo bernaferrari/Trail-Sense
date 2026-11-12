@@ -73,8 +73,9 @@ dependencies {
 }
 
 /**
- * Copies the app strings listed in shared-strings.txt, with all their translations, into Compose resources so
- * common code can read them. The app's res folder stays the only place strings and translations are edited.
+ * Copies the app strings, plurals and string arrays listed in shared-strings.txt, with all their translations,
+ * into Compose resources so common code can read them. Array items that point at a string (@string/name) are
+ * resolved in each language. The app's res folder stays the only place strings and translations are edited.
  *
  * Android string syntax is resolved here (quotes, \' \" \@ \? escapes, whitespace collapsing, inline markup)
  * and the plain text is written back with only the escapes Compose resources understand (\n, \t, \\).
@@ -88,6 +89,10 @@ abstract class SyncSharedStringsTask : DefaultTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val appStrings: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val appArrays: ConfigurableFileCollection
 
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -107,6 +112,8 @@ abstract class SyncSharedStringsTask : DefaultTask() {
         // values folder -> name -> text, and name -> quantity -> text for plurals
         val byFolder = sortedMapOf<String, MutableMap<String, String>>()
         val pluralsByFolder = sortedMapOf<String, MutableMap<String, Map<String, String>>>()
+        // Every string by folder, to resolve array items that point at strings
+        val allByFolder = mutableMapOf<String, MutableMap<String, String>>()
         appStrings.files.forEach { file ->
             val folder = file.parentFile.name
             val qualifiers = folder.removePrefix("values").removePrefix("-")
@@ -116,8 +123,10 @@ abstract class SyncSharedStringsTask : DefaultTask() {
             for (i in 0 until nodes.length) {
                 val node = nodes.item(i) as org.w3c.dom.Element
                 val name = node.getAttribute("name")
+                val text = resolveAndroidString(node.textContent)
+                allByFolder.getOrPut(folder) { mutableMapOf() }[name] = text
                 if (name in wanted) {
-                    byFolder.getOrPut(folder) { sortedMapOf() }[name] = resolveAndroidString(node.textContent)
+                    byFolder.getOrPut(folder) { sortedMapOf() }[name] = text
                 }
             }
             val plurals = doc.getElementsByTagName("plurals")
@@ -134,12 +143,44 @@ abstract class SyncSharedStringsTask : DefaultTask() {
                 pluralsByFolder.getOrPut(folder) { sortedMapOf() }[name] = quantities
             }
         }
-        val missing = wanted - byFolder["values"].orEmpty().keys - pluralsByFolder["values"].orEmpty().keys
+        // Arrays are defined once (untranslated); their raw items, by name
+        val rawArrays = sortedMapOf<String, List<String>>()
+        appArrays.files.filter { it.parentFile.name == "values" }.forEach { file ->
+            val doc = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)
+            val nodes = doc.getElementsByTagName("string-array")
+            for (i in 0 until nodes.length) {
+                val node = nodes.item(i) as org.w3c.dom.Element
+                val name = node.getAttribute("name")
+                if (name !in wanted) continue
+                val items = node.getElementsByTagName("item")
+                rawArrays[name] = (0 until items.length).map { items.item(it).textContent.trim() }
+            }
+        }
+
+        val missing = wanted - byFolder["values"].orEmpty().keys - pluralsByFolder["values"].orEmpty().keys -
+                rawArrays.keys
         check(missing.isEmpty()) { "shared-strings.txt lists strings the app does not define: $missing" }
 
-        (byFolder.keys + pluralsByFolder.keys).toSortedSet().forEach { folder ->
+        val defaults = allByFolder["values"].orEmpty()
+        fun arraysFor(folder: String): Map<String, List<String>> {
+            val localized = allByFolder[folder].orEmpty()
+            return rawArrays.mapValues { (name, items) ->
+                items.map { item ->
+                    if (item.startsWith("@string/")) {
+                        val key = item.removePrefix("@string/")
+                        localized[key] ?: defaults[key] ?: error("Array $name points at a missing string: $key")
+                    } else {
+                        resolveAndroidString(item)
+                    }
+                }
+            }
+        }
+
+        (byFolder.keys + pluralsByFolder.keys + (if (rawArrays.isEmpty()) emptySet() else allByFolder.keys))
+            .toSortedSet().forEach { folder ->
             val strings = byFolder[folder].orEmpty()
             val plurals = pluralsByFolder[folder].orEmpty()
+            val arrays = arraysFor(folder)
             // Android still names Hebrew and Indonesian by their old codes; write both so either lookup finds them.
             val folders = when (folder) {
                 "values-iw" -> listOf(folder, "values-he")
@@ -157,6 +198,11 @@ abstract class SyncSharedStringsTask : DefaultTask() {
                         appendLine("""        <item quantity="$quantity">${encode(text)}</item>""")
                     }
                     appendLine("    </plurals>")
+                }
+                arrays.forEach { (name, items) ->
+                    appendLine("""    <string-array name="$name">""")
+                    items.forEach { appendLine("""        <item>${encode(it)}</item>""") }
+                    appendLine("    </string-array>")
                 }
                 appendLine("</resources>")
             }
@@ -216,6 +262,7 @@ val syncSharedStrings = tasks.register<SyncSharedStringsTask>("syncSharedStrings
     val appRes = rootProject.layout.projectDirectory.dir("app/src/main/res")
     names.set(layout.projectDirectory.file("shared-strings.txt"))
     appStrings.from(appRes.asFileTree.matching { include("values*/strings*.xml") })
+    appArrays.from(appRes.asFileTree.matching { include("values/arrays*.xml") })
     staticResources.set(layout.projectDirectory.dir("src/commonMain/composeResources"))
     outputDir.set(layout.buildDirectory.dir("generated/sharedComposeResources/commonMain"))
 }

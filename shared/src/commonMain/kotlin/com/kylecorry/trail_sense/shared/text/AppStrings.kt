@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.shared.text
 
 import org.jetbrains.compose.resources.PluralStringResource
+import org.jetbrains.compose.resources.StringArrayResource
 import org.jetbrains.compose.resources.StringResource
 
 /**
@@ -16,6 +17,9 @@ interface AppStrings {
 
     fun get(resource: StringResource, vararg args: Any?): String
     fun plural(resource: PluralStringResource, quantity: Int, vararg args: Any?): String
+
+    /** A string array's items, in order, in the app's language. */
+    fun array(resource: StringArrayResource): List<String>
 
     /** The platform's own translation of a common label (composables use systemString). */
     fun system(string: SystemString): String

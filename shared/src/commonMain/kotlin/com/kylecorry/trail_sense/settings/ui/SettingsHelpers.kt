@@ -1,8 +1,10 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import androidx.compose.runtime.remember
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
+import org.jetbrains.compose.resources.StringArrayResource
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.sol.units.Distance
@@ -24,6 +26,25 @@ data class SettingsOption(
     val value: String,
     val label: String
 )
+
+/** The options of a string-array preference: [values] are stored, [entries] shown (a value labels itself if unnamed). */
+fun settingsOptions(
+    entries: StringArrayResource,
+    values: StringArrayResource,
+    strings: AppStrings = getAppService()
+): List<SettingsOption> {
+    val labels = strings.array(entries)
+    return strings.array(values).mapIndexed { index, value ->
+        SettingsOption(value, labels.getOrElse(index) { value })
+    }
+}
+
+/** [settingsOptions], read once for this screen. */
+@Composable
+fun rememberSettingsOptions(entries: StringArrayResource, values: StringArrayResource): List<SettingsOption> {
+    val strings = LocalAppStrings.current
+    return remember(entries, values, strings) { settingsOptions(entries, values, strings) }
+}
 
 /** Every settings page: the family's page with its large title and a way back. */
 @Composable

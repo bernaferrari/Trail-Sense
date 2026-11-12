@@ -1,7 +1,12 @@
 package com.kylecorry.trail_sense.settings.ui
 
-import androidx.compose.ui.platform.LocalContext
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
 
+
+import com.kylecorry.andromeda.preferences.Preferences
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.device.DeviceProfile
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,17 +33,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.TemperatureUnits
 import com.kylecorry.sol.units.WeightUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sharing.MapSite
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
@@ -49,28 +50,15 @@ import kotlinx.datetime.format.char
 
 @Composable
 fun UnitSettingsToolScreen() {
-    val context = LocalContext.current
-    val cache = remember { PreferencesSubsystem.getInstance(context).preferences }
-    val userPrefs = remember { UserPreferences(context) }
-    val hasBarometer = remember { Sensors.hasBarometer(context) }
-    val distanceOptions = remember {
-        context.settingsOptions(R.array.distance_unit_entries, R.array.distance_unit_values)
-    }
-    val pressureOptions = remember {
-        context.settingsOptions(R.array.pressure_unit_entries, R.array.pressure_unit_values)
-    }
-    val temperatureOptions = remember {
-        context.settingsOptions(R.array.temperature_unit_entries, R.array.temperature_unit_values)
-    }
-    val weightOptions = remember {
-        context.settingsOptions(R.array.weight_entries, R.array.weight_values)
-    }
-    val coordinateOptions = remember {
-        context.settingsOptions(R.array.coordinate_format_entries, R.array.coordinate_format_values)
-    }
-    val mapOptions = remember {
-        context.settingsOptions(R.array.map_url_entries, R.array.map_url_values)
-    }
+    val cache = remember { getAppService<Preferences>() }
+    val userPrefs = remember { getAppService<UserPreferences>() }
+    val hasBarometer = remember { getAppService<DeviceProfile>().hasBarometer }
+    val distanceOptions = rememberSettingsOptions(Res.array.distance_unit_entries, Res.array.distance_unit_values)
+    val pressureOptions = rememberSettingsOptions(Res.array.pressure_unit_entries, Res.array.pressure_unit_values)
+    val temperatureOptions = rememberSettingsOptions(Res.array.temperature_unit_entries, Res.array.temperature_unit_values)
+    val weightOptions = rememberSettingsOptions(Res.array.weight_entries, Res.array.weight_values)
+    val coordinateOptions = rememberSettingsOptions(Res.array.coordinate_format_entries, Res.array.coordinate_format_values)
+    val mapOptions = rememberSettingsOptions(Res.array.map_url_entries, Res.array.map_url_values)
 
     var distanceUnits by remember {
         mutableStateOf(distanceUnitsValue(userPrefs.distanceUnits))
@@ -95,16 +83,15 @@ fun UnitSettingsToolScreen() {
         mutableStateOf(userPrefs.addLeadingZeroToTime)
     }
 
-    val measurementsTitle = stringResource(R.string.settings_section_measurements)
-    val fineTuneTitle = stringResource(R.string.units_fine_tune)
-    val locationTitle = stringResource(R.string.location)
-    val timeTitle = stringResource(R.string.time)
-    val timeExample = stringResource(
-        R.string.settings_time_format_example,
+    val measurementsTitle = appString(Res.string.settings_section_measurements)
+    val fineTuneTitle = appString(Res.string.units_fine_tune)
+    val locationTitle = appString(Res.string.location)
+    val timeTitle = appString(Res.string.time)
+    val timeExample = appString(Res.string.settings_time_format_example,
         exampleTime(use24HourTime, includeLeadingZero)
     )
 
-    SettingsList(title = stringResource(R.string.units)) {
+    SettingsList(title = appString(Res.string.units)) {
         // The one question most people have: metric or imperial. One tap sets every unit; the rows below are
         // for the few who mix them (metres with °F), each showing its current value.
         val metric = listOf("meters", "c", "kg") + if (hasBarometer) listOf("hpa") else emptyList()
@@ -128,23 +115,23 @@ fun UnitSettingsToolScreen() {
         }
         trailSenseSection("fine_tune", title = fineTuneTitle) {
             row { position ->
-                UnitValueRow(stringResource(R.string.distance), distanceOptions, distanceUnits, position) {
+                UnitValueRow(appString(Res.string.distance), distanceOptions, distanceUnits, position) {
                     distanceUnits = it; cache.putString(PreferenceKeys.distanceUnits, it)
                 }
             }
             row { position ->
-                UnitValueRow(stringResource(R.string.temperature), temperatureOptions, temperatureUnits, position) {
+                UnitValueRow(appString(Res.string.temperature), temperatureOptions, temperatureUnits, position) {
                     temperatureUnits = it; cache.putString(PreferenceKeys.temperatureUnits, it)
                 }
             }
             row { position ->
-                UnitValueRow(stringResource(R.string.weight), weightOptions, weightUnits, position) {
+                UnitValueRow(appString(Res.string.weight), weightOptions, weightUnits, position) {
                     weightUnits = it; cache.putString(PreferenceKeys.weightUnits, it)
                 }
             }
             if (hasBarometer) {
                 row { position ->
-                    UnitValueRow(stringResource(R.string.pressure), pressureOptions, pressureUnits, position) {
+                    UnitValueRow(appString(Res.string.pressure), pressureOptions, pressureUnits, position) {
                         pressureUnits = it; cache.putString(PreferenceKeys.pressureUnits, it)
                     }
                 }
@@ -152,13 +139,13 @@ fun UnitSettingsToolScreen() {
         }
         trailSenseSection("location", title = locationTitle) {
             row { position ->
-                UnitValueRow(stringResource(R.string.pref_coordinate_format_title), coordinateOptions, coordinateFormat, position) {
+                UnitValueRow(appString(Res.string.pref_coordinate_format_title), coordinateOptions, coordinateFormat, position) {
                     coordinateFormat = it
                     cache.putString(PreferenceKeys.coordinateFormat, it)
                 }
             }
             row { position ->
-                UnitValueRow(stringResource(R.string.pref_map_url_source_title), mapOptions, mapSite, position) {
+                UnitValueRow(appString(Res.string.pref_map_url_source_title), mapOptions, mapSite, position) {
                     mapSite = it
                     cache.putString(PreferenceKeys.mapUrlSource, it)
                 }
@@ -167,7 +154,7 @@ fun UnitSettingsToolScreen() {
         trailSenseSection("time", title = timeTitle, footer = timeExample) {
             row { position ->
                 SettingsSwitchRow(
-                    label = stringResource(R.string.pref_use_24_hour_title),
+                    label = appString(Res.string.pref_use_24_hour_title),
                     checked = use24HourTime,
                     onCheckedChange = {
                         use24HourTime = it
@@ -178,7 +165,7 @@ fun UnitSettingsToolScreen() {
             }
             row { position ->
                 SettingsSwitchRow(
-                    label = stringResource(R.string.pref_include_leading_zero_title),
+                    label = appString(Res.string.pref_include_leading_zero_title),
                     checked = includeLeadingZero,
                     onCheckedChange = {
                         includeLeadingZero = it
@@ -208,8 +195,8 @@ private fun UnitSystemCards(
             .padding(bottom = TrailSenseSpacing.lg),
         horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
     ) {
-        UnitSystemCard(stringResource(R.string.units_metric), stringResource(R.string.units_metric_example), metricSelected, onMetric, Modifier.weight(1f))
-        UnitSystemCard(stringResource(R.string.units_imperial), stringResource(R.string.units_imperial_example), imperialSelected, onImperial, Modifier.weight(1f))
+        UnitSystemCard(appString(Res.string.units_metric), appString(Res.string.units_metric_example), metricSelected, onMetric, Modifier.weight(1f))
+        UnitSystemCard(appString(Res.string.units_imperial), appString(Res.string.units_imperial_example), imperialSelected, onImperial, Modifier.weight(1f))
     }
 }
 

@@ -291,6 +291,10 @@ abstract class SharedStringsKeepTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val defaultStrings: RegularFileProperty
 
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val defaultArrays: RegularFileProperty
+
     @get:Internal
     abstract val keepFile: RegularFileProperty
 
@@ -303,7 +307,15 @@ abstract class SharedStringsKeepTask : DefaultTask() {
             .filter { it.isNotEmpty() && !it.startsWith("#") }.toSortedSet()
         val text = defaultStrings.get().asFile.readText()
         val plurals = Regex("""<plurals\s+name="([^"]+)"""").findAll(text).map { it.groupValues[1] }.toSet()
-        val keep = wanted.joinToString(",") { if (it in plurals) "@plurals/$it" else "@string/$it" }
+        val arrays = Regex("""<string-array\s+name="([^"]+)"""").findAll(defaultArrays.get().asFile.readText())
+            .map { it.groupValues[1] }.toSet()
+        val keep = wanted.joinToString(",") {
+            when (it) {
+                in plurals -> "@plurals/$it"
+                in arrays -> "@array/$it"
+                else -> "@string/$it"
+            }
+        }
         val expected = """
             |<?xml version="1.0" encoding="utf-8"?>
             |<!-- Generated from shared/shared-strings.txt by :app:updateSharedStringsKeep. Do not edit. -->
@@ -324,6 +336,7 @@ abstract class SharedStringsKeepTask : DefaultTask() {
 fun SharedStringsKeepTask.configureKeep(update: Boolean) {
     names.set(rootProject.layout.projectDirectory.file("shared/shared-strings.txt"))
     defaultStrings.set(layout.projectDirectory.file("src/main/res/values/strings.xml"))
+    defaultArrays.set(layout.projectDirectory.file("src/main/res/values/arrays.xml"))
     keepFile.set(layout.projectDirectory.file("src/main/res/raw/shared_strings_keep.xml"))
     this.update.set(update)
 }

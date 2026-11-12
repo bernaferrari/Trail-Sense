@@ -5,6 +5,7 @@ import android.content.Context
 import com.kylecorry.andromeda.core.system.ResourceCache
 import com.kylecorry.andromeda.core.system.Resources
 import org.jetbrains.compose.resources.PluralStringResource
+import org.jetbrains.compose.resources.StringArrayResource
 import org.jetbrains.compose.resources.StringResource
 import java.util.concurrent.ConcurrentHashMap
 
@@ -30,6 +31,10 @@ class AndroidAppStrings(context: Context) : AppStrings {
 
     override fun plural(resource: PluralStringResource, quantity: Int, vararg args: Any?): String {
         return context.resources.getQuantityString(id(resource.key, "plurals"), quantity, *args)
+    }
+
+    override fun array(resource: StringArrayResource): List<String> {
+        return context.resources.getStringArray(id(resource.key, "array")).toList()
     }
 
     override fun system(string: SystemString): String {
