@@ -6,6 +6,10 @@ import kotlinx.datetime.LocalTime
 class CanSendDailyForecast(private val startTime: LocalTime) : Specification<LocalTime>() {
     override fun isSatisfiedBy(value: LocalTime): Boolean {
         val end = LocalTime.fromSecondOfDay((startTime.toSecondOfDay() + 3 * 3600) % (24 * 3600))
-        return value >= startTime && value <= end
+        if (end >= startTime) {
+            return value in startTime..end
+        }
+        // The window starts at night and ends after midnight
+        return value >= startTime || value <= end
     }
 }

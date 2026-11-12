@@ -267,6 +267,6 @@ dependencies {
     testRuntimeOnly(libs.junit.jupiter.engine)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockito.kotlin)
-    testImplementation("com.russhwolf:multiplatform-settings-test:1.3.0")
+    testImplementation(libs.multiplatform.settings.test)
     testImplementation(libs.kotlinx.serialization.json)
 }
