@@ -1,8 +1,9 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.tools.paths.domain.IPath
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
@@ -11,16 +12,16 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
 import com.kylecorry.trail_sense.tools.paths.infrastructure.PathPickers
 
 class MoveIPathCommand(
-    private val context: Context,
+    private val host: AppHost,
     private val pathService: IPathService = getAppService<IPathService>()
 ) {
 
     suspend fun execute(path: IPath): PathGroup? {
 
         val result = PathPickers.pickGroup(
-            context,
+            host,
             null,
-            context.getString(R.string.move),
+            getAppService<AppStrings>().get(Res.string.move),
             initialGroup = path.parentId,
             filter = { it.filter { path !is PathGroup || path.id != it.id } }
         )

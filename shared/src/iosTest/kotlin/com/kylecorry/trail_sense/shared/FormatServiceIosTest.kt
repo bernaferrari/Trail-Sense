@@ -18,6 +18,7 @@ class FormatServiceIosTest {
         override val hasCompass = true
         override val hasGyroscope = true
         override val hasBarometer = true
+        override val hasHygrometer = false
         override val hasDynamicColors = false
         override val isMetricPreferred = true
         override val uses24HourClock = true

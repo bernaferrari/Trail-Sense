@@ -1,15 +1,14 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import android.content.Context
 import com.kylecorry.andromeda.gpx.GPXData
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
-import com.kylecorry.trail_sense.shared.dialogs.items
-import com.kylecorry.trail_sense.shared.dialogs.snackbar
 import com.kylecorry.trail_sense.shared.io.IOService
 import com.kylecorry.trail_sense.tools.paths.domain.FullPath
 import com.kylecorry.trail_sense.tools.paths.domain.IPath
@@ -23,13 +22,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 class ExportPathCommand(
-    private val context: Context,
+    private val host: AppHost,
     private val scope: CoroutineScope,
     private val gpxService: IOService<GPXData>,
     private val pathService: IPathService = getAppService<IPathService>()
 ) {
 
     private val pathNameFactory = PathNameFactory()
+    private val strings = getAppService<AppStrings>()
 
     fun execute(path: IPath?) {
         scope.launch {
@@ -46,8 +46,8 @@ class ExportPathCommand(
                 listOf(path.id)
             } else {
                 val selection = CoroutinePickers.items(
-                    context,
-                    context.getString(R.string.export),
+                    host,
+                    strings.get(Res.string.export),
                     paths.map { pathNameFactory.getName(it) },
                     List(paths.size) { it }
                 ) ?: return@launch
@@ -76,9 +76,9 @@ class ExportPathCommand(
             // Notify the user
             onMain {
                 if (success) {
-                    Alerts.snackbar(context, context.getString(R.string.path_exported))
+                    Alerts.snackbar(host, strings.get(Res.string.path_exported))
                 } else {
-                    Alerts.snackbar(context, context.getString(R.string.export_path_error))
+                    Alerts.snackbar(host, strings.get(Res.string.export_path_error))
                 }
             }
         }

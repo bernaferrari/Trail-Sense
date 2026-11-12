@@ -1,11 +1,10 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import android.content.Context
 
 interface WeatherField {
 
-    fun getListItem(context: Context): WeatherListItem?
+    fun getListItem(): WeatherListItem?
 
 }
 

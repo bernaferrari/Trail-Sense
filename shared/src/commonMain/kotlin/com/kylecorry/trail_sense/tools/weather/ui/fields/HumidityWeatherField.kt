@@ -1,11 +1,12 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.content.Context
-import com.kylecorry.andromeda.sense.Sensors
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.device.DeviceProfile
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.colors.AppColor
 
 // TODO: Build chart into this
@@ -13,18 +14,18 @@ class HumidityWeatherField(
     private val humidity: Float?,
     private val onClick: () -> Unit
 ) : WeatherField {
-    override fun getListItem(context: Context): WeatherListItem? {
+    override fun getListItem(): WeatherListItem? {
         humidity ?: return null
-        if (!Sensors.hasHygrometer(context)) {
+        if (!getAppService<DeviceProfile>().hasHygrometer) {
             return null
         }
 
-        val formatter = FormatService.getInstance(context)
+        val formatter = FormatService.getInstance()
         val value = formatter.formatPercentage(humidity)
 
         return WeatherListItem(
             id = 6,
-            title = context.getString(R.string.humidity),
+            title = getAppService<AppStrings>().get(Res.string.humidity),
             icon = TrailIcons.CategoryWater,
             iconTint = AppColor.Blue.color,
             trailingText = value

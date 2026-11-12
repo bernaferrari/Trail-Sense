@@ -256,7 +256,7 @@ fun WeatherToolScreen(
 
     fun showTemperatureForecast() {
         scope.launch {
-            ShowHighLowTemperatureDialogCommand(context).execute()
+            ShowHighLowTemperatureDialogCommand().execute()
         }
     }
 
@@ -281,7 +281,7 @@ fun WeatherToolScreen(
 
             // Humidity
             HumidityWeatherField(weather.observation?.humidity) { showHumidityChart() },
-            CloudWeatherField(weather.clouds),
+            CloudWeatherField(weather.clouds, context),
 
             // System
             PressureSystemWeatherField(weather.observation?.pressure),
@@ -290,7 +290,7 @@ fun WeatherToolScreen(
             // Last updated
             LastUpdatedWeatherField(weather.observation?.time),
         )
-        fields.mapNotNull { it.getListItem(context) }
+        fields.mapNotNull { it.getListItem() }
     }
     val tendencyDirection = weather?.pressureTendency?.characteristic?.name?.let {
         when {
@@ -742,7 +742,8 @@ private fun WeatherPressureSection(
                 )
             }
         }
-        if (number != null && tendency?.trailingText != null) {
+        val tendencyText = tendency?.trailingText
+        if (number != null && tendencyText != null) {
             // One line: the change that matters, in emphasis, then what it means. (It used to say "rising" in
             // words, then the rate in the smallest type under it.)
             val rate = stringResource(
@@ -751,7 +752,7 @@ private fun WeatherPressureSection(
                     tendencyDirection < 0 -> R.string.sky_pressure_rate_falling
                     else -> R.string.sky_pressure_rate_steady
                 },
-                tendency.trailingText
+                tendencyText
             )
             val outlook = stringResource(
                 when {

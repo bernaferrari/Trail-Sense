@@ -1,14 +1,15 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.content.Context
 import com.kylecorry.sol.units.Temperature
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import com.kylecorry.trail_sense.tools.weather.domain.TemperatureThresholds
 import androidx.compose.ui.graphics.toArgb
 import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 
@@ -17,11 +18,11 @@ class HistoricTemperatureRangeWeatherField(
     private val high: Temperature?,
     private val onClick: () -> Unit
 ) : WeatherField {
-    override fun getListItem(context: Context): WeatherListItem? {
+    override fun getListItem(): WeatherListItem? {
         low ?: return null
         high ?: return null
-        val formatter = FormatService.getInstance(context)
-        val units = UserPreferences(context).temperatureUnits
+        val formatter = FormatService.getInstance()
+        val units = getAppService<UserPreferences>().temperatureUnits
         val lowValue = formatter.formatTemperature(
             low.convertTo(units)
         )
@@ -30,11 +31,11 @@ class HistoricTemperatureRangeWeatherField(
         )
 
         val color = when {
-            low.value <= WeatherSubsystem.COLD -> {
+            low.value <= TemperatureThresholds.COLD -> {
                 AppColor.Blue.color
             }
 
-            high.value >= WeatherSubsystem.HOT -> {
+            high.value >= TemperatureThresholds.HOT -> {
                 AppColor.Red.color
             }
 
@@ -45,11 +46,11 @@ class HistoricTemperatureRangeWeatherField(
 
         return WeatherListItem(
             id = 9,
-            title = context.getString(R.string.temperature_high_low),
-            subtitle = context.getString(R.string.historic_temperature_years, 30),
+            title = getAppService<AppStrings>().get(Res.string.temperature_high_low),
+            subtitle = getAppService<AppStrings>().get(Res.string.historic_temperature_years, 30),
             icon = TrailIcons.TemperatureRange,
             iconTint = color,
-            trailingText = context.getString(R.string.slash_separated_pair, highValue, lowValue)
+            trailingText = getAppService<AppStrings>().get(Res.string.slash_separated_pair, highValue, lowValue)
         ) {
             onClick()
         }

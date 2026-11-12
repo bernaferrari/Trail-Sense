@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import android.content.Context
 import android.content.ContextWrapper
@@ -202,7 +204,7 @@ fun PathsToolScreen(
     }
 
     fun exportPath(path: IPath?) {
-        ExportPathCommand(context, scope, gpxService, pathService).execute(path)
+        ExportPathCommand(AppHost.from(context), scope, gpxService, pathService).execute(path)
     }
 
     fun setGroupVisibility(group: PathGroup, visible: Boolean) {
@@ -214,7 +216,7 @@ fun PathsToolScreen(
     }
 
     fun movePath(path: IPath) {
-        val command = MoveIPathCommand(context, pathService)
+        val command = MoveIPathCommand(AppHost.from(context), pathService)
         scope.launch {
             val newGroup = command.execute(path)
             if (newGroup?.id != path.parentId) {
@@ -250,7 +252,7 @@ fun PathsToolScreen(
         when (action) {
             PathAction.Export -> exportPath(path)
             PathAction.Delete -> DeletePathCommand(scope, pathService).execute(path)
-            PathAction.Merge -> MergePathCommand(context, scope, pathService).execute(path)
+            PathAction.Merge -> MergePathCommand(AppHost.from(context), scope, pathService).execute(path)
             PathAction.Show -> ViewPathCommand(appNavigator).execute(path)
             PathAction.Rename -> RenamePathCommand(scope, pathService).execute(path)
             PathAction.Keep -> KeepPathCommand(scope, pathService).execute(path)

@@ -1,10 +1,11 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import android.content.Context
-import com.kylecorry.trail_sense.R
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.dialogs.loading
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.infrastructure.PathPickers
@@ -14,22 +15,24 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MergePathCommand(
-    private val context: Context,
+    private val host: AppHost,
     private val scope: CoroutineScope,
     private val pathService: IPathService = getAppService<IPathService>()
 ) : IPathCommand {
 
+    private val strings = getAppService<AppStrings>()
+
     override fun execute(path: Path) {
         scope.launch {
             val other = PathPickers.pickPath(
-                context,
-                context.getString(R.string.append_onto),
+                host,
+                strings.get(Res.string.append_onto),
                 scope = this,
                 filter = { it.filter { it !is Path || it.id != path.id } }
             ) ?: return@launch
 
             val loading = withContext(Dispatchers.Main) {
-                Alerts.loading(context, context.getString(R.string.merging))
+                Alerts.loading(host, strings.get(Res.string.merging))
             }
             withContext(Dispatchers.IO) {
                 pathService.mergePaths(other.id, path.id)

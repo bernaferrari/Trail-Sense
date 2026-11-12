@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import com.kylecorry.trail_sense.shared.views.compose.chartHeight
 
 import android.content.Context
@@ -364,7 +367,7 @@ fun PathOverviewToolScreen(
     fun movePath() {
         val current = viewModel.path ?: return
         scope.launch {
-            MoveIPathCommand(context, pathService).execute(current)
+            MoveIPathCommand(AppHost.from(context), pathService).execute(current)
         }
     }
 
@@ -419,7 +422,7 @@ fun PathOverviewToolScreen(
                 ActionItem(it, TrailIcons.MenuDots) {
                     when (action) {
                         PathAction.Export -> ExportPathCommand(
-                            context,
+                            AppHost.from(context),
                             scope,
                             IOFactory().createGpxService(
                                 context,

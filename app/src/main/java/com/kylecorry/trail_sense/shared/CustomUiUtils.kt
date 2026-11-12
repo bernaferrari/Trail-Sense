@@ -29,8 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import com.kylecorry.andromeda.core.sensors.Quality
@@ -399,32 +397,11 @@ object CustomUiUtils {
         content: CharSequence? = null,
         composeContent: @Composable () -> Unit
     ) {
-        val view: @Composable () -> Unit = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    // A dialog is its own window, so its test tags are only ids if it says so too
-                    .semantics { testTagsAsResourceId = true }
-                    .padding(24.dp)
-            ) {
-                if (content != null) {
-                    Text(
-                        text = content.toString(),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                    )
-                }
-                composeContent()
-            }
-        }
-        Alerts.dialog(
-            context,
+        com.kylecorry.trail_sense.shared.dialogs.showComposeContentDialog(
+            AppHost.from(context),
             title,
-            body = view,
-            cancelText = null
+            content,
+            composeContent
         )
     }
 

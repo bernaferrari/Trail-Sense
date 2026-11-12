@@ -1,15 +1,16 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.content.Context
 import com.kylecorry.sol.units.Temperature
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.sensors.thermometer.ThermometerSource
-import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import com.kylecorry.trail_sense.tools.weather.domain.TemperatureThresholds
 import androidx.compose.ui.graphics.toArgb
 import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 
@@ -18,10 +19,10 @@ class TemperatureWeatherField(
     private val temperature: Temperature?,
     private val onClick: () -> Unit
 ) : WeatherField {
-    override fun getListItem(context: Context): WeatherListItem? {
+    override fun getListItem(): WeatherListItem? {
         temperature ?: return null
-        val formatter = FormatService.getInstance(context)
-        val prefs = UserPreferences(context)
+        val formatter = FormatService.getInstance()
+        val prefs = getAppService<UserPreferences>()
         val units = prefs.temperatureUnits
         val source = prefs.thermometer.source
         val value = formatter.formatTemperature(
@@ -29,11 +30,11 @@ class TemperatureWeatherField(
         )
 
         val color = when {
-            temperature.value <= WeatherSubsystem.COLD -> {
+            temperature.value <= TemperatureThresholds.COLD -> {
                 AppColor.Blue.color
             }
 
-            temperature.value >= WeatherSubsystem.HOT -> {
+            temperature.value >= TemperatureThresholds.HOT -> {
                 AppColor.Red.color
             }
 
@@ -44,14 +45,13 @@ class TemperatureWeatherField(
 
         return WeatherListItem(
             id = 5,
-            title = context.getString(R.string.temperature),
+            title = getAppService<AppStrings>().get(Res.string.temperature),
             subtitle = when (source) {
-                ThermometerSource.Historic -> context.getString(
-                    R.string.historic_temperature_years,
+                ThermometerSource.Historic -> getAppService<AppStrings>().get(Res.string.historic_temperature_years,
                     30
                 )
 
-                ThermometerSource.Sensor -> context.getString(R.string.sensor)
+                ThermometerSource.Sensor -> getAppService<AppStrings>().get(Res.string.sensor)
             },
             icon = TrailIcons.Thermometer,
             iconTint = color,

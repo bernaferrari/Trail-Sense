@@ -9,9 +9,10 @@ import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
 import com.kylecorry.trail_sense.tools.clouds.ui.CloudDetailsModal
 
 class CloudWeatherField(
-    private val cloud: Reading<CloudGenus?>?
+    private val cloud: Reading<CloudGenus?>?,
+    private val context: Context
 ) : WeatherField {
-    override fun getListItem(context: Context): WeatherListItem? {
+    override fun getListItem(): WeatherListItem? {
         cloud ?: return null
         val cloudDetailsService = CloudDetailsService(context)
         val name = cloudDetailsService.getCloudName(cloud.value)

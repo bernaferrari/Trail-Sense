@@ -8,6 +8,7 @@ interface DeviceProfile {
     val hasCompass: Boolean
     val hasGyroscope: Boolean
     val hasBarometer: Boolean
+    val hasHygrometer: Boolean
 
     /** Whether the system can supply colors from the wallpaper. */
     val hasDynamicColors: Boolean

@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure
 
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
-import com.kylecorry.trail_sense.shared.views.compose.from
 
-import android.content.Context
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.dialogs.DialogLabels
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.grouping.picker.GroupablePickers
@@ -23,9 +23,9 @@ import kotlinx.coroutines.Dispatchers
 object PathPickers {
 
     suspend fun pickGroup(
-        context: Context,
+        host: AppHost,
         title: String? = null,
-        okText: String = context.getString(android.R.string.ok),
+        okText: CharSequence = DialogLabels.Ok,
         initialGroup: Long? = null,
         scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
         sort: IPathSortStrategy = NamePathSortStrategy(),
@@ -39,13 +39,13 @@ object PathPickers {
             augment = { sort.sort(filter(it.filterIsInstance<PathGroup>())) }
         )
         GroupablePickers.group(
-            AppHost.from(context),
+            host,
             title,
             okText,
             manager,
-            { getGroupTitle(context, it) },
+            { getGroupTitle(it) },
             { (it as PathGroup).name },
-            context.getString(R.string.no_groups),
+            getAppService<AppStrings>().get(Res.string.no_groups),
             initialGroup,
             searchEnabled = false
         ) { cancelled, item ->
@@ -54,7 +54,7 @@ object PathPickers {
     }
 
     suspend fun pickPath(
-        context: Context,
+        host: AppHost,
         title: String? = null,
         initialGroup: Long? = null,
         scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
@@ -69,10 +69,10 @@ object PathPickers {
             augment = { sort.sort(filter(it)) }
         )
         GroupablePickers.item(
-            AppHost.from(context),
+            host,
             title,
             manager,
-            { getGroupTitle(context, it) },
+            { getGroupTitle(it) },
             {
                 when (it) {
                     is PathGroup -> it.name
@@ -80,7 +80,7 @@ object PathPickers {
                     else -> ""
                 }
             },
-            context.getString(R.string.no_paths),
+            getAppService<AppStrings>().get(Res.string.no_paths),
             initialGroup,
             searchEnabled = false
         ) {
@@ -88,11 +88,11 @@ object PathPickers {
         }
     }
 
-    private fun getGroupTitle(context: Context, group: IPath?): String {
+    private fun getGroupTitle(group: IPath?): String {
         return if (group is PathGroup) {
             group.name
         } else {
-            context.getString(R.string.paths)
+            getAppService<AppStrings>().get(Res.string.paths)
         }
     }
 }

@@ -1,21 +1,22 @@
 package com.kylecorry.trail_sense.tools.weather.ui.fields
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.content.Context
 import com.kylecorry.sol.units.Pressure
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import androidx.compose.ui.graphics.toArgb
 import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 
 class PressureWeatherField(private val pressure: Pressure?) : WeatherField {
-    override fun getListItem(context: Context): WeatherListItem? {
+    override fun getListItem(): WeatherListItem? {
         pressure ?: return null
-        val formatter = FormatService.getInstance(context)
-        val units = UserPreferences(context).pressureUnits
+        val formatter = FormatService.getInstance()
+        val units = getAppService<UserPreferences>().pressureUnits
         val color = TrailSenseColors.current.onSurfaceVariant.toArgb()
         val value = formatter.formatPressure(
             pressure.convertTo(units),
@@ -24,7 +25,7 @@ class PressureWeatherField(private val pressure: Pressure?) : WeatherField {
 
         return WeatherListItem(
             id = 1,
-            title = context.getString(R.string.pressure),
+            title = getAppService<AppStrings>().get(Res.string.pressure),
             icon = TrailIcons.Barometer,
             iconTint = color,
             trailingText = value

@@ -214,9 +214,8 @@ fun BeaconDetailsToolScreen(route: Route.BeaconDetails) {
             if (current != null) {
                 scope.launch {
                     ShowHighLowTemperatureDialogCommand(
-                        context,
-                        current.coordinate,
-                        Distance.meters(current.elevation ?: 0f)
+                        location = current.coordinate,
+                        elevation = Distance.meters(current.elevation ?: 0f)
                     ).execute()
                 }
             }

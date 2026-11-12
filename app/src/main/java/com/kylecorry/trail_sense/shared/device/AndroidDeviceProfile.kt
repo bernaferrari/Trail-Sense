@@ -22,6 +22,9 @@ class AndroidDeviceProfile(context: Context) : DeviceProfile {
     override val hasBarometer: Boolean
         get() = Sensors.hasBarometer(context)
 
+    override val hasHygrometer: Boolean
+        get() = Sensors.hasHygrometer(context)
+
     override val hasDynamicColors: Boolean
         get() = isDynamicColorAvailable()
 
