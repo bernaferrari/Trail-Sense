@@ -16,7 +16,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /** What lifting the finger did to a hold. */
-internal enum class ClinometerHoldResult {
+enum class ClinometerHoldResult {
     /** Nothing was held. */
     None,
 
@@ -35,7 +35,7 @@ internal enum class ClinometerHoldResult {
  * or height, and the locked readings a tap or a hold-and-sweep leaves. The live angle comes from the sensors in the
  * screen; this decides what is shown and measured from it.
  */
-internal class ClinometerViewModel(
+class ClinometerViewModel(
     private val baselineDistance: () -> Distance?,
     private val now: () -> Instant = { Clock.System.now() }
 ) : ViewModel() {
