@@ -264,7 +264,7 @@ object AstronomyToolRegistration : ToolRegistration {
                 )
             ),
             singletons = listOf(
-                AstronomySubsystem::getInstance
+                { AstronomySubsystem.getInstance() }
             )
         )
     }

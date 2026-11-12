@@ -28,7 +28,7 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
         context: Context,
         prefs: WidgetPreferences?
     ): ToolWidgetContent {
-        val astronomy = AstronomySubsystem.getInstance(context)
+        val astronomy = AstronomySubsystem.getInstance()
 
         val moon = astronomy.moon
 

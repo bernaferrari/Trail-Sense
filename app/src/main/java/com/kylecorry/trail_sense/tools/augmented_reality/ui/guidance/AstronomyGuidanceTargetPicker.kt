@@ -62,7 +62,7 @@ class AstronomyGuidanceTargetPicker(
         onDefault {
             val location = view.location
             val time = getDisplayedTime()
-            val planetMapper = PlanetMapper(view.context)
+            val planetMapper = PlanetMapper()
             val moonPhaseMapper = MoonPhaseImageMapper()
             val notVisible = view.context.getString(R.string.not_visible)
 

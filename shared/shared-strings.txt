@@ -320,3 +320,10 @@ sun_nautical
 supermoon
 times
 total
+planet_jupiter
+planet_mars
+planet_mercury
+planet_neptune
+planet_saturn
+planet_uranus
+planet_venus

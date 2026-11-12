@@ -91,7 +91,7 @@ class ARAstronomyLayer(
     override suspend fun update(drawer: ICanvasDrawer, view: AugmentedRealityView) {
         val location = view.location
         if (planetMapper == null) {
-            planetMapper = PlanetMapper(view.context)
+            planetMapper = PlanetMapper()
         }
 
         hooks.effect(

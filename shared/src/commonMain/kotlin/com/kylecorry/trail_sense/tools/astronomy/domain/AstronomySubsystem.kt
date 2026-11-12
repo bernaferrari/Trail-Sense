@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.tools.astronomy.domain
 
-import android.annotation.SuppressLint
-import android.content.Context
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.Reading
@@ -13,11 +11,11 @@ import com.kylecorry.trail_sense.shared.time.today
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
-class AstronomySubsystem(context: Context) {
+class AstronomySubsystem private constructor() {
 
     private val astronomyService = AstronomyService()
     private val location = getAppService<ILocationSubsystem>()
-    private val prefs = UserPreferences(context)
+    private val prefs = getAppService<UserPreferences>()
     private val hooks = Hooks()
     private val hookTriggers = HookTriggers()
 
@@ -97,16 +95,9 @@ class AstronomySubsystem(context: Context) {
     }
 
     companion object {
-        @SuppressLint("StaticFieldLeak")
-        private var instance: AstronomySubsystem? = null
+        private val shared by lazy { AstronomySubsystem() }
 
-        @Synchronized
-        fun getInstance(context: Context): AstronomySubsystem {
-            if (instance == null) {
-                instance = AstronomySubsystem(context.applicationContext)
-            }
-            return instance!!
-        }
+        fun getInstance(): AstronomySubsystem = shared
     }
 
 }

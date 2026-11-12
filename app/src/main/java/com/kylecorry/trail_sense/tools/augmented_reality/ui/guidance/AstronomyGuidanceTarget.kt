@@ -30,7 +30,7 @@ class AstronomyGuidanceTarget(
     override suspend fun refresh(request: ARGuidanceRefreshRequest): ARGuidanceTargetState = onDefault {
         val location = request.location
         val time = request.time
-        val planetMapper = PlanetMapper(request.context)
+        val planetMapper = PlanetMapper()
 
         when (selection) {
             AstronomySelection.Sun -> {

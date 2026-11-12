@@ -20,7 +20,7 @@ class SunToolWidgetView : SimpleToolWidgetView() {
         prefs: WidgetPreferences?
     ): ToolWidgetContent {
         val formatService = FormatService.getInstance(context)
-        val astronomy = AstronomySubsystem.getInstance(context)
+        val astronomy = AstronomySubsystem.getInstance()
         val sun = astronomy.sun
 
         val clickAction = WidgetClickAction.StartActivity(

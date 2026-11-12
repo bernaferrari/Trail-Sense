@@ -21,7 +21,7 @@ class MoonToolWidgetView : SimpleToolWidgetView() {
         context: Context,
         prefs: WidgetPreferences?
     ): ToolWidgetContent {
-        val astronomy = AstronomySubsystem.getInstance(context)
+        val astronomy = AstronomySubsystem.getInstance()
         val formatter = FormatService.getInstance(context)
         val moon = astronomy.moon
         val size = Resources.dp(context, 32f).toInt()

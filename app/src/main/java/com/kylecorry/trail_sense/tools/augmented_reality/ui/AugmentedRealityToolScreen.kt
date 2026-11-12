@@ -224,7 +224,7 @@ private class AugmentedRealityController(
     }
 
     private val formatter by lazy { FormatService.getInstance(context) }
-    private val planetMapper by lazy { PlanetMapper(context) }
+    private val planetMapper by lazy { PlanetMapper() }
     private var activeGuidanceTarget: ARGuidanceTarget? = null
     private val guidanceRefreshRunner = CoroutineQueueRunner()
 
@@ -560,7 +560,7 @@ private class AugmentedRealityController(
         if (!isViewReady) {
             return
         }
-        val isNight = AstronomySubsystem.getInstance(context).isNight()
+        val isNight = AstronomySubsystem.getInstance().isNight()
         val shouldIncreaseExposureAtNight = userPrefs.augmentedReality.increaseExposureAtNight
         views.arView.setExposureCompensation(if (isNight && shouldIncreaseExposureAtNight) 0.5f else 0f)
     }
