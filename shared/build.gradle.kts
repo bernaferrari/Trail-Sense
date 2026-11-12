@@ -31,6 +31,7 @@ kotlin {
             api(libs.androidx.navigation3.runtime)
             api(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.atomicfu)
 
             // Compose Multiplatform artifacts
             implementation(compose.runtime)

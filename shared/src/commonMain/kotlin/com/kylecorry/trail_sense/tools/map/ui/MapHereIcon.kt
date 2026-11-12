@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
  * A folded map with a "you are here" dot in its middle panel: the Map tab's empty state, so it reads as "where am I
  * on my map" rather than the same map glyph as the Offline Maps list.
  */
-internal val MapHereIcon: ImageVector
+val MapHereIcon: ImageVector
     get() {
         _mapHereIcon?.let { return it }
         return ImageVector.Builder(

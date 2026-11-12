@@ -5,12 +5,11 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Path
-import androidx.core.graphics.createBitmap
-import com.kylecorry.andromeda.canvas.CanvasDrawer
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Path
+import com.kylecorry.trail_sense.shared.canvas.ComposeMapDrawer
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -33,7 +32,7 @@ class MyLocationGeoJsonSource : GeoJsonSource {
     private val context: Context
         get() = getAppService()
 
-    private var arrowBitmap: Bitmap? = null
+    private var arrowBitmap: ImageBitmap? = null
     private var arrowBitmapKey: ArrowBitmapKey? = null
     private val hasCompass = DependencyRegistry.get<SensorService>().hasCompass()
 
@@ -90,7 +89,7 @@ class MyLocationGeoJsonSource : GeoJsonSource {
                 GeoJsonFeature.point(
                     Coordinate.zero,
                     color = color,
-                    strokeColor = Color.WHITE,
+                    strokeColor = ColorInts.White,
                     strokeWeight = strokeWeight,
                     size = userLocationSizeDp,
                     moveWithUserLocation = true
@@ -100,7 +99,7 @@ class MyLocationGeoJsonSource : GeoJsonSource {
         return GeoJsonFeatureCollection(features)
     }
 
-    private fun getArrowBitmap(context: Context, color: Int, sizeDp: Float, strokeWeight: Float): Bitmap {
+    private fun getArrowBitmap(context: Context, color: Int, sizeDp: Float, strokeWeight: Float): ImageBitmap {
         val key = ArrowBitmapKey(color, sizeDp, strokeWeight)
         val cached = arrowBitmap
         if (cached != null && arrowBitmapKey == key) {
@@ -108,9 +107,12 @@ class MyLocationGeoJsonSource : GeoJsonSource {
         }
 
         val size = Resources.dp(context, sizeDp).toInt()
-        val bitmap = createBitmap(size, size)
-        val canvas = Canvas(bitmap)
-        val bitmapDrawer = CanvasDrawer(context, canvas)
+        val bitmap = ImageBitmap(size, size)
+        val bitmapDrawer = ComposeMapDrawer(
+            context.resources.displayMetrics.density,
+            context.resources.configuration.fontScale
+        )
+        bitmapDrawer.setCanvas(Canvas(bitmap), size.toFloat(), size.toFloat())
 
         val path = Path()
         // Bottom left
@@ -128,7 +130,7 @@ class MyLocationGeoJsonSource : GeoJsonSource {
         path.close()
         bitmapDrawer.push()
         bitmapDrawer.fill(color)
-        bitmapDrawer.stroke(Color.WHITE)
+        bitmapDrawer.stroke(ColorInts.White)
         bitmapDrawer.strokeWeight(strokeWeight)
         bitmapDrawer.path(path)
         bitmapDrawer.pop()

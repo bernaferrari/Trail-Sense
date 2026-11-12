@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson
 
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IFeatureClickableLayer
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.OnGeoJsonFeatureClickListener
+import kotlin.concurrent.Volatile
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import kotlin.time.Clock
 import kotlin.time.Duration
@@ -29,8 +32,6 @@ import kotlin.time.Instant
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 
-typealias OnGeoJsonFeatureClickListener = (GeoJsonFeature) -> Unit
-
 open class GeoJsonLayer<T : GeoJsonSource>(
     protected val source: T,
     override val layerId: String,
@@ -39,7 +40,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     override val isTimeDependent: Boolean = false,
     private val refreshInterval: Duration? = null,
     private val refreshBroadcasts: List<String> = emptyList()
-) : IAsyncLayer {
+) : IAsyncLayer, IFeatureClickableLayer {
     val renderer = GeoJsonRenderer()
     @Volatile private var isStopped = false
     private var isInvalid = true
@@ -197,7 +198,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
         return renderer.onClick(drawer, map, pixel)
     }
 
-    fun setOnFeatureClickListener(listener: OnGeoJsonFeatureClickListener?) {
+    override fun setOnFeatureClickListener(listener: OnGeoJsonFeatureClickListener?) {
         onFeatureClick = listener
     }
 

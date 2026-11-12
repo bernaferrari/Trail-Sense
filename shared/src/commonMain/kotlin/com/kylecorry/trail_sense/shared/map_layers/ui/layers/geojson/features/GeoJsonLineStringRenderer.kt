@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.features
 
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import com.kylecorry.trail_sense.shared.colors.ColorInts
 import androidx.compose.ui.graphics.Matrix
 import com.kylecorry.trail_sense.shared.canvas.mapPoints
@@ -47,7 +49,7 @@ class GeoJsonLineStringRenderer : FeatureRenderer() {
     private var backgroundColor: Int? = null
     private var filterEpsilon = 0f
     private var reducedPaths = emptyList<PrecomputedLineString>()
-    private val lock = Any()
+    private val lock = SynchronizedObject()
     private val transform = GeoJsonRenderTransform()
     private val labelPoint = FloatArray(2)
 

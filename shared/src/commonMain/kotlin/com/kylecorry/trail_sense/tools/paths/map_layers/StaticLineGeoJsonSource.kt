@@ -9,6 +9,7 @@ import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.extensions.lineString
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
 import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
+import kotlin.concurrent.Volatile
 
 class StaticLineGeoJsonSource(
     @Volatile var line: List<Coordinate>,

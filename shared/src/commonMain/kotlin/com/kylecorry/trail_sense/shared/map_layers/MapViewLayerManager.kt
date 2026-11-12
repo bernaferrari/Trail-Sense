@@ -9,8 +9,8 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IAsyncLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IDraggableLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.ILayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.GeoJsonLayer
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.OnGeoJsonFeatureClickListener
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IFeatureClickableLayer
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.OnGeoJsonFeatureClickListener
 import com.kylecorry.trail_sense.shared.canvas.getBounds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,8 +40,8 @@ class MapViewLayerManager(private val invalidateView: () -> Unit) {
 
     fun setOnGeoJsonFeatureClickListener(listener: OnGeoJsonFeatureClickListener?) {
         onGeoJsonFeatureClickListener = listener
-        layers.filter { it is GeoJsonLayer<*> }.forEach {
-            (it as GeoJsonLayer<*>).setOnFeatureClickListener(listener)
+        layers.filter { it is IFeatureClickableLayer }.forEach {
+            (it as IFeatureClickableLayer).setOnFeatureClickListener(listener)
         }
     }
 
@@ -64,9 +64,9 @@ class MapViewLayerManager(private val invalidateView: () -> Unit) {
         this.layers = layers.toList()
         this.layers.filterIsInstance<IAsyncLayer>()
             .forEach { it.setHasUpdateListener { invalidateView() } }
-        this.layers.filter { it is GeoJsonLayer<*> }
+        this.layers.filter { it is IFeatureClickableLayer }
             .forEach {
-                (it as GeoJsonLayer<*>).setOnFeatureClickListener(
+                (it as IFeatureClickableLayer).setOnFeatureClickListener(
                     onGeoJsonFeatureClickListener
                 )
             }

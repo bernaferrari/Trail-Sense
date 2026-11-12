@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.features
 
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import com.kylecorry.trail_sense.shared.colors.ColorInts
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
@@ -33,7 +35,7 @@ class GeoJsonPolygonRenderer : FeatureRenderer() {
     private val clipper = PolygonClipper()
     private var pathPool = ObjectPool { Path() }
     private var polygons = listOf<PrecomputedPolygon>()
-    private val lock = Any()
+    private val lock = SynchronizedObject()
     private var updateListener: (() -> Unit)? = null
     private val transform = GeoJsonRenderTransform()
 

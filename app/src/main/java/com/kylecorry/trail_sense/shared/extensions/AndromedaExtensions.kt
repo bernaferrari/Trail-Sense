@@ -133,15 +133,6 @@ fun Alerts.cancelableLoading(
     }
 }
 
-fun PixelCoordinate.isSamePixel(other: PixelCoordinate): Boolean {
-    // If either contains a NaN, return false
-    if (x.isNaN() || y.isNaN() || other.x.isNaN() || other.y.isNaN()) {
-        return false
-    }
-
-    return x.safeRoundToInt() == other.x.safeRoundToInt() && y.safeRoundToInt() == other.y.safeRoundToInt()
-}
-
 fun Path.drawLines(lines: FloatArray, smooth: Boolean = false) {
     // Lines are in the form [x1, y1, x2, y2, x3, y3, ...]
     // Where x1, y1 is the first point and x2, y2 is the second point of the line

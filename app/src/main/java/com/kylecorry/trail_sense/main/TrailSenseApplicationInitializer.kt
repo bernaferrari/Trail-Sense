@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import com.kylecorry.trail_sense.main.automations.Automations
 import com.kylecorry.trail_sense.main.errors.SafeMode
+import com.kylecorry.trail_sense.main.errors.initialize
 import com.kylecorry.trail_sense.main.persistence.RepoCleanupWorker
 import com.kylecorry.trail_sense.settings.migrations.PreferenceMigrator
 import com.kylecorry.trail_sense.shared.debugging.getBuildType

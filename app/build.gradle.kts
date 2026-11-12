@@ -150,6 +150,7 @@ tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
 dependencies {
     // Internal modules
     implementation(project(":shared"))
+    implementation(libs.atomicfu)
     implementation(project(":core"))
 
     // Kotlin

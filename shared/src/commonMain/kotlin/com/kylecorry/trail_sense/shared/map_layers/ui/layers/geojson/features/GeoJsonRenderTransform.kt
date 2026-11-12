@@ -6,7 +6,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
 import com.kylecorry.trail_sense.shared.canvas.scaleX
 import com.kylecorry.trail_sense.shared.canvas.setPolyToPoly
 
-internal class GeoJsonRenderTransform {
+class GeoJsonRenderTransform {
     val matrix = Matrix()
     var scale = 1f
         private set

@@ -6,6 +6,9 @@ import com.kylecorry.sol.math.geometry.Rectangle
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.shared.map_layers.tiles.TileMath
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
+import kotlin.concurrent.Volatile
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -26,7 +29,7 @@ class MapLayerBackgroundTask {
     private val scope = CoroutineScope(Dispatchers.Default)
     private val runner = CoroutineQueueRunner(1, queuePolicy = BufferOverflow.DROP_OLDEST)
     private val lock = Mutex()
-    private val taskLock = Any()
+    private val taskLock = SynchronizedObject()
     @Volatile
     private var isDirty = true
 

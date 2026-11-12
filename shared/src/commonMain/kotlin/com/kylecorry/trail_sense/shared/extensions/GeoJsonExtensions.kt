@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.shared.extensions
 
-import android.graphics.Bitmap
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import android.graphics.Color
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.andromeda.geojson.GeoJsonBoundingBox
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
@@ -21,7 +19,8 @@ import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.SizeUnit
 import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
-import java.util.UUID
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 fun GeoJsonObject.normalize(): List<GeoJsonFeature> {
     return when (this) {
@@ -136,11 +135,7 @@ fun GeoJsonFeature.getScaleToLocationAccuracy(): Boolean {
 }
 
 fun GeoJsonFeature.getBitmap(): ImageBitmap? {
-    return when (val bitmap = properties?.get(GEO_JSON_PROPERTY_BITMAP)) {
-        is ImageBitmap -> bitmap
-        is Bitmap -> bitmap.asImageBitmap()
-        else -> null
-    }
+    return properties?.get(GEO_JSON_PROPERTY_BITMAP) as? ImageBitmap
 }
 
 fun GeoJsonFeature.getIcon(): Long? {
@@ -200,7 +195,7 @@ fun GeoJsonFeature.Companion.lineString(
     id: Long? = null,
     name: String? = null,
     lineStyle: LineStyle = LineStyle.Solid,
-    color: Int = Color.WHITE,
+    color: Int = ColorInts.White,
     thicknessScale: Float = 1f,
     bounds: CoordinateBounds? = CoordinateBounds.from(points)
 ): GeoJsonFeature {
@@ -238,7 +233,7 @@ fun GeoJsonFeature.Companion.point(
     rotateWithUserAzimuth: Boolean = false,
     moveWithUserLocation: Boolean = false,
     scaleToLocationAccuracy: Boolean = false,
-    bitmap: Bitmap? = null,
+    bitmap: ImageBitmap? = null,
     layerId: String? = null,
     bounds: CoordinateBounds? = CoordinateBounds(
         point.latitude,
@@ -330,7 +325,10 @@ const val GEO_JSON_PROPERTY_ROTATE_WITH_USER_AZIMUTH = "rotateWithUserAzimuth"
 const val GEO_JSON_PROPERTY_ROTATION = "rotation"
 const val GEO_JSON_PROPERTY_MOVE_WITH_USER_LOCATION = "moveWithUserLocation"
 const val GEO_JSON_PROPERTY_SCALE_TO_LOCATION_ACCURACY = "scaleToLocationAccuracy"
-val GEO_JSON_PROPERTY_BITMAP = UUID.randomUUID().toString()
-val GEO_JSON_PROPERTY_LAYER_ID = UUID.randomUUID().toString()
+// Random keys, so these properties never clash with ones read from a GeoJSON file
+@OptIn(ExperimentalUuidApi::class)
+val GEO_JSON_PROPERTY_BITMAP = Uuid.random().toString()
+@OptIn(ExperimentalUuidApi::class)
+val GEO_JSON_PROPERTY_LAYER_ID = Uuid.random().toString()
 const val DEFAULT_LINE_STRING_STROKE_WEIGHT_DP = 2.25f
 const val GEO_JSON_NAME_MAX_LENGTH = 200

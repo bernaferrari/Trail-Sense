@@ -9,6 +9,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.Size
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -41,7 +43,7 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
     var nameFormat = ""
     private val size = 12f
     private val imageSize = size * 1.5f
-    private val bitmapCache = mutableMapOf<Long, Bitmap?>()
+    private val bitmapCache = mutableMapOf<Long, ImageBitmap?>()
 
     private val tagIconMap = mapOf(
         FieldGuidePageTag.Plant to BeaconIcon.Plant,
@@ -113,7 +115,7 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
         return collection
     }
 
-    private fun getBitmapForPage(page: FieldGuidePage, context: Context): Bitmap? {
+    private fun getBitmapForPage(page: FieldGuidePage, context: Context): ImageBitmap? {
         if (page.images.isEmpty()) {
             return null
         }
@@ -129,7 +131,7 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
             files.bitmap(page.images.first(), Size(sizePixels, sizePixels))
         }
 
-        val circularBitmap = sourceBitmap?.let { cropToCircle(it, sizePixels) }
+        val circularBitmap = sourceBitmap?.let { cropToCircle(it, sizePixels).asImageBitmap() }
         bitmapCache[page.id] = circularBitmap
         return circularBitmap
     }
