@@ -394,7 +394,7 @@
     <string name="imperial_pints">英制品脫</string>
     <string name="take_photo">拍照</string>
     <string name="cloud_stratus_forecast" tools:ignore="PluralsCandidate">如果有霧，可能預示未來 %d 小時內天氣晴朗，否則可能預示很快就會有降雨。</string>
-    <string name="pedometer_disclaimer">計步器的準確度和電池使用情況取決於你的裝置製造商和輸入的步幅。在步道上使用前，請先在家測試片刻，以驗證電池電量消耗和準確度。</string>
+    <string name="pedometer_disclaimer">計步器的準確性和電池使用情況取決於你的裝置製造商和輸入的步幅。在外出使用之前，先在家嘗試一下，以驗證電池電量消耗和準確性。</string>
     <string name="manual">手動</string>
     <string name="unable_to_find_next_astronomy">無法找到下一個 %s</string>
     <string name="season_spring">春天</string>
@@ -667,7 +667,6 @@
     <string name="todays_forecast">今天的預測</string>
     <string name="moderate">中等</string>
     <string name="low">低</string>
-    <string name="pref_stride_length_title">步幅</string>
     <string name="meteor_shower">流星雨</string>
     <string name="map_auto_calibrated">地圖已自動校正，請驗證其準確度</string>
     <string name="solid">實線</string>
@@ -758,7 +757,6 @@
     <string name="view">檢視</string>
     <string name="tide_table">潮汐表</string>
     <string name="off">關</string>
-    <string name="stride_length_stand_still">站著不動</string>
     <string name="average_speed_pedometer">平均速度（計步器）</string>
     <string name="wgs84">WGS 84</string>
     <string name="elevation_history_length">海拔歷史記錄長度</string>
@@ -935,7 +933,6 @@
     <string name="tool_turn_back">折返</string>
     <string name="allow_ignore_battery_restrictions_instructions">移除 Trail Sense 的電池限制可能會提高準確度。 \n \n在大多數裝置上，按一下「%s」，然後切換到所有應用程式，並關閉 Trail Sense 的電池優化。 \n \n請瀏覽[不要終止我的應用程式（英文）](https://dontkillmyapp.com/) 以取得特定裝置的說明。</string>
     <string name="weather_clear">天晴</string>
-    <string name="stride_length_walk">沿直線行走，當你完成後按下停止</string>
     <string name="point_added">點已增加至路線</string>
     <string name="fast_path_rendering_summary">以犧牲外觀為代價提高性能</string>
     <string name="weather_front">鋒</string>
@@ -1085,7 +1082,6 @@
     <string name="weather_alert_cold_description">為應對寒冷天氣做好準備。採取額外的預防措施以防止體溫過低和凍傷。</string>
     <string name="map_calibration_instructions">選取兩個在地圖上及現實世界中都能辨認的地點。對於每個地點，請在地圖上點擊其確切位置，然後輸入其現實世界座標。\n\n最佳地點應該為相距較遠且易於辨認，例如步道入口、停車場、路標、地標、地圖網格交叉點或步道交會處。\n\n若兩地點皆有效，請點擊完成校正。若您目前僅有一個地點，或想稍後再完成，請點擊儲存「草稿」。</string>
     <string name="battery_usage">%s 電池使用情況</string>
-    <string name="estimate_stride_length">估計步幅</string>
     <string name="pack_sort_percent_low_to_high">已打包百分比（從低至高）</string>
     <string name="for_historic_temperatures">用於歷史溫度</string>
     <string name="delete_pack">刪除打包？</string>

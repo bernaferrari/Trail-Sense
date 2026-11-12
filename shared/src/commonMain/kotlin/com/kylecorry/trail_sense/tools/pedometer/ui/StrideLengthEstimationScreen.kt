@@ -144,13 +144,13 @@ private fun StrideLengthScreen(
     }
 
     val statusText = when {
-        isRunning && !hasValidReading -> appString(Res.string.stride_length_stand_still)
-        isRunning -> appString(Res.string.stride_length_walk)
+        isRunning && !hasValidReading -> appString(Res.string.step_length_stand_still)
+        isRunning -> appString(Res.string.step_length_walk)
         else -> null
     }
 
     TrailSensePage(
-        title = appString(Res.string.estimate_stride_length),
+        title = appString(Res.string.estimate_step_length),
         onBack = { dispatcher?.invoke() },
         backLabel = appString(Res.string.back)
     ) {
@@ -226,7 +226,7 @@ private fun StrideLengthHero(value: String, status: String?, isRunning: Boolean)
             verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)
         ) {
             Text(
-                text = appString(Res.string.pref_stride_length_title),
+                text = appString(Res.string.pref_step_length_title),
                 style = MaterialTheme.typography.labelLarge,
                 color = content.copy(alpha = 0.8f)
             )

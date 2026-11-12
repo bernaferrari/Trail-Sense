@@ -171,14 +171,14 @@ fun PedometerSettingsToolScreen() {
         trailSenseSection("distance", title = distanceTitle) {
             row { position ->
                 SettingsPickerRow(
-                    label = stringResource(R.string.pref_stride_length_title),
+                    label = stringResource(R.string.pref_step_length_title),
                     selected = formatter.formatDistance(viewModel.strideLength, 2),
                     onClick = {
                         CustomUiUtils.pickDistance(
                             context,
                             strideLengthUnits,
                             viewModel.strideLength,
-                            context.getString(R.string.pref_stride_length_title),
+                            context.getString(R.string.pref_step_length_title),
                             showFeetAndInches = true
                         ) { distance, cancelled ->
                             if (cancelled || distance == null || distance.value <= 0f) {
@@ -192,7 +192,7 @@ fun PedometerSettingsToolScreen() {
             }
             row { position ->
                 SettingsActionRow(
-                    label = stringResource(R.string.estimate_stride_length),
+                    label = stringResource(R.string.estimate_step_length),
                     onClick = {
                         navigator.navigate(
                             Route.StrideLengthEstimation
