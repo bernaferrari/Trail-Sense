@@ -72,6 +72,7 @@ object BeaconsToolRegistration : ToolRegistration {
                 Route.PlaceBeacon::class
             ),
             diagnostics = listOf(
+                ToolDiagnosticFactory.externalStorage(context),
                 ToolDiagnosticFactory.gps(context),
                 *ToolDiagnosticFactory.altimeter(context),
                 ToolDiagnosticFactory.camera(context),

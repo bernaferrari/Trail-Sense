@@ -33,6 +33,7 @@ object CloudsToolRegistration : ToolRegistration {
                 Route.CloudResults::class
             ),
             diagnostics = listOf(
+                ToolDiagnosticFactory.externalStorage(context),
                 ToolDiagnosticFactory.camera(context)
             )
         )

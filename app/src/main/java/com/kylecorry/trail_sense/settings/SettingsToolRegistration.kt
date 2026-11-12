@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.settings
 
+import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
+
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
@@ -84,6 +86,7 @@ object SettingsToolRegistration : ToolRegistration {
                 WidgetUpdateToolService(context)
             ),
             diagnostics = listOf(
+                ToolDiagnosticFactory.externalStorage(context),
                 ToolDiagnostic(
                     "settings-auto-backup",
                     context.getString(R.string.automatic_backup),

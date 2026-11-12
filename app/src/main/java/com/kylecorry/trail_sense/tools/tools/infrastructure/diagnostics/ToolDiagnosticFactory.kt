@@ -6,6 +6,14 @@ import com.kylecorry.trail_sense.R
 
 object ToolDiagnosticFactory {
 
+    fun externalStorage(context: Context): ToolDiagnostic {
+        return ToolDiagnostic(
+            "external-storage",
+            context.getString(R.string.external_storage),
+            scanner = ExternalStorageDiagnosticScanner()
+        )
+    }
+
     fun gps(context: Context): ToolDiagnostic {
         return ToolDiagnostic(
             "gps",

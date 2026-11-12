@@ -9,6 +9,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
+import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object DiagnosticsToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
@@ -18,7 +19,10 @@ object DiagnosticsToolRegistration : ToolRegistration {
             TrailIcons.Alert,
             Route.Diagnostics,
             ToolCategory.Other,
-            guideId = RawTexts.guide_tool_diagnostics
+            guideId = RawTexts.guide_tool_diagnostics,
+            diagnostics = listOf(
+                ToolDiagnosticFactory.externalStorage(context)
+            )
         )
     }
 }
