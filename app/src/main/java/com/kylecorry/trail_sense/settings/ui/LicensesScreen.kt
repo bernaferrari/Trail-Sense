@@ -1,14 +1,12 @@
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.text.withWebLinks
 import android.content.Context
 
 import androidx.compose.ui.platform.LocalContext
 
-import android.text.util.Linkify.WEB_URLS
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
-import androidx.core.text.toSpannable
-import androidx.core.text.util.LinkifyCompat
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.licenses.Library
 import com.kylecorry.trail_sense.settings.licenses.Licenses
@@ -36,8 +34,7 @@ fun LicensesToolScreen() {
 }
 
 private fun Context.showLicense(library: Library) {
-    val content = (library.url + "\n\n" + library.license()).toSpannable()
-    LinkifyCompat.addLinks(content, WEB_URLS)
+    val content = (library.url + "\n\n" + library.license()).withWebLinks()
 
     Alerts.dialog(
         this,

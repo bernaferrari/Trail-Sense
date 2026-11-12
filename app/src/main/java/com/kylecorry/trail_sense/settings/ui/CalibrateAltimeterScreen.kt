@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.text.withWebLinks
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.andromeda.core.sensors.read
@@ -9,7 +10,6 @@ import com.kylecorry.andromeda.core.sensors.read
 import com.kylecorry.trail_sense.shared.preferences.onChange
 
 import android.content.Context
-import android.text.util.Linkify.WEB_URLS
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,8 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.core.text.toSpannable
-import androidx.core.text.util.LinkifyCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
@@ -330,8 +328,7 @@ private suspend fun loadDEM(context: Context, viewModel: CalibrateAltimeterViewM
     val instructions = context.getString(
         R.string.digital_elevation_model_link,
         URLs.DEM
-    ).toSpannable()
-    LinkifyCompat.addLinks(instructions, WEB_URLS)
+    ).withWebLinks()
     val cancelled = CoroutineAlerts.dialog(
         context,
         context.getString(R.string.plugin_digital_elevation_model),

@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.text.withWebLinks
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModel
@@ -18,7 +19,6 @@ import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.graphics.Bitmap
-import android.text.util.Linkify.WEB_URLS
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,8 +52,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-import androidx.core.text.toSpannable
-import androidx.core.text.util.LinkifyCompat
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.getInstance
@@ -415,11 +413,7 @@ private fun LinkifiedNotes(
     notes: String,
     modifier: Modifier = Modifier
 ) {
-    val noteText = remember(notes) {
-        val noteText = notes.toSpannable()
-        LinkifyCompat.addLinks(noteText, WEB_URLS)
-        noteText
-    }
+    val noteText = remember(notes) { notes.withWebLinks() }
     SelectionContainer(modifier = modifier) {
         TrailSenseLinkedText(
             text = noteText,

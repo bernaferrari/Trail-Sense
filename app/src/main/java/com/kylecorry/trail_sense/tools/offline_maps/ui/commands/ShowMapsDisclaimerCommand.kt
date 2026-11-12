@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.commands
 
+import com.kylecorry.trail_sense.shared.text.withWebLinks
 import android.content.Context
-import android.text.util.Linkify
-import androidx.core.text.toSpannable
-import androidx.core.text.util.LinkifyCompat
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.commands.Command
@@ -16,8 +14,7 @@ class ShowMapsDisclaimerCommand(
     private val appNavigator: TrailSenseNavigator
 ) : Command {
     override fun execute() {
-        val message = context.getString(R.string.photo_map_disclaimer).toSpannable()
-        LinkifyCompat.addLinks(message, Linkify.WEB_URLS)
+        val message = context.getString(R.string.photo_map_disclaimer).withWebLinks()
         CustomUiUtils.disclaimer(
             context,
             context.getString(R.string.photo_maps),
