@@ -39,13 +39,16 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
+import com.kylecorry.trail_sense.shared.generated.resources.Res
+import com.kylecorry.trail_sense.shared.generated.resources.horizon
+import com.kylecorry.trail_sense.shared.generated.resources.sky_axis_above
+import com.kylecorry.trail_sense.shared.generated.resources.sky_axis_below
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartFrame
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartGutter
@@ -63,7 +66,7 @@ import kotlin.math.absoluteValue
  * where each body is now ([sunPosition], [moonPosition], or null when another day is charted), and whether the
  * twilight limits are drawn ([showBands]).
  */
-internal data class AstroChartState(
+data class AstroChartState(
     val startTime: Instant = Clock.System.now(),
     val sun: List<Reading<Float>> = emptyList(),
     val moon: List<Reading<Float>> = emptyList(),
@@ -81,7 +84,7 @@ internal data class AstroChartState(
  * stands in. A tap on the sun or moon reports null, a tap elsewhere reports the time under it.
  */
 @Composable
-internal fun AstroChart(
+fun AstroChart(
     state: AstroChartState,
     moonImage: ImageBitmap?,
     modifier: Modifier = Modifier,
@@ -98,9 +101,9 @@ internal fun AstroChart(
     Column(modifier) {
         TrailSenseChartFrame(
             yLabels = listOf(
-                stringResource(R.string.sky_axis_above),
-                stringResource(R.string.horizon),
-                stringResource(R.string.sky_axis_below)
+                stringResource(Res.string.sky_axis_above),
+                stringResource(Res.string.horizon),
+                stringResource(Res.string.sky_axis_below)
             ),
             modifier = Modifier
                 .weight(1f)
@@ -151,7 +154,7 @@ internal fun AstroChart(
 }
 
 /** The chart's colours, from the app's scheme (in the app) or the widget theme's (on the home screen). */
-internal data class AstroChartColors(
+data class AstroChartColors(
     val sun: Color,
     val daylight: Color,
     val night: Color,
@@ -186,7 +189,7 @@ internal data class AstroChartColors(
  * The plot itself: night under the horizon, daylight under the sun's curve, the moon's dotted path, the sun and moon
  * where they are now. Drawn by [AstroChart] in the app and by the sun and moon widget on the home screen.
  */
-internal fun DrawScope.drawAstroChart(
+fun DrawScope.drawAstroChart(
     state: AstroChartState,
     colors: AstroChartColors,
     moonImage: ImageBitmap?,
@@ -392,7 +395,7 @@ private const val MIN_Y = -100f
 private const val MAX_Y = 100f
 
 /** The moon disc's size on the chart; phase bitmaps for it are drawn at this size. */
-internal val MoonSize = 24.dp
+val MoonSize = 24.dp
 
 /** How close to the sun or moon a tap counts as a tap on it. */
 private val MarkerReach = 24.dp
@@ -404,13 +407,13 @@ private val SunWarm = Color(0xFFFFC94D)
 private val NightSky = Color(0xFF070B1F)
 
 /** The moon's lit face: the real moon is pale whatever the theme. */
-internal val MoonLit = Color(0xFFF4F4F0)
+val MoonLit = Color(0xFFF4F4F0)
 
 /**
  * Recolours a phase bitmap (white lit limb, near-black shadow) by its brightness: black becomes [shadow] and white
  * becomes [lit]. A 4x5 colour matrix with offsets in 0..255, usable by both Android and Compose colour filters.
  */
-internal fun moonPhaseColorMatrix(
+fun moonPhaseColorMatrix(
     shadow: Color,
     lit: Color
 ): FloatArray {

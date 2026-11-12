@@ -1,0 +1,10 @@
+# App strings that shared (common) code reads through Compose resources (Res.string.<name>).
+# app/src/main/res stays the one source of truth: the syncSharedStrings task copies each listed
+# string and every translation of it into the shared module's resources at build time.
+# Add a name here before using it from commonMain; the build fails on names the app doesn't have.
+back
+convert_swap_units
+horizon
+no_data
+sky_axis_above
+sky_axis_below

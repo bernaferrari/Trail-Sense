@@ -29,11 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.toShape
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
+import com.kylecorry.trail_sense.shared.generated.resources.Res
+import com.kylecorry.trail_sense.shared.generated.resources.back
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
@@ -63,7 +64,7 @@ fun SingleSwitchSettingsScreen(
         title = title,
         modifier = modifier,
         onBack = onBack,
-        backLabel = stringResource(R.string.back)
+        backLabel = stringResource(Res.string.back)
     ) {
         trailSenseSection("switch", footer = footer) {
             row { position ->

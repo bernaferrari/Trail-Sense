@@ -13,10 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
+import com.kylecorry.trail_sense.shared.generated.resources.Res
+import com.kylecorry.trail_sense.shared.generated.resources.no_data
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.R
 import kotlin.math.max
 
 @Composable
@@ -38,7 +39,7 @@ fun TrailSenseLineChart(
     ) {
         if (readings.isEmpty()) {
             Text(
-                text = stringResource(R.string.no_data),
+                text = stringResource(Res.string.no_data),
                 color = textColor,
                 style = MaterialTheme.typography.bodyMedium
             )

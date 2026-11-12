@@ -58,7 +58,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
+import org.jetbrains.compose.resources.stringResource
+import com.kylecorry.trail_sense.shared.generated.resources.Res
+import com.kylecorry.trail_sense.shared.generated.resources.convert_swap_units
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -67,7 +69,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
 import androidx.compose.animation.togetherWith
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
@@ -87,7 +88,7 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseChoiceColors
  * the page colour so it cuts the seam cleanly instead of sitting on a card.
  */
 @Composable
-internal fun ConvertCard(
+fun ConvertCard(
     onSwap: (() -> Unit)?,
     swapLabel: String,
     modifier: Modifier = Modifier,
@@ -135,7 +136,7 @@ internal fun ConvertCard(
  * into; [picking] lights its pill while its units are shown; [dimmed] steps the other row back meanwhile.
  */
 @Composable
-internal fun ConvertRow(
+fun ConvertRow(
     active: Boolean,
     picking: Boolean,
     dimmed: Boolean,
@@ -229,7 +230,7 @@ internal fun ConvertRow(
 
 /** The family's number style for a converter value; long values step down so they stay on one line. */
 @Composable
-internal fun convertNumberStyle(text: String): TextStyle {
+fun convertNumberStyle(text: String): TextStyle {
     val base = when {
         text.length > 22 -> MaterialTheme.typography.titleLarge
         text.length > 14 -> MaterialTheme.typography.headlineSmall
@@ -241,7 +242,7 @@ internal fun convertNumberStyle(text: String): TextStyle {
 
 /** The value being typed, on the system keyboard. Shows a faint 0 (or [placeholder]) while empty. */
 @Composable
-internal fun RowScope.ConvertInput(
+fun RowScope.ConvertInput(
     value: String,
     onValueChange: (String) -> Unit,
     focusRequester: FocusRequester,
@@ -293,7 +294,7 @@ internal fun RowScope.ConvertInput(
  * it changes: the new value slides up into place as the old one leaves.
  */
 @Composable
-internal fun RowScope.ConvertValue(text: String, placeholder: String = "0") {
+fun RowScope.ConvertValue(text: String, placeholder: String = "0") {
     val colors = MaterialTheme.colorScheme
     val slide = MaterialTheme.motionScheme.fastSpatialSpec<androidx.compose.ui.unit.IntOffset>()
     val fade = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
@@ -321,7 +322,7 @@ internal fun RowScope.ConvertValue(text: String, placeholder: String = "0") {
 
 /** A unit's symbol beside its number, quieter than the number. */
 @Composable
-internal fun ConvertSymbol(symbol: String) {
+fun ConvertSymbol(symbol: String) {
     if (symbol.isBlank()) return
     Text(
         symbol,
@@ -333,11 +334,11 @@ internal fun ConvertSymbol(symbol: String) {
 }
 
 /** One choice of a [ConvertUnitGrid]: its short symbol (when it has one) over its name. */
-internal data class ConvertUnitOption<T>(val value: T, val name: String, val symbol: String?)
+data class ConvertUnitOption<T>(val value: T, val name: String, val symbol: String?)
 
 /** The units of the category, in tiles, where the keyboard was. The chosen one is solid primary. */
 @Composable
-internal fun <T> ConvertUnitGrid(
+fun <T> ConvertUnitGrid(
     options: List<ConvertUnitOption<T>>,
     selected: T,
     onPick: (T) -> Unit,
@@ -395,4 +396,4 @@ internal fun <T> ConvertUnitGrid(
 
 /** Swap's label, shared by the converters that can swap. */
 @Composable
-internal fun convertSwapLabel(): String = stringResource(R.string.convert_swap_units)
+fun convertSwapLabel(): String = stringResource(Res.string.convert_swap_units)
