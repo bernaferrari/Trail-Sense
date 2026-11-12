@@ -164,10 +164,9 @@ fun FieldGuideToolScreen() {
                 FieldGuideListItem.PageItem(
                     page = it,
                     title = formatter.formatNameAnnotated(it),
-                    subtitle = it.notes?.substringBefore(".")
-                        ?.plus(if (it.notes.contains(".")) "." else "")
-                        ?.take(200)
-                        ?: ""
+                    subtitle = it.notes?.let { notes ->
+                        (notes.substringBefore(".") + if (notes.contains(".")) "." else "").take(200)
+                    } ?: ""
                 )
             }
         )
