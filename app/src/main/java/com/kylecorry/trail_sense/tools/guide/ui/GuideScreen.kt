@@ -50,6 +50,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.shared.text.readRawText
 
 /**
  * One user guide as an article: a book-shaped hero with the reading time, a contents strip that jumps to a section,
@@ -65,7 +66,7 @@ internal fun GuideScreen(name: String, resource: Int) {
 
     LaunchedEffect(resource) {
         sections = withContext(Dispatchers.IO) {
-            val content = TextUtils.loadTextFromResources(context, resource)
+            val content = context.readRawText(resource)
             TextUtils.groupSections(TextUtils.getSections(content), null).flatten()
         }
     }

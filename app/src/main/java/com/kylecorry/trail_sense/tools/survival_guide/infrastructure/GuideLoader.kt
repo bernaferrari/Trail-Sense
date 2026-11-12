@@ -6,6 +6,7 @@ import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
+import com.kylecorry.trail_sense.shared.text.readRawText
 
 data class GuideSection(
     val level: Int?,
@@ -27,7 +28,7 @@ class GuideLoader(private val context: Context) {
     }
 
     suspend fun load(chapter: Chapter, includeContent: Boolean = true): GuideDetails = onIO {
-        val text = TextUtils.loadTextFromResources(context, chapter.resource)
+        val text = context.readRawText(chapter.resource)
         val sections = TextUtils.groupSections(TextUtils.getSections(text), null)
 
         var guideSections = sections.map {

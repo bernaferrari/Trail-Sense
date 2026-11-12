@@ -93,6 +93,7 @@ import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.shared.text.readRawText
 
 /**
  * One survival guide chapter: the chapter's introduction as plain reading text, then its sections as one group of
@@ -372,7 +373,7 @@ fun SurvivalGuideReaderToolScreen(route: Route.SurvivalGuideReader) {
     }
     val content by produceState<String?>(null, chapterResourceId) {
         value = withContext(Dispatchers.IO) {
-            TextUtils.loadTextFromResources(context, chapterResourceId)
+            context.readRawText(chapterResourceId)
         }
     }
     SurvivalGuideReaderScreen(
@@ -398,10 +399,7 @@ private fun printChapter(context: Context, scope: CoroutineScope, chapter: Chapt
             printer.setScaleMode(ScaleMode.Fit)
             printer.setOrientation(Orientation.Portrait)
             val content = TextUtils.removeMarkdownComments(
-                "# ${chapter.title}\n" + TextUtils.loadTextFromResources(
-                    context,
-                    chapter.resource
-                )
+                "# ${chapter.title}\n" + context.readRawText(chapter.resource)
             )
             val file = files.createTemp("pdf")
             val parsed = markdown.toMarkdown(content)

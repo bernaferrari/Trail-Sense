@@ -49,6 +49,8 @@ kotlin {
             api(libs.andromeda.torch)
             api(libs.andromeda.preferences)
             api(libs.andromeda.geojson)
+            api(libs.andromeda.gpx)
+            api(libs.andromeda.csv)
             // Persisted state (e.g. GPSKalmanState) goes through Andromeda's kotlinx.serialization JsonConvert
             implementation(libs.kotlinx.serialization.core)
         }

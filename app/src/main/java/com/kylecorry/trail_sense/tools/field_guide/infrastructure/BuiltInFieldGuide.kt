@@ -7,9 +7,9 @@ import com.kylecorry.andromeda.json.JsonConvert
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.ProguardIgnore
-import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
+import com.kylecorry.trail_sense.shared.text.readRawText
 
 object BuiltInFieldGuide {
 
@@ -32,7 +32,7 @@ object BuiltInFieldGuide {
 
     private fun getPages(context: Context): List<BuiltInFieldGuidePage> {
         return hooks.memo("pages") {
-            val rawJson = TextUtils.loadTextFromResources(context, R.raw.field_guide_pages)
+            val rawJson = context.readRawText(R.raw.field_guide_pages)
             JsonConvert.fromJson<Pages>(rawJson)?.pages ?: emptyList()
         }
     }
@@ -55,7 +55,7 @@ object BuiltInFieldGuide {
         index: Int
     ): FieldGuidePage {
         val resourceId = context.resources.getIdentifier(page.content, "raw", context.packageName)
-        val text = TextUtils.loadTextFromResources(context, resourceId)
+        val text = context.readRawText(resourceId)
         val lines = text.split("\n")
         val name = lines.first()
         val notes = lines.drop(1).joinToString("\n").trim()
