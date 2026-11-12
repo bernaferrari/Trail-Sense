@@ -8,30 +8,30 @@ import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.preferences.Preference
 import com.kylecorry.andromeda.preferences.PreferenceType
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.shared.text.LevenshteinDistance
 
 class MapLayerPreferenceRepo {
 
-    private val prefs = DependencyRegistry.get<PreferencesSubsystem>()
+    private val prefs = DependencyRegistry.get<Preferences>()
     private val distanceMetric = LevenshteinDistance()
 
     fun getActiveLayerIds(mapId: String): List<String> {
-        return prefs.preferences.getString("pref_${mapId}_active_layers")
+        return prefs.getString("pref_${mapId}_active_layers")
             ?.split(",")
             ?.filter { it.isNotBlank() }
             ?: emptyList()
     }
 
     fun setActiveLayerIds(mapId: String, layerIds: List<String>) {
-        prefs.preferences.putString("pref_${mapId}_active_layers", layerIds.joinToString(","))
+        prefs.putString("pref_${mapId}_active_layers", layerIds.joinToString(","))
     }
 
     fun getLayerPreferences(
         mapId: String,
         layerIds: List<String>
     ): Map<String, List<Preference>> {
-        val all = prefs.preferences.getAll()
+        val all = prefs.getAll()
         val preferences = mutableMapOf<String, List<Preference>>()
         for (layerId in layerIds) {
             val prefix = getPreferenceKey(mapId, layerId, "")
@@ -78,7 +78,7 @@ class MapLayerPreferenceRepo {
         for (mapId in toMapIds) {
             val newPreferences =
                 fromPreferences.map { it.copy(key = getPreferenceKey(mapId, layerId, it.key)) }
-            prefs.preferences.putAll(newPreferences)
+            prefs.putAll(newPreferences)
 
             // Add the layer to the destination's active layers if not present
             addLayerInBestPosition(mapId, layerId, sourceLayerOrder)
@@ -123,7 +123,7 @@ class MapLayerPreferenceRepo {
     fun removeLayerPreferences(mapId: String, layerId: String) {
         val toPreferences = getLayerPreferences(mapId, listOf(layerId))[layerId] ?: emptyList()
         for (preference in toPreferences) {
-            prefs.preferences.remove(getPreferenceKey(mapId, layerId, preference.key))
+            prefs.remove(getPreferenceKey(mapId, layerId, preference.key))
         }
     }
 

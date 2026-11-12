@@ -11,16 +11,16 @@ import com.kylecorry.trail_sense.shared.extensions.point
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
 
 class BeaconGeoJsonSource : GeoJsonSource {
 
     private var featureToBeaconMap = mapOf<GeoJsonFeature, Beacon>()
     private val outlineColor = ColorInts.White
-    private val beaconService = DependencyRegistry.get<BeaconService>()
-    private val navigator = DependencyRegistry.get<Navigator>()
+    private val beaconService = DependencyRegistry.get<IBeaconService>()
+    private val navigator = DependencyRegistry.get<INavigator>()
 
     override suspend fun load(
         bounds: CoordinateBounds,

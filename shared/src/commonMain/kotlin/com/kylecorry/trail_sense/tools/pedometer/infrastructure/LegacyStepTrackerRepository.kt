@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure
 
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepCountBucket
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackingPeriod
 import com.kylecorry.trail_sense.tools.pedometer.domain.abstractions.IStepTrackerRepository
@@ -9,7 +9,7 @@ import kotlin.time.Instant
 
 internal class LegacyStepTrackerRepository : IStepTrackerRepository {
 
-    private val counter = StepCounter(getAppService<PreferencesSubsystem>().preferences)
+    private val counter = StepCounter(getAppService<Preferences>())
 
     override suspend fun getStepTrackingPeriods(): List<StepTrackingPeriod> {
         val start = counter.startTime ?: return emptyList()

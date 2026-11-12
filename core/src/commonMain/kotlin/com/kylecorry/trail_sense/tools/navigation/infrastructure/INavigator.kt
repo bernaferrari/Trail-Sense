@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.navigation.infrastructure
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
+import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 
 /** Starts and stops navigating to a beacon (or to a spot, through a hidden temporary beacon). */
 interface INavigator {
@@ -26,4 +27,7 @@ interface INavigator {
     fun cancelBeaconNavigation()
 
     fun getBeaconDestinationId(): Long?
+
+    /** Where the person is navigating: a path, a beacon or a bearing, in that order, or null. */
+    suspend fun getDestination(): Destination?
 }

@@ -15,7 +15,7 @@ import com.kylecorry.trail_sense.shared.icons.toImageBitmap
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.overlay.OverlayLayer
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
 
 class MyElevationLayer : OverlayLayer() {
@@ -27,7 +27,7 @@ class MyElevationLayer : OverlayLayer() {
 
     private val formatter = DependencyRegistry.get<FormatService>()
     private val prefs = DependencyRegistry.get<UserPreferences>()
-    private val locationSubsystem = DependencyRegistry.get<LocationSubsystem>()
+    private val locationSubsystem = DependencyRegistry.get<ILocationSubsystem>()
 
     override val layerId: String = LAYER_ID
 

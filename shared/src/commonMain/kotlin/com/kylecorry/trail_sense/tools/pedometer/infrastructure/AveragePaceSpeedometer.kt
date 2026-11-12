@@ -8,7 +8,7 @@ import com.kylecorry.trail_sense.settings.infrastructure.IPedometerPreferences
 import com.kylecorry.trail_sense.shared.ZERO_SPEED
 import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
-import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
+import com.kylecorry.trail_sense.tools.pedometer.PedometerBroadcasts
 import com.kylecorry.trail_sense.tools.pedometer.domain.IPaceCalculator
 import com.kylecorry.trail_sense.tools.pedometer.domain.IStepTrackerService
 import kotlinx.coroutines.CoroutineScope
@@ -41,12 +41,12 @@ class AveragePaceSpeedometer(
             scope = newScope()
         }
         timer.interval(10000)
-        ToolBroadcasts.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, this::onStepsChanged)
+        ToolBroadcasts.subscribe(PedometerBroadcasts.STEPS_CHANGED, this::onStepsChanged)
     }
 
     override fun stopImpl() {
         timer.stop()
-        ToolBroadcasts.unsubscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, this::onStepsChanged)
+        ToolBroadcasts.unsubscribe(PedometerBroadcasts.STEPS_CHANGED, this::onStepsChanged)
         scope.cancel()
     }
 

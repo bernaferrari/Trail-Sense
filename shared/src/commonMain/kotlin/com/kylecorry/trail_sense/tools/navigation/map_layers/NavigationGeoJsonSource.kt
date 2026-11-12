@@ -13,18 +13,18 @@ import com.kylecorry.trail_sense.shared.extensions.point
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
 import com.kylecorry.trail_sense.tools.navigation.ui.NavigationColors
 import com.kylecorry.trail_sense.tools.paths.domain.LineStyle
 import com.kylecorry.trail_sense.tools.paths.ui.PathBackgroundColor
 
 class NavigationGeoJsonSource : GeoJsonSource {
 
-    private val locationSubsystem = DependencyRegistry.get<LocationSubsystem>()
-    private val navigator = DependencyRegistry.get<Navigator>()
+    private val locationSubsystem = DependencyRegistry.get<ILocationSubsystem>()
+    private val navigator = DependencyRegistry.get<INavigator>()
 
     override suspend fun load(
         bounds: CoordinateBounds,

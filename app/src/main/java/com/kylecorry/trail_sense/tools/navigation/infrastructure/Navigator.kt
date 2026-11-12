@@ -226,7 +226,7 @@ class Navigator private constructor(context: Context) : INavigator {
         return getBeaconDestinationId()
     }
 
-    suspend fun getDestination(): Destination? {
+    override suspend fun getDestination(): Destination? {
         pathNavigator.awaitRestore()
         return destination.firstOrNull()
     }

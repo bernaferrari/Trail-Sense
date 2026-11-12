@@ -13,7 +13,7 @@ import com.kylecorry.andromeda.core.time.SystemZonedDateTimeProvider
 import com.kylecorry.trail_sense.settings.infrastructure.IPedometerPreferences
 import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.events.IEventEmitter
-import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
+import com.kylecorry.trail_sense.tools.pedometer.PedometerBroadcasts
 import com.kylecorry.trail_sense.tools.pedometer.domain.abstractions.IStepTrackerRepository
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -167,9 +167,9 @@ class StepTrackerService(
 
     private fun emitStepsChanged(steps: Long) {
         eventBus.broadcast(
-            PedometerToolRegistration.BROADCAST_STEPS_CHANGED,
+            PedometerBroadcasts.STEPS_CHANGED,
             EventData().apply {
-                putLong(PedometerToolRegistration.BROADCAST_PARAM_STEPS, steps)
+                putLong(PedometerBroadcasts.PARAM_STEPS, steps)
             }
         )
     }

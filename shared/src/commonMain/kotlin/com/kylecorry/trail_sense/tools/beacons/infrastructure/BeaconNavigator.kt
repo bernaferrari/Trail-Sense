@@ -6,7 +6,7 @@ import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.shared.navigation.IAppNavigation
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,7 +14,7 @@ import kotlinx.coroutines.withContext
 class BeaconNavigator(
     private val beaconService: IBeaconService,
     private val navigation: IAppNavigation,
-    private val navigator: Navigator,
+    private val navigator: INavigator,
     private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main
 ) : IBeaconNavigator {
 

@@ -64,12 +64,9 @@ data class CreateBeaconData(
         val empty = CreateBeaconData()
 
         fun from(uri: GeoUri): CreateBeaconData {
-            val name = uri.queryParameters.getOrDefault("label", "")
+            val name = uri.queryParameters["label"] ?: ""
             val coordinate = uri.coordinate
-            val elevation = uri.altitude ?: uri.queryParameters.getOrDefault(
-                "ele",
-                ""
-            ).toFloatOrNull()
+            val elevation = uri.altitude ?: uri.queryParameters["ele"]?.toFloatOrNull()
             val elevationDistance = elevation?.let { Distance.meters(elevation) }
             return CreateBeaconData(
                 name = name,
