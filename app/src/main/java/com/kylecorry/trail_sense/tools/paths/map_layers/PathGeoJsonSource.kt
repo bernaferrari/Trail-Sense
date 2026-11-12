@@ -51,7 +51,7 @@ class PathGeoJsonSource : GeoJsonSource {
         val mappablePaths = points.mapNotNull {
             val path = pathsById[it.key] ?: return@mapNotNull null
 
-            it.value.asMappable(context, path)
+            it.value.asMappable(path)
         }
 
         return GeoJsonFeatureCollection(mappablePaths.map {

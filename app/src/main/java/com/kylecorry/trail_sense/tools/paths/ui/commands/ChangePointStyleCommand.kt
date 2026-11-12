@@ -21,7 +21,7 @@ class ChangePointStyleCommand(
 ) : IPathCommand {
 
     override fun execute(path: Path) {
-        val names = getPointStyleNames(context)
+        val names = getPointStyleNames()
         val styles = PathPointColoringStyle.entries
         Pickers.item(
             context, context.getString(R.string.point_style), styles.map { names.getValue(it) },

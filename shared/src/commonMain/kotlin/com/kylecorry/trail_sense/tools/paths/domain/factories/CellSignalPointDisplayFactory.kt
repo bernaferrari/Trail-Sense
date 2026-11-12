@@ -1,17 +1,15 @@
 package com.kylecorry.trail_sense.tools.paths.domain.factories
 
-import android.content.Context
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.colors.QualityColors
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.scales.DiscreteColorScale
 import com.kylecorry.trail_sense.shared.scales.IColorScale
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.waypointcolors.CellSignalPointColoringStrategy
 import com.kylecorry.trail_sense.tools.paths.domain.waypointcolors.IPointColoringStrategy
 
-class CellSignalPointDisplayFactory(private val context: Context) : IPointDisplayFactory {
+class CellSignalPointDisplayFactory : IPointDisplayFactory {
     override fun createColoringStrategy(path: List<PathPoint>): IPointColoringStrategy {
         return CellSignalPointColoringStrategy(createColorScale(path))
     }
@@ -22,12 +20,12 @@ class CellSignalPointDisplayFactory(private val context: Context) : IPointDispla
                 Quality.Poor,
                 Quality.Moderate,
                 Quality.Good
-            ).map { CustomUiUtils.getQualityColor(it) }
+            ).map { QualityColors.of(it) }
         )
     }
 
     override fun createLabelMap(path: List<PathPoint>): Map<Float, String> {
-        val formatService = FormatService.getInstance(context)
+        val formatService = FormatService.getInstance()
         return mapOf(
             0.167f to formatService.formatQuality(Quality.Poor),
             0.5f to formatService.formatQuality(Quality.Moderate),

@@ -765,3 +765,13 @@ sensors
 set
 tool_thermometer_title
 view_error_details
+arrow
+cross
+dashed
+diamond
+dotted
+new_text
+old
+path_slope
+solid
+square

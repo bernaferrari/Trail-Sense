@@ -250,7 +250,7 @@ fun PathOverviewToolScreen(
     }
     val legend = remember { ColorScaleState() }
     val pointFactory = remember(context, path?.style?.point) {
-        getPointFactory(context, path?.style?.point ?: PathPointColoringStyle.None)
+        getPointFactory(path?.style?.point ?: PathPointColoringStyle.None)
     }
     val bounds = remember(waypoints) { Geography.getBounds(waypoints.map { it.coordinate }) }
     val converter: IPathPointBeaconConverter = remember(context) {
@@ -318,7 +318,6 @@ fun PathOverviewToolScreen(
     LaunchedEffect(path, waypoints, viewModel.selectedPointId) {
         val current = path ?: return@LaunchedEffect
         val waypointFeatures = waypoints.asBeacons(
-            context,
             current.style.point,
             viewModel.selectedPointId
         ).map {
@@ -506,8 +505,8 @@ fun PathOverviewToolScreen(
             elevationMin = elevationRange?.let { format(it.start) },
             elevationMax = elevationRange?.let { format(it.end) },
             pathColor = current.style.color,
-            lineStyle = getLineStyleNames(context)[current.style.line] ?: "",
-            pointStyle = getPointStyleNames(context)[current.style.point] ?: ""
+            lineStyle = getLineStyleNames()[current.style.line] ?: "",
+            pointStyle = getPointStyleNames()[current.style.point] ?: ""
         )
     } ?: PathOverviewModel.empty(ContextCompat.getColor(context, R.color.blue))
 

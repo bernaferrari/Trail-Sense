@@ -42,6 +42,7 @@ import com.kylecorry.sol.units.Pressure
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.colors.QualityColors
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.views.compose.from
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
@@ -82,11 +83,7 @@ object CustomUiUtils {
 
     @ColorInt
     fun getQualityColor(quality: Quality): Int {
-        return when (quality) {
-            Quality.Poor, Quality.Unknown -> AppColor.Red.color
-            Quality.Moderate -> AppColor.Yellow.color
-            Quality.Good -> AppColor.Green.color
-        }
+        return QualityColors.of(quality)
     }
 
     fun pickDistance(

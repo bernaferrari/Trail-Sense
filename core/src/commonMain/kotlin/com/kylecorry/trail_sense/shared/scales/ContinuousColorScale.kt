@@ -1,11 +1,11 @@
 package com.kylecorry.trail_sense.shared.scales
 
 import androidx.annotation.ColorInt
-import androidx.core.graphics.ColorUtils
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 
 class ContinuousColorScale(@ColorInt private val start: Int, @ColorInt private val end: Int) :
     IColorScale {
     override fun getColor(percent: Float): Int {
-        return ColorUtils.blendARGB(start, end, percent)
+        return ColorInts.blend(start, end, percent)
     }
 }

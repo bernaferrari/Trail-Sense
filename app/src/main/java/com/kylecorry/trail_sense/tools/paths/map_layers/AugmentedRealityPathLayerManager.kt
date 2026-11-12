@@ -90,7 +90,7 @@ class AugmentedRealityPathLayerManager(
                 it.value
             }
 
-            correctedPoints.asMappable(context, path)
+            correctedPoints.asMappable(path)
         }
         layer.setPaths(mappablePaths)
     }

@@ -1,7 +1,9 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
-import android.content.Context
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappablePath
@@ -20,10 +22,10 @@ import com.kylecorry.trail_sense.tools.paths.domain.factories.TimePointDisplayFa
 import com.kylecorry.trail_sense.tools.paths.domain.waypointcolors.NoDrawPointColoringStrategy
 import com.kylecorry.trail_sense.tools.paths.domain.waypointcolors.SelectedPointDecorator
 
-fun List<PathPoint>.asMappable(context: Context, path: Path): IMappablePath {
+fun List<PathPoint>.asMappable(path: Path): IMappablePath {
     return MappablePath(
         path.id,
-        toMappableLocations(context),
+        toMappableLocations(),
         path.style.color,
         path.style.line,
         path.name
@@ -31,10 +33,9 @@ fun List<PathPoint>.asMappable(context: Context, path: Path): IMappablePath {
 }
 
 fun List<PathPoint>.toMappableLocations(
-    context: Context,
     coloringStyle: PathPointColoringStyle = PathPointColoringStyle.None
 ): List<MappableLocation> {
-    val colorFactory = getPointFactory(context, coloringStyle)
+    val colorFactory = getPointFactory(coloringStyle)
     val strategy = colorFactory.createColoringStrategy(this)
     return this.map { point ->
         MappableLocation(
@@ -48,11 +49,10 @@ fun List<PathPoint>.toMappableLocations(
 }
 
 fun List<PathPoint>.asBeacons(
-    context: Context,
     coloringStyle: PathPointColoringStyle = PathPointColoringStyle.None,
     selected: Long? = null
 ): List<Beacon> {
-    val colorFactory = getPointFactory(context, coloringStyle)
+    val colorFactory = getPointFactory(coloringStyle)
     val baseStrategy = colorFactory.createColoringStrategy(this)
     val strategy = if (selected != null) {
         SelectedPointDecorator(
@@ -79,38 +79,37 @@ fun List<PathPoint>.asBeacons(
     }
 }
 
-fun getLineStyleNames(context: Context): Map<LineStyle, String> {
+fun getLineStyleNames(): Map<LineStyle, String> {
     return mapOf(
-        LineStyle.Solid to context.getString(R.string.solid),
-        LineStyle.Dotted to context.getString(R.string.dotted),
-        LineStyle.Arrow to context.getString(R.string.arrow),
-        LineStyle.Dashed to context.getString(R.string.dashed),
-        LineStyle.Square to context.getString(R.string.square),
-        LineStyle.Diamond to context.getString(R.string.diamond),
-        LineStyle.Cross to context.getString(R.string.cross)
+        LineStyle.Solid to getAppService<AppStrings>().get(Res.string.solid),
+        LineStyle.Dotted to getAppService<AppStrings>().get(Res.string.dotted),
+        LineStyle.Arrow to getAppService<AppStrings>().get(Res.string.arrow),
+        LineStyle.Dashed to getAppService<AppStrings>().get(Res.string.dashed),
+        LineStyle.Square to getAppService<AppStrings>().get(Res.string.square),
+        LineStyle.Diamond to getAppService<AppStrings>().get(Res.string.diamond),
+        LineStyle.Cross to getAppService<AppStrings>().get(Res.string.cross)
     )
 }
 
-fun getPointStyleNames(context: Context): Map<PathPointColoringStyle, String> {
+fun getPointStyleNames(): Map<PathPointColoringStyle, String> {
     return mapOf(
-        PathPointColoringStyle.None to context.getString(R.string.none),
-        PathPointColoringStyle.CellSignal to context.getString(R.string.cell_signal),
-        PathPointColoringStyle.Altitude to context.getString(R.string.elevation),
-        PathPointColoringStyle.Time to context.getString(R.string.time),
-        PathPointColoringStyle.Slope to context.getString(R.string.path_slope)
+        PathPointColoringStyle.None to getAppService<AppStrings>().get(Res.string.none),
+        PathPointColoringStyle.CellSignal to getAppService<AppStrings>().get(Res.string.cell_signal),
+        PathPointColoringStyle.Altitude to getAppService<AppStrings>().get(Res.string.elevation),
+        PathPointColoringStyle.Time to getAppService<AppStrings>().get(Res.string.time),
+        PathPointColoringStyle.Slope to getAppService<AppStrings>().get(Res.string.path_slope)
     )
 }
 
 // TODO: Extract this and add solid style
 fun getPointFactory(
-    context: Context,
     pointColoringStyle: PathPointColoringStyle
 ): IPointDisplayFactory {
     return when (pointColoringStyle) {
         PathPointColoringStyle.None -> NonePointDisplayFactory()
-        PathPointColoringStyle.CellSignal -> CellSignalPointDisplayFactory(context)
-        PathPointColoringStyle.Altitude -> AltitudePointDisplayFactory(context)
-        PathPointColoringStyle.Time -> TimePointDisplayFactory(context)
+        PathPointColoringStyle.CellSignal -> CellSignalPointDisplayFactory()
+        PathPointColoringStyle.Altitude -> AltitudePointDisplayFactory()
+        PathPointColoringStyle.Time -> TimePointDisplayFactory()
         PathPointColoringStyle.Slope -> SlopePointDisplayFactory()
     }
 }

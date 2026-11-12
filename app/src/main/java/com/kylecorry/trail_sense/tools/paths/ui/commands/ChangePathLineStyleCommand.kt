@@ -21,7 +21,7 @@ class ChangePathLineStyleCommand(
 ) : IPathCommand {
 
     override fun execute(path: Path) {
-        val names = getLineStyleNames(context)
+        val names = getLineStyleNames()
         val styles = LineStyle.entries
         Pickers.item(
             context, context.getString(R.string.line_style), styles.map { names.getValue(it) },

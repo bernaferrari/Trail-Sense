@@ -1,9 +1,10 @@
 package com.kylecorry.trail_sense.tools.paths.domain.factories
 
-import android.content.Context
-import android.util.Range
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.andromeda.core.rangeOrNull
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.scales.ContinuousColorScale
@@ -13,12 +14,9 @@ import com.kylecorry.trail_sense.tools.paths.domain.waypointcolors.IPointColorin
 import com.kylecorry.trail_sense.tools.paths.domain.waypointcolors.TimePointColoringStrategy
 import kotlin.time.Clock
 
-class TimePointDisplayFactory(private val context: Context) : IPointDisplayFactory {
+class TimePointDisplayFactory : IPointDisplayFactory {
     override fun createColoringStrategy(path: List<PathPoint>): IPointColoringStrategy {
-        val timeRange = path.mapNotNull { it.time }.rangeOrNull()?.let { Range(it.start, it.endInclusive) } ?: Range(
-            Clock.System.now(),
-            Clock.System.now()
-        )
+        val timeRange = path.mapNotNull { it.time }.rangeOrNull() ?: Clock.System.now().let { it..it }
         return TimePointColoringStrategy(
             timeRange,
             createColorScale(path)
@@ -31,8 +29,8 @@ class TimePointDisplayFactory(private val context: Context) : IPointDisplayFacto
 
     override fun createLabelMap(path: List<PathPoint>): Map<Float, String> {
         return mapOf(
-            0.167f to context.getString(R.string.old),
-            0.833f to context.getString(R.string.new_text),
+            0.167f to getAppService<AppStrings>().get(Res.string.old),
+            0.833f to getAppService<AppStrings>().get(Res.string.new_text),
         )
     }
 }
