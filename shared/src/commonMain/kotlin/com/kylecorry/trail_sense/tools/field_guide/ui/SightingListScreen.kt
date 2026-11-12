@@ -2,11 +2,22 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
+
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
+
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.compose.ui.platform.LocalContext
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -33,12 +44,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -47,26 +55,20 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
-import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.kylecorry.trail_sense.shared.time.displayName
 import com.kylecorry.trail_sense.shared.time.toLocalDate
 import kotlinx.datetime.yearMonth
-import java.util.Locale
-import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun SightingListToolScreen(route: Route.SightingList) {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
     val navigator = LocalNavigator.current
-    val viewModel = viewModel { SightingListViewModel(route.pageId, FieldGuideRepo.getInstance(appContext)) }
-    val formatter = remember(appContext) { FormatService.getInstance(appContext) }
-    val beaconNavigator = remember(appContext) { Navigator.getInstance(appContext) }
-    val sightingLabel = stringResource(R.string.sighting)
+    val viewModel = viewModel { SightingListViewModel(route.pageId, getAppService<IFieldGuideRepo>()) }
+    val formatter = remember { FormatService.getInstance() }
+    val beaconNavigator = remember { getAppService<INavigator>() }
+    val sightingLabel = appString(Res.string.sighting)
 
     LifecycleResumeEffect(viewModel) {
         viewModel.loadPage()
@@ -109,9 +111,8 @@ fun SightingListToolScreen(route: Route.SightingList) {
                 navigator.navigate(Route.PlaceBeacon(initialLocation = location))
             },
             onDelete = {
-                Alerts.dialog(
-                    context,
-                    context.getString(R.string.delete),
+                Alerts.dialog(AppHost.current(),
+                    getAppService<AppStrings>().get(Res.string.delete),
                     sightingTitle(sighting)
                 ) { cancelled ->
                     if (!cancelled) {
@@ -135,7 +136,7 @@ fun SightingListToolScreen(route: Route.SightingList) {
 /** A field guide page's sightings, reread each time the list is shown and after a sighting is deleted. */
 internal class SightingListViewModel(
     private val pageId: Long,
-    private val repo: FieldGuideRepo
+    private val repo: IFieldGuideRepo
 ) : ViewModel() {
 
     var page by mutableStateOf<FieldGuidePage?>(null)
@@ -172,14 +173,14 @@ private fun SightingListScreen(
     onBack: () -> Unit,
     onCreate: () -> Unit
 ) {
-    val unknownLabel = stringResource(R.string.unknown)
+    val unknownLabel = appString(Res.string.unknown)
     val sections = remember(items, unknownLabel) { groupSightingsByMonth(items, unknownLabel) }
 
     TrailSensePage(
-        title = stringResource(R.string.sightings),
+        title = appString(Res.string.sightings),
         subtitle = title,
         onBack = onBack,
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = Modifier.testTag("list"),
         floatingActionButton = {
             // An empty list offers its one action in the empty state instead.
@@ -192,7 +193,7 @@ private fun SightingListScreen(
                         contentDescription = null
                     )
                 },
-                text = { Text(stringResource(R.string.record_sighting)) }
+                text = { Text(appString(Res.string.record_sighting)) }
             )
         }
     ) {
@@ -204,9 +205,9 @@ private fun SightingListScreen(
             item(key = "empty") {
                 TrailSenseEmptyState(
                     icon = Icons.Outlined.Pets,
-                    title = stringResource(R.string.no_sightings),
-                    description = stringResource(R.string.field_guide_no_sightings_description),
-                    actionLabel = stringResource(R.string.record_sighting),
+                    title = appString(Res.string.no_sightings),
+                    description = appString(Res.string.field_guide_no_sightings_description),
+                    actionLabel = appString(Res.string.record_sighting),
                     onAction = onCreate,
                     actionModifier = Modifier.testTag("create_btn"),
                     modifier = Modifier.fillParentMaxHeight(0.9f)
@@ -238,15 +239,14 @@ private fun groupSightingsByMonth(
     items: List<SightingListItem>,
     unknownLabel: String
 ): List<SightingSection> {
-    val locale = Locale.getDefault()
     return items
         .groupBy { item -> item.sighting.time?.toLocalDate()?.yearMonth }
         .map { (month, sightings) ->
             SightingSection(
                 key = month?.toString() ?: "unknown",
                 title = month?.let {
-                    "${it.month.displayName(standalone = true, locale = locale)} ${it.year}"
-                }?.replaceFirstChar { it.titlecase(locale) }
+                    "${it.month.displayName(standalone = true)} ${it.year}"
+                }?.replaceFirstChar { it.titlecase() }
                     ?: unknownLabel,
                 items = sightings
             )
@@ -259,7 +259,7 @@ private fun SightingRow(
     position: TrailSenseGroupPosition
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    val harvested = stringResource(R.string.harvested)
+    val harvested = appString(Res.string.harvested)
     val subtitle = listOfNotNull(
         harvested.takeIf { item.isHarvested },
         item.subtitle.lineSequence().firstOrNull { it.isNotBlank() }?.trim()
@@ -284,7 +284,7 @@ private fun SightingRow(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.MoreVert,
-                        contentDescription = stringResource(R.string.field_guide_more_options),
+                        contentDescription = appString(Res.string.field_guide_more_options),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -294,14 +294,14 @@ private fun SightingRow(
                 ) {
                     if (item.hasLocation) {
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.navigate)) },
+                            text = { Text(appString(Res.string.navigate)) },
                             onClick = {
                                 menuOpen = false
                                 item.onNavigate()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.create_beacon)) },
+                            text = { Text(appString(Res.string.create_beacon)) },
                             onClick = {
                                 menuOpen = false
                                 item.onCreateBeacon()
@@ -309,14 +309,14 @@ private fun SightingRow(
                         )
                     }
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.edit)) },
+                        text = { Text(appString(Res.string.edit)) },
                         onClick = {
                             menuOpen = false
                             item.onEdit()
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.delete)) },
+                        text = { Text(appString(Res.string.delete)) },
                         onClick = {
                             menuOpen = false
                             item.onDelete()

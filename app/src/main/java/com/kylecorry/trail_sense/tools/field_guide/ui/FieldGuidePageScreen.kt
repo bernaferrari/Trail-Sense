@@ -2,6 +2,8 @@
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
+
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -106,7 +108,7 @@ fun FieldGuidePageToolScreen(route: Route.FieldGuidePage) {
 /** One field guide page, reread each time it's shown so edits and new sightings appear. */
 internal class FieldGuidePageViewModel(
     private val pageId: Long?,
-    private val repo: FieldGuideRepo
+    private val repo: IFieldGuideRepo
 ) : ViewModel() {
 
     var page by mutableStateOf<FieldGuidePage?>(null)

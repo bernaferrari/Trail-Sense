@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -611,7 +614,7 @@ private fun GPSOverrideCoordinateInput(
                             0 -> onAutoFill()
                             1 -> scope.launch {
                                 val beacon = BeaconPickers.pickBeacon(
-                                    context,
+                                    AppHost.from(context),
                                     sort = ClosestBeaconSort(
                                         getAppService<IBeaconService>(),
                                         locationProvider

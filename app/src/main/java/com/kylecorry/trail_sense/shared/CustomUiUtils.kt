@@ -215,7 +215,7 @@ object CustomUiUtils {
                             0 -> autofillWithAltimeter()
                             1 -> scope.launch {
                                 val beacon = BeaconPickers.pickBeacon(
-                                    context,
+                                    AppHost.from(context),
                                     sort = ClosestBeaconSort(
                                         getAppService<IBeaconService>(),
                                         location::location
@@ -383,19 +383,7 @@ object CustomUiUtils {
         default: LocalDateTime = nowLocal(),
         onDatetimePick: (value: LocalDateTime?) -> Unit
     ) {
-        pickDate(context, default.date) { date ->
-            if (date != null) {
-                Pickers.time(context, use24Hours, default.time) { time ->
-                    if (time != null) {
-                        onDatetimePick(LocalDateTime(date, time))
-                    } else {
-                        onDatetimePick(null)
-                    }
-                }
-            } else {
-                onDatetimePick(null)
-            }
-        }
+        Pickers.datetime(AppHost.from(context), use24Hours, default, onDatetimePick)
     }
 
     fun pickPressure(

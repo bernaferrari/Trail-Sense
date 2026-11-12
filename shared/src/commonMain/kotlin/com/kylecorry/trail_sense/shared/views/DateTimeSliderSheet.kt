@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.shared.views
 
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
 import com.kylecorry.trail_sense.shared.time.today
 
 import com.kylecorry.trail_sense.shared.time.minusDays
@@ -9,7 +12,6 @@ import com.kylecorry.trail_sense.shared.time.plusDays
 import kotlin.time.Duration.Companion.days
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -36,12 +38,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.luna.hooks.Hooks
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -52,9 +53,8 @@ import kotlinx.datetime.LocalDateTime
 import com.kylecorry.trail_sense.shared.time.nowLocal
 import com.kylecorry.trail_sense.shared.time.toInstant
 import com.kylecorry.trail_sense.shared.time.toLocalDateTime
-import java.util.UUID
 
-class DateTimeSliderSheetState(context: Context) {
+class DateTimeSliderSheetState {
 
     private val formatter = getAppService<FormatService>()
     private val hooks = Hooks(
@@ -65,6 +65,7 @@ class DateTimeSliderSheetState(context: Context) {
         }
     )
     private var trigger by hooks.state("")
+    private var changeCount = 0L
     private var currentTime by mutableStateOf(nowLocal())
     private var sheetVisible by mutableStateOf(false)
 
@@ -81,7 +82,7 @@ class DateTimeSliderSheetState(context: Context) {
     }
 
     private fun notifyChanged() {
-        trigger = UUID.randomUUID().toString()
+        trigger = (++changeCount).toString()
     }
 
     fun show() {
@@ -123,8 +124,7 @@ private fun DateTimeSliderSheetContent(
     onTimeChanged: (LocalTime) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val prefs = remember { UserPreferences(context) }
+    val prefs = remember { getAppService<UserPreferences>() }
     val minutes = (currentTime.hour * 60 + currentTime.minute).toFloat()
 
     Surface(
@@ -152,8 +152,8 @@ private fun DateTimeSliderSheetContent(
                     .padding(top = TrailSenseSpacing.lg)
                     .heightIn(min = 48.dp)
                     .clickable {
-                        CustomUiUtils.pickTime(
-                            context,
+                        Pickers.time(
+                            AppHost.current(),
                             prefs.use24HourTime,
                             currentTime.time
                         ) {
@@ -192,7 +192,6 @@ private fun DatePickerRow(
     onDateChanged: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
 
     Row(
         modifier = modifier,
@@ -206,7 +205,7 @@ private fun DatePickerRow(
         ) {
             Icon(
                 imageVector = TrailIcons.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.previous),
+                contentDescription = appString(Res.string.previous),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.rotate(180f)
             )
@@ -224,7 +223,7 @@ private fun DatePickerRow(
                 .size(48.dp)
                 .combinedClickable(
                     onClick = {
-                        CustomUiUtils.pickDate(context, date) {
+                        Pickers.date(AppHost.current(), date) {
                             if (it != null) {
                                 onDateChanged(it)
                             }
@@ -237,7 +236,7 @@ private fun DatePickerRow(
         ) {
             Icon(
                 imageVector = TrailIcons.Date,
-                contentDescription = stringResource(R.string.date),
+                contentDescription = appString(Res.string.date),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -250,7 +249,7 @@ private fun DatePickerRow(
         ) {
             Icon(
                 imageVector = TrailIcons.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.next),
+                contentDescription = appString(Res.string.next),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

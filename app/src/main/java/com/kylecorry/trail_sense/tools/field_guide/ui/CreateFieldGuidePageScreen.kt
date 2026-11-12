@@ -2,6 +2,8 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
+
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.channels.Channel
@@ -178,7 +180,7 @@ fun CreateFieldGuidePageToolScreen(route: Route.CreateFieldGuidePage) {
  */
 internal class CreateFieldGuidePageViewModel(
     route: Route.CreateFieldGuidePage,
-    private val repo: FieldGuideRepo,
+    private val repo: IFieldGuideRepo,
     /** Copies a picked or taken photo into the field guide's storage and returns its path, or null. */
     private val importPhoto: suspend (uri: String) -> String?,
     private val deletePhoto: (path: String) -> Unit

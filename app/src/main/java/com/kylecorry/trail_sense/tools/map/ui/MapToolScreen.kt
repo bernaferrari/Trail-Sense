@@ -939,7 +939,7 @@ private fun createMapViews(context: Context): MapViews {
 
     val distanceSheet = MapDistanceSheetState()
 
-    val timeSheet = DateTimeSliderSheetState(context)
+    val timeSheet = DateTimeSliderSheetState()
 
     return MapViews(
         map = map,

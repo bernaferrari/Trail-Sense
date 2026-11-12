@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure.commands
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
@@ -23,7 +26,7 @@ class MoveBeaconCommand(
     fun execute(beacon: Beacon) {
         scope.launch {
             val result = BeaconPickers.pickGroup(
-                context,
+                AppHost.from(context),
                 null,
                 context.getString(R.string.move),
                 initialGroup = beacon.parentId

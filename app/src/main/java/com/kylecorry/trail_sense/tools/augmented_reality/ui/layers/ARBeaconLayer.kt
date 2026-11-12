@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.units.PixelCoordinate
@@ -150,7 +153,7 @@ class ARBeaconLayer(
 
     override suspend fun pickGuidanceTarget(view: AugmentedRealityView): ARGuidanceTarget? {
         val beacon = BeaconPickers.pickBeacon(
-            view.context,
+            AppHost.from(view.context),
             view.context.getString(R.string.locate)
         ) ?: return null
         return BeaconGuidanceTarget(beacon)

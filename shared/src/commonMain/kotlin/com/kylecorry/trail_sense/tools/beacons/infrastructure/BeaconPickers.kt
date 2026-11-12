@@ -1,7 +1,9 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure
 
-import android.content.Context
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.dialogs.DialogLabels
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
@@ -21,14 +23,14 @@ import kotlinx.coroutines.Dispatchers
 object BeaconPickers {
 
     suspend fun pickBeacon(
-        context: Context,
+        host: AppHost,
         title: String? = null,
         initialGroup: Long? = null,
         scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
         sort: IBeaconSort = NameBeaconSort(),
         filter: (List<IBeacon>) -> List<IBeacon> = { it }
     ): Beacon? = suspendCoroutine { cont ->
-        val loader = BeaconLoader(getAppService<IBeaconService>(), UserPreferences(context).beacons)
+        val loader = BeaconLoader(getAppService<IBeaconService>(), getAppService<UserPreferences>().beacons)
         val manager = GroupListManager(
             scope,
             loader,
@@ -36,15 +38,15 @@ object BeaconPickers {
             augment = { sort.sort(filter(it)) }
         )
         val titleProvider = { beacon: IBeacon? ->
-            beacon?.name ?: context.getString(R.string.beacons)
+            beacon?.name ?: getAppService<AppStrings>().get(Res.string.beacons)
         }
         GroupablePickers.item(
-            context,
+            host,
             title,
             manager,
             titleProvider,
             { it.name },
-            context.getString(R.string.no_beacons),
+            getAppService<AppStrings>().get(Res.string.no_beacons),
             initialGroup,
             searchEnabled = true
         ) {
@@ -53,15 +55,15 @@ object BeaconPickers {
     }
 
     suspend fun pickGroup(
-        context: Context,
+        host: AppHost,
         title: String? = null,
-        okText: String = context.getString(android.R.string.ok),
+        okText: CharSequence = DialogLabels.Ok,
         initialGroup: Long? = null,
         scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
         sort: IBeaconSort = NameBeaconSort(),
         filter: (List<BeaconGroup>) -> List<BeaconGroup> = { it }
     ): Pair<Boolean, BeaconGroup?> = suspendCoroutine { cont ->
-        val loader = BeaconLoader(getAppService<IBeaconService>(), UserPreferences(context).beacons)
+        val loader = BeaconLoader(getAppService<IBeaconService>(), getAppService<UserPreferences>().beacons)
         val manager = GroupListManager(
             scope,
             loader,
@@ -69,16 +71,16 @@ object BeaconPickers {
             augment = { sort.sort(filter(it.filterIsInstance<BeaconGroup>())) }
         )
         val titleProvider = { beacon: IBeacon? ->
-            beacon?.name ?: context.getString(R.string.beacons)
+            beacon?.name ?: getAppService<AppStrings>().get(Res.string.beacons)
         }
         GroupablePickers.group(
-            context,
+            host,
             title,
             okText,
             manager,
             titleProvider,
             { it.name },
-            context.getString(R.string.no_groups),
+            getAppService<AppStrings>().get(Res.string.no_groups),
             initialGroup,
             searchEnabled = false
         ) { cancelled, item ->

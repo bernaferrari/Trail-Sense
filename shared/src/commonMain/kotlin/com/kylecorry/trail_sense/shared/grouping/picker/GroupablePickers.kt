@@ -1,7 +1,11 @@
 package com.kylecorry.trail_sense.shared.grouping.picker
 
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.content.Context
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.dialogs.DialogLabels
 import com.kylecorry.trail_sense.shared.dialogs.TrailSenseDialog
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,20 +30,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.grouping.Groupable
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDivider
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
-import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 object GroupablePickers {
 
     fun <T : Groupable> item(
-        context: Context,
+        host: AppHost,
         title: String?,
         manager: GroupListManager<T>,
         titleProvider: (T?) -> String,
@@ -71,15 +72,15 @@ object GroupablePickers {
         manager.onChange = state::update
 
         manager.open(initialGroup)
-        alert = Alerts.dialog(context, title ?: "", okText = null, body = { state.Content() }) {
+        alert = Alerts.dialog(host, title ?: "", okText = null, body = { state.Content() }) {
             onPick.invoke(selected)
         }
     }
 
     fun <T : Groupable> group(
-        context: Context,
+        host: AppHost,
         title: String?,
-        okText: String = context.getString(android.R.string.ok),
+        okText: CharSequence = DialogLabels.Ok,
         manager: GroupListManager<T>,
         titleProvider: (T?) -> String,
         itemTitleProvider: (T) -> String,
@@ -104,7 +105,7 @@ object GroupablePickers {
         manager.onChange = state::update
 
         manager.open(initialGroup)
-        Alerts.dialog(context, title ?: "", okText = okText, body = { state.Content() }) {
+        Alerts.dialog(host, title ?: "", okText = okText, body = { state.Content() }) {
             onPick.invoke(it, state.selectedRoot)
         }
     }
@@ -198,7 +199,7 @@ private fun <T : Groupable> GroupableSelectContent(
                     .fillMaxWidth()
                     .padding(top = 8.dp),
                 singleLine = true,
-                label = { Text(stringResource(R.string.search)) },
+                label = { Text(appString(Res.string.search)) },
                 leadingIcon = {
                     Icon(
                         imageVector = TrailIcons.Search,

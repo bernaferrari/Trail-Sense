@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class Navigator private constructor(context: Context) {
+class Navigator private constructor(context: Context) : INavigator {
 
     private val prefs = SessionStateSubsystem.getInstance(context).preferences
     private val userPrefs = DependencyRegistry.get<UserPreferences>()
@@ -121,12 +121,12 @@ class Navigator private constructor(context: Context) {
         }
     }
 
-    fun navigateTo(
+    override fun navigateTo(
         location: Coordinate,
-        name: String = "",
-        owner: BeaconOwner = BeaconOwner.User,
-        elevation: Float? = null,
-        useDemElevation: Boolean = elevation == null,
+        name: String,
+        owner: BeaconOwner,
+        elevation: Float?,
+        useDemElevation: Boolean,
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             val beacon = Beacon.temporary(
@@ -141,11 +141,11 @@ class Navigator private constructor(context: Context) {
         }
     }
 
-    fun navigateTo(beacon: Beacon) {
+    override fun navigateTo(beacon: Beacon) {
         navigateTo(beacon.id)
     }
 
-    fun navigateTo(beaconId: Long) {
+    override fun navigateTo(beaconId: Long) {
         pathNavigator.cancel()
         CoroutineScope(Dispatchers.IO).launch { clearBearing() }
         setBeaconDestination(beaconId)
@@ -157,7 +157,7 @@ class Navigator private constructor(context: Context) {
         prefs.putLong(BEACON_DESTINATION_ID_KEY, beaconId)
     }
 
-    fun cancelBeaconNavigation() {
+    override fun cancelBeaconNavigation() {
         val wasNavigating = getBeaconDestinationId() != null
         clearBeaconDestination()
         if (wasNavigating) {
@@ -218,7 +218,7 @@ class Navigator private constructor(context: Context) {
                 pathNavigator.currentSession() != null
     }
 
-    fun getBeaconDestinationId(): Long? {
+    override fun getBeaconDestinationId(): Long? {
         return beaconDestinationId.value
     }
 

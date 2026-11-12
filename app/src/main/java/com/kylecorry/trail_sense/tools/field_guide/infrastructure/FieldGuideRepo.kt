@@ -10,14 +10,14 @@ import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
 import com.kylecorry.trail_sense.shared.UserPreferences
 
-class FieldGuideRepo private constructor(private val context: Context) {
+class FieldGuideRepo private constructor(private val context: Context) : IFieldGuideRepo {
 
     private val pageDao = AppDatabase.getInstance(context).fieldGuidePageDao()
     private val sightingDao = AppDatabase.getInstance(context).fieldGuideSightingDao()
     private val preferences = UserPreferences(context).fieldGuide
     private val files = FileSubsystem.getInstance(context)
 
-    suspend fun getAllPages(): List<FieldGuidePage> = onIO {
+    override suspend fun getAllPages(): List<FieldGuidePage> = onIO {
         val saved = pageDao.getAllPages().map { it.toFieldGuidePage() }
         val sightings = sightingDao.getAllSightings().map { it.toSighting() }
         val all = BuiltInFieldGuide.getFieldGuide() + saved
@@ -30,7 +30,7 @@ class FieldGuideRepo private constructor(private val context: Context) {
         }
     }
 
-    suspend fun getPage(id: Long): FieldGuidePage? = onIO {
+    override suspend fun getPage(id: Long): FieldGuidePage? = onIO {
         val page = if (id < 0) {
             BuiltInFieldGuide.getFieldGuidePage(id)
         } else {
@@ -41,7 +41,7 @@ class FieldGuideRepo private constructor(private val context: Context) {
         page?.copy(sightings = sightings, isHidden = preferences.hiddenPageIds.contains(id))
     }
 
-    suspend fun delete(page: FieldGuidePage) = onIO {
+    override suspend fun delete(page: FieldGuidePage) = onIO {
         if (page.isReadOnly) {
             return@onIO
         }
@@ -50,7 +50,7 @@ class FieldGuideRepo private constructor(private val context: Context) {
         pageDao.delete(FieldGuidePageEntity.fromFieldGuidePage(page))
     }
 
-    suspend fun add(page: FieldGuidePage): Long = onIO {
+    override suspend fun add(page: FieldGuidePage): Long = onIO {
         if (page.isReadOnly) {
             return@onIO -1
         }
@@ -64,22 +64,22 @@ class FieldGuideRepo private constructor(private val context: Context) {
         pageDao.upsert(entity).getUpsertedId(page.id)
     }
 
-    suspend fun addSighting(sighting: Sighting): Long = onIO {
+    override suspend fun addSighting(sighting: Sighting): Long = onIO {
         sightingDao.upsert(FieldGuideSightingEntity.fromSighting(sighting)).getUpsertedId(sighting.id)
     }
 
-    suspend fun getSighting(id: Long): Sighting? = onIO {
+    override suspend fun getSighting(id: Long): Sighting? = onIO {
         sightingDao.getSighting(id)?.toSighting()
     }
 
-    suspend fun deleteSighting(sighting: Sighting) = onIO {
+    override suspend fun deleteSighting(sighting: Sighting) = onIO {
         sightingDao.delete(FieldGuideSightingEntity.fromSighting(sighting))
     }
 
     /**
      * Only built-in pages (negative ids) can be hidden. Returns false otherwise.
      */
-    suspend fun setPageHidden(pageId: Long, isHidden: Boolean): Boolean = onIO {
+    override suspend fun setPageHidden(pageId: Long, isHidden: Boolean): Boolean = onIO {
         if (pageId >= 0) {
             return@onIO false
         }

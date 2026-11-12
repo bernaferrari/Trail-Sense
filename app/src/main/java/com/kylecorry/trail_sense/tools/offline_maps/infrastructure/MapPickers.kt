@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
@@ -31,7 +34,7 @@ object MapPickers {
             augment = { filter(it.filterIsInstance<MapGroup>()) }
         )
         GroupablePickers.group(
-            context,
+            AppHost.from(context),
             title,
             okText,
             manager,

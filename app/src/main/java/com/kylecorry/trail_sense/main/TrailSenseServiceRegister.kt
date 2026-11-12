@@ -13,6 +13,10 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.Waypoint
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.IFlashlightSubsystem
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.IPedometerSubsystem
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 
 import android.content.Context
@@ -122,6 +126,8 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(IWaypointRepo::class) { WaypointRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(IFlashlightSubsystem::class) { FlashlightSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IPedometerSubsystem::class) { PedometerSubsystem.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IFieldGuideRepo::class) { FieldGuideRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(INavigator::class) { Navigator.getInstance(appContext) }
         DependencyRegistry.addSingleton(MapService::class) { MapService(MapRepo.getInstance(appContext)) }
 
         // Map layers

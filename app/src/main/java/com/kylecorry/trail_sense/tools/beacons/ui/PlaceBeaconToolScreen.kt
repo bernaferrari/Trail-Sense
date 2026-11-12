@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
 
 import androidx.compose.animation.animateContentSize
@@ -188,7 +191,7 @@ fun PlaceBeaconToolScreen(
         onGroupClick = {
             scope.launch {
                 val result = BeaconPickers.pickGroup(
-                    context,
+                    AppHost.from(context),
                     initialGroup = viewModel.data.groupId
                 )
                 if (!result.first) {
@@ -745,7 +748,7 @@ private fun CoordinateInput(
                                 0 -> autofillFromGps()
                                 1 -> scope.launch {
                                     val beacon = BeaconPickers.pickBeacon(
-                                        context,
+                                        AppHost.from(context),
                                         sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                     ) ?: return@launch
                                     coordinateText = formatter.formatLocation(beacon.coordinate)
@@ -876,7 +879,7 @@ private fun ElevationInput(
                                 0 -> autofillFromAltimeter()
                                 1 -> scope.launch {
                                     val beacon = BeaconPickers.pickBeacon(
-                                        context,
+                                        AppHost.from(context),
                                         sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                     ) { beacons: List<IBeacon> ->
                                         beacons.filterIsInstance<Beacon>().filter { it.elevation != null }

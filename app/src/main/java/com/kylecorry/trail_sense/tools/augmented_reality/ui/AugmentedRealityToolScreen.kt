@@ -1062,7 +1062,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
     val guideName = ArTextView(
         style = ArTextStyle.Title
     )
-    val timeSheet = DateTimeSliderSheetState(context)
+    val timeSheet = DateTimeSliderSheetState()
 
     return AugmentedRealityViews(
         camera = camera,

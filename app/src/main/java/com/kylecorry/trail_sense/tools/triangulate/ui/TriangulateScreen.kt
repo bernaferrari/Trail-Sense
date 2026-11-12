@@ -3,6 +3,9 @@
 
 package com.kylecorry.trail_sense.tools.triangulate.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -1010,7 +1013,7 @@ private fun CoordinateInput(
                                 0 -> autofillFromGps()
                                 1 -> scope.launch {
                                     val beacon = BeaconPickers.pickBeacon(
-                                        context,
+                                        AppHost.from(context),
                                         sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                     ) ?: return@launch
                                     coordinateText = formatter.formatLocation(beacon.coordinate)

@@ -2,6 +2,19 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.sensors.ISensorSubsystem
+
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
+
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+
 import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
 
 import androidx.compose.foundation.layout.Box
@@ -29,9 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,25 +56,18 @@ import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.dialogs.item
-import com.kylecorry.trail_sense.shared.dialogs.withLoading
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.time.nowLocal
 import com.kylecorry.trail_sense.shared.time.toInstant
 import com.kylecorry.trail_sense.shared.time.toLocalDateTime
@@ -83,7 +87,6 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
-import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -91,15 +94,13 @@ import kotlinx.datetime.LocalDateTime
 
 @Composable
 fun CreateFieldGuideSightingToolScreen(route: Route.CreateFieldGuideSighting) {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
     val navigator = LocalNavigator.current
     val scope = rememberCoroutineScope()
     val viewModel = viewModel {
         CreateFieldGuideSightingViewModel(
             route = route,
-            repo = FieldGuideRepo.getInstance(appContext),
-            baseDistanceUnits = UserPreferences(appContext).baseDistanceUnits
+            repo = getAppService<IFieldGuideRepo>(),
+            baseDistanceUnits = getAppService<UserPreferences>().baseDistanceUnits
         )
     }
 
@@ -121,7 +122,7 @@ fun CreateFieldGuideSightingToolScreen(route: Route.CreateFieldGuideSighting) {
         onShowOnMapChange = { viewModel.showOnMap = it },
         onSave = {
             scope.launch {
-                Alerts.withLoading(context, context.getString(R.string.saving)) {
+                Alerts.withLoading(AppHost.current(), getAppService<AppStrings>().get(Res.string.saving)) {
                     viewModel.save()
                 }
                 navigator.navigateUp()
@@ -143,7 +144,7 @@ fun CreateFieldGuideSightingToolScreen(route: Route.CreateFieldGuideSighting) {
         onBack = { dispatcher?.invoke() },
         onDelete = if (viewModel.isEditing) {
             {
-                Alerts.dialog(context, context.getString(R.string.delete)) { cancelled ->
+                Alerts.dialog(AppHost.current(), getAppService<AppStrings>().get(Res.string.delete)) { cancelled ->
                     if (!cancelled) {
                         scope.launch {
                             viewModel.delete()
@@ -162,9 +163,9 @@ fun CreateFieldGuideSightingToolScreen(route: Route.CreateFieldGuideSighting) {
  * The sighting form's state: when, where and how high, notes, harvested and on-the-map, loaded from the sighting
  * being edited, and whether anything changed from it (or from a blank sighting).
  */
-internal class CreateFieldGuideSightingViewModel(
+class CreateFieldGuideSightingViewModel(
     route: Route.CreateFieldGuideSighting,
-    private val repo: FieldGuideRepo,
+    private val repo: IFieldGuideRepo,
     private val baseDistanceUnits: DistanceUnits,
     private val initialDatetime: LocalDateTime = nowLocal()
 ) : ViewModel() {
@@ -287,17 +288,17 @@ private fun CreateFieldGuideSightingScreen(
     onBack: () -> Unit = {},
     onDelete: (() -> Unit)? = null
 ) {
-    val saveLabel = stringResource(R.string.save)
-    val locationTitle = stringResource(R.string.location)
-    val notesTitle = stringResource(R.string.tool_notes_title)
-    val harvestedLabel = stringResource(R.string.harvested)
-    val showOnMapLabel = stringResource(R.string.show_on_map)
+    val saveLabel = appString(Res.string.save)
+    val locationTitle = appString(Res.string.location)
+    val notesTitle = appString(Res.string.tool_notes_title)
+    val harvestedLabel = appString(Res.string.harvested)
+    val showOnMapLabel = appString(Res.string.show_on_map)
 
     Box(modifier = modifier.testTag("field_guide_sighting_scroll")) {
         TrailSensePage(
-            title = stringResource(R.string.record_sighting),
+            title = appString(Res.string.record_sighting),
             onBack = onBack,
-            backLabel = stringResource(R.string.back),
+            backLabel = appString(Res.string.back),
             modifier = Modifier.testTag("field_guide_sighting_title"),
             actions = {
                 if (onDelete != null) {
@@ -309,12 +310,12 @@ private fun CreateFieldGuideSightingScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.MoreVert,
-                                contentDescription = stringResource(R.string.field_guide_more_options)
+                                contentDescription = appString(Res.string.field_guide_more_options)
                             )
                         }
                         DropdownMenu(expanded = isMenuOpen, onDismissRequest = { isMenuOpen = false }) {
                             DropdownMenuItem(
-                                text = { Text(stringResource(R.string.delete)) },
+                                text = { Text(appString(Res.string.delete)) },
                                 onClick = {
                                     isMenuOpen = false
                                     onDelete()
@@ -417,19 +418,18 @@ private fun DateTimeInput(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val formatter = remember { DependencyRegistry.get<FormatService>() }
     val prefs = remember { DependencyRegistry.get<UserPreferences>() }
     val selected = datetime ?: nowLocal()
     val text = formatter.formatDateTime(selected.toInstant(), relative = true)
 
     TrailSenseListItem(
-        title = stringResource(R.string.time),
+        title = appString(Res.string.time),
         subtitle = text,
         icon = rememberVectorPainter(TrailIcons.Date),
         position = position,
         onClick = {
-            CustomUiUtils.pickDatetime(context, prefs.use24HourTime, selected) {
+            Pickers.datetime(AppHost.current(), prefs.use24HourTime, selected) {
                 onDatetimeChange(it)
             }
         },
@@ -482,9 +482,8 @@ private fun CoordinateInput(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
-    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
+    val sensors = remember { getAppService<ISensorSubsystem>() }
     val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     var locationText by remember(location, formatter) {
@@ -531,27 +530,26 @@ private fun CoordinateInput(
             locationText = it
             onLocationChange(Coordinate.parse(it))
         },
-        label = stringResource(R.string.location),
+        label = appString(Res.string.location),
         position = position,
         modifier = modifier.testTag("location"),
         enabled = !isLoadingLocation,
         keyboardType = KeyboardType.Text,
         isError = isInvalid,
-        errorText = stringResource(R.string.coordinate_input_invalid_location),
+        errorText = appString(Res.string.coordinate_input_invalid_location),
         leadingIcon = {
             SightingAutofillButton(
                 isLoading = isLoadingLocation,
                 icon = rememberVectorPainter(TrailIcons.Location),
-                contentDescription = stringResource(R.string.gps),
+                contentDescription = appString(Res.string.gps),
                 buttonTag = "gps_btn",
                 loadingTag = "gps_loading",
                 onClick = {
-                    Pickers.item(
-                        context,
-                        context.getString(R.string.autofill_source),
+                    Pickers.item(AppHost.current(),
+                        getAppService<AppStrings>().get(Res.string.autofill_source),
                         listOf(
-                            context.getString(R.string.gps),
-                            context.getString(R.string.beacon)
+                            getAppService<AppStrings>().get(Res.string.gps),
+                            getAppService<AppStrings>().get(Res.string.beacon)
                         ),
                         0
                     ) { selection ->
@@ -559,7 +557,7 @@ private fun CoordinateInput(
                             0 -> autofillFromGps()
                             1 -> scope.launch {
                                 val beacon = BeaconPickers.pickBeacon(
-                                    context,
+                                    AppHost.current(),
                                     sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                 ) ?: return@launch
                                 locationText = formatter.formatLocation(beacon.coordinate)
@@ -578,7 +576,7 @@ private fun CoordinateInput(
             ) {
                 Icon(
                     painter = rememberVectorPainter(TrailIcons.Help),
-                    contentDescription = stringResource(R.string.location_input_help_title),
+                    contentDescription = appString(Res.string.location_input_help_title),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -588,10 +586,10 @@ private fun CoordinateInput(
     if (showHelp) {
         TrailSenseDialog(
             onDismissRequest = { showHelp = false },
-            title = stringResource(R.string.location_input_help_title),
-            confirmText = stringResource(android.R.string.ok)
+            title = appString(Res.string.location_input_help_title),
+            confirmText = systemString(SystemString.Ok)
         ) {
-            Text(stringResource(R.string.location_input_help))
+            Text(appString(Res.string.location_input_help))
         }
     }
 }
@@ -605,16 +603,15 @@ private fun ElevationInput(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
-    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
+    val sensors = remember { getAppService<ISensorSubsystem>() }
     val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     val units = remember {
         formatter.sortDistanceUnits(DistanceUtils.elevationDistanceUnits)
     }
     var unit by remember(units) {
-        mutableStateOf(elevation?.units ?: UserPreferences(context).baseDistanceUnits)
+        mutableStateOf(elevation?.units ?: getAppService<UserPreferences>().baseDistanceUnits)
     }
     var elevationText by remember {
         mutableStateOf(formatElevationAmount(elevation, unit))
@@ -662,7 +659,7 @@ private fun ElevationInput(
             elevationText = it
             publish(text = it)
         },
-        label = stringResource(R.string.elevation),
+        label = appString(Res.string.elevation),
         position = position,
         modifier = modifier.testTag("elevation"),
         enabled = !isLoadingElevation,
@@ -671,16 +668,15 @@ private fun ElevationInput(
             SightingAutofillButton(
                 isLoading = isLoadingElevation,
                 icon = rememberVectorPainter(TrailIcons.Altitude),
-                contentDescription = stringResource(R.string.elevation),
+                contentDescription = appString(Res.string.elevation),
                 buttonTag = "elevation_gps_btn",
                 loadingTag = "elevation_loading",
                 onClick = {
-                    Pickers.item(
-                        context,
-                        context.getString(R.string.autofill_source),
+                    Pickers.item(AppHost.current(),
+                        getAppService<AppStrings>().get(Res.string.autofill_source),
                         listOf(
-                            context.getString(R.string.pref_altimeter_calibration_title),
-                            context.getString(R.string.beacon)
+                            getAppService<AppStrings>().get(Res.string.pref_altimeter_calibration_title),
+                            getAppService<AppStrings>().get(Res.string.beacon)
                         ),
                         0
                     ) { selection ->
@@ -689,7 +685,7 @@ private fun ElevationInput(
 
                             1 -> scope.launch {
                                 val beacon = BeaconPickers.pickBeacon(
-                                    context,
+                                    AppHost.current(),
                                     sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                 ) { beacons ->
                                     beacons.filterIsInstance<Beacon>().filter { it.elevation != null }
@@ -766,7 +762,7 @@ private fun NotesInput(
     com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
         value = notes.orEmpty(),
         onValueChange = { onNotesChange(it.ifBlank { null }) },
-        label = stringResource(R.string.tool_notes_title),
+        label = appString(Res.string.tool_notes_title),
         position = position,
         modifier = modifier.testTag("notes"),
         singleLine = false,

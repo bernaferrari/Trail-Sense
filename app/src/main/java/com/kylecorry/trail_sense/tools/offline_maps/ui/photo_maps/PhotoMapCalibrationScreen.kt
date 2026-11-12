@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
@@ -645,7 +648,7 @@ private class PhotoMapCalibrationPanelState(
     private fun pickBeacon() {
         CoroutineScope(Dispatchers.Main).launch {
             val beacon = BeaconPickers.pickBeacon(
-                context,
+                AppHost.from(context),
                 sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
             ) ?: return@launch
             coordinate = beacon.coordinate

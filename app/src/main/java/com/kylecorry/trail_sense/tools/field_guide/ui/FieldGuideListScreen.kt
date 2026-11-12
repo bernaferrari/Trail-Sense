@@ -3,6 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
+
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -205,7 +207,7 @@ fun FieldGuideToolScreen() {
  * being browsed, and which pages they leave.
  */
 internal class FieldGuideListViewModel(
-    private val repo: FieldGuideRepo,
+    private val repo: IFieldGuideRepo,
     private val cleanup: suspend () -> Unit,
     private val sortName: (FieldGuidePage) -> String,
     private val tagName: (FieldGuidePageTag) -> String

@@ -2,6 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
 
 import androidx.compose.animation.animateColorAsState
@@ -708,7 +711,7 @@ private fun TideLocationInput(
 
                             1 -> scope.launch {
                                 val beacon = BeaconPickers.pickBeacon(
-                                    context,
+                                    AppHost.from(context),
                                     sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                 ) ?: return@launch
                                 locationText = formatter.formatLocation(beacon.coordinate)

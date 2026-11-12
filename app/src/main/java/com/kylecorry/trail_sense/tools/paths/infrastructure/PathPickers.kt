@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
@@ -36,7 +39,7 @@ object PathPickers {
             augment = { sort.sort(filter(it.filterIsInstance<PathGroup>())) }
         )
         GroupablePickers.group(
-            context,
+            AppHost.from(context),
             title,
             okText,
             manager,
@@ -66,7 +69,7 @@ object PathPickers {
             augment = { sort.sort(filter(it)) }
         )
         GroupablePickers.item(
-            context,
+            AppHost.from(context),
             title,
             manager,
             { getGroupTitle(context, it) },
