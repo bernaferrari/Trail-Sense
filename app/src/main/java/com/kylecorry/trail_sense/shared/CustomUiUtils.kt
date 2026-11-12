@@ -45,9 +45,12 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.views.compose.from
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.dialogs.date
 import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.disclaimer
 import com.kylecorry.trail_sense.shared.dialogs.item
 import com.kylecorry.trail_sense.shared.dialogs.snackbar
 import com.kylecorry.trail_sense.shared.dialogs.time
@@ -468,32 +471,18 @@ object CustomUiUtils {
         shownValue: Boolean = true,
         onClose: (cancelled: Boolean, agreed: Boolean) -> Unit = { _, _ -> }
     ) {
-        val prefs = PreferencesSubsystem.getInstance(context).preferences
-        if (prefs.getBoolean(shownKey) != shownValue) {
-            if (considerShownIfCancelled && cancelText == null) {
-                Alerts.dialog(context, title, message, okText = okText, cancelText = null, allowLinks = true) {
-                    prefs.putBoolean(shownKey, shownValue)
-                    onClose(it, true)
-                }
-            } else {
-                Alerts.dialog(
-                    context,
-                    title,
-                    message,
-                    okText = okText,
-                    cancelText = cancelText,
-                    allowLinks = true
-                ) { cancelled ->
-                    val agreed = !cancelled || considerShownIfCancelled
-                    if (agreed) {
-                        prefs.putBoolean(shownKey, shownValue)
-                    }
-                    onClose(cancelled, agreed)
-                }
-            }
-        } else {
-            onClose(false, true)
-        }
+        Alerts.disclaimer(
+            AppHost.from(context),
+            title,
+            message,
+            shownKey,
+            okText = okText,
+            cancelText = cancelText,
+            considerShownIfCancelled = considerShownIfCancelled,
+            shownValue = shownValue,
+            preferences = PreferencesSubsystem.getInstance(context).preferences,
+            onClose = onClose
+        )
     }
 
     /** A snackbar on [host]'s screen; [onAction] runs when its action is pressed. */
