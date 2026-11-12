@@ -13,8 +13,6 @@ import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.core.tryOrDefault
 import com.kylecorry.luna.cache.MemoryLRUCache
-import com.kylecorry.luna.concurrency.Parallel
-import com.kylecorry.sol.math.geometry.Geometry
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.units.Coordinate
@@ -30,7 +28,7 @@ import com.kylecorry.trail_sense.shared.extensions.ThreadParallelExecutor
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-object DEM {
+object DEM : ElevationModel {
 
     private class ElevationBitmap(
         val data: FloatBitmap,
@@ -50,7 +48,7 @@ object DEM {
     private var cachedIsExternal: Boolean? = null
     private val sourcesLock = Mutex()
 
-    suspend fun getElevation(location: Coordinate): DEMElevation = onDefault {
+    override suspend fun getElevation(location: Coordinate): DEMElevation = onDefault {
         cache.getOrPut(location) {
             val allSources = getSources()
             val source = allSources.firstOrNull { it.contains(location) }
@@ -62,7 +60,7 @@ object DEM {
                     val data = source.read(location, neighbors)
                     val elevation = data[0]
                     if (hasWaterMask) {
-                        val waterType = toElevationType(data.getOrElse(1) { 0f })
+                        val waterType = DEMElevationType.fromWaterMask(data.getOrElse(1) { 0f })
                         DEMElevation(elevation, waterType)
                     } else {
                         DEMElevation(elevation, null)
@@ -126,58 +124,18 @@ object DEM {
     }
 
 
-    /**
-     * Get contour lines using marching squares
-     */
-    suspend fun getContourLines(
+    override suspend fun getContourLines(
         bounds: CoordinateBounds,
         interval: Float,
         resolution: Double,
     ): List<Contour> = onDefault {
         val elevations = getElevations(bounds, resolution)
-
-        var minElevation = Float.MAX_VALUE
-        var maxElevation = Float.MIN_VALUE
-
-        val grid = ArrayList<List<Pair<Coordinate, Float>>>(elevations.latitudes.size)
-        for (y in elevations.latitudes.indices) {
-            val row = ArrayList<Pair<Coordinate, Float>>(elevations.longitudes.size)
-            val lat = elevations.latitudes[y]
-            for (x in elevations.longitudes.indices) {
-                val lon = Coordinate.toLongitude(elevations.longitudes[x])
-                val value = elevations.data.get(x, y, 0)
-
-                if (value < minElevation) {
-                    minElevation = value
-                }
-                if (value > maxElevation) {
-                    maxElevation = value
-                }
-
-                row.add(Coordinate(lat, lon) to value)
-            }
-            grid.add(row)
-        }
-
-        val thresholds = Interpolation.getMultiplesBetween(
-            minElevation,
-            maxElevation,
-            interval
-        ).toList()
-
-        Parallel.map(thresholds) { threshold ->
-            val segments = Interpolation.getIsoline(
-                grid,
-                threshold,
-                executor = ThreadParallelExecutor(),
-                interpolator = ::lerpCoordinate
-            )
-
-            Contour(
-                threshold,
-                Geometry.getConnectedLines(segments.map { it.start to it.end })
-            )
-        }
+        ContourGenerator.generate(
+            elevations.latitudes,
+            elevations.longitudes,
+            interval,
+            ThreadParallelExecutor()
+        ) { x, y -> elevations.data.get(x, y, 0) }
     }
 
     suspend fun getElevationImage(
@@ -204,7 +162,7 @@ object DEM {
             if (!elevations.hasWaterMask) {
                 null
             } else {
-                toElevationType(elevations.data.get(x, y, 1))
+                DEMElevationType.fromWaterMask(elevations.data.get(x, y, 1))
             }
         }
 
@@ -240,19 +198,7 @@ object DEM {
         )
     }
 
-    private fun toElevationType(maskValue: Float): DEMElevationType {
-        return when {
-            maskValue < 64f -> DEMElevationType.Land
-            maskValue < 192f -> DEMElevationType.InlandWater
-            else -> DEMElevationType.Ocean
-        }
-    }
 
-    private fun lerpCoordinate(percent: Float, a: Coordinate, b: Coordinate): Coordinate {
-        val distance = a.distanceTo(b)
-        val bearing = a.bearingTo(b)
-        return a.plus(distance * percent.toDouble(), bearing)
-    }
 
     private fun getNeighborSources(
         source: GeographicImageSource,
@@ -333,7 +279,7 @@ object DEM {
         }
     }
 
-    fun invalidateCache() {
+    override fun invalidateCache() {
         cache = GeospatialCache(Distance.meters(CACHE_DISTANCE), size = CACHE_SIZE)
         pixelCache = MemoryLRUCache(1)
         tileCache = MemoryLRUCache(16)
@@ -342,7 +288,7 @@ object DEM {
         cachedIsExternal = null
     }
 
-    fun isExternalModel(): Boolean {
+    override fun isExternalModel(): Boolean {
         val prefs = DependencyRegistry.get<UserPreferences>()
         return prefs.altimeter.isDigitalElevationModelLoaded
     }
@@ -358,33 +304,5 @@ object DEM {
         val maxLongitude = longitudes.lastOrNull() ?: 0.0
         return "${minLatitude}_${maxLatitude}_${minLongitude}_${maxLongitude}_$resolution"
     }
-
-    private const val BASE_RESOLUTION = 1 / 240.0
-    const val IMAGE_MIN_ZOOM_LEVEL = 10
-    const val IMAGE_MAX_ZOOM_LEVEL = 19
-    val HIGH_RESOLUTION_ZOOM_TO_RESOLUTION = mapOf(
-        10 to BASE_RESOLUTION * 2,
-        11 to BASE_RESOLUTION,
-        12 to BASE_RESOLUTION,
-        13 to BASE_RESOLUTION / 2,
-        14 to BASE_RESOLUTION / 2,
-        15 to BASE_RESOLUTION / 4,
-        16 to BASE_RESOLUTION / 4,
-        17 to BASE_RESOLUTION / 4,
-        18 to BASE_RESOLUTION / 4,
-        19 to BASE_RESOLUTION / 4
-    )
-    val LOW_RESOLUTION_ZOOM_TO_RESOLUTION = mapOf(
-        10 to BASE_RESOLUTION * 8,
-        11 to BASE_RESOLUTION * 4,
-        12 to BASE_RESOLUTION * 2,
-        13 to BASE_RESOLUTION,
-        14 to BASE_RESOLUTION / 2,
-        15 to BASE_RESOLUTION / 4,
-        16 to BASE_RESOLUTION / 4,
-        17 to BASE_RESOLUTION / 4,
-        18 to BASE_RESOLUTION / 4,
-        19 to BASE_RESOLUTION / 4
-    )
 
 }

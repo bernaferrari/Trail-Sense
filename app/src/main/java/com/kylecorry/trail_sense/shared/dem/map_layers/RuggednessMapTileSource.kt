@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.shared.dem.map_layers
 
+import com.kylecorry.trail_sense.shared.dem.DEMZoomLevels
+
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.tiles.toSize
 import android.content.Context
@@ -27,13 +29,13 @@ class RuggednessMapTileSource : TileSource {
             )
         val colorMap = RuggednessDefaultColorMap()
 
-        val zoomLevel = tile.z.coerceIn(DEM.IMAGE_MIN_ZOOM_LEVEL, DEM.IMAGE_MAX_ZOOM_LEVEL)
+        val zoomLevel = tile.z.coerceIn(DEMZoomLevels.IMAGE_MIN_ZOOM_LEVEL, DEMZoomLevels.IMAGE_MAX_ZOOM_LEVEL)
         val bounds = tile.getBounds()
 
         val zoomToResolutionMap = if (highResolution) {
-            DEM.HIGH_RESOLUTION_ZOOM_TO_RESOLUTION
+            DEMZoomLevels.HIGH_RESOLUTION_ZOOM_TO_RESOLUTION
         } else {
-            DEM.LOW_RESOLUTION_ZOOM_TO_RESOLUTION
+            DEMZoomLevels.LOW_RESOLUTION_ZOOM_TO_RESOLUTION
         }
         val resolution = zoomToResolutionMap[zoomLevel] ?: return null
 

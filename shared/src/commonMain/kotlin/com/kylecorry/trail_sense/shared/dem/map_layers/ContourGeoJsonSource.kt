@@ -1,5 +1,11 @@
 package com.kylecorry.trail_sense.shared.dem.map_layers
 
+import com.kylecorry.trail_sense.main.getAppService
+
+import com.kylecorry.trail_sense.shared.dem.ElevationModel
+
+import com.kylecorry.trail_sense.shared.dem.DEMZoomLevels
+
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -11,7 +17,6 @@ import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.dem.DEM
 import com.kylecorry.trail_sense.shared.dem.colors.ElevationColorMapFactory
 import com.kylecorry.trail_sense.shared.dem.colors.ElevationColorStrategy
 import com.kylecorry.trail_sense.shared.extensions.lineString
@@ -70,10 +75,10 @@ class ContourGeoJsonSource : GeoJsonSource {
         }
 
         val interval = validIntervals[zoom] ?: validIntervals.values.first()
-        val contours = DEM.getContourLines(
+        val contours = getAppService<ElevationModel>().getContourLines(
             bounds,
             interval,
-            DEM.LOW_RESOLUTION_ZOOM_TO_RESOLUTION[zoom]!!
+            DEMZoomLevels.LOW_RESOLUTION_ZOOM_TO_RESOLUTION[zoom]!!
         )
         var i = -10000L
 

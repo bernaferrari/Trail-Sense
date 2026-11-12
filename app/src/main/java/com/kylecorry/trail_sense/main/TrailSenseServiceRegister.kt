@@ -16,6 +16,8 @@ import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.IPedom
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
+import com.kylecorry.trail_sense.shared.dem.ElevationModel
+import com.kylecorry.trail_sense.shared.dem.DEM
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 
@@ -128,6 +130,7 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(IPedometerSubsystem::class) { PedometerSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IFieldGuideRepo::class) { FieldGuideRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(INavigator::class) { Navigator.getInstance(appContext) }
+        DependencyRegistry.addSingleton<ElevationModel>(DEM)
         DependencyRegistry.addSingleton(MapService::class) { MapService(MapRepo.getInstance(appContext)) }
 
         // Map layers
