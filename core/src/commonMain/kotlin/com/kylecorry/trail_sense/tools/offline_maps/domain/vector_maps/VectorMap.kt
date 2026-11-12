@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps
 
 import com.kylecorry.sol.science.geology.CoordinateBounds
-import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.shared.io.FilePaths
 import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
 import kotlin.time.Instant
 
@@ -20,5 +20,5 @@ data class VectorMap(
 ) : IMap {
     override val isGroup = false
     override val count: Int? = null
-    val isExternal: Boolean = path.startsWith(FileSubsystem.SCHEME_CONTENT)
+    val isExternal: Boolean = path.startsWith(FilePaths.SCHEME_CONTENT)
 }

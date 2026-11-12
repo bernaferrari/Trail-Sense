@@ -288,7 +288,7 @@ class FileSubsystem private constructor(private val context: Context) {
 
     companion object {
         private const val TAG = "FileSubsystem"
-        const val SCHEME_CONTENT = "content://"
+        const val SCHEME_CONTENT = FilePaths.SCHEME_CONTENT
 
         private const val TEMP_DIR = "tmp"
 
