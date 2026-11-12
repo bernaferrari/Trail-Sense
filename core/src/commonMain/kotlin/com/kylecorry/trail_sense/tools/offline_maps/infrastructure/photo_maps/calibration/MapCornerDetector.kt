@@ -1,8 +1,5 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.calibration
 
-import android.graphics.Bitmap
-import androidx.core.graphics.scale
-import com.kylecorry.andromeda.bitmaps.operations.getPixels
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.luna.collections.combinations
 import com.kylecorry.luna.specifications.Specification
@@ -55,42 +52,54 @@ class MapCornerDetector(
 
     private val gradientCalculator = GradientCalculator()
 
-    fun detect(bitmap: Bitmap): PixelBounds? {
-        if (bitmap.width < IMAGE_MIN_SIZE || bitmap.height < IMAGE_MIN_SIZE) {
+    /**
+     * The size to scale an image to before detecting, or null if the image is too small to detect
+     * corners in.
+     */
+    fun detectionSize(width: Int, height: Int): Pair<Int, Int>? {
+        if (width < IMAGE_MIN_SIZE || height < IMAGE_MIN_SIZE) {
             return null
         }
 
         val scale = Geometry.scaleToFit(
-            bitmap.width.toFloat(),
-            bitmap.height.toFloat(),
+            width.toFloat(),
+            height.toFloat(),
             maxDimension.toFloat(),
             maxDimension.toFloat()
         )
-        val scaled = if (scale < 1f) {
-            bitmap.scale(
-                max(1, (bitmap.width * scale).roundToInt()),
-                max(1, (bitmap.height * scale).roundToInt())
-            )
-        } else {
-            bitmap
+        if (scale >= 1f) {
+            return width to height
+        }
+        return max(1, (width * scale).roundToInt()) to max(1, (height * scale).roundToInt())
+    }
+
+    /**
+     * Detects the map corners in ARGB [pixels] that were scaled to [detectionSize] from an image of
+     * [originalWidth] x [originalHeight]. The bounds are in the original image's pixels.
+     */
+    fun detect(
+        pixels: IntArray,
+        width: Int,
+        height: Int,
+        originalWidth: Int = width,
+        originalHeight: Int = height
+    ): PixelBounds? {
+        if (originalWidth < IMAGE_MIN_SIZE || originalHeight < IMAGE_MIN_SIZE) {
+            return null
         }
 
-        val pixels = scaled.getPixels()
-        val result = detect(pixels, scaled.width, scaled.height)
+        val result = detectInPixels(pixels, width, height)
 
-        if (scaled == bitmap) {
+        if (width == originalWidth && height == originalHeight) {
             return result
         }
 
-        val xScale = bitmap.width / scaled.width.toFloat()
-        val yScale = bitmap.height / scaled.height.toFloat()
-        val scaledResult = result?.scaleBounds(xScale, yScale)
-
-        scaled.recycle()
-        return scaledResult
+        val xScale = originalWidth / width.toFloat()
+        val yScale = originalHeight / height.toFloat()
+        return result?.scaleBounds(xScale, yScale)
     }
 
-    private fun detect(
+    private fun detectInPixels(
         pixels: IntArray,
         width: Int,
         height: Int
