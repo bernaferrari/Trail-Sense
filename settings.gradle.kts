@@ -75,3 +75,12 @@ if (file("../sol/settings.gradle.kts").exists()) {
         }
     }
 }
+
+// Luna 3 (multiplatform) is likewise developed alongside as the adjacent checkout until it is published.
+if (file("../luna/settings.gradle.kts").exists()) {
+    includeBuild("../luna") {
+        dependencySubstitution {
+            substitute(module("com.kylecorry:luna")).using(project(":"))
+        }
+    }
+}
