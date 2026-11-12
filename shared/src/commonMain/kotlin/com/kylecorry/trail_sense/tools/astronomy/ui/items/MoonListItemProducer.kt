@@ -1,19 +1,25 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
-import com.kylecorry.trail_sense.shared.time.today
-
-import android.content.Context
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.declination.DeclinationUtils
+import com.kylecorry.trail_sense.shared.generated.resources.Res
+import com.kylecorry.trail_sense.shared.generated.resources.astronomy_altitude
+import com.kylecorry.trail_sense.shared.generated.resources.astronomy_altitude_peak
+import com.kylecorry.trail_sense.shared.generated.resources.direction
+import com.kylecorry.trail_sense.shared.generated.resources.illumination
+import com.kylecorry.trail_sense.shared.generated.resources.moon
+import com.kylecorry.trail_sense.shared.generated.resources.moon_phase
+import com.kylecorry.trail_sense.shared.generated.resources.supermoon
+import com.kylecorry.trail_sense.shared.generated.resources.times
+import com.kylecorry.trail_sense.shared.time.today
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
-import kotlinx.datetime.TimeZone
 
-class MoonListItemProducer(context: Context) : BaseAstroListItemProducer(context) {
+class MoonListItemProducer : BaseAstroListItemProducer() {
 
     override suspend fun getListItem(
         date: LocalDate,
@@ -50,10 +56,10 @@ class MoonListItemProducer(context: Context) : BaseAstroListItemProducer(context
 
         list(
             2,
-            context.getString(R.string.moon),
+            strings.get(Res.string.moon),
             percent(formatter.formatMoonPhase(phase.phase), phase.illumination),
             icon(
-                MoonPhaseImageMapper(context).getPhaseImage(
+                MoonPhaseImageMapper().getPhaseImage(
                     phase.phaseAngle,
                     imageSize,
                     imageSize,
@@ -64,20 +70,20 @@ class MoonListItemProducer(context: Context) : BaseAstroListItemProducer(context
             data = riseSetTransit(times)
         ) {
             val advancedData = listOf(
-                context.getString(R.string.times) to riseSetTransit(times),
-                context.getString(R.string.moon_phase) to data(formatter.formatMoonPhase(phase.phase)),
-                context.getString(R.string.illumination) to percent(phase.illumination),
-                context.getString(R.string.astronomy_altitude_peak) to peak?.let { degrees(it) },
-                context.getString(R.string.supermoon) to data(
+                strings.get(Res.string.times) to riseSetTransit(times),
+                strings.get(Res.string.moon_phase) to data(formatter.formatMoonPhase(phase.phase)),
+                strings.get(Res.string.illumination) to percent(phase.illumination),
+                strings.get(Res.string.astronomy_altitude_peak) to peak?.let { degrees(it) },
+                strings.get(Res.string.supermoon) to data(
                     formatter.formatBooleanYesNo(
                         isSuperMoon
                     )
                 ),
-                context.getString(R.string.astronomy_altitude) to altitude?.let { degrees(it) },
-                context.getString(R.string.direction) to azimuth?.let { degrees(it.value) }
+                strings.get(Res.string.astronomy_altitude) to altitude?.let { degrees(it) },
+                strings.get(Res.string.direction) to azimuth?.let { degrees(it.value) }
             )
 
-            showAdvancedData(context.getString(R.string.moon), advancedData)
+            showAdvancedData(strings.get(Res.string.moon), advancedData)
         }
     }
 

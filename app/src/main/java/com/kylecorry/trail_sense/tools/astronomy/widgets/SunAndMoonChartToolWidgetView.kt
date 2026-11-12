@@ -15,7 +15,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
 import com.kylecorry.trail_sense.tools.astronomy.ui.AstroChartState
-import androidx.compose.ui.graphics.asImageBitmap
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
@@ -47,12 +46,12 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
         onMain {
             val userPrefs = UserPreferences(context)
             val size = Resources.dp(context, 24f).toInt()
-            val moonImage = MoonPhaseImageMapper(context).getPhaseImage(
+            val moonImage = MoonPhaseImageMapper().getPhaseImage(
                 moon.phaseAngle,
                 size,
                 size,
                 moon.tilt
-            ).asImageBitmap()
+            )
             val state = AstroChartState(
                 startTime = sunAltitudes.firstOrNull()?.time ?: Clock.System.now(),
                 sun = sunAltitudes,

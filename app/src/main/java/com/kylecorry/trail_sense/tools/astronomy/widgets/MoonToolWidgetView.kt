@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.astronomy.widgets
 
+import androidx.compose.ui.graphics.asAndroidBitmap
 import android.content.Context
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.trail_sense.R
@@ -24,12 +25,12 @@ class MoonToolWidgetView : SimpleToolWidgetView() {
         val formatter = FormatService.getInstance(context)
         val moon = astronomy.moon
         val size = Resources.dp(context, 32f).toInt()
-        val bitmap = MoonPhaseImageMapper(context).getPhaseImage(
+        val bitmap = MoonPhaseImageMapper().getPhaseImage(
             moon.phaseAngle,
             size,
             size,
             moon.tilt
-        )
+        ).asAndroidBitmap()
 
         return ToolWidgetContent.Simple(
             title = context.getString(R.string.moon),

@@ -1,15 +1,21 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
-import android.content.Context
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.declination.DeclinationUtils
+import com.kylecorry.trail_sense.shared.generated.resources.Res
+import com.kylecorry.trail_sense.shared.generated.resources.astronomy_altitude_peak
+import com.kylecorry.trail_sense.shared.generated.resources.astronomy_direction_peak
+import com.kylecorry.trail_sense.shared.generated.resources.duration
+import com.kylecorry.trail_sense.shared.generated.resources.lunar_eclipse
+import com.kylecorry.trail_sense.shared.generated.resources.magnitude
+import com.kylecorry.trail_sense.shared.generated.resources.obscuration
+import com.kylecorry.trail_sense.shared.generated.resources.times
 import com.kylecorry.trail_sense.tools.astronomy.ui.LunarEclipseImageMapper
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.EclipseFormatter
 import kotlinx.datetime.LocalDate
 
-class LunarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer(context) {
+class LunarEclipseListItemProducer : BaseAstroListItemProducer() {
 
     override suspend fun getListItem(
         date: LocalDate,
@@ -31,10 +37,10 @@ class LunarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
 
         list(
             4,
-            context.getString(R.string.lunar_eclipse),
-            EclipseFormatter.type(context, eclipse),
+            strings.get(Res.string.lunar_eclipse),
+            EclipseFormatter.type(eclipse),
             icon(
-                LunarEclipseImageMapper(context).getEclipseImage(
+                LunarEclipseImageMapper().getEclipseImage(
                     moon,
                     shadow,
                     imageSize,
@@ -45,17 +51,17 @@ class LunarEclipseListItemProducer(context: Context) : BaseAstroListItemProducer
             data = times
         ) {
             val advancedData = listOf(
-                context.getString(R.string.times) to times,
-                context.getString(R.string.duration) to duration(eclipse.duration),
-                context.getString(R.string.obscuration) to data(
-                    EclipseFormatter.type(context, eclipse)
+                strings.get(Res.string.times) to times,
+                strings.get(Res.string.duration) to duration(eclipse.duration),
+                strings.get(Res.string.obscuration) to data(
+                    EclipseFormatter.type(eclipse)
                 ),
-                context.getString(R.string.magnitude) to decimal(eclipse.magnitude, 2),
-                context.getString(R.string.astronomy_altitude_peak) to degrees(moon.altitude),
-                context.getString(R.string.astronomy_direction_peak) to direction(peakAzimuth)
+                strings.get(Res.string.magnitude) to decimal(eclipse.magnitude, 2),
+                strings.get(Res.string.astronomy_altitude_peak) to degrees(moon.altitude),
+                strings.get(Res.string.astronomy_direction_peak) to direction(peakAzimuth)
             )
 
-            showAdvancedData(context.getString(R.string.lunar_eclipse), advancedData)
+            showAdvancedData(strings.get(Res.string.lunar_eclipse), advancedData)
         }
     }
 

@@ -75,7 +75,7 @@ class SolarEclipseAlertCommand(private val context: Context) : Command<Coordinat
             true
         )
 
-        val eclipseAmount = EclipseFormatter.type(context, eclipse)
+        val eclipseAmount = EclipseFormatter.type(eclipse)
 
         return "$timeSpan\n$eclipseAmount"
     }

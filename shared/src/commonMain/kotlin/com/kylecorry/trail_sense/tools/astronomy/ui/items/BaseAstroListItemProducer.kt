@@ -1,38 +1,40 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui.items
 
-
-
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
-import android.content.Context
-import android.graphics.Bitmap
-import androidx.core.text.buildSpannedString
-import androidx.core.text.scale
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.science.astronomy.RiseSetTransitTimes
 import com.kylecorry.sol.units.Bearing
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.generated.resources.Res
+import com.kylecorry.trail_sense.shared.generated.resources.astronomy_rise
+import com.kylecorry.trail_sense.shared.generated.resources.astronomy_set
+import com.kylecorry.trail_sense.shared.generated.resources.end_time
+import com.kylecorry.trail_sense.shared.generated.resources.noon
+import com.kylecorry.trail_sense.shared.generated.resources.peak_time
+import com.kylecorry.trail_sense.shared.generated.resources.start_time
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import kotlin.time.Duration
-import com.kylecorry.trail_sense.shared.time.toLocalDate
-import kotlinx.datetime.LocalDate
 import kotlin.time.Instant
-import androidx.compose.ui.graphics.toArgb
-import com.kylecorry.trail_sense.shared.views.TrailSenseColors
-import com.kylecorry.trail_sense.shared.dialogs.dialog
+import kotlinx.datetime.LocalDate
 
-abstract class BaseAstroListItemProducer(protected val context: Context) :
-    AstronomyListItemProducer {
+abstract class BaseAstroListItemProducer : AstronomyListItemProducer {
 
-    protected val imageSize = Resources.dp(context, 24f).toInt()
+    // Drawn images (the moon's phase, eclipses) are made at a fixed size that stays sharp in the list's icon chip
+    protected val imageSize = IMAGE_SIZE_PX
     protected val secondaryColor = TrailSenseColors.current.onSurfaceVariant.toArgb()
-    protected val formatter = FormatService.getInstance(context)
+    protected val formatter = FormatService.getInstance()
     protected val astronomyService = AstronomyService()
-    protected val prefs = UserPreferences(context)
+    protected val prefs = getAppService<UserPreferences>()
+    protected val strings = getAppService<AppStrings>()
 
     private fun formatTime(time: Instant?): String {
         if (time == null) {
@@ -78,7 +80,7 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
         return AstronomyListIcon(vector, tint, rotation)
     }
 
-    protected fun icon(bitmap: Bitmap): AstronomyListIcon {
+    protected fun icon(bitmap: ImageBitmap): AstronomyListIcon {
         return AstronomyListIcon(bitmap = bitmap)
     }
 
@@ -104,7 +106,7 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
             }
 
         Alerts.dialog(
-            context,
+            AppHost.current(),
             title,
             description,
             cancelText = null
@@ -138,9 +140,9 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
 
     protected fun riseSetTransit(times: RiseSetTransitTimes): List<AstronomyListItemData> {
         return listOf(
-            context.getString(R.string.astronomy_rise) to times.rise,
-            context.getString(R.string.noon) to times.transit,
-            context.getString(R.string.astronomy_set) to times.set
+            strings.get(Res.string.astronomy_rise) to times.rise,
+            strings.get(Res.string.noon) to times.transit,
+            strings.get(Res.string.astronomy_set) to times.set
         ).sortedBy { it.second }.map {
             datapoint(formatTime(it.second), it.first)
         }
@@ -154,9 +156,9 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
     ): List<AstronomyListItemData> {
         val reserveHeaderSpace = listOf(start, peak, end).any { it != null && it.toLocalDate() != displayDate }
         return listOf(
-            context.getString(R.string.start_time) to start,
-            context.getString(R.string.peak_time) to peak,
-            context.getString(R.string.end_time) to end
+            strings.get(Res.string.start_time) to start,
+            strings.get(Res.string.peak_time) to peak,
+            strings.get(Res.string.end_time) to end
         ).flatMap {
             time(it.second, displayDate, it.first, reserveHeaderSpace)
         }
@@ -169,18 +171,18 @@ abstract class BaseAstroListItemProducer(protected val context: Context) :
         reserveHeaderSpace: Boolean = false
     ): List<AstronomyListItemData> {
 
-        val value = buildSpannedString {
-            scale(0.75f) {
-                if (time != null && time.toLocalDate() != displayDate) {
-                    appendLine(formatter.formatRelativeDate(time.toLocalDate(), true))
-                } else if (reserveHeaderSpace) {
-                    appendLine()
-                }
+        val value = buildString {
+            if (time != null && time.toLocalDate() != displayDate) {
+                appendLine(formatter.formatRelativeDate(time.toLocalDate(), true))
+            } else if (reserveHeaderSpace) {
+                appendLine()
             }
             append(formatTime(time))
         }
         return listOf(datapoint(value, label))
     }
 
-
+    private companion object {
+        const val IMAGE_SIZE_PX = 112
+    }
 }

@@ -45,7 +45,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -165,11 +164,11 @@ fun AstronomyToolScreen(
     // date, place and declination.
     val producers = remember(context) {
         listOf(
-            SunListItemProducer(context),
-            MoonListItemProducer(context),
-            MeteorShowerListItemProducer(context),
-            LunarEclipseListItemProducer(context),
-            SolarEclipseListItemProducer(context)
+            SunListItemProducer(),
+            MoonListItemProducer(),
+            MeteorShowerListItemProducer(),
+            LunarEclipseListItemProducer(),
+            SolarEclipseListItemProducer()
         )
     }
 
@@ -231,9 +230,8 @@ fun AstronomyToolScreen(
     val moonSize = with(LocalDensity.current) { MoonSize.roundToPx() }
     val moonImage = remember(moonPhase, moonSize) {
         moonPhase?.let {
-            MoonPhaseImageMapper(context)
+            MoonPhaseImageMapper()
                 .getPhaseImage(it.phaseAngle, moonSize, moonSize, it.tilt, plain = true)
-                .asImageBitmap()
         }
     }
 
@@ -826,7 +824,7 @@ private fun AstronomyDetailRow(item: AstronomyListItem, position: TrailSenseGrou
 private fun rememberAstronomyIconPainter(icon: com.kylecorry.trail_sense.tools.astronomy.ui.items.AstronomyListIcon): Painter {
     val bitmap = icon.bitmap
     return if (bitmap != null) {
-        remember(bitmap) { BitmapPainter(bitmap.asImageBitmap()) }
+        remember(bitmap) { BitmapPainter(bitmap) }
     } else {
         rememberVectorPainter(requireNotNull(icon.vector))
     }

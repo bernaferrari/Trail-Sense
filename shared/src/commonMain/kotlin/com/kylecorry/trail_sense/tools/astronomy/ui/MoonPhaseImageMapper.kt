@@ -1,38 +1,49 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffXfermode
-import android.graphics.RectF
-import androidx.core.graphics.createBitmap
-import androidx.core.graphics.withSave
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.kylecorry.trail_sense.shared.icons.toBitmap
+import androidx.compose.ui.graphics.withSave
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
 import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
+import com.kylecorry.trail_sense.shared.icons.toImageBitmap
+import com.kylecorry.trail_sense.shared.icons.trail.Moon
+import com.kylecorry.trail_sense.shared.icons.trail.MoonFirstQuarter
+import com.kylecorry.trail_sense.shared.icons.trail.MoonNew
+import com.kylecorry.trail_sense.shared.icons.trail.MoonThirdQuarter
+import com.kylecorry.trail_sense.shared.icons.trail.MoonWaningCrescent
+import com.kylecorry.trail_sense.shared.icons.trail.MoonWaningGibbous
+import com.kylecorry.trail_sense.shared.icons.trail.MoonWaxingCrescent
+import com.kylecorry.trail_sense.shared.icons.trail.MoonWaxingGibbous
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.tools.astronomy.domain.MoonTilt
 import kotlin.math.abs
 
-class MoonPhaseImageMapper(private val context: Context? = null) {
+class MoonPhaseImageMapper {
 
-    private val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = SHADOW_COLOR
-        xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP)
+    private val shadowPaint = Paint().apply {
+        isAntiAlias = true
+        color = Color(SHADOW_COLOR)
+        blendMode = BlendMode.SrcAtop
     }
 
-    private val litPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = android.graphics.Color.WHITE
+    private val litPaint = Paint().apply {
+        isAntiAlias = true
+        color = Color.White
     }
 
-    private val plainShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = android.graphics.Color.BLACK
-        xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP)
+    private val plainShadowPaint = Paint().apply {
+        isAntiAlias = true
+        color = Color.Black
+        blendMode = BlendMode.SrcAtop
     }
 
     fun getPhaseImage(phase: MoonTruePhase): ImageVector {
@@ -49,9 +60,9 @@ class MoonPhaseImageMapper(private val context: Context? = null) {
     }
 
     /**
-     * The phase as a bitmap. [plain] draws a clean disc (pure white lit face, opaque black shadow, a smooth terminator)
-     * for screens that recolour it with [moonPhaseColorMatrix]; otherwise it is the textured moon icon under a
-     * translucent shadow, for widgets and the calendar.
+     * The phase as an image. [plain] draws a clean disc (pure white lit face, opaque black shadow, a smooth
+     * terminator) for screens that recolour it; otherwise it is the textured moon icon under a translucent shadow,
+     * for widgets and the calendar.
      */
     fun getPhaseImage(
         phaseAngle: Float,
@@ -59,18 +70,17 @@ class MoonPhaseImageMapper(private val context: Context? = null) {
         height: Int,
         tilt: MoonTilt? = null,
         plain: Boolean = false
-    ): Bitmap {
-        checkNotNull(context) { "MoonPhaseImageMapper requires a context to draw a phase bitmap" }
-        val output = createBitmap(width, height)
+    ): ImageBitmap {
+        val output = ImageBitmap(width, height)
         val canvas = Canvas(output)
         canvas.withSave {
             tilt?.let {
-                rotate(it.parallacticAngle, width / 2f, height / 2f)
+                canvas.rotate(it.parallacticAngle, width / 2f, height / 2f)
             }
             if (plain) {
-                drawCircle(width / 2f, height / 2f, minOf(width, height) / 2f, litPaint)
+                canvas.drawCircle(Offset(width / 2f, height / 2f), minOf(width, height) / 2f, litPaint)
             } else {
-                drawBitmap(TrailIcons.Moon.toBitmap(width, height), 0f, 0f, null)
+                canvas.drawImage(TrailIcons.Moon.toImageBitmap(width, height), Offset.Zero, Paint())
             }
 
             tilt?.let {
@@ -79,9 +89,15 @@ class MoonPhaseImageMapper(private val context: Context? = null) {
                 } else {
                     -90f
                 }
-                rotate(-(it.brightLimbAngleFromNorth + rotationAdjustment), width / 2f, height / 2f)
+                canvas.rotate(-(it.brightLimbAngleFromNorth + rotationAdjustment), width / 2f, height / 2f)
             }
-            drawShadow(this, phaseAngle, width.toFloat(), height.toFloat(), if (plain) plainShadowPaint else shadowPaint)
+            drawShadow(
+                canvas,
+                phaseAngle,
+                width.toFloat(),
+                height.toFloat(),
+                if (plain) plainShadowPaint else shadowPaint
+            )
         }
         return output
     }
@@ -107,7 +123,7 @@ class MoonPhaseImageMapper(private val context: Context? = null) {
     private fun createShadowPath(angle: Float, width: Float, height: Float): Path {
         val centerX = width / 2f
         val terminatorRadius = abs(cosDegrees(angle)) * centerX
-        val terminator = RectF(
+        val terminator = Rect(
             centerX - terminatorRadius,
             0f,
             centerX + terminatorRadius,
@@ -127,7 +143,8 @@ class MoonPhaseImageMapper(private val context: Context? = null) {
                 arcTo(
                     terminator,
                     90f,
-                    if (terminatorOnRight) -180f else 180f
+                    if (terminatorOnRight) -180f else 180f,
+                    false
                 )
             }
             close()
@@ -135,6 +152,6 @@ class MoonPhaseImageMapper(private val context: Context? = null) {
     }
 
     companion object {
-        private const val SHADOW_COLOR = 0xE0000000.toInt()
+        private const val SHADOW_COLOR = 0xE0000000
     }
 }
