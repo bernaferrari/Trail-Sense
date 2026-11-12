@@ -1,40 +1,41 @@
 package com.kylecorry.trail_sense.settings.ui
 
-import android.content.Context
+import com.kylecorry.trail_sense.shared.device.DeviceProfile
 
-import androidx.compose.ui.platform.LocalContext
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
+import com.kylecorry.trail_sense.shared.dialogs.UnitPickers
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+
+
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 
 @Composable
 fun AugmentedRealitySettingsToolScreen() {
-    val context = LocalContext.current
-    val userPrefs = remember { UserPreferences(context) }
-    val formatter = remember { FormatService.getInstance(context) }
+    val userPrefs = remember { getAppService<UserPreferences>() }
+    val formatter = remember { FormatService.getInstance() }
     val distanceUnits = remember {
         formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
     }
     val arPrefs = userPrefs.augmentedReality
-    val hasGyro = remember { Sensors.hasGyroscope(context) }
+    val hasGyro = remember { getAppService<DeviceProfile>().hasGyroscope }
     val pathDistanceDescription = remember {
-        context.getString(
-            R.string.path_distance_performance_disclaimer,
+        getAppService<AppStrings>().get(Res.string.path_distance_performance_disclaimer,
             formatter.formatDistance(
                 relativeDistance(
                     userPrefs,
@@ -72,18 +73,18 @@ fun AugmentedRealitySettingsToolScreen() {
         mutableStateOf(relativeDistance(userPrefs, Distance.meters(arPrefs.pathViewDistance)))
     }
 
-    val beaconsTitle = stringResource(R.string.beacons)
-    val pathsTitle = stringResource(R.string.paths)
-    val astronomyTitle = stringResource(R.string.astronomy)
-    val gridTitle = stringResource(R.string.grid)
-    val advancedTitle = stringResource(R.string.advanced)
+    val beaconsTitle = appString(Res.string.beacons)
+    val pathsTitle = appString(Res.string.paths)
+    val astronomyTitle = appString(Res.string.astronomy)
+    val gridTitle = appString(Res.string.grid)
+    val advancedTitle = appString(Res.string.advanced)
 
     // Each layer's own options only show while the layer does.
-    SettingsList(title = stringResource(R.string.augmented_reality)) {
+    SettingsList(title = appString(Res.string.augmented_reality)) {
         trailSenseSection("beacons", title = beaconsTitle) {
             row { position ->
                 SettingsSwitchRow(
-                    label = stringResource(R.string.visible),
+                    label = appString(Res.string.visible),
                     checked = showBeaconLayer,
                     onCheckedChange = {
                         showBeaconLayer = it
@@ -95,12 +96,12 @@ fun AugmentedRealitySettingsToolScreen() {
             if (showBeaconLayer) {
                 row { position ->
                     SettingsActionRow(
-                        label = stringResource(R.string.view_distance),
+                        label = appString(Res.string.view_distance),
                         summary = formatDistance(formatter, beaconViewDistance),
                         onClick = {
-                            context.pickDistance(
+                            pickDistance(
                                 distanceUnits,
-                                title = context.getString(R.string.view_distance),
+                                title = getAppService<AppStrings>().get(Res.string.view_distance),
                                 current = beaconViewDistance
                             ) {
                                 beaconViewDistance = it
@@ -115,7 +116,7 @@ fun AugmentedRealitySettingsToolScreen() {
         trailSenseSection("paths", title = pathsTitle) {
             row { position ->
                 SettingsSwitchRow(
-                    label = stringResource(R.string.visible),
+                    label = appString(Res.string.visible),
                     checked = showPathLayer,
                     onCheckedChange = {
                         showPathLayer = it
@@ -127,12 +128,12 @@ fun AugmentedRealitySettingsToolScreen() {
             if (showPathLayer) {
                 row { position ->
                     SettingsActionRow(
-                        label = stringResource(R.string.view_distance),
+                        label = appString(Res.string.view_distance),
                         summary = formatDistance(formatter, pathViewDistance),
                         onClick = {
-                            context.pickDistance(
+                            pickDistance(
                                 distanceUnits,
-                                title = context.getString(R.string.view_distance),
+                                title = getAppService<AppStrings>().get(Res.string.view_distance),
                                 current = pathViewDistance,
                                 description = pathDistanceDescription
                             ) {
@@ -145,7 +146,7 @@ fun AugmentedRealitySettingsToolScreen() {
                 }
                 row { position ->
                     SettingsSwitchRow(
-                        label = stringResource(R.string.use_path_elevation),
+                        label = appString(Res.string.use_path_elevation),
                         checked = adjustForPathElevation,
                         onCheckedChange = {
                             adjustForPathElevation = it
@@ -159,7 +160,7 @@ fun AugmentedRealitySettingsToolScreen() {
         trailSenseSection("astronomy", title = astronomyTitle) {
             row { position ->
                 SettingsSwitchRow(
-                    label = stringResource(R.string.visible),
+                    label = appString(Res.string.visible),
                     checked = showAstronomyLayer,
                     onCheckedChange = {
                         showAstronomyLayer = it
@@ -171,7 +172,7 @@ fun AugmentedRealitySettingsToolScreen() {
             if (showAstronomyLayer) {
                 row { position ->
                     SettingsSwitchRow(
-                        label = stringResource(R.string.show_stars),
+                        label = appString(Res.string.show_stars),
                         checked = showStars,
                         onCheckedChange = {
                             showStars = it
@@ -183,7 +184,7 @@ fun AugmentedRealitySettingsToolScreen() {
                 if (showStars) {
                     row { position ->
                         SettingsSwitchRow(
-                            label = stringResource(R.string.show_low_brightness_objects),
+                            label = appString(Res.string.show_low_brightness_objects),
                             checked = showLowBrightnessObjects,
                             onCheckedChange = {
                                 showLowBrightnessObjects = it
@@ -195,7 +196,7 @@ fun AugmentedRealitySettingsToolScreen() {
                 }
                 row { position ->
                     SettingsSwitchRow(
-                        label = stringResource(R.string.show_constellations),
+                        label = appString(Res.string.show_constellations),
                         checked = showConstellations,
                         onCheckedChange = {
                             showConstellations = it
@@ -206,7 +207,7 @@ fun AugmentedRealitySettingsToolScreen() {
                 }
                 row { position ->
                     SettingsSwitchRow(
-                        label = stringResource(R.string.show_below_horizon),
+                        label = appString(Res.string.show_below_horizon),
                         checked = showAstronomyBelowHorizon,
                         onCheckedChange = {
                             showAstronomyBelowHorizon = it
@@ -220,7 +221,7 @@ fun AugmentedRealitySettingsToolScreen() {
         trailSenseSection("grid", title = gridTitle) {
             row { position ->
                 SettingsSwitchRow(
-                    label = stringResource(R.string.visible),
+                    label = appString(Res.string.visible),
                     checked = showGridLayer,
                     onCheckedChange = {
                         showGridLayer = it
@@ -234,8 +235,8 @@ fun AugmentedRealitySettingsToolScreen() {
             if (hasGyro) {
                 row { position ->
                     SettingsSwitchRow(
-                        label = stringResource(R.string.use_gyroscope_after_calibration),
-                        summary = stringResource(R.string.use_gyroscope_after_calibration_description),
+                        label = appString(Res.string.use_gyroscope_after_calibration),
+                        summary = appString(Res.string.use_gyroscope_after_calibration_description),
                         checked = useGyroOnlyAfterCalibration,
                         onCheckedChange = {
                             useGyroOnlyAfterCalibration = it
@@ -247,7 +248,7 @@ fun AugmentedRealitySettingsToolScreen() {
             }
             row { position ->
                 SettingsSwitchRow(
-                    label = stringResource(R.string.increase_exposure_at_night),
+                    label = appString(Res.string.increase_exposure_at_night),
                     checked = increaseExposureAtNight,
                     onCheckedChange = {
                         increaseExposureAtNight = it
@@ -260,22 +261,22 @@ fun AugmentedRealitySettingsToolScreen() {
     }
 }
 
-private fun Context.pickDistance(
+private fun pickDistance(
     units: List<DistanceUnits>,
     title: String,
     current: Distance,
     description: String? = null,
     onPicked: (Distance) -> Unit
 ) {
-    CustomUiUtils.pickDistance(
-        this,
+    UnitPickers.distance(
+        AppHost.current(),
         units,
         current,
         title,
         description = description
     ) { distance, cancelled ->
         if (cancelled || distance == null || distance.value <= 0) {
-            return@pickDistance
+            return@distance
         }
 
         onPicked(distance)

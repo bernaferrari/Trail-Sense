@@ -2,14 +2,21 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
+import com.kylecorry.andromeda.preferences.Preferences
+
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
+import com.kylecorry.trail_sense.shared.dialogs.UnitPickers
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewModelScope
@@ -21,18 +28,13 @@ import com.kylecorry.luna.time.Throttle
 import com.kylecorry.sol.units.Pressure
 import com.kylecorry.sol.units.PressureUnits
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.PreferenceKeys
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
@@ -46,10 +48,9 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun CalibrateBarometerToolScreen() {
-    val context = LocalContext.current.applicationContext
     val viewModel = viewModel {
         CalibrateBarometerViewModel(
-            prefs = UserPreferences(context),
+            prefs = getAppService<UserPreferences>(),
             weatherSubsystem = getAppService<IWeatherSubsystem>(),
             logger = WeatherLogger(30.seconds,
                 500.milliseconds,
@@ -199,11 +200,10 @@ internal data class PressureChartData(
 
 @Composable
 private fun CalibrateBarometerContent(viewModel: CalibrateBarometerViewModel) {
-    val context = LocalContext.current
-    val cache = remember(context) { PreferencesSubsystem.getInstance(context).preferences }
-    val formatService = remember(context) { FormatService.getInstance(context) }
+    val cache = remember { getAppService<Preferences>() }
+    val formatService = remember { FormatService.getInstance() }
     val units = viewModel.units
-    val dash = stringResource(R.string.dash)
+    val dash = appString(Res.string.dash)
     val currentPressure = viewModel.pressure
     val pressure = currentPressure?.let {
         formatService.formatPressure(it.convertTo(units), Units.getDecimalPlaces(units))
@@ -227,19 +227,19 @@ private fun CalibrateBarometerContent(viewModel: CalibrateBarometerViewModel) {
         )
     }
 
-    val pressureTitle = stringResource(R.string.pressure)
-    val seaLevelTitle = stringResource(R.string.pref_use_sea_level_pressure_title)
-    val historyTitle = stringResource(R.string.history)
-    val calibrationTitle = stringResource(R.string.calibrate)
-    val noData = stringResource(R.string.no_data)
-    val chartLegend = stringResource(R.string.calibration_chart_legend)
-    val offsetFooter = stringResource(R.string.barometer_offset_explanation)
+    val pressureTitle = appString(Res.string.pressure)
+    val seaLevelTitle = appString(Res.string.pref_use_sea_level_pressure_title)
+    val historyTitle = appString(Res.string.history)
+    val calibrationTitle = appString(Res.string.calibrate)
+    val noData = appString(Res.string.no_data)
+    val chartLegend = appString(Res.string.calibration_chart_legend)
+    val offsetFooter = appString(Res.string.barometer_offset_explanation)
     val barometerIcon = rememberVectorPainter(TrailIcons.Barometer)
 
     TrailSensePage(
-        title = stringResource(R.string.barometer),
+        title = appString(Res.string.barometer),
         onBack = rememberGoBack(),
-        backLabel = stringResource(R.string.back)
+        backLabel = appString(Res.string.back)
     ) {
         item("hero") {
             CalibrationHero(
@@ -248,7 +248,7 @@ private fun CalibrateBarometerContent(viewModel: CalibrateBarometerViewModel) {
                 icon = barometerIcon,
                 supportingText = if (barometerOffset != 0f) {
                     val sign = if (barometerOffset > 0f) "+" else ""
-                    stringResource(R.string.barometer_offset_applied, sign + formatOffset(barometerOffset))
+                    appString(Res.string.barometer_offset_applied, sign + formatOffset(barometerOffset))
                 } else {
                     null
                 }
@@ -284,8 +284,8 @@ private fun CalibrateBarometerContent(viewModel: CalibrateBarometerViewModel) {
             if (useSeaLevelPressure) {
                 row { position ->
                     SettingsSwitchRow(
-                        label = stringResource(R.string.pref_adjust_for_temperature_title),
-                        summary = stringResource(R.string.pref_adjust_for_temperature_summary),
+                        label = appString(Res.string.pref_adjust_for_temperature_title),
+                        summary = appString(Res.string.pref_adjust_for_temperature_summary),
                         checked = adjustForTemperature,
                         onCheckedChange = {
                             adjustForTemperature = it
@@ -298,8 +298,8 @@ private fun CalibrateBarometerContent(viewModel: CalibrateBarometerViewModel) {
             }
             row { position ->
                 CalibrationSliderRow(
-                    title = stringResource(R.string.smoothing),
-                    summary = stringResource(R.string.smoothing_summary),
+                    title = appString(Res.string.smoothing),
+                    summary = appString(Res.string.smoothing_summary),
                     value = pressureSmoothing,
                     valueLabel = formatService.formatPercentage(pressureSmoothing / 10f),
                     range = 0..1000,
@@ -316,13 +316,13 @@ private fun CalibrateBarometerContent(viewModel: CalibrateBarometerViewModel) {
             if (pressureAvailable) {
                 row { position ->
                     SettingsPickerRow(
-                        label = stringResource(R.string.barometer_offset),
+                        label = appString(Res.string.barometer_offset),
                         selected = formatOffset(barometerOffset),
                         onClick = {
-                            CustomUiUtils.pickPressure(
-                                context,
-                                context.getString(R.string.pressure),
-                                context.getString(R.string.enter_the_current_pressure),
+                            UnitPickers.pressure(
+                                AppHost.current(),
+                                getAppService<AppStrings>().get(Res.string.pressure),
+                                getAppService<AppStrings>().get(Res.string.enter_the_current_pressure),
                                 default = viewModel.currentPressure.convertTo(units)
                             ) {
                                 if (it != null) {
@@ -337,11 +337,10 @@ private fun CalibrateBarometerContent(viewModel: CalibrateBarometerViewModel) {
             if (barometerOffset != 0f) {
                 row { position ->
                     SettingsActionRow(
-                        label = stringResource(R.string.reset_calibration),
+                        label = appString(Res.string.reset_calibration),
                         onClick = {
-                            Alerts.dialog(
-                                context,
-                                context.getString(R.string.reset_calibration_question)
+                            Alerts.dialog(AppHost.current(),
+                                getAppService<AppStrings>().get(Res.string.reset_calibration_question)
                             ) { cancelled ->
                                 if (!cancelled) {
                                     viewModel.resetBarometerOffset()
