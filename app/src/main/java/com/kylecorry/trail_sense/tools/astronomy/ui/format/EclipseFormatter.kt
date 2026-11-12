@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.astronomy.ui.format
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.tools.astronomy.domain.Eclipse
 
 object EclipseFormatter {

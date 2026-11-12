@@ -271,3 +271,68 @@ dependencies {
     testImplementation(libs.multiplatform.settings.test)
     testImplementation(libs.kotlinx.serialization.json)
 }
+
+/**
+ * Shared code reads the strings listed in shared/shared-strings.txt from the app's resources by name, which the
+ * resource shrinker can't see; this keeps them (and only them) in release builds.
+ */
+@CacheableTask
+/**
+ * Shared code reads the strings listed in shared/shared-strings.txt by name, which resource shrinking and
+ * lint can't see. A checked-in tools:keep file marks them used; it lives in src/ because lint ignores
+ * generated resource folders. The check runs on every build, `updateSharedStringsKeep` rewrites the file.
+ */
+abstract class SharedStringsKeepTask : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val names: RegularFileProperty
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val defaultStrings: RegularFileProperty
+
+    @get:Internal
+    abstract val keepFile: RegularFileProperty
+
+    @get:Input
+    abstract val update: Property<Boolean>
+
+    @TaskAction
+    fun run() {
+        val wanted = names.get().asFile.readLines().map { it.trim() }
+            .filter { it.isNotEmpty() && !it.startsWith("#") }.toSortedSet()
+        val text = defaultStrings.get().asFile.readText()
+        val plurals = Regex("""<plurals\s+name="([^"]+)"""").findAll(text).map { it.groupValues[1] }.toSet()
+        val keep = wanted.joinToString(",") { if (it in plurals) "@plurals/$it" else "@string/$it" }
+        val expected = """
+            |<?xml version="1.0" encoding="utf-8"?>
+            |<!-- Generated from shared/shared-strings.txt by :app:updateSharedStringsKeep. Do not edit. -->
+            |<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="$keep" />
+            |""".trimMargin()
+        val file = keepFile.get().asFile
+        if (update.get()) {
+            file.parentFile.mkdirs()
+            file.writeText(expected)
+        } else if (!file.exists() || file.readText() != expected) {
+            throw GradleException(
+                "${file.name} is out of date with shared/shared-strings.txt. Run ./gradlew :app:updateSharedStringsKeep"
+            )
+        }
+    }
+}
+
+fun SharedStringsKeepTask.configureKeep(update: Boolean) {
+    names.set(rootProject.layout.projectDirectory.file("shared/shared-strings.txt"))
+    defaultStrings.set(layout.projectDirectory.file("src/main/res/values/strings.xml"))
+    keepFile.set(layout.projectDirectory.file("src/main/res/raw/shared_strings_keep.xml"))
+    this.update.set(update)
+}
+
+val updateSharedStringsKeep = tasks.register<SharedStringsKeepTask>("updateSharedStringsKeep") {
+    configureKeep(update = true)
+}
+val checkSharedStringsKeep = tasks.register<SharedStringsKeepTask>("checkSharedStringsKeep") {
+    configureKeep(update = false)
+    mustRunAfter(updateSharedStringsKeep)
+}
+tasks.named("preBuild") { dependsOn(checkSharedStringsKeep) }

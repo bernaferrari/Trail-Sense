@@ -4,6 +4,7 @@ import android.content.Context
 import com.kylecorry.sol.units.TimeUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 
 class TimeConverterPage(private val context: Context) :
     SimpleConverterPage<TimeUnits>(TimeUnits.Minutes, TimeUnits.Hours) {

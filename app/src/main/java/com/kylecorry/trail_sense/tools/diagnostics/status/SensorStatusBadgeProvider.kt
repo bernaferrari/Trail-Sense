@@ -8,6 +8,7 @@ import com.kylecorry.andromeda.sense.mock.MockSensor
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 
 class SensorStatusBadgeProvider(
     private val sensor: Sensor,

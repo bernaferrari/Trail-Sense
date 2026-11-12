@@ -7,6 +7,7 @@ import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.ErrorBannerReason
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.views.UserError
 import android.content.Context
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator

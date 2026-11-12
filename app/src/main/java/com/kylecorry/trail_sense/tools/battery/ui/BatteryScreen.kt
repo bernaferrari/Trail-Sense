@@ -109,6 +109,7 @@ import com.kylecorry.andromeda.core.system.Intents
 import com.kylecorry.sol.math.filters.MedianFilter
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.dialogs.Alerts

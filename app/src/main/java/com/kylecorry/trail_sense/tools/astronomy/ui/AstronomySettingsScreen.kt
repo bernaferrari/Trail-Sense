@@ -31,6 +31,7 @@ import com.kylecorry.trail_sense.settings.ui.optionLabel
 import com.kylecorry.trail_sense.settings.ui.pickOption
 import com.kylecorry.trail_sense.settings.ui.rememberSettingsOptions
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects

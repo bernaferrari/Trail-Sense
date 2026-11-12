@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
 import android.content.Context
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.alerts.IValueAlerter
 import com.kylecorry.trail_sense.shared.commands.generic.Command

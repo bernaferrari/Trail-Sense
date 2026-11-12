@@ -4,15 +4,14 @@ import com.kylecorry.trail_sense.shared.time.toJavaSeconds
 import com.kylecorry.trail_sense.shared.time.toJavaMinutes
 import com.kylecorry.trail_sense.shared.time.toJavaHours
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.text.PlatformFormats
+import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.annotation.SuppressLint
-import android.content.Context
-import android.text.format.DateUtils
-import android.text.format.Formatter
 import com.kylecorry.andromeda.battery.BatteryHealth
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Quality
-import com.kylecorry.andromeda.core.system.ResourceCache
 import com.kylecorry.andromeda.signal.CellNetwork
 import com.kylecorry.sol.science.astronomy.moon.MoonTruePhase
 import com.kylecorry.sol.science.geography.formatting.CoordinateFormat
@@ -39,7 +38,6 @@ import com.kylecorry.sol.units.Volume
 import com.kylecorry.sol.units.VolumeUnits
 import com.kylecorry.sol.units.Weight
 import com.kylecorry.sol.units.WeightUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.domain.Probability
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMapFileType
@@ -62,10 +60,8 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
-import java.text.DateFormatSymbols
 import com.kylecorry.trail_sense.shared.time.DateNameWidth
 import com.kylecorry.trail_sense.shared.time.displayName
-import java.util.Locale
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -74,10 +70,17 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 import kotlin.math.roundToLong
 
-class FormatService private constructor(private val context: Context) {
-
-    private val prefs by lazy { UserPreferences(context) }
-    private val strings by lazy { ResourceCache(context.resources) }
+/**
+ * Turns values into text for display, in the user's language and with their unit, time and coordinate settings.
+ * @param strings the app's strings
+ * @param platform the dates, file sizes and clock markers each platform formats natively
+ * @param prefs the user's settings
+ */
+class FormatService(
+    private val strings: AppStrings,
+    private val platform: PlatformFormats,
+    private val prefs: UserPreferences
+) {
 
     fun getWeatherImage(condition: WeatherCondition?): ImageVector {
         return when (condition) {
@@ -95,25 +98,25 @@ class FormatService private constructor(private val context: Context) {
 
     fun formatWeather(condition: WeatherCondition?): String {
         return when (condition) {
-            WeatherCondition.Clear -> strings.getString(R.string.weather_clear)
-            WeatherCondition.Overcast -> strings.getString(R.string.weather_overcast)
-            WeatherCondition.Precipitation -> strings.getString(R.string.weather_precipitation)
-            WeatherCondition.Storm -> strings.getString(R.string.weather_storm)
-            WeatherCondition.Wind -> strings.getString(R.string.weather_wind)
-            WeatherCondition.Rain -> strings.getString(R.string.precipitation_rain)
-            WeatherCondition.Snow -> strings.getString(R.string.precipitation_snow)
-            WeatherCondition.Thunderstorm -> strings.getString(R.string.weather_thunderstorm)
-            null -> strings.getString(R.string.weather_no_change)
+            WeatherCondition.Clear -> strings.get(Res.string.weather_clear)
+            WeatherCondition.Overcast -> strings.get(Res.string.weather_overcast)
+            WeatherCondition.Precipitation -> strings.get(Res.string.weather_precipitation)
+            WeatherCondition.Storm -> strings.get(Res.string.weather_storm)
+            WeatherCondition.Wind -> strings.get(Res.string.weather_wind)
+            WeatherCondition.Rain -> strings.get(Res.string.precipitation_rain)
+            WeatherCondition.Snow -> strings.get(Res.string.precipitation_snow)
+            WeatherCondition.Thunderstorm -> strings.get(Res.string.weather_thunderstorm)
+            null -> strings.get(Res.string.weather_no_change)
         }
     }
 
     fun formatWeatherArrival(arrival: WeatherArrivalTime?): String {
         if (arrival?.isExact != true) {
             return when (arrival?.toRelative(Clock.System.now())) {
-                RelativeArrivalTime.Now -> strings.getString(R.string.now)
-                RelativeArrivalTime.VerySoon -> strings.getString(R.string.very_soon)
-                RelativeArrivalTime.Soon -> strings.getString(R.string.soon)
-                RelativeArrivalTime.Later -> strings.getString(R.string.later)
+                RelativeArrivalTime.Now -> strings.get(Res.string.now)
+                RelativeArrivalTime.VerySoon -> strings.get(Res.string.very_soon)
+                RelativeArrivalTime.Soon -> strings.get(Res.string.soon)
+                RelativeArrivalTime.Later -> strings.get(Res.string.later)
                 null -> ""
             }.lowercase()
         }
@@ -122,26 +125,25 @@ class FormatService private constructor(private val context: Context) {
         val duration = time - Clock.System.now()
 
         if (duration < 1.minutes) {
-            return strings.getString(R.string.now).lowercase()
+            return strings.get(Res.string.now).lowercase()
         }
 
         if (duration > 20.hours) {
-            return strings.getString(R.string.later).lowercase()
+            return strings.get(Res.string.later).lowercase()
         }
 
-        return strings.getString(
-            R.string.at_time,
+        return strings.get(Res.string.at_time,
             formatTime(time, includeSeconds = false)
         )
     }
 
     fun formatProbability(probability: Probability): String {
         return when (probability) {
-            Probability.Never -> strings.getString(R.string.never)
-            Probability.Low -> strings.getString(R.string.low)
-            Probability.Moderate -> strings.getString(R.string.moderate)
-            Probability.High -> strings.getString(R.string.high)
-            Probability.Always -> strings.getString(R.string.always)
+            Probability.Never -> strings.get(Res.string.never)
+            Probability.Low -> strings.get(Res.string.low)
+            Probability.Moderate -> strings.get(Res.string.moderate)
+            Probability.High -> strings.get(Res.string.high)
+            Probability.Always -> strings.get(Res.string.always)
         }
     }
 
@@ -164,22 +166,23 @@ class FormatService private constructor(private val context: Context) {
 
         return when (date) {
             now -> {
-                strings.getString(R.string.today)
+                strings.get(Res.string.today)
             }
 
             now.plus(1, DateTimeUnit.DAY) -> {
-                strings.getString(R.string.tomorrow)
+                strings.get(Res.string.tomorrow)
             }
 
             now.minus(1, DateTimeUnit.DAY) -> {
-                strings.getString(R.string.yesterday)
+                strings.get(Res.string.yesterday)
             }
 
             else -> {
-                DateUtils.formatDateTime(
-                    context,
-                    date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds(),
-                    DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_RELATIVE or (if (abbreviateMonth) DateUtils.FORMAT_ABBREV_MONTH else 0)
+                platform.formatDate(
+                    date.atStartOfDayIn(TimeZone.currentSystemDefault()),
+                    includeWeekDay = false,
+                    includeYear = false,
+                    abbreviateMonth = abbreviateMonth
                 )
             }
         }
@@ -221,8 +224,8 @@ class FormatService private constructor(private val context: Context) {
             }
             if (amPm) {
                 char(' ')
-                val markers = DateFormatSymbols.getInstance(Locale.getDefault()).amPmStrings
-                amPmMarker(markers[0], markers[1])
+                val (am, pm) = platform.amPmMarkers
+                amPmMarker(am, pm)
             }
         }
         return time.format(format)
@@ -247,10 +250,11 @@ class FormatService private constructor(private val context: Context) {
         includeWeekDay: Boolean = true,
         abbreviateMonth: Boolean = false
     ): String {
-        return DateUtils.formatDateTime(
-            context,
-            date.toEpochMilliseconds(),
-            DateUtils.FORMAT_SHOW_DATE or (if (includeWeekDay) DateUtils.FORMAT_SHOW_WEEKDAY else 0) or DateUtils.FORMAT_SHOW_YEAR or (if (abbreviateMonth) DateUtils.FORMAT_ABBREV_MONTH else 0)
+        return platform.formatDate(
+            date,
+            includeWeekDay = includeWeekDay,
+            includeYear = true,
+            abbreviateMonth = abbreviateMonth
         )
     }
 
@@ -307,7 +311,7 @@ class FormatService private constructor(private val context: Context) {
         } else {
             "${dateFormatFn(end)} ${formatTime(endLocal.time, false)}"
         }
-        return strings.getString(R.string.dash_separated_pair, startText, endText)
+        return strings.get(Res.string.dash_separated_pair, startText, endText)
     }
 
     fun formatElevation(distance: Distance): String {
@@ -322,32 +326,28 @@ class FormatService private constructor(private val context: Context) {
     ): String {
         val formatted = DecimalFormatter.format(distance.value, decimalPlaces, strict)
         return when (distance.units) {
-            DistanceUnits.Meters -> strings.getString(R.string.precise_meters_format, formatted)
-            DistanceUnits.Kilometers -> strings.getString(
-                R.string.precise_kilometers_format,
+            DistanceUnits.Meters -> strings.get(Res.string.precise_meters_format, formatted)
+            DistanceUnits.Kilometers -> strings.get(Res.string.precise_kilometers_format,
                 formatted
             )
 
-            DistanceUnits.Feet -> strings.getString(R.string.precise_feet_format, formatted)
-            DistanceUnits.Miles -> strings.getString(R.string.precise_miles_format, formatted)
-            DistanceUnits.NauticalMiles -> strings.getString(
-                R.string.precise_nautical_miles_format,
+            DistanceUnits.Feet -> strings.get(Res.string.precise_feet_format, formatted)
+            DistanceUnits.Miles -> strings.get(Res.string.precise_miles_format, formatted)
+            DistanceUnits.NauticalMiles -> strings.get(Res.string.precise_nautical_miles_format,
                 formatted
             )
 
-            DistanceUnits.Inches -> strings.getString(R.string.precise_inches_format, formatted)
-            DistanceUnits.Centimeters -> strings.getString(
-                R.string.precise_centimeters_format,
+            DistanceUnits.Inches -> strings.get(Res.string.precise_inches_format, formatted)
+            DistanceUnits.Centimeters -> strings.get(Res.string.precise_centimeters_format,
                 formatted
             )
 
-            DistanceUnits.Yards -> strings.getString(R.string.yards_format, formatted)
-            DistanceUnits.Millimeters -> strings.getString(
-                R.string.millimeters_format,
+            DistanceUnits.Yards -> strings.get(Res.string.yards_format, formatted)
+            DistanceUnits.Millimeters -> strings.get(Res.string.millimeters_format,
                 formatted
             )
 
-            DistanceUnits.Caliber -> strings.getString(R.string.caliber_format, formatted)
+            DistanceUnits.Caliber -> strings.get(Res.string.caliber_format, formatted)
         }
     }
 
@@ -359,51 +359,44 @@ class FormatService private constructor(private val context: Context) {
     ): String {
         val formatted = DecimalFormatter.format(amount, decimalPlaces, strict)
         return when (units) {
-            TimeUnits.Milliseconds -> strings.getString(R.string.milliseconds_format, formatted)
-            TimeUnits.Seconds -> strings.getString(R.string.seconds_format, formatted)
-            TimeUnits.Minutes -> strings.getString(R.string.minutes_format, formatted)
-            TimeUnits.Hours -> strings.getString(R.string.hours_format, formatted)
-            TimeUnits.Days -> strings.getString(R.string.days_format, formatted)
+            TimeUnits.Milliseconds -> strings.get(Res.string.milliseconds_format, formatted)
+            TimeUnits.Seconds -> strings.get(Res.string.seconds_format, formatted)
+            TimeUnits.Minutes -> strings.get(Res.string.minutes_format, formatted)
+            TimeUnits.Hours -> strings.get(Res.string.hours_format, formatted)
+            TimeUnits.Days -> strings.get(Res.string.days_format, formatted)
         }
     }
 
     fun formatVolume(volume: Volume, decimalPlaces: Int = 0, strict: Boolean = true): String {
         val formatted = DecimalFormatter.format(volume.value, decimalPlaces, strict)
         return when (volume.units) {
-            VolumeUnits.Liters -> strings.getString(R.string.liter_format, formatted)
-            VolumeUnits.Milliliter -> strings.getString(R.string.milliliter_format, formatted)
-            VolumeUnits.USCups, VolumeUnits.ImperialCups -> strings.getString(
-                R.string.cup_format,
+            VolumeUnits.Liters -> strings.get(Res.string.liter_format, formatted)
+            VolumeUnits.Milliliter -> strings.get(Res.string.milliliter_format, formatted)
+            VolumeUnits.USCups, VolumeUnits.ImperialCups -> strings.get(Res.string.cup_format,
                 formatted
             )
 
-            VolumeUnits.USPints, VolumeUnits.ImperialPints -> strings.getString(
-                R.string.pint_format,
+            VolumeUnits.USPints, VolumeUnits.ImperialPints -> strings.get(Res.string.pint_format,
                 formatted
             )
 
-            VolumeUnits.USQuarts, VolumeUnits.ImperialQuarts -> strings.getString(
-                R.string.quart_format,
+            VolumeUnits.USQuarts, VolumeUnits.ImperialQuarts -> strings.get(Res.string.quart_format,
                 formatted
             )
 
-            VolumeUnits.USOunces, VolumeUnits.ImperialOunces -> strings.getString(
-                R.string.ounces_volume_format,
+            VolumeUnits.USOunces, VolumeUnits.ImperialOunces -> strings.get(Res.string.ounces_volume_format,
                 formatted
             )
 
-            VolumeUnits.USGallons, VolumeUnits.ImperialGallons -> strings.getString(
-                R.string.gallon_format,
+            VolumeUnits.USGallons, VolumeUnits.ImperialGallons -> strings.get(Res.string.gallon_format,
                 formatted
             )
 
-            VolumeUnits.USTeaspoons, VolumeUnits.ImperialTeaspoons -> strings.getString(
-                R.string.teaspooon_format,
+            VolumeUnits.USTeaspoons, VolumeUnits.ImperialTeaspoons -> strings.get(Res.string.teaspooon_format,
                 formatted
             )
 
-            VolumeUnits.USTablespoons, VolumeUnits.ImperialTablespoons -> strings.getString(
-                R.string.tablespoon_format,
+            VolumeUnits.USTablespoons, VolumeUnits.ImperialTablespoons -> strings.get(Res.string.tablespoon_format,
                 formatted
             )
         }
@@ -412,33 +405,33 @@ class FormatService private constructor(private val context: Context) {
     fun formatWeight(weight: Weight, decimalPlaces: Int = 0, strict: Boolean = true): String {
         val formatted = DecimalFormatter.format(weight.value, decimalPlaces, strict)
         return when (weight.units) {
-            WeightUnits.Pounds -> strings.getString(R.string.pounds_format, formatted)
-            WeightUnits.Ounces -> strings.getString(R.string.ounces_weight_format, formatted)
-            WeightUnits.Kilograms -> strings.getString(R.string.kilograms_format, formatted)
-            WeightUnits.Grams -> strings.getString(R.string.grams_format, formatted)
-            WeightUnits.Milligrams -> strings.getString(R.string.milligrams_format, formatted)
-            WeightUnits.Grains -> strings.getString(R.string.grains_format, formatted)
-            WeightUnits.Stone -> strings.getString(R.string.stone_format, formatted)
+            WeightUnits.Pounds -> strings.get(Res.string.pounds_format, formatted)
+            WeightUnits.Ounces -> strings.get(Res.string.ounces_weight_format, formatted)
+            WeightUnits.Kilograms -> strings.get(Res.string.kilograms_format, formatted)
+            WeightUnits.Grams -> strings.get(Res.string.grams_format, formatted)
+            WeightUnits.Milligrams -> strings.get(Res.string.milligrams_format, formatted)
+            WeightUnits.Grains -> strings.get(Res.string.grains_format, formatted)
+            WeightUnits.Stone -> strings.get(Res.string.stone_format, formatted)
         }
     }
 
     fun formatDbm(dbm: Int): String {
-        return strings.getString(R.string.dbm_format, dbm.toString())
+        return strings.get(Res.string.dbm_format, dbm.toString())
     }
 
     fun formatPercentage(percent: Float, decimalPlaces: Int = 0, strict: Boolean = true): String {
         val formatted = DecimalFormatter.format(percent, decimalPlaces, strict)
-        return strings.getString(R.string.precise_percent_format, formatted)
+        return strings.get(Res.string.precise_percent_format, formatted)
     }
 
     fun formatBatteryHealth(batteryHealth: BatteryHealth): String {
         return when (batteryHealth) {
-            BatteryHealth.Cold -> strings.getString(R.string.battery_health_cold)
-            BatteryHealth.Dead -> strings.getString(R.string.battery_health_dead)
-            BatteryHealth.Good -> strings.getString(R.string.quality_good)
-            BatteryHealth.Overheat -> strings.getString(R.string.battery_health_overheat)
-            BatteryHealth.OverVoltage -> strings.getString(R.string.battery_health_over_voltage)
-            BatteryHealth.Unknown -> strings.getString(R.string.unknown)
+            BatteryHealth.Cold -> strings.get(Res.string.battery_health_cold)
+            BatteryHealth.Dead -> strings.get(Res.string.battery_health_dead)
+            BatteryHealth.Good -> strings.get(Res.string.quality_good)
+            BatteryHealth.Overheat -> strings.get(Res.string.battery_health_overheat)
+            BatteryHealth.OverVoltage -> strings.get(Res.string.battery_health_over_voltage)
+            BatteryHealth.Unknown -> strings.get(Res.string.unknown)
         }
     }
 
@@ -449,12 +442,11 @@ class FormatService private constructor(private val context: Context) {
     ): String {
         val formatted = DecimalFormatter.format(temperature.value, decimalPlaces, strict)
         return when (temperature.units) {
-            TemperatureUnits.Fahrenheit -> strings.getString(
-                R.string.precise_temp_f_format,
+            TemperatureUnits.Fahrenheit -> strings.get(Res.string.precise_temp_f_format,
                 formatted
             )
 
-            TemperatureUnits.Celsius -> strings.getString(R.string.precise_temp_c_format, formatted)
+            TemperatureUnits.Celsius -> strings.get(Res.string.precise_temp_c_format, formatted)
         }
     }
 
@@ -465,24 +457,24 @@ class FormatService private constructor(private val context: Context) {
     ): String {
         val formatted = DecimalFormatter.format(degrees.toDouble(), decimalPlaces)
         val finalFormatted = if (replace360) formatted.replace("360", "0") else formatted
-        return strings.getString(R.string.degree, finalFormatted)
+        return strings.get(Res.string.degree, finalFormatted)
     }
 
     fun formatDirection(direction: CompassDirection): String {
         return when (direction) {
-            CompassDirection.North -> strings.getString(R.string.direction_north)
-            CompassDirection.South -> strings.getString(R.string.direction_south)
-            CompassDirection.East -> strings.getString(R.string.direction_east)
-            CompassDirection.West -> strings.getString(R.string.direction_west)
-            CompassDirection.NorthEast -> strings.getString(R.string.direction_north_east)
-            CompassDirection.SouthEast -> strings.getString(R.string.direction_south_east)
-            CompassDirection.NorthWest -> strings.getString(R.string.direction_north_west)
-            CompassDirection.SouthWest -> strings.getString(R.string.direction_south_west)
+            CompassDirection.North -> strings.get(Res.string.direction_north)
+            CompassDirection.South -> strings.get(Res.string.direction_south)
+            CompassDirection.East -> strings.get(Res.string.direction_east)
+            CompassDirection.West -> strings.get(Res.string.direction_west)
+            CompassDirection.NorthEast -> strings.get(Res.string.direction_north_east)
+            CompassDirection.SouthEast -> strings.get(Res.string.direction_south_east)
+            CompassDirection.NorthWest -> strings.get(Res.string.direction_north_west)
+            CompassDirection.SouthWest -> strings.get(Res.string.direction_south_west)
         }
     }
 
     fun formatDays(days: Int): String {
-        return context.resources.getQuantityString(R.plurals.number_days, days, days)
+        return strings.plural(Res.plurals.number_days, days, days)
     }
 
     fun formatDuration(
@@ -494,9 +486,9 @@ class FormatService private constructor(private val context: Context) {
         val minutes = duration.toJavaMinutes() % 60
         val seconds = duration.toJavaSeconds() % 60
 
-        val h = strings.getString(R.string.duration_hour_format, hours)
-        val m = strings.getString(R.string.duration_minute_format, minutes)
-        val s = strings.getString(R.string.duration_second_format, seconds)
+        val h = strings.get(Res.string.duration_hour_format, hours)
+        val m = strings.get(Res.string.duration_minute_format, minutes)
+        val s = strings.get(Res.string.duration_second_format, seconds)
 
         val strs = mutableListOf<String>()
 
@@ -521,27 +513,27 @@ class FormatService private constructor(private val context: Context) {
 
     fun formatAcceleration(acceleration: Float, decimalPlaces: Int = 0): String {
         val formatted = DecimalFormatter.format(acceleration.toDouble(), decimalPlaces)
-        return strings.getString(R.string.acceleration_m_s2_format, formatted)
+        return strings.get(Res.string.acceleration_m_s2_format, formatted)
     }
 
     fun formatMagneticField(magneticField: Float, decimalPlaces: Int = 0): String {
         val formatted = DecimalFormatter.format(magneticField.toDouble(), decimalPlaces)
-        return strings.getString(R.string.magnetic_field_format_precise, formatted)
+        return strings.get(Res.string.magnetic_field_format_precise, formatted)
     }
 
     fun formatQuality(quality: Quality): String {
         return when (quality) {
-            Quality.Poor -> strings.getString(R.string.quality_poor)
-            Quality.Moderate -> strings.getString(R.string.moderate)
-            Quality.Good -> strings.getString(R.string.quality_good)
-            else -> strings.getString(R.string.unknown)
+            Quality.Poor -> strings.get(Res.string.quality_poor)
+            Quality.Moderate -> strings.get(Res.string.moderate)
+            Quality.Good -> strings.get(Res.string.quality_good)
+            else -> strings.get(Res.string.unknown)
         }
     }
 
     fun formatPressure(pressure: Pressure, decimalPlaces: Int = 0, strict: Boolean = true): String {
         val symbol = getPressureUnitString(pressure.units)
         val amt = DecimalFormatter.format(pressure.value, decimalPlaces, strict)
-        return strings.getString(R.string.pressure_format, amt, symbol)
+        return strings.get(Res.string.pressure_format, amt, symbol)
     }
 
     // TODO: Rewrite this
@@ -552,15 +544,15 @@ class FormatService private constructor(private val context: Context) {
         val unitsPerSecond = Distance.from(metersPerSecond, DistanceUnits.Meters).convertTo(speedUnits).value
         val formattedSpeed = DecimalFormatter.format((unitsPerSecond * 60 * 60).toDouble(), 1)
         return if (isMetric) {
-            strings.getString(R.string.kilometers_per_hour_format, formattedSpeed)
+            strings.get(Res.string.kilometers_per_hour_format, formattedSpeed)
         } else {
-            strings.getString(R.string.miles_per_hour_format, formattedSpeed)
+            strings.get(Res.string.miles_per_hour_format, formattedSpeed)
         }
     }
 
     fun formatPace(metersPerSecond: Float): String {
         if (!metersPerSecond.isFinite() || metersPerSecond <= 0f) {
-            return strings.getString(R.string.dash)
+            return strings.get(Res.string.dash)
         }
 
         val distanceUnit = if (prefs.distanceUnits == UserPreferences.DistanceUnits.Meters) {
@@ -575,8 +567,7 @@ class FormatService private constructor(private val context: Context) {
         val minutes = duration.inWholeMinutes
         val seconds = duration.inWholeSeconds % 60
         val formattedPace = "$minutes:${seconds.toString().padStart(2, '0')}"
-        return strings.getString(
-            R.string.slash_separated_pair,
+        return strings.get(Res.string.slash_separated_pair,
             formattedPace,
             getDistanceUnitName(distanceUnit, short = true)
         )
@@ -611,56 +602,50 @@ class FormatService private constructor(private val context: Context) {
 
     fun formatCoordinateType(type: BuiltInCoordinateFormat): String {
         return when (type) {
-            BuiltInCoordinateFormat.DecimalDegrees -> strings.getString(R.string.coordinate_format_decimal_degrees)
-            BuiltInCoordinateFormat.DegreesDecimalMinutes -> strings.getString(R.string.coordinate_format_degrees_decimal_minutes)
-            BuiltInCoordinateFormat.DegreesMinutesSeconds -> strings.getString(R.string.coordinate_format_degrees_minutes_seconds)
-            BuiltInCoordinateFormat.UTM -> strings.getString(R.string.coordinate_format_utm)
-            BuiltInCoordinateFormat.MGRS -> strings.getString(R.string.coordinate_format_mgrs)
-            BuiltInCoordinateFormat.USNG -> strings.getString(R.string.coordinate_format_usng)
-            BuiltInCoordinateFormat.OSGB -> strings.getString(R.string.coordinate_format_osgb)
+            BuiltInCoordinateFormat.DecimalDegrees -> strings.get(Res.string.coordinate_format_decimal_degrees)
+            BuiltInCoordinateFormat.DegreesDecimalMinutes -> strings.get(Res.string.coordinate_format_degrees_decimal_minutes)
+            BuiltInCoordinateFormat.DegreesMinutesSeconds -> strings.get(Res.string.coordinate_format_degrees_minutes_seconds)
+            BuiltInCoordinateFormat.UTM -> strings.get(Res.string.coordinate_format_utm)
+            BuiltInCoordinateFormat.MGRS -> strings.get(Res.string.coordinate_format_mgrs)
+            BuiltInCoordinateFormat.USNG -> strings.get(Res.string.coordinate_format_usng)
+            BuiltInCoordinateFormat.OSGB -> strings.get(Res.string.coordinate_format_osgb)
         }
     }
 
     fun formatElectricalCapacity(capacity: Float): String {
-        return strings.getString(
-            R.string.battery_capacity_format,
+        return strings.get(Res.string.battery_capacity_format,
             DecimalFormatter.format(capacity, 0)
         )
     }
 
     fun formatCurrent(current: Float, decimalPlaces: Int = 0): String {
-        return strings.getString(
-            R.string.current_format,
+        return strings.get(Res.string.current_format,
             DecimalFormatter.format(current, decimalPlaces)
         )
     }
 
     fun formatLux(lux: Float, decimalPlaces: Int = 0): String {
         val formatted = DecimalFormatter.format(lux.toDouble(), decimalPlaces)
-        return strings.getString(R.string.lux_format, formatted)
+        return strings.get(Res.string.lux_format, formatted)
     }
 
     fun formatCandela(candela: Float, decimalPlaces: Int = 0): String {
         val formatted = DecimalFormatter.format(candela.toDouble(), decimalPlaces)
-        return strings.getString(R.string.candela_format, formatted)
+        return strings.get(Res.string.candela_format, formatted)
     }
 
     fun formatSolarEnergy(energy: Float, decimalPlaces: Int = 1, strict: Boolean = false): String {
         val formatted = DecimalFormatter.format(energy, decimalPlaces, strict)
-        return strings.getString(R.string.kwh_per_meter_squared_format, formatted)
+        return strings.get(Res.string.kwh_per_meter_squared_format, formatted)
     }
 
     fun formatFileSize(bytes: Long, short: Boolean = true): String {
-        return if (short) {
-            Formatter.formatShortFileSize(context, bytes)
-        } else {
-            Formatter.formatFileSize(context, bytes)
-        }
+        return platform.formatFileSize(bytes, short)
     }
 
     fun formatOfflineMapFileTypeName(type: VectorMapFileType): String {
         return when (type) {
-            VectorMapFileType.Mapsforge -> strings.getString(R.string.mapsforge)
+            VectorMapFileType.Mapsforge -> strings.get(Res.string.mapsforge)
         }
     }
 
@@ -699,23 +684,23 @@ class FormatService private constructor(private val context: Context) {
     fun getWeightUnitName(unit: WeightUnits, short: Boolean = false): String {
         if (short) {
             return when (unit) {
-                WeightUnits.Pounds -> strings.getString(R.string.pounds_format, "")
-                WeightUnits.Ounces -> strings.getString(R.string.ounces_weight_format, "")
-                WeightUnits.Kilograms -> strings.getString(R.string.kilograms_format, "")
-                WeightUnits.Grams -> strings.getString(R.string.grams_format, "")
-                WeightUnits.Milligrams -> strings.getString(R.string.milligrams_format, "")
-                WeightUnits.Grains -> strings.getString(R.string.grains_format, "")
-                WeightUnits.Stone -> strings.getString(R.string.stone_format, "")
+                WeightUnits.Pounds -> strings.get(Res.string.pounds_format, "")
+                WeightUnits.Ounces -> strings.get(Res.string.ounces_weight_format, "")
+                WeightUnits.Kilograms -> strings.get(Res.string.kilograms_format, "")
+                WeightUnits.Grams -> strings.get(Res.string.grams_format, "")
+                WeightUnits.Milligrams -> strings.get(Res.string.milligrams_format, "")
+                WeightUnits.Grains -> strings.get(Res.string.grains_format, "")
+                WeightUnits.Stone -> strings.get(Res.string.stone_format, "")
             }.replace(" ", "")
         }
         return when (unit) {
-            WeightUnits.Pounds -> strings.getString(R.string.pounds)
-            WeightUnits.Ounces -> strings.getString(R.string.ounces_weight)
-            WeightUnits.Kilograms -> strings.getString(R.string.kilograms)
-            WeightUnits.Grams -> strings.getString(R.string.grams)
-            WeightUnits.Milligrams -> strings.getString(R.string.milligrams)
-            WeightUnits.Grains -> strings.getString(R.string.grains)
-            WeightUnits.Stone -> strings.getString(R.string.stone)
+            WeightUnits.Pounds -> strings.get(Res.string.pounds)
+            WeightUnits.Ounces -> strings.get(Res.string.ounces_weight)
+            WeightUnits.Kilograms -> strings.get(Res.string.kilograms)
+            WeightUnits.Grams -> strings.get(Res.string.grams)
+            WeightUnits.Milligrams -> strings.get(Res.string.milligrams)
+            WeightUnits.Grains -> strings.get(Res.string.grains)
+            WeightUnits.Stone -> strings.get(Res.string.stone)
         }
     }
 
@@ -723,9 +708,8 @@ class FormatService private constructor(private val context: Context) {
         // Only supports Feet and Meters
         if (short) {
             return when (unit) {
-                DistanceUnits.Feet -> context.getString(R.string.speed_format_feet_per_second, "")
-                DistanceUnits.Meters -> context.getString(
-                    R.string.speed_format_meters_per_second,
+                DistanceUnits.Feet -> strings.get(Res.string.speed_format_feet_per_second, "")
+                DistanceUnits.Meters -> strings.get(Res.string.speed_format_meters_per_second,
                     ""
                 )
 
@@ -734,32 +718,32 @@ class FormatService private constructor(private val context: Context) {
         }
 
         return when (unit) {
-            DistanceUnits.Feet -> context.getString(R.string.feet_per_second)
-            DistanceUnits.Meters -> context.getString(R.string.meters_per_second)
+            DistanceUnits.Feet -> strings.get(Res.string.feet_per_second)
+            DistanceUnits.Meters -> strings.get(Res.string.meters_per_second)
             else -> ""
         }
     }
 
     fun getPressureUnitName(unit: PressureUnits): String {
         return when (unit) {
-            PressureUnits.Hpa -> strings.getString(R.string.units_hpa)
-            PressureUnits.Mbar -> strings.getString(R.string.units_mbar)
-            PressureUnits.Inhg -> strings.getString(R.string.units_inhg)
-            PressureUnits.Psi -> strings.getString(R.string.units_psi)
-            PressureUnits.MmHg -> strings.getString(R.string.units_mmhg)
+            PressureUnits.Hpa -> strings.get(Res.string.units_hpa)
+            PressureUnits.Mbar -> strings.get(Res.string.units_mbar)
+            PressureUnits.Inhg -> strings.get(Res.string.units_inhg)
+            PressureUnits.Psi -> strings.get(Res.string.units_psi)
+            PressureUnits.MmHg -> strings.get(Res.string.units_mmhg)
         }
     }
 
     fun getTemperatureUnitName(unit: TemperatureUnits, short: Boolean = false): String {
         return if (short) {
             when (unit) {
-                TemperatureUnits.Fahrenheit -> strings.getString(R.string.temp_f_short)
-                TemperatureUnits.Celsius -> strings.getString(R.string.temp_c_short)
+                TemperatureUnits.Fahrenheit -> strings.get(Res.string.temp_f_short)
+                TemperatureUnits.Celsius -> strings.get(Res.string.temp_c_short)
             }
         } else {
             when (unit) {
-                TemperatureUnits.Fahrenheit -> strings.getString(R.string.fahrenheit)
-                TemperatureUnits.Celsius -> strings.getString(R.string.celsius)
+                TemperatureUnits.Fahrenheit -> strings.get(Res.string.fahrenheit)
+                TemperatureUnits.Celsius -> strings.get(Res.string.celsius)
             }
         }
     }
@@ -767,45 +751,41 @@ class FormatService private constructor(private val context: Context) {
     fun getDistanceUnitName(unit: DistanceUnits, short: Boolean = false): String {
         if (short) {
             return when (unit) {
-                DistanceUnits.Meters -> strings.getString(R.string.precise_meters_format, "")
-                DistanceUnits.Kilometers -> strings.getString(
-                    R.string.precise_kilometers_format,
+                DistanceUnits.Meters -> strings.get(Res.string.precise_meters_format, "")
+                DistanceUnits.Kilometers -> strings.get(Res.string.precise_kilometers_format,
                     ""
                 )
 
-                DistanceUnits.Feet -> strings.getString(R.string.precise_feet_format, "")
-                DistanceUnits.Miles -> strings.getString(R.string.precise_miles_format, "")
-                DistanceUnits.NauticalMiles -> strings.getString(
-                    R.string.precise_nautical_miles_format,
+                DistanceUnits.Feet -> strings.get(Res.string.precise_feet_format, "")
+                DistanceUnits.Miles -> strings.get(Res.string.precise_miles_format, "")
+                DistanceUnits.NauticalMiles -> strings.get(Res.string.precise_nautical_miles_format,
                     ""
                 )
 
-                DistanceUnits.Centimeters -> strings.getString(
-                    R.string.precise_centimeters_format,
+                DistanceUnits.Centimeters -> strings.get(Res.string.precise_centimeters_format,
                     ""
                 )
 
-                DistanceUnits.Inches -> strings.getString(R.string.precise_inches_format, "")
-                DistanceUnits.Yards -> strings.getString(R.string.yards_format, "")
-                DistanceUnits.Millimeters -> strings.getString(
-                    R.string.millimeters_format,
+                DistanceUnits.Inches -> strings.get(Res.string.precise_inches_format, "")
+                DistanceUnits.Yards -> strings.get(Res.string.yards_format, "")
+                DistanceUnits.Millimeters -> strings.get(Res.string.millimeters_format,
                     ""
                 )
 
-                DistanceUnits.Caliber -> strings.getString(R.string.caliber_format, "")
+                DistanceUnits.Caliber -> strings.get(Res.string.caliber_format, "")
             }.replace(" ", "")
         }
         return when (unit) {
-            DistanceUnits.Meters -> strings.getString(R.string.unit_meters)
-            DistanceUnits.Kilometers -> strings.getString(R.string.unit_kilometers)
-            DistanceUnits.Feet -> strings.getString(R.string.unit_feet)
-            DistanceUnits.Miles -> strings.getString(R.string.unit_miles)
-            DistanceUnits.NauticalMiles -> strings.getString(R.string.unit_nautical_miles)
-            DistanceUnits.Centimeters -> strings.getString(R.string.unit_centimeters)
-            DistanceUnits.Inches -> strings.getString(R.string.unit_inches)
-            DistanceUnits.Yards -> strings.getString(R.string.unit_yards)
-            DistanceUnits.Millimeters -> strings.getString(R.string.unit_millimeters)
-            DistanceUnits.Caliber -> strings.getString(R.string.unit_caliber)
+            DistanceUnits.Meters -> strings.get(Res.string.unit_meters)
+            DistanceUnits.Kilometers -> strings.get(Res.string.unit_kilometers)
+            DistanceUnits.Feet -> strings.get(Res.string.unit_feet)
+            DistanceUnits.Miles -> strings.get(Res.string.unit_miles)
+            DistanceUnits.NauticalMiles -> strings.get(Res.string.unit_nautical_miles)
+            DistanceUnits.Centimeters -> strings.get(Res.string.unit_centimeters)
+            DistanceUnits.Inches -> strings.get(Res.string.unit_inches)
+            DistanceUnits.Yards -> strings.get(Res.string.unit_yards)
+            DistanceUnits.Millimeters -> strings.get(Res.string.unit_millimeters)
+            DistanceUnits.Caliber -> strings.get(Res.string.unit_caliber)
         }
     }
 
@@ -815,18 +795,15 @@ class FormatService private constructor(private val context: Context) {
         short: Boolean = false
     ): String {
         return when (distanceUnit to timeUnit) {
-            DistanceUnits.Kilometers to TimeUnits.Hours -> strings.getString(
-                R.string.kilometers_per_hour_format,
+            DistanceUnits.Kilometers to TimeUnits.Hours -> strings.get(Res.string.kilometers_per_hour_format,
                 ""
             ).replace(" ", "")
 
-            DistanceUnits.Miles to TimeUnits.Hours -> strings.getString(
-                R.string.miles_per_hour_format,
+            DistanceUnits.Miles to TimeUnits.Hours -> strings.get(Res.string.miles_per_hour_format,
                 ""
             ).replace(" ", "")
 
-            DistanceUnits.Meters to TimeUnits.Seconds -> strings.getString(
-                R.string.speed_format_meters_per_second,
+            DistanceUnits.Meters to TimeUnits.Seconds -> strings.get(Res.string.speed_format_meters_per_second,
                 ""
             ).replace(" ", "")
 
@@ -836,80 +813,80 @@ class FormatService private constructor(private val context: Context) {
 
     fun formatCellNetwork(cellType: CellNetwork?): String {
         return when (cellType) {
-            CellNetwork.Nr -> strings.getString(R.string.network_5g)
-            CellNetwork.Lte -> strings.getString(R.string.network_4g)
-            CellNetwork.Cdma, CellNetwork.Gsm -> strings.getString(R.string.network_2g)
-            CellNetwork.Wcdma -> strings.getString(R.string.network_3g)
-            else -> strings.getString(R.string.network_no_signal)
+            CellNetwork.Nr -> strings.get(Res.string.network_5g)
+            CellNetwork.Lte -> strings.get(Res.string.network_4g)
+            CellNetwork.Cdma, CellNetwork.Gsm -> strings.get(Res.string.network_2g)
+            CellNetwork.Wcdma -> strings.get(Res.string.network_3g)
+            else -> strings.get(Res.string.network_no_signal)
         }
     }
 
     fun formatMoonPhase(phase: MoonTruePhase): String {
-        return strings.getString(
+        return strings.get(
             when (phase) {
-                MoonTruePhase.FirstQuarter -> R.string.first_quarter
-                MoonTruePhase.Full -> R.string.full_moon
-                MoonTruePhase.ThirdQuarter -> R.string.third_quarter
-                MoonTruePhase.New -> R.string.new_moon
-                MoonTruePhase.WaningCrescent -> R.string.waning_crescent
-                MoonTruePhase.WaningGibbous -> R.string.waning_gibbous
-                MoonTruePhase.WaxingCrescent -> R.string.waxing_crescent
-                MoonTruePhase.WaxingGibbous -> R.string.waxing_gibbous
+                MoonTruePhase.FirstQuarter -> Res.string.first_quarter
+                MoonTruePhase.Full -> Res.string.full_moon
+                MoonTruePhase.ThirdQuarter -> Res.string.third_quarter
+                MoonTruePhase.New -> Res.string.new_moon
+                MoonTruePhase.WaningCrescent -> Res.string.waning_crescent
+                MoonTruePhase.WaningGibbous -> Res.string.waning_gibbous
+                MoonTruePhase.WaxingCrescent -> Res.string.waxing_crescent
+                MoonTruePhase.WaxingGibbous -> Res.string.waxing_gibbous
             }
         )
     }
 
     fun formatSeason(season: Season): String {
         return when (season) {
-            Season.Winter -> strings.getString(R.string.season_winter)
-            Season.Spring -> strings.getString(R.string.season_spring)
-            Season.Summer -> strings.getString(R.string.season_summer)
-            Season.Fall -> strings.getString(R.string.season_fall)
+            Season.Winter -> strings.get(Res.string.season_winter)
+            Season.Spring -> strings.get(Res.string.season_spring)
+            Season.Summer -> strings.get(Res.string.season_summer)
+            Season.Fall -> strings.get(Res.string.season_fall)
         }
     }
 
 
     private fun getPressureUnitString(unit: PressureUnits): String {
         return when (unit) {
-            PressureUnits.Hpa -> strings.getString(R.string.units_hpa)
-            PressureUnits.Mbar -> strings.getString(R.string.units_mbar)
-            PressureUnits.Inhg -> strings.getString(R.string.units_inhg_short)
-            PressureUnits.Psi -> strings.getString(R.string.units_psi)
-            PressureUnits.MmHg -> strings.getString(R.string.units_mmhg_short)
+            PressureUnits.Hpa -> strings.get(Res.string.units_hpa)
+            PressureUnits.Mbar -> strings.get(Res.string.units_mbar)
+            PressureUnits.Inhg -> strings.get(Res.string.units_inhg_short)
+            PressureUnits.Psi -> strings.get(Res.string.units_psi)
+            PressureUnits.MmHg -> strings.get(Res.string.units_mmhg_short)
         }
     }
 
     fun formatPrecipitation(precipitation: Precipitation): String {
         return when (precipitation) {
-            Precipitation.Rain -> strings.getString(R.string.precipitation_rain)
-            Precipitation.Drizzle -> strings.getString(R.string.precipitation_drizzle)
-            Precipitation.Snow -> strings.getString(R.string.precipitation_snow)
-            Precipitation.SnowPellets -> strings.getString(R.string.precipitation_snow_pellets)
-            Precipitation.Hail -> strings.getString(R.string.precipitation_hail)
-            Precipitation.SmallHail -> strings.getString(R.string.precipitation_small_hail)
-            Precipitation.IcePellets -> strings.getString(R.string.precipitation_ice_pellets)
-            Precipitation.SnowGrains -> strings.getString(R.string.precipitation_snow_grains)
-            Precipitation.Lightning -> strings.getString(R.string.lightning)
+            Precipitation.Rain -> strings.get(Res.string.precipitation_rain)
+            Precipitation.Drizzle -> strings.get(Res.string.precipitation_drizzle)
+            Precipitation.Snow -> strings.get(Res.string.precipitation_snow)
+            Precipitation.SnowPellets -> strings.get(Res.string.precipitation_snow_pellets)
+            Precipitation.Hail -> strings.get(Res.string.precipitation_hail)
+            Precipitation.SmallHail -> strings.get(Res.string.precipitation_small_hail)
+            Precipitation.IcePellets -> strings.get(Res.string.precipitation_ice_pellets)
+            Precipitation.SnowGrains -> strings.get(Res.string.precipitation_snow_grains)
+            Precipitation.Lightning -> strings.get(Res.string.lightning)
         }
     }
 
     fun formatHikingDifficulty(difficulty: HikingDifficulty): String {
         return when (difficulty) {
-            HikingDifficulty.Easy -> strings.getString(R.string.easy)
-            HikingDifficulty.Moderate -> strings.getString(R.string.moderate)
-            else -> strings.getString(R.string.hard)
+            HikingDifficulty.Easy -> strings.get(Res.string.easy)
+            HikingDifficulty.Moderate -> strings.get(Res.string.moderate)
+            else -> strings.get(Res.string.hard)
         }
     }
 
     fun formatMapProjection(projection: MapProjectionType): String {
         return when (projection) {
-            MapProjectionType.Mercator -> strings.getString(R.string.map_projection_mercator)
-            MapProjectionType.CylindricalEquidistant -> strings.getString(R.string.map_projection_equidistant)
+            MapProjectionType.Mercator -> strings.get(Res.string.map_projection_mercator)
+            MapProjectionType.CylindricalEquidistant -> strings.get(Res.string.map_projection_equidistant)
         }
     }
 
     fun formatBooleanYesNo(value: Boolean): String {
-        return if (value) context.getString(R.string.yes) else context.getString(R.string.no)
+        return if (value) strings.get(Res.string.yes) else strings.get(Res.string.no)
     }
 
     fun join(vararg strings: String?, separator: Separator = Separator.Comma): String {
@@ -940,16 +917,8 @@ class FormatService private constructor(private val context: Context) {
     }
 
     companion object {
-        @SuppressLint("StaticFieldLeak")
-        private var instance: FormatService? = null
-
-        @Synchronized
-        fun getInstance(context: Context): FormatService {
-            if (instance == null) {
-                instance = FormatService(context.applicationContext)
-            }
-            return instance!!
-        }
+        /** The app's instance. */
+        fun getInstance(): FormatService = getAppService()
     }
 
 }

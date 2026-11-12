@@ -4,6 +4,7 @@ import android.content.Context
 import com.kylecorry.sol.units.Weight
 import com.kylecorry.sol.units.WeightUnits
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 import kotlin.math.absoluteValue
 
 class WeightConverterPage(context: Context) :

@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.tools.sensors.widgets
 import android.content.Context
 import androidx.lifecycle.Lifecycle
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds

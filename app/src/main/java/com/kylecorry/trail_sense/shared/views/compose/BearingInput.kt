@@ -36,6 +36,7 @@ import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import androidx.compose.foundation.selection.toggleable

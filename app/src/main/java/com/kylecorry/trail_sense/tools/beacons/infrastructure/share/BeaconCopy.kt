@@ -6,6 +6,7 @@ import android.content.Context
 import com.kylecorry.andromeda.clipboard.Clipboard
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 
 class BeaconCopy(private val context: Context) : IBeaconSender {

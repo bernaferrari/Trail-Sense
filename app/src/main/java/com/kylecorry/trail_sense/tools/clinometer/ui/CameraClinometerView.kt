@@ -22,6 +22,7 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.math.interpolation.Interpolation.map
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import kotlin.math.absoluteValue
 import kotlin.math.min

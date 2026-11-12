@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.tools.paths.ui
 
 import android.content.Context
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 
 class PathNameFactory(private val context: Context) {

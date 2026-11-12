@@ -5,6 +5,7 @@ import com.kylecorry.sol.units.Volume
 import com.kylecorry.sol.units.VolumeUnits
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.getInstance
 import kotlin.math.absoluteValue
 
 class VolumeConverterPage(private val context: Context) :
