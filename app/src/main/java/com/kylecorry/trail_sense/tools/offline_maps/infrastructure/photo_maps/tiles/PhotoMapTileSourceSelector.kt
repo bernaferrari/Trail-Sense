@@ -1,10 +1,8 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.tiles
 
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import androidx.core.graphics.alpha
 import androidx.core.graphics.createBitmap
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.use
@@ -15,7 +13,9 @@ import com.kylecorry.andromeda.bitmaps.operations.ReplaceColor
 import com.kylecorry.andromeda.bitmaps.operations.applyOperationsOrNull
 import com.kylecorry.sol.math.arithmetic.Arithmetic
 import com.kylecorry.sol.science.geology.CoordinateBounds
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import java.util.concurrent.ConcurrentHashMap
@@ -27,7 +27,7 @@ class PhotoMapTileSourceSelector(
     private val maxLayers: Int = 4,
     private val loadPdfs: Boolean = true,
     private val isPixelPerfect: Boolean = false,
-    private val backgroundColor: Int = Color.WHITE,
+    private val backgroundColor: Int = ColorInts.White,
     private val operations: List<BitmapOperation> = emptyList()
 ) : TileSource {
 
@@ -71,8 +71,8 @@ class PhotoMapTileSourceSelector(
                 Conditional(
                     index > 0,
                     ReplaceColor(
-                        Color.WHITE,
-                        Color.argb(127, 127, 127, 127),
+                        ColorInts.White,
+                        ColorInts.argb(127, 127, 127, 127),
                         80f,
                         true,
                         inPlace = true
@@ -89,8 +89,8 @@ class PhotoMapTileSourceSelector(
             Conditional(
                 backgroundColor.alpha != 255 && loaders.size > 1,
                 ReplaceColor(
-                    Color.argb(127, 127, 127, 127),
-                    Color.WHITE,
+                    ColorInts.argb(127, 127, 127, 127),
+                    ColorInts.White,
                     80f,
                     true,
                     inPlace = true

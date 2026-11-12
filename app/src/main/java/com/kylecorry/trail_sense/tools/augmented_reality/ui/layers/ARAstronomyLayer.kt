@@ -1,15 +1,5 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
-import kotlin.time.Instant
-
-import kotlin.time.Clock
-
-import com.kylecorry.sol.time.Time
-
-import kotlin.time.Duration.Companion.minutes
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.graphics.Color
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
@@ -24,11 +14,14 @@ import com.kylecorry.sol.science.astronomy.meteors.MeteorShower
 import com.kylecorry.sol.science.astronomy.moon.MoonPhase
 import com.kylecorry.sol.science.astronomy.stars.CONSTELLATIONS
 import com.kylecorry.sol.science.astronomy.stars.Star
+import com.kylecorry.sol.time.Time
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.hooks.HookTriggers
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.PlanetMapper
@@ -39,9 +32,12 @@ import com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityView
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.CanvasBitmap
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.CanvasCircle
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceLayer
-import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.AstronomyGuidanceTargetPicker
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceTarget
+import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.AstronomyGuidanceTargetPicker
 import com.kylecorry.trail_sense.tools.navigation.ui.DrawerBitmapLoader
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -188,11 +184,11 @@ class ARAstronomyLayer(
                 val granularity = 10.minutes
 
                 val moonBeforePathObject = CanvasCircle(
-                    Color.WHITE.withAlpha(60)
+                    ColorInts.White.withAlpha(60)
                 )
 
                 val moonAfterPathObject = CanvasCircle(
-                    Color.WHITE.withAlpha(200)
+                    ColorInts.White.withAlpha(200)
                 )
 
                 val sunBeforePathObject = CanvasCircle(
@@ -297,7 +293,7 @@ class ARAstronomyLayer(
                             opacity = moonOpacity
                         )
                     }
-                        ?: CanvasCircle(Color.WHITE.withAlpha(moonOpacity)),
+                        ?: CanvasCircle(ColorInts.White.withAlpha(moonOpacity)),
                     onFocusedFn = {
                         onMoonFocus(time, phase)
                     }
@@ -334,7 +330,7 @@ class ARAstronomyLayer(
                 val moonLines = moonPointsToDraw.map { markers ->
                     ARLine(
                         markers.map { it.point },
-                        Color.WHITE.withAlpha(lineAlpha),
+                        ColorInts.White.withAlpha(lineAlpha),
                         lineThickness,
                         ARLine.ThicknessUnits.Angle,
                     )
@@ -425,7 +421,7 @@ class ARAstronomyLayer(
                                 isTrueNorth = true
                             )
                         ),
-                        Color.WHITE.withAlpha(30),
+                        ColorInts.White.withAlpha(30),
                         1f
                     )
                 }

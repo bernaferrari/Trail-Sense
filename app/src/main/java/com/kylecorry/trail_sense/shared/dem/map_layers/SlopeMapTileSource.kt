@@ -1,16 +1,13 @@
 package com.kylecorry.trail_sense.shared.dem.map_layers
 
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
-import com.kylecorry.trail_sense.shared.map_layers.tiles.toSize
 import android.content.Context
-
 import android.graphics.Bitmap
-import android.graphics.Color
 import com.kylecorry.andromeda.bitmaps.operations.Conditional
 import com.kylecorry.andromeda.bitmaps.operations.Dither
 import com.kylecorry.andromeda.bitmaps.operations.ReplaceColor
 import com.kylecorry.andromeda.bitmaps.operations.applyOperations
 import com.kylecorry.sol.math.MathExtensions.toDegrees
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.dem.DEM
 import com.kylecorry.trail_sense.shared.dem.colors.SlopeColorMapFactory
 import com.kylecorry.trail_sense.shared.dem.colors.SlopeColorStrategy
@@ -19,6 +16,8 @@ import com.kylecorry.trail_sense.shared.dem.getCellSizeY
 import com.kylecorry.trail_sense.shared.dem.getSlopeAngle
 import com.kylecorry.trail_sense.shared.dem.getSlopeVector
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
+import com.kylecorry.trail_sense.shared.map_layers.tiles.toSize
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.shared.withId
@@ -96,7 +95,7 @@ class SlopeMapTileSource : TileSource {
                 hideFlatGround,
                 ReplaceColor(
                     flatColor,
-                    Color.TRANSPARENT,
+                    ColorInts.Transparent,
                     80f,
                     interpolate = false,
                     inPlace = true

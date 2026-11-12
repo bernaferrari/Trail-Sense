@@ -1,9 +1,6 @@
 package com.kylecorry.trail_sense.tools.tides.map_layers
 
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
-import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
 import android.content.Context
-import android.graphics.Color
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
@@ -11,8 +8,10 @@ import com.kylecorry.andromeda.geojson.GeoJsonObject
 import com.kylecorry.luna.concurrency.Parallel
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.science.oceanography.TideType
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.extensions.point
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
@@ -23,7 +22,7 @@ import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTidePhaseCom
 import com.kylecorry.trail_sense.tools.tides.domain.commands.CurrentTideTypeCommand
 import com.kylecorry.trail_sense.tools.tides.domain.commands.LoadAllTideTablesCommand
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
-
+import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
 import kotlin.time.Instant
 
 class TideGeoJsonSource : GeoJsonSource {
@@ -77,11 +76,11 @@ class TideGeoJsonSource : GeoJsonSource {
                 location,
                 icon = icon.id,
                 iconColor = if (showPhase) {
-                    Color.BLACK
+                    ColorInts.Black
                 } else {
                     null
                 },
-                color = Color.WHITE,
+                color = ColorInts.White,
                 rotation = phase
             )
         }

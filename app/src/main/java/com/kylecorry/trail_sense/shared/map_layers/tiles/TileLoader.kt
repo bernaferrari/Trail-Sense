@@ -1,10 +1,8 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles
 
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
@@ -18,9 +16,11 @@ import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance.PersistentTileCache
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import kotlin.time.Instant
 
@@ -158,7 +158,7 @@ class TileLoader(
             ),
             Pad(
                 padding,
-                if (existing.config == Bitmap.Config.ARGB_8888) Color.TRANSPARENT else Color.WHITE
+                if (existing.config == Bitmap.Config.ARGB_8888) ColorInts.Transparent else ColorInts.White
             )
         )
     }

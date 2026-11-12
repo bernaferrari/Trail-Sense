@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.domain.factories
 
-import android.graphics.Color
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.scales.DiscreteColorScale
 import com.kylecorry.trail_sense.shared.scales.IColorScale
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
@@ -9,11 +9,11 @@ import com.kylecorry.trail_sense.tools.paths.domain.waypointcolors.IPointColorin
 
 class NonePointDisplayFactory : IPointDisplayFactory {
     override fun createColoringStrategy(path: List<PathPoint>): IPointColoringStrategy {
-        return DefaultPointColoringStrategy(Color.TRANSPARENT)
+        return DefaultPointColoringStrategy(ColorInts.Transparent)
     }
 
     override fun createColorScale(path: List<PathPoint>): IColorScale {
-        return DiscreteColorScale(listOf(Color.TRANSPARENT))
+        return DiscreteColorScale(listOf(ColorInts.Transparent))
     }
 
     override fun createLabelMap(path: List<PathPoint>): Map<Float, String> {

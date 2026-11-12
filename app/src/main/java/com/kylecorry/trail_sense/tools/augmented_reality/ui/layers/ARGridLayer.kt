@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
-import android.graphics.Color
 import androidx.annotation.ColorInt
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.ARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.AugmentedRealityCoordinate
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.SphericalARPoint
@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 class ARGridLayer(
     spacing: Int = 30,
-    @ColorInt private val color: Int = Color.WHITE,
+    @ColorInt private val color: Int = ColorInts.White,
     @ColorInt private val northColor: Int = color,
     @ColorInt private val horizonColor: Int = color,
     @ColorInt private val labelColor: Int = color,

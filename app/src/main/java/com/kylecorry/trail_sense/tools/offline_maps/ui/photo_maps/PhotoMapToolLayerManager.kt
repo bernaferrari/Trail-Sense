@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
-import android.graphics.Color
+import androidx.lifecycle.LifecycleOwner
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
@@ -8,6 +8,8 @@ import com.kylecorry.sol.science.geography.Geography
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.shared.extensions.point
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceRepo
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
@@ -18,8 +20,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileMapLayer
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import androidx.lifecycle.LifecycleOwner
-import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.tools.map.map_layers.MyElevationLayer
 import com.kylecorry.trail_sense.tools.map.map_layers.ScaleBarLayer
 import com.kylecorry.trail_sense.tools.navigation.map_layers.CompassOverlayLayer
@@ -127,8 +127,8 @@ class PhotoMapToolLayerManager {
         } else {
             val point = GeoJsonFeature.point(
                 location,
-                strokeColor = Color.WHITE,
-                color = Color.BLACK
+                strokeColor = ColorInts.White,
+                color = ColorInts.Black
             )
             selectedPointLayer.setData(GeoJsonFeatureCollection(listOf(point)))
         }

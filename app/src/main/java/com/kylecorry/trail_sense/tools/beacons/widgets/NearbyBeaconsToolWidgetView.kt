@@ -1,9 +1,7 @@
 package com.kylecorry.trail_sense.tools.beacons.widgets
 
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import androidx.lifecycle.Lifecycle
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.sol.units.Distance
@@ -11,9 +9,11 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.tools.beacons.domain.icon
@@ -49,8 +49,8 @@ class NearbyBeaconsToolWidgetView : ToolWidgetView {
                 description = formatter.formatDistance(distance, Units.getDecimalPlaces(distance.units)),
                 icon = beacon.icon?.icon ?: TrailIcons.Location,
                 iconTint = Colors.mostContrastingColor(
-                    Color.WHITE,
-                    Color.BLACK,
+                    ColorInts.White,
+                    ColorInts.Black,
                     beacon.color
                 ),
                 iconBackground = beacon.color,

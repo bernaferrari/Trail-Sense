@@ -2,16 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.augmented_reality.ui
 
-import kotlin.time.Clock
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import androidx.annotation.StringRes
-import com.kylecorry.trail_sense.shared.camera.CameraScaleType
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.expandVertically
@@ -19,28 +12,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.ripple
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
-import com.kylecorry.trail_sense.shared.icons.trail.Camera
-import com.kylecorry.trail_sense.shared.icons.trail.CameraOff
-import com.kylecorry.trail_sense.shared.icons.trail.Cancel
-import com.kylecorry.trail_sense.shared.icons.trail.CompassIcon
-import com.kylecorry.trail_sense.shared.icons.trail.Layers
-import com.kylecorry.trail_sense.shared.icons.trail.Search
-import com.kylecorry.trail_sense.shared.icons.trail.ToolClock
-import com.kylecorry.trail_sense.shared.views.compose.LocalTrailSenseBack
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentPanel
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentTopBar
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
-import com.kylecorry.trail_sense.shared.views.compose.trailSensePressScale
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,6 +24,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -66,30 +44,33 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color as ComposeColor
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.luna.concurrency.onMain
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.luna.time.TimerActionBehavior
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.ui.Colors.withAlpha
-import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
+import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.luna.time.CoroutineTimer
+import com.kylecorry.luna.time.TimerActionBehavior
 import com.kylecorry.sol.science.astronomy.locators.Planet
 import com.kylecorry.sol.science.astronomy.meteors.MeteorShower
 import com.kylecorry.sol.science.astronomy.moon.MoonPhase
@@ -103,31 +84,53 @@ import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getCardinalDirectionColor
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.camera.CameraScaleType
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.extensions.inBackground
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.icons.trail.Camera
+import com.kylecorry.trail_sense.shared.icons.trail.CameraOff
+import com.kylecorry.trail_sense.shared.icons.trail.Cancel
+import com.kylecorry.trail_sense.shared.icons.trail.CompassIcon
+import com.kylecorry.trail_sense.shared.icons.trail.Layers
+import com.kylecorry.trail_sense.shared.icons.trail.Search
+import com.kylecorry.trail_sense.shared.icons.trail.ToolClock
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.readableName
 import com.kylecorry.trail_sense.shared.views.CameraPreview
 import com.kylecorry.trail_sense.shared.views.CameraState
 import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheetState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
+import com.kylecorry.trail_sense.shared.views.TrailSenseColors
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.LocalTrailSenseBack
 import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
-import com.kylecorry.trail_sense.shared.extensions.inBackground
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentPanel
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentTopBar
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSensePressScale
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
 import com.kylecorry.trail_sense.tools.astronomy.ui.format.PlanetMapper
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.calibration.ARCalibratorFactory
-import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceRefreshRequest
-import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.BeaconGuidanceTarget
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceDisplayState
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceLayer
+import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceRefreshRequest
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceTarget
+import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.BeaconGuidanceTarget
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARAstronomyLayer
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARBeaconLayer
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.layers.ARGridLayer
@@ -140,15 +143,11 @@ import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappablePath
 import com.kylecorry.trail_sense.tools.paths.map_layers.AugmentedRealityPathLayerManager
+import kotlin.math.hypot
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import kotlin.time.Instant
-import kotlin.math.hypot
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
-import androidx.compose.ui.graphics.toArgb
-import com.kylecorry.trail_sense.shared.views.TrailSenseColors
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.dialogs.item
 
 fun openAugmentedReality(
     appNavigator: TrailSenseNavigator,
@@ -274,9 +273,9 @@ private class AugmentedRealityController(
         ARGridLayer(
             30,
             northColor = Resources.getCardinalDirectionColor(context),
-            horizonColor = Color.WHITE,
-            labelColor = Color.WHITE,
-            color = Color.WHITE.withAlpha(100),
+            horizonColor = ColorInts.White,
+            labelColor = ColorInts.White,
+            color = ColorInts.White.withAlpha(100),
             useTrueNorth = userPrefs.compass.useTrueNorth
         )
     }
@@ -505,7 +504,7 @@ private class AugmentedRealityController(
     private fun startCamera() {
         isCameraEnabled = true
         views.cameraToggle.setIcon(TrailIcons.Camera)
-        views.arView.backgroundFillColor = Color.TRANSPARENT
+        views.arView.backgroundFillColor = ColorInts.Transparent
         lifecycleOwner.lifecycleScope.launch {
             if (effects.requestPermission(AppPermission.Camera)) {
                 views.camera.isVisible = true
@@ -516,7 +515,7 @@ private class AugmentedRealityController(
                 views.camera.isInvisible = true
                 isCameraEnabled = false
                 views.cameraToggle.setIcon(TrailIcons.CameraOff)
-                views.arView.backgroundFillColor = Color.BLACK
+                views.arView.backgroundFillColor = ColorInts.Black
                 effects.explainPermissionDenied(AppPermission.Camera)
             }
         }
@@ -525,7 +524,7 @@ private class AugmentedRealityController(
     private fun stopCamera() {
         views.cameraToggle.setIcon(TrailIcons.CameraOff)
         isCameraEnabled = false
-        views.arView.backgroundFillColor = Color.BLACK
+        views.arView.backgroundFillColor = ColorInts.Black
         views.camera.stop()
         views.camera.isInvisible = true
     }
@@ -814,8 +813,8 @@ private class AugmentedRealityController(
         views.arGuideIcon.setState(
             icon = state.icon,
             iconRotation = state.iconRotation,
-            iconTint = state.iconTint ?: Color.WHITE,
-            backgroundTint = state.iconBackgroundTint ?: Color.TRANSPARENT
+            iconTint = state.iconTint ?: ColorInts.White,
+            backgroundTint = state.iconBackgroundTint ?: ColorInts.Transparent
         )
     }
 
@@ -1087,7 +1086,7 @@ private fun createAugmentedRealityViews(context: Context): AugmentedRealityViews
 }
 
 private fun createArIconButton(icon: ImageVector, @StringRes contentDescription: Int): ArIconButton {
-    return createTransparentIconButton(icon, Color.WHITE, contentDescription)
+    return createTransparentIconButton(icon, ColorInts.White, contentDescription)
 }
 
 private fun createTransparentIconButton(
@@ -1235,8 +1234,8 @@ private class ArCalibrationPanelView {
 private class ArGuideIconView {
     private var icon by mutableStateOf(TrailIcons.Location)
     private var iconRotation by mutableStateOf(0f)
-    private var iconTint by mutableIntStateOf(Color.WHITE)
-    private var backgroundTint by mutableIntStateOf(Color.TRANSPARENT)
+    private var iconTint by mutableIntStateOf(ColorInts.White)
+    private var backgroundTint by mutableIntStateOf(ColorInts.Transparent)
 
     fun setState(
         icon: ImageVector,

@@ -12,4 +12,17 @@ object ColorInts {
 
     @ColorInt
     const val Transparent: Int = 0
+
+    @ColorInt
+    const val Gray: Int = -0x777778
+
+    @ColorInt
+    fun argb(alpha: Int, red: Int, green: Int, blue: Int): Int {
+        return (alpha shl 24) or (red shl 16) or (green shl 8) or blue
+    }
+
+    @ColorInt
+    fun rgb(red: Int, green: Int, blue: Int): Int {
+        return argb(255, red, green, blue)
+    }
 }

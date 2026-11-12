@@ -1,27 +1,20 @@
 package com.kylecorry.trail_sense.main
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
 import android.Manifest
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.Surface
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,22 +28,24 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
-import androidx.compose.ui.graphics.toArgb
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
+import com.kylecorry.andromeda.core.system.Screen
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.permissions.Permissions
@@ -60,16 +55,23 @@ import com.kylecorry.trail_sense.main.errors.SafeMode
 import com.kylecorry.trail_sense.main.errors.TrailSenseExceptionHandler
 import com.kylecorry.trail_sense.main.theme.AppThemeMode
 import com.kylecorry.trail_sense.main.theme.ThemeProvider
+import com.kylecorry.trail_sense.main.theme.TrailSenseAppTheme
 import com.kylecorry.trail_sense.onboarding.Onboarding
 import com.kylecorry.trail_sense.onboarding.OnboardingFlow
 import com.kylecorry.trail_sense.receivers.RestartServicesCommand
 import com.kylecorry.trail_sense.shared.CustomUiUtils.isDarkThemeOn
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.commands.ComposedCommand
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
+import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
+import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavDisplay
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.views.ErrorBannerState
-import com.kylecorry.trail_sense.main.theme.TrailSenseAppTheme
 import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.AppHostDialogs
@@ -81,14 +83,11 @@ import com.kylecorry.trail_sense.shared.volume.VolumeAction
 import com.kylecorry.trail_sense.tools.battery.BatteryToolRegistration
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionSheetState
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
-import androidx.core.graphics.drawable.toDrawable
-import android.content.res.Configuration
-import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
 
@@ -205,7 +204,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
 
         // Handle black theme
         if (isBlackTheme) {
-            window.setBackgroundDrawable(Color.BLACK.toDrawable())
+            window.setBackgroundDrawable(ColorInts.Black.toDrawable())
             bottomNavigation.useBlackTheme = true
         }
 

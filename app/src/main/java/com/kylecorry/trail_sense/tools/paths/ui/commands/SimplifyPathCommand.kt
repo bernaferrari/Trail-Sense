@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import android.content.Context
-import android.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,7 +30,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.loading
+import com.kylecorry.trail_sense.shared.dialogs.snackbar
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.GeoJsonLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
@@ -51,8 +53,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.kylecorry.trail_sense.shared.dialogs.loading
-import com.kylecorry.trail_sense.shared.dialogs.snackbar
 
 /** A path and its points, ready for the simplify preview. */
 class SimplifyPathRequest(val path: Path, val points: List<PathPoint>)
@@ -120,7 +120,7 @@ fun SimplifyPathDialog(
     val map = remember(request) {
         MapView(context).apply {
             val originalLayer = GeoJsonLayer(
-                StaticLineGeoJsonSource(originalCoordinates, Color.GRAY, thicknessScale = 1.5f),
+                StaticLineGeoJsonSource(originalCoordinates, ColorInts.Gray, thicknessScale = 1.5f),
                 ORIGINAL_LAYER_ID
             ).also { it.percentOpacity = ORIGINAL_PATH_OPACITY }
             setLayers(listOf(originalLayer, simplifiedLayer))

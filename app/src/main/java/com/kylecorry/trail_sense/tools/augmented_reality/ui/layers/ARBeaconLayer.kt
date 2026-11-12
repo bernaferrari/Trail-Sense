@@ -1,12 +1,12 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
-import android.graphics.Color
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.luna.hooks.Hooks
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.GeographicARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARMarker
@@ -96,7 +96,7 @@ class ARBeaconLayer(
                             beacon.elevation,
                             beaconSize.value,
                         ),
-                        CanvasCircle(beacon.color, Color.WHITE),
+                        CanvasCircle(beacon.color, ColorInts.White),
                         onFocusedFn = {
                             onFocus(beacon)
                         },
@@ -106,7 +106,7 @@ class ARBeaconLayer(
                     ),
                     beacon.icon?.let { icon ->
                         val color =
-                            Colors.mostContrastingColor(Color.WHITE, Color.BLACK, beacon.color)
+                            Colors.mostContrastingColor(ColorInts.White, ColorInts.Black, beacon.color)
                         ARMarker(
                             GeographicARPoint(
                                 beacon.coordinate,

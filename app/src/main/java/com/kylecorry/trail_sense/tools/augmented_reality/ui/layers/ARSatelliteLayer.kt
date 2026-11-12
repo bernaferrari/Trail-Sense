@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.graphics.Color
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.sense.location.Satellite
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.hooks.Hooks
-import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.SphericalARPoint
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARMarker
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityView
@@ -89,9 +89,9 @@ class ARSatelliteLayer(
                         canvasObject = satelliteBitmap?.let {
                             CanvasBitmap(
                                 satelliteBitmap,
-                                tint = Color.WHITE
+                                tint = ColorInts.White
                             )
-                        } ?: CanvasCircle(Color.WHITE),
+                        } ?: CanvasCircle(ColorInts.White),
                         onFocusedFn = {
                             onSatelliteFocus(it)
                         }

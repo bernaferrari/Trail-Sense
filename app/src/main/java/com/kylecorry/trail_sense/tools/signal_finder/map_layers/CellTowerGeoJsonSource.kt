@@ -1,16 +1,16 @@
 package com.kylecorry.trail_sense.tools.signal_finder.map_layers
 
-import com.kylecorry.trail_sense.main.getAppService
 import android.content.Context
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
-import android.graphics.Color
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.geojson.GeoJsonObject
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.extensions.GEO_JSON_PROPERTY_SIZE_UNIT_METERS
 import com.kylecorry.trail_sense.shared.extensions.point
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.tools.signal_finder.infrastructure.CellTowerModel
@@ -38,12 +38,12 @@ class CellTowerGeoJsonSource : GeoJsonSource {
                 GeoJsonFeature.point(
                     it.coordinate,
                     id = it.coordinate.toString(),
-                    color = Color.WHITE,
+                    color = ColorInts.White,
                     opacity = 25,
                     size = 2 * it.accuracy.meters().value,
                     sizeUnit = GEO_JSON_PROPERTY_SIZE_UNIT_METERS,
                     icon = BeaconIcon.CellTower.id,
-                    iconColor = Color.WHITE,
+                    iconColor = ColorInts.White,
                     iconSize = 12f,
                     isClickable = true,
                     name = featureName,

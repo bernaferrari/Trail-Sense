@@ -3,11 +3,11 @@ package com.kylecorry.trail_sense.shared.notifications
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
-import android.graphics.Color
 import android.graphics.drawable.Icon
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.app.NotificationCompat
 import com.kylecorry.andromeda.notify.Notify
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.icons.toBitmap
 import com.kylecorry.trail_sense.shared.icons.toIconCompat
 
@@ -116,12 +116,12 @@ fun Notify.action(
     name: String,
     intent: PendingIntent,
     icon: ImageVector
-): NotificationCompat.Action = action(name, intent, icon.toIconCompat(context, 24f, Color.WHITE))
+): NotificationCompat.Action = action(name, intent, icon.toIconCompat(context, 24f, ColorInts.White))
 
 /** This notification with its small icon (and, when [showBigIcon], its large icon) drawn from [icon]. */
 fun Notification.withIcon(context: Context, icon: ImageVector, showBigIcon: Boolean = false): Notification {
     val builder = Notification.Builder.recoverBuilder(context, this)
-        .setSmallIcon(Icon.createWithBitmap(icon.toBitmap(context, 24f, Color.WHITE)))
+        .setSmallIcon(Icon.createWithBitmap(icon.toBitmap(context, 24f, ColorInts.White)))
     if (showBigIcon) {
         builder.setLargeIcon(icon.toBitmap(context, 24f))
     }

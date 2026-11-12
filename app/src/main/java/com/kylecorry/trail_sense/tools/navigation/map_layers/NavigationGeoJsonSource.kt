@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.tools.navigation.map_layers
 
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
-import android.graphics.Color
 import androidx.annotation.ColorInt
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -9,10 +7,12 @@ import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.geojson.GeoJsonObject
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.extensions.lineString
 import com.kylecorry.trail_sense.shared.extensions.point
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
@@ -53,7 +53,7 @@ class NavigationGeoJsonSource : GeoJsonSource {
                     it,
                     id = "navigation-start-${path.id}",
                     color = path.color,
-                    strokeColor = Color.WHITE,
+                    strokeColor = ColorInts.White,
                     strokeWeight = 1f,
                     size = 8f
                 )
@@ -62,7 +62,7 @@ class NavigationGeoJsonSource : GeoJsonSource {
                 GeoJsonFeature.point(
                     it,
                     id = "navigation-end-${path.id}",
-                    color = Color.WHITE,
+                    color = ColorInts.White,
                     icon = BeaconIcon.Flag.id,
                     iconColor = path.color,
                     strokeColor = path.color,

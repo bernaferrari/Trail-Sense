@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.tools.offline_maps.map_layers
 
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.cache.InvalidatableCachedValue
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
@@ -17,7 +17,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.ti
 
 class PhotoMapTileSource : TileSource {
 
-    private val backgroundColor: Int = Color.TRANSPARENT
+    private val backgroundColor: Int = ColorInts.Transparent
     private val selectorCache = InvalidatableCachedValue<SelectorKey, TileSource>()
     private val decoderCache = PhotoMapDecoderCache()
     private val service = getAppService<MapService>()

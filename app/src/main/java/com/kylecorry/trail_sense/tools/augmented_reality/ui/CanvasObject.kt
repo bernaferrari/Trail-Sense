@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui
 
-import android.graphics.Color
 import androidx.annotation.ColorInt
 import com.kylecorry.andromeda.canvas.ICanvasDrawer
 import com.kylecorry.andromeda.canvas.ImageMode
 import com.kylecorry.trail_sense.shared.canvas.PixelCircle
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 
 // TODO: Use this on the MapView as well - maybe extract to Andromeda
 
@@ -22,13 +22,13 @@ class CanvasCircle(
     override fun draw(drawer: ICanvasDrawer, area: PixelCircle) {
         val size = area.radius * 2f
         drawer.noTint()
-        if (strokeColor != null && strokeColor != Color.TRANSPARENT) {
+        if (strokeColor != null && strokeColor != ColorInts.Transparent) {
             drawer.stroke(strokeColor)
             drawer.strokeWeight(drawer.dp(strokeWeight))
         } else {
             drawer.noStroke()
         }
-        if (color != Color.TRANSPARENT) {
+        if (color != ColorInts.Transparent) {
             drawer.fill(color)
             drawer.circle(area.center.x, area.center.y, size)
         }

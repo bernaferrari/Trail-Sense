@@ -2,19 +2,6 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentBounds
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.receiveAsFlow
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,35 +16,48 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.loading
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.views.PerspectiveCorrection
 import com.kylecorry.trail_sense.shared.views.PerspectiveCorrectionState
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.rememberPerspectiveCorrectionState
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentBounds
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.fixPerspective
+import java.io.IOException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.IOException
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.dialogs.loading
 
 @Composable
 internal fun WarpMapToolScreen(
@@ -158,7 +158,7 @@ internal class WarpMapViewModel(
                         val bitmap = files.bitmap(currentMap.filename) ?: return@withContext false
                         val bounds =
                             percentBounds.toPixelBounds(bitmap.width.toFloat(), bitmap.height.toFloat())
-                        val warped = bitmap.fixPerspective(bounds, true, Color.WHITE)
+                        val warped = bitmap.fixPerspective(bounds, true, ColorInts.White)
                         try {
                             files.save(currentMap.filename, warped, recycleOnSave = true)
                         } catch (e: IOException) {

@@ -1,11 +1,8 @@
 package com.kylecorry.trail_sense.tools.field_guide.map_layers
 
-import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.Size
@@ -21,9 +18,12 @@ import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.geojson.GeoJsonObject
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.extensions.point
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
@@ -95,10 +95,10 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
                     sighting.location!!,
                     sighting.id,
                     nameFormat.format(formatter.formatName(page)),
-                    color = Color.BLACK,
+                    color = ColorInts.Black,
                     icon = if (bitmap == null) icon.id else null,
                     iconSize = if (bitmap == null) size * 0.75f else imageSize,
-                    iconColor = if (bitmap == null) Color.WHITE else null,
+                    iconColor = if (bitmap == null) ColorInts.White else null,
                     markerShape = if (bitmap == null) "circle" else null,
                     size = size,
                     isClickable = true,

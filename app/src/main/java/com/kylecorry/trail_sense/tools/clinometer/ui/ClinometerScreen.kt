@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
 import android.content.Context
-import android.graphics.Color
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
@@ -82,6 +81,7 @@ import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.camera.CameraScaleType
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.dialogs.item
 import com.kylecorry.trail_sense.shared.getInstance
@@ -488,7 +488,7 @@ private class ClinometerController(
                                 isTrueNorth = prefs.compass.useTrueNorth,
                                 distance = viewModel.distanceAway?.meters()?.value ?: 10f
                             )
-                        ), Color.WHITE, 1f
+                        ), ColorInts.White, 1f
                     )
                 )
             )

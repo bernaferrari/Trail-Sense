@@ -2,10 +2,9 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Color
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,9 +16,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,9 +45,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
-import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
 import com.kylecorry.andromeda.core.math.DecimalFormatter
-import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.luna.text.toDoubleCompat
@@ -59,22 +59,23 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.alerts.ILoadingIndicator
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.dialogs.showComposeDialog
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.dialogs.showComposeDialog
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
@@ -82,12 +83,11 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapCalibra
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentCoordinate
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
+import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
-import com.kylecorry.trail_sense.shared.dialogs.item
 
 class CreateBlankMapCommand(
     private val context: Context,
@@ -110,7 +110,7 @@ class CreateBlankMapCommand(
         val file = files.createTemp(".webp")
         val bitmap = createBitmap(100, 100)
         val canvas = Canvas(bitmap)
-        canvas.drawColor(Color.WHITE)
+        canvas.drawColor(ColorInts.White)
         files.save(files.getLocalPath(file), bitmap, 10, true)
 
         try {

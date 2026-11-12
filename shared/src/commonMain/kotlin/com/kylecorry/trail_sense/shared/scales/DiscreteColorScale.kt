@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.shared.scales
 
-import android.graphics.Color
 import androidx.annotation.ColorInt
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 
 class DiscreteColorScale(@ColorInt private val colors: List<Int>) :
     IColorScale {
     override fun getColor(percent: Float): Int {
         if (colors.isEmpty()) {
-            return Color.BLACK
+            return ColorInts.Black
         }
 
         val percentPerColor = 1 / colors.size.toFloat()

@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.augmented_reality.ui.layers
 
-import android.graphics.Color
 import androidx.core.graphics.ColorUtils
 import com.kylecorry.sol.math.Vector3
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.AugmentedRealityCoordinate
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARLine
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.AugmentedRealityView
@@ -47,7 +47,7 @@ class ARPathPolygons(private val widthMeters: Float) {
                 AugmentedRealityCoordinate(it, coordinates[i].isTrueNorth)
             }
         }
-        return ARPolygon(arrows, Color.WHITE)
+        return ARPolygon(arrows, ColorInts.White)
     }
 
     /** An arrowhead centered on the segment, or null if the segment is too short to fit one */

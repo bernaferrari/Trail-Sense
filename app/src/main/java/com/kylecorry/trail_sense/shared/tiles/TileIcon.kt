@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.shared.tiles
 
-import android.graphics.Color
 import android.graphics.drawable.Icon
 import android.service.quicksettings.TileService
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.andromeda.core.tryOrLog
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.icons.toBitmap
 
 /**
@@ -14,7 +14,7 @@ import com.kylecorry.trail_sense.shared.icons.toBitmap
 internal fun TileService.showIcon(icon: ImageVector) {
     tryOrLog {
         val tile = qsTile ?: return@tryOrLog
-        tile.icon = Icon.createWithBitmap(icon.toBitmap(this, 24f, Color.WHITE))
+        tile.icon = Icon.createWithBitmap(icon.toBitmap(this, 24f, ColorInts.White))
         tile.updateTile()
     }
 }

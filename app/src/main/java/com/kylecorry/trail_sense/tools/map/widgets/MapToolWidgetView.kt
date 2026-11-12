@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.map.widgets
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -15,6 +14,7 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.luna.concurrency.onMain
 import com.kylecorry.sol.science.geography.projections.AzimuthalEquidistantProjection
 import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceRepo
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayersWithPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
@@ -72,7 +72,7 @@ class MapToolWidgetView : ChartToolWidgetViewBase() {
     ): MapView {
         val cornerRadius = Resources.dp(context, 8f)
         val mapView = MapView(context)
-        mapView.backgroundColorOverride = Color.rgb(127, 127, 127)
+        mapView.backgroundColorOverride = ColorInts.rgb(127, 127, 127)
         mapView.clipPath = Path().apply {
             if (drawAsCircle) {
                 addOval(Rect(Offset(size / 2f, size / 2f), size / 2f))

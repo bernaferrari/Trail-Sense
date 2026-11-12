@@ -1,15 +1,14 @@
 package com.kylecorry.trail_sense.tools.beacons.map_layers
 
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
-
-import android.graphics.Color
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.geojson.GeoJsonObject
 import com.kylecorry.sol.science.geology.CoordinateBounds
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.extensions.point
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -19,7 +18,7 @@ import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 class BeaconGeoJsonSource : GeoJsonSource {
 
     private var featureToBeaconMap = mapOf<GeoJsonFeature, Beacon>()
-    private val outlineColor = Color.WHITE
+    private val outlineColor = ColorInts.White
     private val beaconService = DependencyRegistry.get<BeaconService>()
     private val navigator = DependencyRegistry.get<Navigator>()
 
@@ -51,8 +50,8 @@ class BeaconGeoJsonSource : GeoJsonSource {
                     icon = it.icon?.id,
                     iconSize = 12f * 0.75f,
                     iconColor = Colors.mostContrastingColor(
-                        Color.WHITE,
-                        Color.BLACK,
+                        ColorInts.White,
+                        ColorInts.Black,
                         it.color
                     ),
                     isClickable = true,

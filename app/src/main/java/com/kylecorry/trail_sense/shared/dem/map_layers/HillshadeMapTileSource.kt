@@ -1,18 +1,14 @@
 package com.kylecorry.trail_sense.shared.dem.map_layers
 
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
-
-import com.kylecorry.trail_sense.shared.map_layers.tiles.toSize
 import android.content.Context
-
 import android.graphics.Bitmap
-import android.graphics.Color
 import com.kylecorry.andromeda.bitmaps.operations.Dither
 import com.kylecorry.andromeda.bitmaps.operations.applyOperations
 import com.kylecorry.sol.math.MathExtensions.toRadians
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.astronomy.Astronomy
 import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.dem.DEM
 import com.kylecorry.trail_sense.shared.dem.getCellSizeX
 import com.kylecorry.trail_sense.shared.dem.getCellSizeY
@@ -20,13 +16,15 @@ import com.kylecorry.trail_sense.shared.dem.getSlopeAngle
 import com.kylecorry.trail_sense.shared.dem.getSlopeAspect
 import com.kylecorry.trail_sense.shared.dem.getSlopeVector
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
+import com.kylecorry.trail_sense.shared.map_layers.tiles.toSize
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
-import kotlin.time.Instant
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.time.Instant
 
 class HillshadeMapTileSource : TileSource {
     private val astronomy = AstronomyService()
@@ -85,8 +83,8 @@ class HillshadeMapTileSource : TileSource {
             tile.size.toSize(),
             config = Bitmap.Config.ARGB_8888,
             padding = padding,
-            oceanColor = Color.WHITE,
-            inlandWaterColor = Color.WHITE
+            oceanColor = ColorInts.White,
+            inlandWaterColor = ColorInts.White
         ) { x, y, getElevation ->
             val vector = getSlopeVector(cellSizeX, cellSizeY, x, y, getElevation)
             val slopeRad = getSlopeAngle(vector, zFactor)
@@ -99,7 +97,7 @@ class HillshadeMapTileSource : TileSource {
             }
 
             val gray = hillshade.toInt().coerceIn(0, 255)
-            Color.rgb(gray, gray, gray)
+            ColorInts.rgb(gray, gray, gray)
         }.applyOperations(
             Dither(Bitmap.Config.RGB_565)
         )

@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
 import android.content.Context
-import android.graphics.Color
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappablePath
 import com.kylecorry.trail_sense.tools.navigation.ui.MappableLocation
@@ -40,7 +40,7 @@ fun List<PathPoint>.toMappableLocations(
         MappableLocation(
             point.id,
             point.coordinate,
-            strategy.getColor(point) ?: Color.TRANSPARENT,
+            strategy.getColor(point) ?: ColorInts.Transparent,
             null,
             point.elevation
         )
@@ -64,14 +64,14 @@ fun List<PathPoint>.asBeacons(
         baseStrategy
     }
     return this.map { point ->
-        val color = strategy.getColor(point) ?: Color.TRANSPARENT
+        val color = strategy.getColor(point) ?: ColorInts.Transparent
         Beacon(
             point.id,
             "",
             point.coordinate,
             elevation = point.elevation,
-            color = if (point.id == selected && color == Color.TRANSPARENT) {
-                Color.WHITE
+            color = if (point.id == selected && color == ColorInts.Transparent) {
+                ColorInts.White
             } else {
                 color
             },

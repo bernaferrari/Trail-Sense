@@ -1,10 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.map_layers
 
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
-import com.kylecorry.trail_sense.shared.map_layers.tiles.toSize
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
 import androidx.core.graphics.alpha
 import com.kylecorry.andromeda.bitmaps.LookupTable
 import com.kylecorry.andromeda.bitmaps.operations.Conditional
@@ -13,11 +10,14 @@ import com.kylecorry.andromeda.bitmaps.operations.applyOperationsOrNull
 import com.kylecorry.andromeda.core.ui.colormaps.AlphaColorMap
 import com.kylecorry.sol.math.interpolation.Interpolation
 import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.map_layers.tiles.InterpolatedGridValueProvider
 import com.kylecorry.trail_sense.shared.map_layers.tiles.ParallelCoordinateGridValueProvider
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
 import com.kylecorry.trail_sense.shared.map_layers.tiles.TileImageUtils
+import com.kylecorry.trail_sense.shared.map_layers.tiles.toSize
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
@@ -75,7 +75,7 @@ class NightTileSource : TileSource {
                     5f,
                     true
                 )).toInt()
-                return@getSampledImage Color.argb(gray, 0, 0, 0)
+                return@getSampledImage ColorInts.argb(gray, 0, 0, 0)
             }
         }.applyOperationsOrNull(
             Conditional(

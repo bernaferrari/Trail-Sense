@@ -1,12 +1,12 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
 import android.content.Context
-import android.graphics.Color
 import androidx.compose.ui.geometry.Offset
 import com.kylecorry.andromeda.canvas.TextMode
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryMarkerColor
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentCoordinate
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 
@@ -25,7 +25,7 @@ class MapCalibrationView : BasePhotoMapView {
 
     private var movePending = true
 
-    private var highlightedColor: Int = Color.WHITE
+    private var highlightedColor: Int = ColorInts.White
 
     constructor(context: Context) : super(context)
 
@@ -79,20 +79,20 @@ class MapCalibrationView : BasePhotoMapView {
                 movePending = false
             }
             val coord = toView(sourceCoord.x, sourceCoord.y) ?: continue
-            drawer.stroke(Color.WHITE)
+            drawer.stroke(ColorInts.White)
             if (i == highlightedIndex) {
                 drawer.fill(highlightedColor)
             } else {
-                drawer.fill(Color.BLACK)
+                drawer.fill(ColorInts.Black)
             }
             drawer.strokeWeight(drawer.dp(1f) / layerScale)
             drawer.circle(coord.x, coord.y, drawer.dp(12f) / layerScale)
 
             drawer.textMode(TextMode.Center)
             if (i == highlightedIndex) {
-                drawer.fill(Color.BLACK)
+                drawer.fill(ColorInts.Black)
             } else {
-                drawer.fill(Color.WHITE)
+                drawer.fill(ColorInts.White)
             }
             drawer.noStroke()
             drawer.textSize(drawer.dp(10f) / layerScale)

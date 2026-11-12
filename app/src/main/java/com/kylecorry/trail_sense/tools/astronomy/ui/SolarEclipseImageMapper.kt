@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.astronomy.ui
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Path
 import androidx.core.graphics.createBitmap
 import com.kylecorry.andromeda.canvas.CanvasDrawer
@@ -11,6 +10,7 @@ import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.sol.science.astronomy.units.CelestialObservation
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 
 class SolarEclipseImageMapper(private val context: Context) {
 
@@ -64,7 +64,7 @@ class SolarEclipseImageMapper(private val context: Context) {
     }
 
     companion object {
-        private const val MOON_COLOR = Color.BLACK
+        private const val MOON_COLOR = ColorInts.Black
         private const val TOTAL_ECLIPSE_MOON_PERCENT_DIAMETER = 0.95f
         private const val CLIP_BUFFER_PIXELS = 0.5f
     }

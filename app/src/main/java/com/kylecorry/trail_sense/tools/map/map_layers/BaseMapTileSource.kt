@@ -1,16 +1,16 @@
 package com.kylecorry.trail_sense.tools.map.map_layers
 
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
 import androidx.core.graphics.toColorInt
 import com.kylecorry.andromeda.bitmaps.operations.Conditional
 import com.kylecorry.andromeda.bitmaps.operations.ReplaceColor
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapCalibrationPoint
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
@@ -87,8 +87,8 @@ class BaseMapTileSource : TileSource {
 
     companion object {
         const val SOURCE_ID = "base_map"
-        private const val SOURCE_MAP_COLOR_OCEAN = Color.BLACK
-        private val SOURCE_MAP_COLOR_LAKES = Color.rgb(127, 127, 127)
+        private const val SOURCE_MAP_COLOR_OCEAN = ColorInts.Black
+        private val SOURCE_MAP_COLOR_LAKES = ColorInts.rgb(127, 127, 127)
 
         val DESTINATION_MAP_COLOR_OCEAN = "#AAD3DF".toColorInt()
         val DESTINATION_MAP_COLOR_INLAND_WATER = "#AAD3DF".toColorInt()

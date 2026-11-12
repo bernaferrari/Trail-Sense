@@ -2,11 +2,11 @@ package com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import androidx.core.graphics.createBitmap
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.geometry.Size
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 
 class ImageMagnifier(private val imageSize: Size, private val magnifierSize: Size) {
 
@@ -32,7 +32,7 @@ class ImageMagnifier(private val imageSize: Size, private val magnifierSize: Siz
         )
     ): Bitmap {
         val canvas = Canvas(dest)
-        canvas.drawColor(Color.BLACK)
+        canvas.drawColor(ColorInts.Black)
 
         val leftOffset = -(sourceCenter.x - magnifierSize.width / 2f)
         val topOffset = -(sourceCenter.y - magnifierSize.height / 2f)

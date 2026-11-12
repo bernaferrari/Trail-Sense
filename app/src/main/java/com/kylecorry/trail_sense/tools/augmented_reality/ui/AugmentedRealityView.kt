@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.augmented_reality.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
 import android.graphics.Path
 import android.graphics.RectF
 import androidx.compose.foundation.Canvas
@@ -46,6 +45,7 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.camera.AugmentedRealityUtils
 import com.kylecorry.trail_sense.shared.canvas.InteractionUtils
 import com.kylecorry.trail_sense.shared.canvas.PixelCircle
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
 import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.safeRoundPlaces
@@ -105,7 +105,7 @@ class AugmentedRealityView(val context: Context) {
     private var hadFocus = false
     private var onFocusLostListener: (() -> Unit)? = null
 
-    var backgroundFillColor: Int = Color.TRANSPARENT
+    var backgroundFillColor: Int = ColorInts.Transparent
 
     val rotationMatrix = FloatArray(16)
     private val orientation = FloatArray(3)
@@ -182,7 +182,7 @@ class AugmentedRealityView(val context: Context) {
 
     var infiniteFocusWhenPointedUp: Boolean = false
 
-    private var reticleColor = Color.WHITE.withAlpha(127)
+    private var reticleColor = ColorInts.White.withAlpha(127)
 
     /**
      * The diameter of the reticle in pixels
@@ -432,7 +432,7 @@ class AugmentedRealityView(val context: Context) {
 
     private fun drawGuidance() {
         // Draw an arrow around the reticle that points to the desired location
-        reticleColor = Color.WHITE.withAlpha(127)
+        reticleColor = ColorInts.White.withAlpha(127)
         val coordinate = guidePoint?.getAugmentedRealityCoordinate(this) ?: return
         val threshold = guideThreshold
         val point = toPixel(coordinate)
@@ -444,7 +444,7 @@ class AugmentedRealityView(val context: Context) {
         )
 
         if (circle.contains(center)) {
-            reticleColor = Color.WHITE
+            reticleColor = ColorInts.White
             onGuideReached?.invoke()
         }
 
@@ -476,7 +476,7 @@ class AugmentedRealityView(val context: Context) {
 
         path.close()
         drawer.noStroke()
-        drawer.fill(Color.WHITE.withAlpha(127))
+        drawer.fill(ColorInts.White.withAlpha(127))
         drawer.path(path)
         drawer.pop()
     }
@@ -490,7 +490,7 @@ class AugmentedRealityView(val context: Context) {
 
         // Background
         drawer.noStroke()
-        drawer.fill(Color.BLACK.withAlpha(127))
+        drawer.fill(ColorInts.Black.withAlpha(127))
         val totalDimensions = drawer.textDimensions(text, lineSpacing)
         drawer.rect(
             x - totalDimensions.first / 2f - padding,
@@ -501,7 +501,7 @@ class AugmentedRealityView(val context: Context) {
         )
 
 
-        drawer.fill(Color.WHITE)
+        drawer.fill(ColorInts.White)
         drawer.textSize(size)
         drawer.textMode(TextMode.Corner)
         drawer.textAlign(TextAlign.Center)

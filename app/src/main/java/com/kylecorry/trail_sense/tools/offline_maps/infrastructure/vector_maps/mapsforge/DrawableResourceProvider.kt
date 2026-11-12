@@ -3,19 +3,19 @@ package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.toColorInt
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.core.system.Resources
 import com.kylecorry.andromeda.core.tryOrDefault
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.icons.toBitmap
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import org.mapsforge.map.rendertheme.XmlThemeResourceProvider
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import org.mapsforge.map.rendertheme.XmlThemeResourceProvider
 
 class DrawableResourceProvider(private val context: Context) : XmlThemeResourceProvider {
 
@@ -39,9 +39,9 @@ class DrawableResourceProvider(private val context: Context) : XmlThemeResourceP
         drawer.smooth()
         if (!isIconOnly) {
             drawer.noStroke()
-            drawer.fill(color ?: Color.BLACK)
+            drawer.fill(color ?: ColorInts.Black)
             drawer.rect(0f, 0f, canvas.width.toFloat(), canvas.height.toFloat(), drawer.dp(4f))
-            drawer.tint(Color.WHITE)
+            drawer.tint(ColorInts.White)
         } else {
             color?.let { drawer.tint(it) }
         }

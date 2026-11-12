@@ -1,13 +1,13 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.layers.compass
 
-import com.kylecorry.trail_sense.tools.beacons.domain.icon
-import com.kylecorry.trail_sense.tools.beacons.ui.polygon
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.graphics.Color
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.colors.ColorInts
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.beacons.domain.icon
+import com.kylecorry.trail_sense.tools.beacons.ui.polygon
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappableReferencePoint
 import com.kylecorry.trail_sense.tools.navigation.ui.MappableReferencePoint
@@ -118,7 +118,7 @@ class BeaconCompassLayer(
                         it.id,
                         icon.icon,
                         bearing,
-                        Colors.mostContrastingColor(Color.WHITE, Color.BLACK, it.color),
+                        Colors.mostContrastingColor(ColorInts.White, ColorInts.Black, it.color),
                         opacity = opacity
                     ) to (size * 0.35f).toInt()
                 )

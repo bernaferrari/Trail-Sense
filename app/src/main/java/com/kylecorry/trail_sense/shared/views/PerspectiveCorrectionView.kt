@@ -3,12 +3,13 @@ package com.kylecorry.trail_sense.shared.views
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import androidx.annotation.ColorInt
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -19,8 +20,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +30,7 @@ import com.kylecorry.andromeda.core.ui.Colors.withAlpha
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.trail_sense.shared.CustomUiUtils.getPrimaryColor
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.ImageMagnifier
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentBounds
@@ -286,7 +286,7 @@ class PerspectiveCorrectionState(
     }
 
     private fun drawPreviewCanvas(canvas: Canvas, bitmap: Bitmap, viewWidth: Float, viewHeight: Float) {
-        val warped = bitmap.fixPerspective(getBounds(), false, Color.WHITE)
+        val warped = bitmap.fixPerspective(getBounds(), false, ColorInts.White)
         canvas.save()
         canvas.translate(-imageX, -imageY)
         val newImageX = (viewWidth - warped.width * scale) / 2f
@@ -310,7 +310,7 @@ class PerspectiveCorrectionState(
         outlinePath.close()
 
         overlayPaint.apply {
-            color = Color.BLACK.withAlpha(128)
+            color = ColorInts.Black.withAlpha(128)
             style = Paint.Style.FILL
         }
         canvas.save()
