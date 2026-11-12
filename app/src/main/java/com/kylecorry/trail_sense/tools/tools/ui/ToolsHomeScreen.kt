@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.tools.ui
 
+import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+
 import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
@@ -58,7 +60,9 @@ fun ToolsHomeScreen(
         }
         onDispose { actions.forEach { it.unbind(lifecycleOwner) } }
     }
+    val tools = remember { Tools.getTools(context) }
     ToolsScreen(
+        tools = tools,
         pinnedToolIds = viewModel.pinnedToolIds,
         quickActions = quickActionButtons,
         onToolClick = { tool ->

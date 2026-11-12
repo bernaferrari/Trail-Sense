@@ -2,6 +2,15 @@
 
 package com.kylecorry.trail_sense.tools.tools.ui
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.oneTimeSnackbar
+
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.generated.resources.*
+
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.layout.FlowRow
@@ -29,26 +38,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolDescriptor
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTile
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTileGrid
 import com.kylecorry.trail_sense.shared.views.compose.rememberTileTitleSize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolKeywordLoader
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSearch
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort
 
 /**
@@ -57,17 +61,17 @@ import com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort
  * don't know a tool's name. Long press any tool for its actions.
  */
 @Composable
-fun ToolsScreen(
+fun <T : ToolDescriptor> ToolsScreen(
+    tools: List<T>,
     pinnedToolIds: List<Long>,
     quickActions: List<ComposeQuickActionButtonView> = emptyList(),
-    onToolClick: (Tool) -> Unit,
-    onToolLongClick: (Tool) -> Unit,
+    onToolClick: (T) -> Unit,
+    onToolLongClick: (T) -> Unit,
     onSettingsClick: () -> Unit,
     onSearchFocusRequestChanged: (((() -> Boolean)?) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val allTools = remember { Tools.getTools(context) }
+    val allTools = tools
     var keywords by remember { mutableStateOf<Map<Long, Set<String>>>(emptyMap()) }
     LaunchedEffect(Unit) { keywords = ToolKeywordLoader.load() }
     val toolSearch = remember(allTools, keywords) { ToolSearch(allTools, keywords) }
@@ -77,9 +81,8 @@ fun ToolsScreen(
     var filter by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        CustomUiUtils.oneTimeSnackbar(
-            context,
-            context.getString(R.string.tool_long_press_hint_toast),
+        Alerts.oneTimeSnackbar(AppHost.current(),
+            getAppService<AppStrings>().get(Res.string.tool_long_press_hint_toast),
             "tools_long_press_notice_shown",
             short = false
         )
@@ -107,18 +110,20 @@ fun ToolsScreen(
     }
 
     // One title size for every tile on the page, decided once from the longest tool name.
-    val screenWidth = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp
+    val screenWidth = with(androidx.compose.ui.platform.LocalDensity.current) {
+        androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp()
+    }
     val gridWidth = minOf(screenWidth, TrailSenseSize.maximumContentWidth) - TrailSenseSpacing.lg * 2
     val titleSize = rememberTileTitleSize(allTools.map { it.name }, gridWidth, if (gridWidth >= 600.dp) 3 else 2)
 
     // The tab's page: the family's large title that collapses as the grid scrolls, settings as its one action.
     com.kylecorry.trail_sense.shared.views.compose.TrailSensePage(
-        title = stringResource(R.string.tools),
+        title = appString(Res.string.tools),
         onBack = null,
         modifier = modifier,
         actions = {
             IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.settings))
+                Icon(Icons.Rounded.Settings, contentDescription = appString(Res.string.settings))
             }
         }
     ) {
@@ -126,8 +131,8 @@ fun ToolsScreen(
             com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar(
                 value = filter,
                 onValueChange = { filter = it },
-                placeholder = stringResource(R.string.search_tools),
-                clearContentDescription = stringResource(R.string.clouds_clear),
+                placeholder = appString(Res.string.search_tools),
+                clearContentDescription = appString(Res.string.clouds_clear),
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(searchFocusRequester)
@@ -153,7 +158,7 @@ fun ToolsScreen(
                 item("no_results") {
                     TrailSenseEmptyState(
                         icon = Icons.Rounded.Search,
-                        title = stringResource(R.string.no_results),
+                        title = appString(Res.string.no_results),
                         modifier = Modifier.fillParentMaxHeight(0.9f)
                     )
                 }
@@ -175,7 +180,7 @@ fun ToolsScreen(
             if (pinned.isNotEmpty()) {
                 item("pinned") {
                     Column {
-                        TrailSenseGroupHeader(stringResource(R.string.pinned))
+                        TrailSenseGroupHeader(appString(Res.string.pinned))
                         TrailSenseTileGrid(
                             pinned.map { it.tile(onToolClick, onToolLongClick) },
                             titleSize = titleSize
@@ -196,7 +201,7 @@ fun ToolsScreen(
     }
 }
 
-private fun Tool.tile(onClick: (Tool) -> Unit, onLongClick: (Tool) -> Unit) = TrailSenseTile(
+private fun <T : ToolDescriptor> T.tile(onClick: (T) -> Unit, onLongClick: (T) -> Unit) = TrailSenseTile(
     key = id,
     title = name,
     // No category hues: every well takes the scheme's own colour, so the hub stays calm.
@@ -208,7 +213,7 @@ private fun Tool.tile(onClick: (Tool) -> Unit, onLongClick: (Tool) -> Unit) = Tr
 
 @Composable
 private fun ToolRow(
-    tool: Tool,
+    tool: ToolDescriptor,
     position: TrailSenseGroupPosition,
     onClick: () -> Unit,
     onLongClick: () -> Unit

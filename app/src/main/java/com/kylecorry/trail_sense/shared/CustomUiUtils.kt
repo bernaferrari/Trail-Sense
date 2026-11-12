@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.shared
 
 import com.kylecorry.trail_sense.shared.dialogs.UnitPickers
+import com.kylecorry.trail_sense.shared.dialogs.oneTimeSnackbar
 
 import android.content.Context
 import android.content.res.Configuration
@@ -284,11 +285,13 @@ object CustomUiUtils {
         shownKey: String,
         short: Boolean = true
     ) {
-        val prefs = PreferencesSubsystem.getInstance(context).preferences
-        if (prefs.getBoolean(shownKey) != true) {
-            Alerts.snackbar(context, message, short)
-            prefs.putBoolean(shownKey, true)
-        }
+        Alerts.oneTimeSnackbar(
+            AppHost.from(context),
+            message,
+            shownKey,
+            short,
+            PreferencesSubsystem.getInstance(context).preferences
+        )
     }
 
     fun confirmDiscardChanges(context: Context, onDiscard: () -> Unit) {

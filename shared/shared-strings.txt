@@ -637,3 +637,7 @@ use_gyroscope_after_calibration_description
 use_path_elevation
 view_distance
 visible
+clouds_clear
+pinned
+search_tools
+tool_long_press_hint_toast
