@@ -275,8 +275,8 @@ fun SurvivalGuideListToolScreen(route: Route.SurvivalGuideList) {
     val viewModel = viewModel {
         SurvivalGuideListViewModel(
             searchQuery = route.searchQuery,
-            loader = GuideLoader(appContext),
-            searchService = SurvivalGuideSearch(appContext)
+            loader = GuideLoader(),
+            searchService = SurvivalGuideSearch()
         )
     }
     LaunchedEffect(Unit) {

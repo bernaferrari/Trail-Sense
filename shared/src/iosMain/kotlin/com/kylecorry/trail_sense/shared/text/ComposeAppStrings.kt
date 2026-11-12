@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.text
 
+import androidx.compose.ui.text.intl.Locale
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.StringResource
@@ -8,6 +9,9 @@ import org.jetbrains.compose.resources.getString
 
 /** Reads shared strings from Compose resources in the device's language. */
 class ComposeAppStrings : AppStrings {
+
+    override val language: String
+        get() = Locale.current.language
 
     override fun get(resource: StringResource, vararg args: Any?): String {
         // Compose resources caches each string after its first read

@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.survival_guide
 
-import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -8,7 +7,7 @@ import org.junit.Test
 
 class SurvivalGuideSearchTest {
 
-    private val survivalGuideSearch = SurvivalGuideSearch(context)
+    private val survivalGuideSearch = SurvivalGuideSearch()
 
     @Test
     fun canSearch() {

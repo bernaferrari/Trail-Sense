@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.shared.text
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.andromeda.core.system.ResourceCache
+import com.kylecorry.andromeda.core.system.Resources
 import org.jetbrains.compose.resources.PluralStringResource
 import org.jetbrains.compose.resources.StringResource
 import java.util.concurrent.ConcurrentHashMap
@@ -17,6 +18,9 @@ class AndroidAppStrings(context: Context) : AppStrings {
     private val context = context.applicationContext
     private val cache = ResourceCache(this.context.resources)
     private val ids = ConcurrentHashMap<String, Int>()
+
+    override val language: String
+        get() = Resources.getLocale(context).language
 
     override fun get(resource: StringResource, vararg args: Any?): String {
         val id = id(resource.key, "string")

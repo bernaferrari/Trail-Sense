@@ -11,6 +11,9 @@ import org.jetbrains.compose.resources.StringResource
  * Templates use Android's placeholders (%s, %d, %1$s, %%).
  */
 interface AppStrings {
+    /** The ISO 639 code of the language the strings are read in, such as "en". */
+    val language: String
+
     fun get(resource: StringResource, vararg args: Any?): String
     fun plural(resource: PluralStringResource, quantity: Int, vararg args: Any?): String
 }

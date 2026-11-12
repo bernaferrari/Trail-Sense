@@ -476,3 +476,6 @@ up_to_amount
 sky_in_this_guide
 sky_minutes_read
 sky_sections
+overview
+shelter
+water

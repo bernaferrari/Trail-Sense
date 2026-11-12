@@ -1,11 +1,12 @@
 package com.kylecorry.trail_sense.tools.survival_guide.infrastructure
 
-import android.content.Context
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.shared.text.search.EnglishFuzzySearchStrategy
 import com.kylecorry.trail_sense.shared.text.search.SearchItem
 
-class EnglishSurvivalGuideFuzzySearch(private val context: Context, loader: GuideLoader) :
+class EnglishSurvivalGuideFuzzySearch(loader: GuideLoader) :
     BaseSurvivalGuideSearch(loader) {
 
     private val additionalContractions = mapOf(
@@ -311,7 +312,7 @@ class EnglishSurvivalGuideFuzzySearch(private val context: Context, loader: Guid
 
         val item = SearchItem(
             "${section.chapter.title} ${section.title}",
-            section.title ?: context.getString(R.string.overview),
+            section.title ?: getAppService<AppStrings>().get(Res.string.overview),
             section.keywords,
             parent = SearchItem(section.chapter.title, section.chapter.title),
             scoreMultiplier = scoreMultiplier

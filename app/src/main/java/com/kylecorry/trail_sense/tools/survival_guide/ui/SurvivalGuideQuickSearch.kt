@@ -77,7 +77,7 @@ private fun SurvivalGuideQuickSearchSheet(
     onOpenResult: (SurvivalGuideSearchResult) -> Unit
 ) {
     val context = LocalContext.current
-    val search = remember { SurvivalGuideSearch(context.applicationContext) }
+    val search = remember { SurvivalGuideSearch() }
     var query by remember { mutableStateOf("") }
     var summary by remember { mutableStateOf("") }
     var firstResult by remember { mutableStateOf<SurvivalGuideSearchResult?>(null) }

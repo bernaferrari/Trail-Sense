@@ -358,7 +358,7 @@ fun SurvivalGuideReaderToolScreen(route: Route.SurvivalGuideReader) {
     val scope = rememberCoroutineScope()
     val chapterResourceId = route.chapter
     val chapter = remember(chapterResourceId) {
-        Chapters.getChapters(context).firstOrNull { it.resource == chapterResourceId }
+        Chapters.getChapters().firstOrNull { it.resource == chapterResourceId }
     }
     if (chapter == null) {
         // A chapter that no longer exists (an old shortcut or a stale saved screen): go back instead of crashing.

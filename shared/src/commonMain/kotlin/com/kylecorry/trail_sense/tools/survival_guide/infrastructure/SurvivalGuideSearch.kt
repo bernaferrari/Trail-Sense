@@ -1,12 +1,13 @@
 package com.kylecorry.trail_sense.tools.survival_guide.infrastructure
 
-import android.content.Context
-import com.kylecorry.andromeda.core.system.Resources
-class SurvivalGuideSearch(context: Context) {
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
 
-    private val loader = GuideLoader(context)
-    private val strategy = if (Resources.getLocale(context).language.startsWith("en")) {
-        EnglishSurvivalGuideFuzzySearch(context, loader)
+class SurvivalGuideSearch {
+
+    private val loader = GuideLoader()
+    private val strategy = if (getAppService<AppStrings>().language.startsWith("en")) {
+        EnglishSurvivalGuideFuzzySearch(loader)
     } else {
         MultilingualSurvivalGuideFuzzySearch(loader)
     }

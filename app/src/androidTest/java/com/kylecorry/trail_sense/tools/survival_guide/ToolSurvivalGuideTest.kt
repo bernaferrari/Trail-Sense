@@ -9,7 +9,6 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollUntil
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
-import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
@@ -26,7 +25,7 @@ class ToolSurvivalGuideTest : ToolTestBase(ToolIds.SURVIVAL_GUIDE) {
         isVisible(R.id.list)
 
         // Verify the first and last chapters load
-        val chapters = Chapters.getChapters(context).let { listOf(it.first(), it.last()) }
+        val chapters = Chapters.getChapters().let { listOf(it.first(), it.last()) }
         chapters.forEach { chapter ->
             scrollUntil {
                 hasText(chapter.title)
