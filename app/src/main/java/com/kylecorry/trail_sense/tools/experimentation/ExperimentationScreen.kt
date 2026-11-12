@@ -19,7 +19,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -74,7 +74,7 @@ internal fun ExperimentationContent() {
     val context = LocalContext.current
     val pluginSubsystem = remember { PluginSubsystem.getInstance(context) }
     var plugins by remember { mutableStateOf<List<PluginResourceServiceDetails>?>(null) }
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
 
     LaunchedEffect(pluginSubsystem) {
         plugins = withContext(Dispatchers.IO) {
@@ -88,7 +88,7 @@ internal fun ExperimentationContent() {
     // One question: which plugins are connected? The count answers it; each plugin is one row.
     TrailSensePage(
         title = "Experimentation",
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back)
     ) {
         when {

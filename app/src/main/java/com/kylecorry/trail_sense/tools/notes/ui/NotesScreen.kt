@@ -25,7 +25,7 @@ import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
 import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -113,8 +113,8 @@ fun NotesScreen(
     val loadedNotes by notes.collectAsStateWithLifecycle(initialValue = null, lifecycleOwner = lifecycleOwner)
     val items = remember(loadedNotes) { loadedNotes.orEmpty().sortedByDescending { note -> note.createdOn } }
     val loaded = loadedNotes != null
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-    val back: () -> Unit = onBack ?: { dispatcher?.onBackPressed() }
+    val dispatcher = rememberSystemBack()
+    val back: () -> Unit = onBack ?: { dispatcher?.invoke() }
 
     TrailSensePage(
         title = stringResource(R.string.tool_notes_title),

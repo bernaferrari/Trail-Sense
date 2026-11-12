@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.activity.compose.BackHandler
+import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
 import androidx.compose.ui.platform.LocalContext
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -42,7 +42,7 @@ import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
 import android.graphics.Bitmap
 import android.util.Size
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -135,7 +135,7 @@ fun FieldGuideToolScreen() {
     }
 
     // Back clears a search or category first, then leaves the field guide.
-    BackHandler(enabled = viewModel.isFiltering) {
+    SystemBackHandler(enabled = viewModel.isFiltering) {
         viewModel.clearFilters()
     }
 
@@ -173,7 +173,7 @@ fun FieldGuideToolScreen() {
         )
     }
 
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     FieldGuideScreen(
         query = viewModel.filter,
         loaded = viewModel.loaded,
@@ -182,7 +182,7 @@ fun FieldGuideToolScreen() {
         tagFilters = FIELD_GUIDE_HEADING_TAGS.map { it to tagNameMapper.getName(it) },
         tagIcon = ::fieldGuideTagIcon,
         onTagSelected = viewModel::toggleTag,
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         onQueryChange = { viewModel.filter = it },
         onViewPage = { navigator.navigate(Route.FieldGuidePage(pageId = it.id)) },
         onEditPage = { navigator.navigate(Route.CreateFieldGuidePage(pageId = it.id)) },

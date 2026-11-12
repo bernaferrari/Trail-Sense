@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.convert.ui
 
 import android.content.Context
-import androidx.activity.compose.BackHandler
+import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -69,7 +69,7 @@ class CoordinateConverterPage(context: Context) : ConverterPage {
             }
             settled = true
         }
-        BackHandler(enabled = picking) { picking = false }
+        SystemBackHandler(enabled = picking) { picking = false }
 
         Column(
             modifier = Modifier.fillMaxWidth(),

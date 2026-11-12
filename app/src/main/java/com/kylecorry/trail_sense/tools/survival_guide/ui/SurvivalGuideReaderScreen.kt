@@ -25,7 +25,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.tools.guide.ui.ArticleBody
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
@@ -108,7 +108,7 @@ fun SurvivalGuideReaderScreen(
     canPrint: Boolean,
     onPrint: (Chapter) -> Unit
 ) {
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val sectionGroups = remember(content) {
         content?.let { TextUtils.groupSections(TextUtils.getSections(it), null) }
     }
@@ -149,7 +149,7 @@ fun SurvivalGuideReaderScreen(
     // One question: what do I do? The chapter's text answers it, as an article straight on the page.
     TrailSensePage(
         title = chapter.title,
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back),
         state = listState,
         modifier = Modifier.testTag("guide_scroll"),

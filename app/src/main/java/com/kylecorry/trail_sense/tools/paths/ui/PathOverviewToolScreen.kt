@@ -155,7 +155,7 @@ import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.TogglePathVisibilityCommand
 import kotlinx.coroutines.Dispatchers
 import kotlin.time.Duration
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
@@ -519,7 +519,7 @@ fun PathOverviewToolScreen(
     PathOverviewHost(
         model = model,
         listState = listState,
-        onBack = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher?.let { { it.onBackPressed() } },
+        onBack = rememberSystemBack(),
         onMenuClick = ::showPathMenu,
         onAddPoint = ::addPoint,
         mapPreview = {

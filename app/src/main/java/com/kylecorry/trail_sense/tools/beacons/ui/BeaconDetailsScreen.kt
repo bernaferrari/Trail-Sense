@@ -47,7 +47,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -337,7 +337,7 @@ private fun BeaconDetailsScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val coordinates = beacon?.coordinate?.let {
         FormatService.getInstance(context).formatLocation(it)
     }.orEmpty()
@@ -348,7 +348,7 @@ private fun BeaconDetailsScreen(
 
     TrailSensePage(
         title = beacon?.name.orEmpty(),
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back),
         modifier = modifier.testTag("beacon_title"),
         actions = {

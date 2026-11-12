@@ -43,7 +43,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTopBar
 import android.net.Uri
 import android.content.Context
 import android.content.ContextWrapper
-import androidx.activity.compose.BackHandler
+import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
 import androidx.compose.ui.platform.LocalContext
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
@@ -173,7 +173,7 @@ fun OfflineMapListToolScreen(
     var isCreateMenuOpen by remember { mutableStateOf(false) }
 
     // Back leaves the open group first, then the screen.
-    BackHandler {
+    SystemBackHandler {
         if (!viewModel.up()) {
             navigator.navigateUp()
         }

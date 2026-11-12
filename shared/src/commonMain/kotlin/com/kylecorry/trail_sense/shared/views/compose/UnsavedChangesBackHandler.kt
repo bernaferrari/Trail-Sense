@@ -1,14 +1,17 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
-import androidx.activity.compose.BackHandler
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.appString
+
+import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 
 /**
@@ -19,19 +22,19 @@ import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 fun UnsavedChangesBackHandler(hasChanges: Boolean) {
     val navigator = LocalNavigator.current
     var asking by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = hasChanges) { asking = true }
+    SystemBackHandler(enabled = hasChanges) { asking = true }
     if (asking) {
         TrailSenseDialog(
             onDismissRequest = { asking = false },
-            title = stringResource(R.string.unsaved_changes),
-            confirmText = stringResource(R.string.dialog_leave),
+            title = appString(Res.string.unsaved_changes),
+            confirmText = appString(Res.string.dialog_leave),
             onConfirm = {
                 asking = false
                 navigator.popBackStack()
             },
-            dismissText = stringResource(android.R.string.cancel)
+            dismissText = systemString(SystemString.Cancel)
         ) {
-            Text(stringResource(R.string.unsaved_changes_message))
+            Text(appString(Res.string.unsaved_changes_message))
         }
     }
 }

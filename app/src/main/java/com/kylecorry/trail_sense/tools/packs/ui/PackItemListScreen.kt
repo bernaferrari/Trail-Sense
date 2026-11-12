@@ -24,7 +24,7 @@ import com.kylecorry.trail_sense.tools.beacons.ui.places.placesJoinNext
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryIconMapper
 import com.kylecorry.trail_sense.shared.icons.trail.*
 
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -132,7 +132,7 @@ fun PackItemListToolScreen(route: Route.PackItemList) {
         )
     }
     val formatService = remember(appContext) { FormatService.getInstance(appContext) }
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
 
     LaunchedEffect(viewModel) {
         viewModel.packDeleted.collect { navigator.popBackStack() }
@@ -241,7 +241,7 @@ fun PackItemListToolScreen(route: Route.PackItemList) {
             }
         },
         modifier = Modifier.fillMaxSize(),
-        onBack = { dispatcher?.onBackPressed() }
+        onBack = { dispatcher?.invoke() }
     )
 }
 

@@ -3,7 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
-import androidx.activity.compose.BackHandler
+import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
@@ -31,7 +31,7 @@ import com.kylecorry.trail_sense.tools.weather.ui.SkyFocalShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -99,10 +99,10 @@ fun SurvivalGuideListScreen(
     onSummaryClick: (SurvivalGuideSearchResult) -> Unit
 ) {
     // One question: what do I do now? Search answers it (with the best passage up front); the chapters follow.
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     TrailSensePage(
         title = stringResource(R.string.survival_guide),
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back)
     ) {
         item(key = "search") {
@@ -305,7 +305,7 @@ fun SurvivalGuideListToolScreen(route: Route.SurvivalGuideList) {
         )
     }
     // Back clears the query before it leaves the guide.
-    BackHandler(enabled = viewModel.query.isNotBlank()) {
+    SystemBackHandler(enabled = viewModel.query.isNotBlank()) {
         viewModel.updateQuery("")
     }
 

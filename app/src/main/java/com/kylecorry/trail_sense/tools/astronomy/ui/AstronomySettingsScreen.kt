@@ -7,7 +7,7 @@ import kotlin.time.Duration.Companion.minutes
 
 import com.kylecorry.trail_sense.shared.preferences.onChange
 
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -55,7 +55,7 @@ fun AstronomySettingsToolScreen() {
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
-    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val backDispatcher = rememberSystemBack()
     val viewModel = viewModel {
         AstronomySettingsViewModel(
             prefs = UserPreferences(appContext).astronomy,
@@ -112,7 +112,7 @@ fun AstronomySettingsToolScreen() {
 
     TrailSensePage(
         title = stringResource(R.string.astronomy),
-        onBack = { backDispatcher?.onBackPressed() },
+        onBack = { backDispatcher?.invoke() },
         backLabel = stringResource(R.string.back)
     ) {
         trailSenseSection("general", title = generalTitle) {

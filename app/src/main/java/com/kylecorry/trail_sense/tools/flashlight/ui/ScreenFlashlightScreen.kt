@@ -9,7 +9,7 @@ import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
 
 import androidx.activity.compose.LocalActivity
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.ui.platform.LocalContext
 import com.kylecorry.andromeda.preferences.Preferences
 import androidx.compose.animation.animateColorAsState
@@ -165,7 +165,7 @@ fun ScreenFlashlightToolScreen(offerController: @Composable (Any) -> Unit = {}) 
     val context = LocalContext.current
     // The screen torch drives the activity's window brightness.
     val window = requireNotNull(LocalActivity.current).window
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val state = remember(window) {
         ScreenFlashlightState(
             torch = ScreenTorch(screenBrightness(window)),
@@ -197,7 +197,7 @@ fun ScreenFlashlightToolScreen(offerController: @Composable (Any) -> Unit = {}) 
         onToggleColor = state::toggleColor,
         onTurnOff = {
             state.turnOff()
-            dispatcher?.onBackPressed()
+            dispatcher?.invoke()
         }
     )
 }

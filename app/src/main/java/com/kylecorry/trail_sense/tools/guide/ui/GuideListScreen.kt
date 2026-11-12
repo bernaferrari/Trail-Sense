@@ -7,7 +7,7 @@ import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 
 import androidx.compose.ui.platform.LocalContext
 
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SearchOff
@@ -60,12 +60,12 @@ internal fun GuideListScreen(
     val filtered = remember(guides, query) {
         filterGuides(guides, query)
     }
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val total = guides.sumOf { it.guides.size }
 
     TrailSensePage(
         title = stringResource(R.string.tool_user_guide_title),
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back)
     ) {
         // One question: how does this tool work? Search answers it; the guides follow, shelved by category.

@@ -34,7 +34,7 @@ import kotlin.math.roundToInt
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -108,7 +108,7 @@ fun PackListToolScreen() {
     // The activity is the app's IntentResultRetriever, which the CSV file picker needs.
     val resultRetriever = LocalActivity.current as IntentResultRetriever
     val viewModel = viewModel { PackListViewModel(PackRepo.getInstance(appContext)) }
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
 
     LifecycleResumeEffect(viewModel) {
         viewModel.refreshSummaries()
@@ -173,7 +173,7 @@ fun PackListToolScreen() {
             }
         },
         modifier = Modifier.fillMaxSize(),
-        onBack = { dispatcher?.onBackPressed() }
+        onBack = { dispatcher?.invoke() }
     )
 }
 

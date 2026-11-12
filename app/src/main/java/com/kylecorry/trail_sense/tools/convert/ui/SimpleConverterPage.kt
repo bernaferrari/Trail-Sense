@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.convert.ui
 
-import androidx.activity.compose.BackHandler
+import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -101,7 +101,7 @@ fun <T : Serializable> SimpleConvertScreen(
             keyboard?.hide()
         }
     }
-    BackHandler(enabled = picking != null) { picking = null }
+    SystemBackHandler(enabled = picking != null) { picking = null }
 
     Column(
         modifier = Modifier.fillMaxWidth(),

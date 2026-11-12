@@ -33,7 +33,7 @@ import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -423,14 +423,14 @@ private fun PlaceBeaconScreen(
     onCameraBearingClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val sizeSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
     val appearanceTitle = stringResource(R.string.appearance)
 
     Box(modifier = modifier.testTag("create_beacon_title")) {
         TrailSensePage(
             title = stringResource(if (isEditing) R.string.edit_beacon else R.string.create_beacon),
-            onBack = { dispatcher?.onBackPressed() },
+            onBack = { dispatcher?.invoke() },
             backLabel = stringResource(R.string.back),
             modifier = Modifier.testTag("create_beacon_scroll"),
             actions = {

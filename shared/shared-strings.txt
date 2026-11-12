@@ -283,3 +283,6 @@ time_header_units
 units
 velocity_header_units
 windage_miss
+dialog_leave
+unsaved_changes
+unsaved_changes_message

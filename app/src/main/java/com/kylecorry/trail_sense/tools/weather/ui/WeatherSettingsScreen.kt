@@ -6,7 +6,7 @@ import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Clock
 
 import androidx.activity.compose.LocalActivity
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import com.kylecorry.andromeda.core.system.IntentResultRetriever
@@ -81,7 +81,7 @@ fun WeatherSettingsToolScreen() {
     val scope = rememberCoroutineScope()
     // MainActivity is the app's IntentResultRetriever, which the CSV export's file picker needs.
     val intentResultRetriever = LocalActivity.current as IntentResultRetriever
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val viewModel = viewModel {
         WeatherSettingsViewModel(
             prefs = UserPreferences(appContext).weather,
@@ -184,7 +184,7 @@ fun WeatherSettingsToolScreen() {
 
     TrailSensePage(
         title = stringResource(R.string.weather),
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back)
     ) {
         trailSenseSection("general", title = generalTitle) {

@@ -28,7 +28,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
@@ -134,7 +134,7 @@ fun CreateTideToolScreen(route: Route.CreateTide) {
         )
     }
     val formatService = remember(context) { FormatService.getInstance(context) }
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
 
     val estimateTypeNames = mapOf(
         EstimateType.Clock to stringResource(R.string.tide_clock),
@@ -224,7 +224,7 @@ fun CreateTideToolScreen(route: Route.CreateTide) {
             )
         },
         onSave = viewModel::saveTide,
-        onBack = { dispatcher?.onBackPressed() }
+        onBack = { dispatcher?.invoke() }
     )
 }
 

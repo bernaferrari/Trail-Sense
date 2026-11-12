@@ -41,7 +41,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.combinedClickable
@@ -274,13 +274,13 @@ internal fun PedometerScreen(
         val total = it.meters().value
         if (total <= 0f) null else (paceCalculator.distance(steps).meters().value / total).coerceIn(0f, 1f)
     }
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val isOn = state == FeatureState.On
     val speedTitle = stringResource(R.string.speed)
 
     TrailSensePage(
         title = stringResource(R.string.pedometer),
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back),
         modifier = modifier,
         actions = {

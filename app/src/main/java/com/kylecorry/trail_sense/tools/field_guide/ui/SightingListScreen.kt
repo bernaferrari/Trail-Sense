@@ -14,7 +14,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.os.Bundle
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Pets
@@ -127,12 +127,12 @@ fun SightingListToolScreen(route: Route.SightingList) {
         )
     }
 
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     SightingListScreen(
         title = viewModel.pageTitle,
         loaded = viewModel.loaded,
         items = items,
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         onCreate = { navigator.navigate(Route.CreateFieldGuideSighting(pageId = route.pageId)) }
     )
 }

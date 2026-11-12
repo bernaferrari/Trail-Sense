@@ -8,7 +8,7 @@ import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import kotlinx.coroutines.launch
 
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.expandVertically
@@ -96,7 +96,7 @@ private fun StrideLengthScreen(
     var isRunning by remember { mutableStateOf(false) }
     var strideLength by remember { mutableStateOf(estimator.strideLength) }
     var hasValidReading by remember { mutableStateOf(estimator.hasValidReading) }
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
 
     fun onStrideLengthChanged(): Boolean {
         return true
@@ -156,7 +156,7 @@ private fun StrideLengthScreen(
 
     TrailSensePage(
         title = stringResource(R.string.estimate_stride_length),
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back)
     ) {
         item(key = "hero") {

@@ -14,7 +14,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MoreVert
@@ -108,7 +108,7 @@ fun CreateFieldGuideSightingToolScreen(route: Route.CreateFieldGuideSighting) {
 
     UnsavedChangesBackHandler(hasChanges = viewModel.hasChanges)
 
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     CreateFieldGuideSightingScreen(
         datetime = viewModel.datetime,
         location = viewModel.location,
@@ -143,7 +143,7 @@ fun CreateFieldGuideSightingToolScreen(route: Route.CreateFieldGuideSighting) {
                 viewModel.locationAutofillRequest++
             }
         },
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         onDelete = if (viewModel.isEditing) {
             {
                 Alerts.dialog(context, context.getString(R.string.delete)) { cancelled ->

@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.util.Linkify.WEB_URLS
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.draw.clip
@@ -95,13 +95,13 @@ fun FieldGuidePageToolScreen(route: Route.FieldGuidePage) {
     val formatter = remember(context) {
         FieldGuideFormatService(UserPreferences(context))
     }
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     FieldGuidePageScreen(
         page = viewModel.page,
         files = files,
         tagNameMapper = tagNameMapper,
         formatter = formatter,
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         onEdit = {
             viewModel.page?.let { navigator.navigate(Route.CreateFieldGuidePage(pageId = it.id)) }
         },

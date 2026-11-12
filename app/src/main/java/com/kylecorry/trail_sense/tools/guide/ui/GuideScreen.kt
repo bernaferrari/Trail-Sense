@@ -3,7 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.guide.ui
 
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,7 +59,7 @@ import com.kylecorry.trail_sense.shared.text.readRawText
 @Composable
 internal fun GuideScreen(name: String, resource: Int) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     var sections by remember { mutableStateOf<List<TextSection>?>(null) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -74,7 +74,7 @@ internal fun GuideScreen(name: String, resource: Int) {
     // One question: how does this tool work? The guide's text answers it, as an article with its contents up front.
     TrailSensePage(
         title = name,
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back),
         state = listState,
         modifier = Modifier.testTag("guide_scroll")

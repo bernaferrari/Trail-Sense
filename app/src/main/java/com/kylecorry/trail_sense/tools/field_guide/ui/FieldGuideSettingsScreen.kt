@@ -14,7 +14,7 @@ import androidx.compose.ui.res.stringResource
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.ui.SettingsActionRow
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
@@ -31,7 +31,7 @@ import com.kylecorry.trail_sense.shared.dialogs.items
 
 @Composable
 fun FieldGuideSettingsToolScreen() {
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val prefs = remember { UserPreferences(context) }
@@ -48,7 +48,7 @@ fun FieldGuideSettingsToolScreen() {
 
     TrailSensePage(
         title = stringResource(R.string.field_guide),
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back)
     ) {
         trailSenseSection("name_display", title = nameTitle) {

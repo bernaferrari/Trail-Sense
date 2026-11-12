@@ -29,7 +29,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseToneColors
 import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
@@ -133,7 +133,7 @@ internal fun DiagnosticsScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val tools = remember { Tools.getTools(context) }
     val diagnosticIdToTool = remember(tools) {
         val toolMap = mutableMapOf<String, List<Tool>>()
@@ -180,7 +180,7 @@ internal fun DiagnosticsScreen(
     val warningsTitle = pluralStringResource(R.plurals.diagnostics_warning_count, warnings.size, warnings.size)
     TrailSensePage(
         title = stringResource(R.string.diagnostics),
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back),
         modifier = modifier.testTag("diagnostics_list")
     ) {

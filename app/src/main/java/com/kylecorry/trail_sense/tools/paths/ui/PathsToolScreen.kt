@@ -6,7 +6,7 @@ import kotlin.time.Duration.Companion.minutes
 
 import android.content.Context
 import android.content.ContextWrapper
-import androidx.activity.compose.BackHandler
+import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
@@ -33,7 +33,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.os.Bundle
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -174,7 +174,7 @@ fun PathsToolScreen(
         SimplifyPathCommand(context, scope, pathService) { simplifyRequest = it }
     }
     val backtrackFrequencyTitle = stringResource(R.string.pref_backtrack_frequency_title)
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
 
     fun getSortString(sortMethod: PathSortMethod): String {
         return when (sortMethod) {
@@ -261,7 +261,7 @@ fun PathsToolScreen(
     }
 
     // Back goes up a group; at the top it leaves the page as usual.
-    BackHandler(enabled = viewModel.handlesBack) {
+    SystemBackHandler(enabled = viewModel.handlesBack) {
         if (!viewModel.up()) {
             appNavigator.navigateUp()
         }
@@ -286,7 +286,7 @@ fun PathsToolScreen(
         backtrackFrequency = viewModel.backtrackFrequency,
         formatService = formatService,
         baseDistanceUnits = prefs.baseDistanceUnits,
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         onSearchChange = viewModel::search,
         onMenuAction = { action ->
             when (action) {
@@ -680,7 +680,7 @@ private fun PathsCreateMenu(
     onCreatePathOnMap: () -> Unit
 ) {
     var isOpen by rememberSaveable { mutableStateOf(false) }
-    BackHandler(enabled = isOpen) { isOpen = false }
+    SystemBackHandler(enabled = isOpen) { isOpen = false }
     val addLabel = stringResource(R.string.add)
 
     FloatingActionButtonMenu(

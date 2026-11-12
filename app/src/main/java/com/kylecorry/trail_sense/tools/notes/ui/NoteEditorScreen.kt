@@ -12,7 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -65,8 +65,8 @@ fun NoteEditorScreen(
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-    val back: () -> Unit = onBack ?: { dispatcher?.onBackPressed() }
+    val dispatcher = rememberSystemBack()
+    val back: () -> Unit = onBack ?: { dispatcher?.invoke() }
 
     LaunchedEffect(noteId) {
         if (noteId != 0L) {

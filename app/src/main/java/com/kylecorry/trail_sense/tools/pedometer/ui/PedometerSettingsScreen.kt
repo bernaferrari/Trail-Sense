@@ -5,7 +5,7 @@ package com.kylecorry.trail_sense.tools.pedometer.ui
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import kotlin.time.Duration.Companion.days
 
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
@@ -66,7 +66,7 @@ fun PedometerSettingsToolScreen() {
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
     val navigator = LocalNavigator.current
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val viewModel = viewModel {
         PedometerSettingsViewModel(
             prefs = UserPreferences(appContext),
@@ -113,7 +113,7 @@ fun PedometerSettingsToolScreen() {
 
     TrailSensePage(
         title = pedometerTitle,
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back)
     ) {
         trailSenseSection("pedometer") {

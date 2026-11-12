@@ -7,7 +7,7 @@ import kotlin.time.Clock
 
 import android.content.Context
 import android.content.ContextWrapper
-import androidx.activity.compose.BackHandler
+import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
@@ -40,7 +40,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import android.graphics.Bitmap
 import android.util.Size
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -432,7 +432,7 @@ fun BeaconListToolScreen(
     }
 
     // Back closes the create menu, then goes up a group; at the top it leaves the page as usual.
-    BackHandler(enabled = viewModel.handlesBack) {
+    SystemBackHandler(enabled = viewModel.handlesBack) {
         if (!viewModel.back()) {
             appNavigator.navigateUp()
         }
@@ -700,7 +700,7 @@ private fun BeaconListScreen(
     modifier: Modifier = Modifier
 ) {
     // Where are my saved places? The nearest one's distance answers it; the rest is one grouped list.
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val listState = rememberLazyListState()
 
     LaunchedEffect(resetKey) {
@@ -710,7 +710,7 @@ private fun BeaconListScreen(
     Box(modifier = modifier.testTag("beacon_title")) {
         TrailSensePage(
             title = title,
-            onBack = { dispatcher?.onBackPressed() },
+            onBack = { dispatcher?.invoke() },
             backLabel = stringResource(R.string.back),
             state = listState,
             contentPadding = PaddingValues(

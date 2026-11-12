@@ -14,7 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import android.content.Context
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
@@ -62,7 +62,7 @@ fun NavigationSettingsToolScreen() {
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
-    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val backDispatcher = rememberSystemBack()
     val viewModel = viewModel {
         val userPrefs = UserPreferences(appContext)
         NavigationSettingsViewModel(
@@ -109,7 +109,7 @@ fun NavigationSettingsToolScreen() {
             layerSheet.dismiss()
             layerSheet.show()
         },
-        onBack = { backDispatcher?.onBackPressed() }
+        onBack = { backDispatcher?.invoke() }
     )
     layerSheet.Content(
         context,

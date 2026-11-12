@@ -27,7 +27,7 @@ import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import androidx.annotation.ColorInt
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -640,7 +640,7 @@ private fun SensorDetailsScreen(
     modifier: Modifier = Modifier
 ) {
     // One question: are my sensors working? The count of good sensors and the verdict answer it.
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     // A sensor that gives a reading but doesn't report its accuracy is working: "Unknown" next to a real value read
     // as a fault, so it says Working and sits with the good ones instead of under Needs attention.
     val unknownText = stringResource(R.string.unknown)
@@ -661,7 +661,7 @@ private fun SensorDetailsScreen(
     TrailSensePage(
         // The same name as its tile in Tools.
         title = stringResource(R.string.sensors),
-        onBack = { dispatcher?.onBackPressed() },
+        onBack = { dispatcher?.invoke() },
         backLabel = stringResource(R.string.back),
         modifier = modifier.testTag("sensor_details_title"),
         actions = {

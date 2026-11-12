@@ -55,7 +55,7 @@ import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Canvas
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartFrame
@@ -172,7 +172,7 @@ fun TidesToolScreen() {
     val formatService = remember(context) { FormatService.getInstance(context) }
     val units = remember(context) { UserPreferences(context).baseDistanceUnits }
     val tideFormatter = remember(context) { TideFormatter(context) }
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(viewModel, lifecycleOwner) {
@@ -283,7 +283,7 @@ fun TidesToolScreen() {
             viewModel.clearTable()
             navigator.navigate(Route.TideList)
         },
-        onBack = { dispatcher?.onBackPressed() }
+        onBack = { dispatcher?.invoke() }
     )
 }
 

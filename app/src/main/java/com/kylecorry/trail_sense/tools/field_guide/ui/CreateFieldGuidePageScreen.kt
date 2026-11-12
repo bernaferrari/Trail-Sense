@@ -22,7 +22,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Size
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -134,7 +134,7 @@ fun CreateFieldGuidePageToolScreen(route: Route.CreateFieldGuidePage) {
         viewModel.saved.collect { navigator.navigateUp() }
     }
 
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val page = viewModel.page
     CreateFieldGuidePageContent(
         page = page,
@@ -178,7 +178,7 @@ fun CreateFieldGuidePageToolScreen(route: Route.CreateFieldGuidePage) {
         },
         onSave = viewModel::save,
         modifier = Modifier.fillMaxSize(),
-        onBack = { dispatcher?.onBackPressed() }
+        onBack = { dispatcher?.invoke() }
     )
 }
 

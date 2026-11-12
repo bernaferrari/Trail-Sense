@@ -19,7 +19,7 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.toShape
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
 import android.os.Bundle
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.kylecorry.trail_sense.shared.icons.trail.*
@@ -88,7 +88,7 @@ fun TideListToolScreen() {
         )
     }
     val formatService = remember(context) { FormatService.getInstance(context) }
-    val dispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+    val dispatcher = rememberSystemBack()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(viewModel, lifecycleOwner) {
@@ -133,7 +133,7 @@ fun TideListToolScreen() {
             }
         },
         onToggleVisibility = viewModel::toggleVisibility,
-        onBack = { dispatcher?.onBackPressed() }
+        onBack = { dispatcher?.invoke() }
     )
 }
 
