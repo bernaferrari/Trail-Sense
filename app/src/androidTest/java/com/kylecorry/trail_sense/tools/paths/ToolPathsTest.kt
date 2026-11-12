@@ -763,7 +763,7 @@ class ToolPathsTest : ToolTestBase(ToolIds.PATHS, Coordinate(42.03, -71.97)) {
     @Test
     fun exportedPathsCanBeImportedWithoutLosingData() = runBlocking {
         assumeFalse(isStagingBuild)
-        val pathService = PathService.getInstance(TestUtils.context)
+        val pathService = PathService.getInstance()
         val groupId = TestData.addPathGroup("Hikes")
         val pathId = TestData.addPathFromGpx("Durfee", "paths/durfee short.gpx", groupId)
         val original = pathService.getWaypoints(pathId)
@@ -794,7 +794,7 @@ class ToolPathsTest : ToolTestBase(ToolIds.PATHS, Coordinate(42.03, -71.97)) {
     @Test
     fun exportedFileIsGpx() = runBlocking {
         assumeFalse(isStagingBuild)
-        val pathService = PathService.getInstance(TestUtils.context)
+        val pathService = PathService.getInstance()
         val pathId = TestData.addPathFromGpx("Durfee", "paths/durfee short.gpx")
         val fullPath = FullPath(
             pathService.getPath(pathId)!!,
@@ -812,7 +812,7 @@ class ToolPathsTest : ToolTestBase(ToolIds.PATHS, Coordinate(42.03, -71.97)) {
     @Test
     fun multiplePathsAreExportedAsSeparateTracks() = runBlocking {
         assumeFalse(isStagingBuild)
-        val pathService = PathService.getInstance(TestUtils.context)
+        val pathService = PathService.getInstance()
         val paths = listOf("Durfee" to "paths/durfee short.gpx", "Sprague" to "paths/sprague.gpx")
             .map { (name, asset) ->
                 val id = TestData.addPathFromGpx(name, asset)
@@ -898,7 +898,7 @@ class ToolPathsTest : ToolTestBase(ToolIds.PATHS, Coordinate(42.03, -71.97)) {
 
     @Test
     fun findsTheMostRecentPathWithEnoughElevationChange() = runBlocking {
-        val pathService = PathService.getInstance(TestUtils.context)
+        val pathService = PathService.getInstance()
         assertNull(pathService.getMostRecentPathIdWithElevationChange(50f))
 
         val hilly = TestData.addPathFromGpx("Hilly", "paths/presidential range.gpx")
@@ -920,7 +920,7 @@ class ToolPathsTest : ToolTestBase(ToolIds.PATHS, Coordinate(42.03, -71.97)) {
         assumeFalse(isStagingBuild)
         UserPreferences(TestUtils.context).gps.locationOverride = from
         val name = if (asset == LOOP) "Durfee Short" else "Durfee Out"
-        val pathService = PathService.getInstance(TestUtils.context)
+        val pathService = PathService.getInstance()
         val id = TestData.addPathFromGpx(name, asset)
         val direction = if (reversed) PathDirection.ToStart else PathDirection.ToEnd
         navigator.navigate(pathService.getPath(id)!!, PathFollow.Direction(direction))

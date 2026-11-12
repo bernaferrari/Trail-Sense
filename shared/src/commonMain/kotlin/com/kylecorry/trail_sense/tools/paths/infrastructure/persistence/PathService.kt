@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
 
 
-import android.content.Context
 import kotlinx.coroutines.flow.map
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.time.ZonedDateTimeProvider
@@ -17,10 +16,12 @@ import com.kylecorry.trail_sense.shared.grouping.count.GroupCounter
 import com.kylecorry.trail_sense.shared.grouping.persistence.GroupDeleter
 import com.kylecorry.trail_sense.shared.grouping.persistence.GroupLoader
 import com.kylecorry.trail_sense.shared.grouping.persistence.IGroupLoader
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
+import com.kylecorry.trail_sense.main.getAppService
+import kotlinx.atomicfu.locks.SynchronizedObject
+import kotlinx.atomicfu.locks.synchronized
 import com.kylecorry.trail_sense.tools.paths.domain.IPath
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
 import com.kylecorry.trail_sense.tools.paths.domain.PathMetadata
@@ -34,7 +35,7 @@ import kotlin.time.Instant
 import com.kylecorry.trail_sense.shared.UserPreferences
 
 class PathService(
-    private val pathRepo: PathRepo,
+    private val pathRepo: IPathRepo,
     private val waypointRepo: IWaypointRepo,
     private val pathPreferences: IPathPreferences,
     private val cache: Preferences,
@@ -144,7 +145,7 @@ class PathService(
             }
         }
 
-        DependencyRegistry.get<Navigator>().cancelPathNavigation(path.id)
+        DependencyRegistry.get<INavigator>().cancelPathNavigation(path.id)
         waypointRepo.deleteInPath(path.id)
         pathRepo.delete(path)
     }
@@ -384,19 +385,16 @@ class PathService(
     companion object {
         private const val BACKTRACK_PATH_KEY = "last_backtrack_path_id"
         private var instance: PathService? = null
+        private val instanceLock = SynchronizedObject()
 
-        @Synchronized
-        fun getInstance(context: Context): PathService {
-            val appContext = context.applicationContext
-            if (instance == null) {
-                instance = PathService(
-                    PathRepo.getInstance(appContext),
-                    WaypointRepo.getInstance(appContext),
-                    UserPreferences(appContext).paths,
-                    PreferencesSubsystem.getInstance(appContext).preferences
-                )
-            }
-            return instance!!
+        /** The app-wide path service, built from the registered path and waypoint repos. */
+        fun getInstance(): PathService = synchronized(instanceLock) {
+            instance ?: PathService(
+                getAppService<IPathRepo>(),
+                getAppService<IWaypointRepo>(),
+                getAppService<UserPreferences>().paths,
+                getAppService<Preferences>()
+            ).also { instance = it }
         }
     }
 }

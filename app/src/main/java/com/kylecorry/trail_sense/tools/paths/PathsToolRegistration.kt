@@ -134,7 +134,7 @@ object PathsToolRegistration : ToolRegistration {
                 )
             ),
             singletons = listOf(
-                PathService::getInstance
+                { _ -> PathService.getInstance() }
             ),
             mapLayers = listOf(
                 MapLayerDefinition(

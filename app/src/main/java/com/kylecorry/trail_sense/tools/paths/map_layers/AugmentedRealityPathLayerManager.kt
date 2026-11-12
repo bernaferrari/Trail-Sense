@@ -25,7 +25,7 @@ class AugmentedRealityPathLayerManager(
 ) {
 
     private var bounds: CoordinateBounds? = null
-    private val pathService = PathService.Companion.getInstance(context)
+    private val pathService = PathService.getInstance()
     private val prefs = getAppService<UserPreferences>().paths
     private val pathLoader = PathLoader(pathService)
     private var paths = emptyList<Path>()

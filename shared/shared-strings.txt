@@ -775,3 +775,16 @@ old
 path_slope
 solid
 square
+app_disclaimer_message_title
+data_source
+disclaimer_message_content
+historic_temperatures
+historic_temperatures_full_disclaimer
+i_agree
+line_style
+magnetic_north_description
+point_style
+replace_elevations
+replace_elevations_confirmation
+true_north_description
+unavailable

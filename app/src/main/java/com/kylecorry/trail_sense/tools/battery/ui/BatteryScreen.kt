@@ -128,7 +128,7 @@ fun BatteryToolScreen(
     val batteryService = remember { BatteryService() }
     val battery = remember { AndroidBattery(context) }
     val batteryRepo = remember { BatteryRepo.getInstance(context) }
-    val lowPowerMode = remember { LowPowerMode(context) }
+    val lowPowerMode = remember { LowPowerMode() }
     val prefs = remember { UserPreferences(context) }
     val formatter = remember { FormatService.getInstance(context) }
     val handler = remember { Handler(Looper.getMainLooper()) }

@@ -1,12 +1,17 @@
 package com.kylecorry.trail_sense.shared.views
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import androidx.compose.animation.animateContentSize
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Surface
-import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -24,16 +29,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
-import com.kylecorry.trail_sense.shared.dialogs.dialog
 
-class NorthReferenceBadgeState(
-    private val context: Context
-) {
+class NorthReferenceBadgeState() {
 
-    private val formatter = FormatService.getInstance(context)
+    private val formatter = FormatService.getInstance()
 
     var isVisible by mutableStateOf(true)
 
@@ -52,8 +52,8 @@ class NorthReferenceBadgeState(
         }
         val text = when {
             !showLabel -> null
-            useTrueNorth -> context.getString(R.string.true_north)
-            else -> context.getString(R.string.magnetic_north)
+            useTrueNorth -> getAppService<AppStrings>().get(Res.string.true_north)
+            else -> getAppService<AppStrings>().get(Res.string.magnetic_north)
         }
 
         // A tonal pill (the app's own theme, not a fixed one), so the reference reads as a chip, not a stray glyph.
@@ -91,26 +91,23 @@ class NorthReferenceBadgeState(
 
     private fun showDescription() {
         val title = if (useTrueNorth) {
-            context.getString(R.string.true_north)
+            getAppService<AppStrings>().get(Res.string.true_north)
         } else {
-            context.getString(R.string.magnetic_north)
+            getAppService<AppStrings>().get(Res.string.magnetic_north)
         }
 
         val message = if (useTrueNorth) {
-            context.getString(R.string.true_north_description)
+            getAppService<AppStrings>().get(Res.string.true_north_description)
         } else {
-            context.getString(R.string.magnetic_north_description)
+            getAppService<AppStrings>().get(Res.string.magnetic_north_description)
         }
 
         val settingsClick = onSettingsClick
-        Alerts.dialog(
-            context,
+        Alerts.dialog(AppHost.current(),
             title,
             message,
-            okText = if (settingsClick != null) context.getString(R.string.settings) else context.getString(
-                android.R.string.ok
-            ),
-            cancelText = if (settingsClick != null) context.getString(android.R.string.cancel) else null,
+            okText = if (settingsClick != null) getAppService<AppStrings>().get(Res.string.settings) else getAppService<AppStrings>().system(SystemString.Ok),
+            cancelText = if (settingsClick != null) getAppService<AppStrings>().system(SystemString.Cancel) else null,
         ) { cancelled ->
             if (!cancelled) {
                 settingsClick?.invoke()

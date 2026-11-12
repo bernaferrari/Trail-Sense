@@ -106,10 +106,10 @@ fun PowerSettingsToolScreen() {
 private fun Context.setLowPowerMode(prefs: UserPreferences, enabled: Boolean) {
     if (enabled) {
         prefs.power.userEnabledLowPower = true
-        LowPowerMode(this).enable()
+        LowPowerMode().enable()
     } else {
         prefs.power.userEnabledLowPower = false
-        LowPowerMode(this).disable()
+        LowPowerMode().disable()
     }
 }
 

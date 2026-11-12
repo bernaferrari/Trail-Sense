@@ -76,7 +76,7 @@ object PathPickers {
             {
                 when (it) {
                     is PathGroup -> it.name
-                    is Path -> PathNameFactory(context).getName(it)
+                    is Path -> PathNameFactory().getName(it)
                     else -> ""
                 }
             },

@@ -815,7 +815,7 @@ private fun PathRow(
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val nameFactory = remember(context) { PathNameFactory(context) }
+    val nameFactory = remember(context) { PathNameFactory() }
     val title = nameFactory.getName(path)
     val distance = path.metadata.distance.convertTo(baseDistanceUnits).toRelativeDistance()
     val distanceString = formatService.formatDistance(

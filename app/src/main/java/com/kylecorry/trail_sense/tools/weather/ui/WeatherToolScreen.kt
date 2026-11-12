@@ -181,7 +181,7 @@ fun WeatherToolScreen(
             when (event) {
                 Lifecycle.Event.ON_RESUME -> {
                     viewModel.start()
-                    ShowHistoricTemperatureDisclaimerCommand(context).execute()
+                    ShowHistoricTemperatureDisclaimerCommand().execute()
                 }
 
                 Lifecycle.Event.ON_PAUSE -> viewModel.stop()

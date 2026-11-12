@@ -176,7 +176,7 @@ class Navigator private constructor(context: Context) : INavigator {
         beaconDestinationInvalidationKey.update { it + 1 }
     }
 
-    fun cancelPathNavigation(pathId: Long) {
+    override fun cancelPathNavigation(pathId: Long) {
         if (pathNavigator.cancel(pathId)) {
             ToolBroadcasts.broadcast(NavigationToolRegistration.BROADCAST_NAVIGATION_STOPPED)
         }

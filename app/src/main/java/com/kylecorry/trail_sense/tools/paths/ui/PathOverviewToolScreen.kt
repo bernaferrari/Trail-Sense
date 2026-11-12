@@ -435,7 +435,7 @@ fun PathOverviewToolScreen(
                             .execute(current)
 
                         PathAction.Simplify -> simplifyCommand.execute(current)
-                        PathAction.ReplaceElevations -> ReplacePathElevationsCommand(context, scope, pathService)
+                        PathAction.ReplaceElevations -> ReplacePathElevationsCommand(scope, pathService)
                             .execute(current)
                         PathAction.ViewPoints -> viewPoints()
                         PathAction.Move -> movePath()
@@ -494,7 +494,7 @@ fun PathOverviewToolScreen(
         val elevationRange = viewModel.elevationRange
         fun format(d: Distance) = formatService.formatDistance(d, Units.getDecimalPlaces(d.units), false)
         PathOverviewModel(
-            title = PathNameFactory(context).getName(current),
+            title = PathNameFactory().getName(current),
             subtitle = viewModel.parentName,
             distance = format(distance),
             duration = formatService.formatDuration(duration, false),
@@ -570,10 +570,10 @@ fun PathOverviewToolScreen(
         onFollowToEnd = { followPath(PathFollow.Direction(PathDirection.ToEnd)) },
         onColorClick = { viewModel.path?.let { pathColorPickerTarget = it } },
         onLineStyleClick = {
-            viewModel.path?.let { ChangePathLineStyleCommand(context, scope).execute(it) }
+            viewModel.path?.let { ChangePathLineStyleCommand(scope).execute(it) }
         },
         onPointStyleClick = {
-            viewModel.path?.let { ChangePointStyleCommand(context, scope).execute(it) }
+            viewModel.path?.let { ChangePointStyleCommand(scope).execute(it) }
         },
         timing = viewModel.debugTiming,
         modifier = modifier.fillMaxSize(),

@@ -89,7 +89,7 @@ object TestData {
     }
 
     fun addPathGroup(name: String, parentId: Long? = null): Long = runBlocking {
-        PathService.getInstance(context).addGroup(PathGroup(0, name, parentId))
+        PathService.getInstance().addGroup(PathGroup(0, name, parentId))
     }
 
     fun addPath(
@@ -98,7 +98,7 @@ object TestData {
         groupId: Long? = null,
         temporary: Boolean = false
     ): Long = runBlocking {
-        val service = PathService.getInstance(context)
+        val service = PathService.getInstance()
         val id = service.addPath(
             Path(0, name, PathStyle.default(), PathMetadata.empty, temporary, groupId)
         )

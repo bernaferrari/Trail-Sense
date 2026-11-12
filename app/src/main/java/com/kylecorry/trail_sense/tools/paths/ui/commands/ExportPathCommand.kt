@@ -29,7 +29,7 @@ class ExportPathCommand(
     private val pathService: IPathService = getAppService<IPathService>()
 ) {
 
-    private val pathNameFactory = PathNameFactory(context)
+    private val pathNameFactory = PathNameFactory()
 
     fun execute(path: IPath?) {
         scope.launch {

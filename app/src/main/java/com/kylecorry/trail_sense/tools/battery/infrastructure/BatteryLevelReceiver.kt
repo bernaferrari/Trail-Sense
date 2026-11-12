@@ -22,10 +22,10 @@ class BatteryLevelReceiver : BroadcastReceiver() {
 
         if (intent.action == Intent.ACTION_BATTERY_LOW) {
             getAppService<Logger>().info(TAG, "Battery low, enabling low power mode")
-            LowPowerMode(context).enable()
+            LowPowerMode().enable()
         } else if (intent.action == Intent.ACTION_BATTERY_OKAY && !powerPrefs.userEnabledLowPower) {
             getAppService<Logger>().info(TAG, "Battery okay, disabling low power mode")
-            LowPowerMode(context).disable()
+            LowPowerMode().disable()
         }
     }
 

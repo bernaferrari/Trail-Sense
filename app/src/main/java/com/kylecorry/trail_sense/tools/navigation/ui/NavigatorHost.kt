@@ -304,7 +304,7 @@ internal fun createNavigatorViews(
     }
 
     val mapAttribution = MapAttributionState()
-    val northReferenceIndicator = NorthReferenceBadgeState(context).apply {
+    val northReferenceIndicator = NorthReferenceBadgeState().apply {
         onSettingsClick = onNorthReferenceSettingsClick
     }
 

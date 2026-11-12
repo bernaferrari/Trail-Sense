@@ -376,7 +376,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
         }
 
         ComposedCommand(
-            ShowDisclaimerCommand(this),
+            ShowDisclaimerCommand(),
             RestartServicesCommand(this, false),
             NotifyForkPoliciesCommand(this)
         ).execute()

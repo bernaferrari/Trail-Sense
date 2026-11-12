@@ -78,6 +78,8 @@ import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.AndroidW
 import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterPurificationTimer
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.AndroidWhiteNoisePlayer
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoisePlayer
+import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.IPathRepo
+import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathRepo
 
 object TrailSenseServiceRegister {
     fun setup(context: Context) {
@@ -121,7 +123,8 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(DeviceSubsystem(appContext))
         DependencyRegistry.addSingleton(PluginSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton(HapticSubsystem.getInstance(appContext))
-        DependencyRegistry.addSingleton<IPathService>(PathService.getInstance(appContext))
+        DependencyRegistry.addSingleton(IPathRepo::class) { PathRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IPathService::class) { PathService.getInstance() }
         DependencyRegistry.addSingleton<IBeaconService>(BeaconService(appContext))
         DependencyRegistry.addSingleton(IWeatherSubsystem::class) { WeatherSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(ITideTableRepo::class) { TideTableRepo.getInstance(appContext) }

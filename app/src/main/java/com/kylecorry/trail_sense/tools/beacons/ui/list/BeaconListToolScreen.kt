@@ -396,7 +396,7 @@ fun BeaconListToolScreen(
             }.execute(group)
 
             BeaconGroupAction.Delete -> delete(group)
-            BeaconGroupAction.Move -> MoveBeaconGroupCommand(context, scope, viewModel.beaconService) {
+            BeaconGroupAction.Move -> MoveBeaconGroupCommand(scope, viewModel.beaconService) {
                 viewModel.refresh()
             }.execute(group)
         }
@@ -415,7 +415,7 @@ fun BeaconListToolScreen(
                 viewModel.refresh()
             }.execute(beacon)
 
-            BeaconAction.Move -> MoveBeaconCommand(context, scope, viewModel.beaconService) {
+            BeaconAction.Move -> MoveBeaconCommand(scope, viewModel.beaconService) {
                 viewModel.refresh()
             }.execute(beacon)
 

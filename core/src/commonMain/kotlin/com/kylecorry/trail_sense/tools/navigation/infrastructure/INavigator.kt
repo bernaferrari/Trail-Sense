@@ -29,6 +29,9 @@ interface INavigator {
 
     fun cancelBeaconNavigation()
 
+    /** Stops following the path [pathId], if it is the one being followed. */
+    fun cancelPathNavigation(pathId: Long)
+
     fun getBeaconDestinationId(): Long?
 
     /** Where the person is navigating: a path, a beacon or a bearing, in that order, or null. */

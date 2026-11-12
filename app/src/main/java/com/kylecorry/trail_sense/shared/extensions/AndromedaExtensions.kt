@@ -9,15 +9,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.dialogs.ProgressBody
+import com.kylecorry.trail_sense.shared.dialogs.cancelableProgress
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
 import com.kylecorry.trail_sense.shared.dialogs.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.dialogs.onMain
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.receivers.ServiceRestartAlerter
 import com.kylecorry.trail_sense.shared.logging.Logger
@@ -83,23 +83,7 @@ fun Alerts.cancelableProgress(
     cancelText: CharSequence = context.getString(android.R.string.cancel),
     onCanceled: (() -> Unit)? = null
 ): Pair<TrailSenseDialog, (Float) -> Unit> {
-    val progress = mutableFloatStateOf(0f)
-    val dialog = dialog(
-        context,
-        title,
-        okText = null,
-        cancelText = cancelText,
-        cancelOnOutsideTouch = false,
-        body = {
-            // The old bar sat 24 dp in from every edge of the dialog.
-            ProgressBody(progress = { progress.floatValue }, modifier = Modifier.padding(vertical = 16.dp))
-        }
-    ) { cancelled ->
-        if (cancelled) {
-            onCanceled?.invoke()
-        }
-    }
-    return dialog to { value -> onMain { progress.floatValue = value.coerceIn(0f, 1f) } }
+    return cancelableProgress(AppHost.from(context), title, cancelText, onCanceled)
 }
 
 /** A spinner with a cancel button. */

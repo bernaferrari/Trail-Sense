@@ -12,7 +12,7 @@ import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
 class QuickActionLowPowerMode(button: QuickActionButtonView, host: AndroidDestinationHost) :
     QuickActionButton(button, host) {
 
-    private val lowerPowerMode by lazy { LowPowerMode(context) }
+    private val lowerPowerMode by lazy { LowPowerMode() }
     private val prefs by lazy { UserPreferences(context) }
 
     private fun update() {

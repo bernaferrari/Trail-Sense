@@ -1,13 +1,15 @@
 package com.kylecorry.trail_sense.tools.paths.ui
 
-import android.content.Context
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 
-class PathNameFactory(private val context: Context) {
+class PathNameFactory() {
 
-    private val formatService = FormatService.getInstance(context)
+    private val formatService = FormatService.getInstance()
 
     fun getName(path: Path): String {
         val name = path.name
@@ -18,7 +20,7 @@ class PathNameFactory(private val context: Context) {
         } else if (start != null && end != null) {
             formatService.formatTimeSpan(start, end, true)
         } else {
-            context.getString(android.R.string.untitled)
+            getAppService<AppStrings>().system(SystemString.Untitled)
         }
     }
 
