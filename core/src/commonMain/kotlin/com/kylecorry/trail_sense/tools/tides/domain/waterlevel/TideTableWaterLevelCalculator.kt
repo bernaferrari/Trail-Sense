@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.tides.domain.waterlevel
 
-import android.content.Context
 import com.kylecorry.luna.cache.MemoryCachedValue
 import com.kylecorry.sol.math.Range
 import com.kylecorry.sol.math.MathExtensions.toRadians
@@ -16,10 +15,8 @@ import com.kylecorry.sol.science.oceanography.waterlevel.RuleOfTwelfthsWaterLeve
 import com.kylecorry.sol.science.oceanography.waterlevel.TideClockWaterLevelCalculator
 import com.kylecorry.sol.time.Time.hours
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.range.TideTableRangeCalculator
-import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideModel
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -27,13 +24,15 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 
-class TideTableWaterLevelCalculator(private val context: Context, private val table: TideTable) :
+class TideTableWaterLevelCalculator(
+    private val harmonicsSource: TideHarmonicsSource,
+    private val table: TideTable
+) :
     IWaterLevelCalculator {
     private val range = TideTableRangeCalculator().getRange(table)
     private val tides = table.tides.sortedBy { it.time }.map { populateHeight(it) }
     private val piecewise = MemoryCachedValue<IWaterLevelCalculator>()
     private val extremaFinder = GoldenSearchExtremaFinder(30.0, 1.0)
-    private val locationSubsystem = LocationSubsystem.getInstance(context)
     private val harmonic = MemoryCachedValue<IWaterLevelCalculator?>()
     private val lunitidal by lazy { getLunitidalCalculator() }
     var location: Coordinate? = table.location
@@ -237,10 +236,7 @@ class TideTableWaterLevelCalculator(private val context: Context, private val ta
             val harmonics = if (table.estimator == TideEstimator.Harmonic) {
                 table.harmonics
             } else {
-                val result = TideModel.getHarmonics(
-                    context,
-                    table.location ?: locationSubsystem.location
-                )
+                val result = harmonicsSource.getHarmonics(table.location ?: harmonicsSource.currentLocation)
                 location = result?.location
                 result?.harmonics ?: emptyList()
             }

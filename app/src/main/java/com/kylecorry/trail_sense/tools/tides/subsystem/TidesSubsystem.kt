@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.tides.subsystem
 
+import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
 import com.kylecorry.trail_sense.shared.time.today
 
 import android.annotation.SuppressLint

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.tides.map_layers
 
+import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.tides
 
+import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideTableWaterLevelCalculator
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.LocalDateTime

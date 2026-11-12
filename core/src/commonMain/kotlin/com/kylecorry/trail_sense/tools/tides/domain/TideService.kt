@@ -7,15 +7,15 @@ import com.kylecorry.trail_sense.shared.time.toLocalDate
 
 import com.kylecorry.trail_sense.shared.time.atStartOfDay
 
-import com.kylecorry.trail_sense.shared.time.minusDays
 
 import com.kylecorry.trail_sense.shared.time.plusDays
 
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.nanoseconds
+import com.kylecorry.sol.math.trigonometry.Trigonometry
 import kotlin.time.Duration.Companion.seconds
 
-import android.content.Context
 import com.kylecorry.luna.cache.MemoryCachedValue
 import com.kylecorry.luna.cache.MemoryLRUCache
 import com.kylecorry.sol.math.Range
@@ -26,7 +26,7 @@ import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.science.oceanography.TideType
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
+import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideHarmonicsSource
 import com.kylecorry.trail_sense.tools.tides.domain.range.TideTableRangeCalculator
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideTableWaterLevelCalculator
 import kotlinx.datetime.LocalDate
@@ -34,11 +34,9 @@ import kotlinx.datetime.TimeZone
 import kotlin.time.Instant
 import com.kylecorry.sol.time.Time
 
-class TideService(private val context: Context) {
+class TideService(private val harmonicsSource: TideHarmonicsSource) {
 
     private val maxSearchIterations = 10
-
-    private val locationSubsystem by lazy { LocationSubsystem.getInstance(context) }
 
     private val locationKeyCache = MemoryCachedValue<Coordinate>(duration = 10.seconds)
     private val cache =
@@ -141,7 +139,7 @@ class TideService(private val context: Context) {
         val delta = (time - previous.time).inWholeMilliseconds.toDouble()
         val progress = (delta / total).toFloat()
         return if (next.isHigh) {
-            Interpolation.map(progress, 0f, 1f, 180f, 270f)
+            Trigonometry.normalizeAngle(Interpolation.map(progress, 0f, 1f, 180f, 360f))
         } else {
             Interpolation.map(progress, 0f, 1f, 0f, 180f)
         }
@@ -211,9 +209,10 @@ class TideService(private val context: Context) {
         val todayTides = getTides(table, date, zone)
         val previous =
             todayTides.lastOrNull { it.time <= time && (isTypeHigh == null || it.isHigh == isTypeHigh) }
+        // Search the end of the previous day: its start would come before every tide on it
         return previous ?: getPreviousTide(
             table,
-            date.minusDays(1).atStartOfDay(zone),
+            date.atStartOfDay(zone) - 1.nanoseconds,
             zone,
             iteration + 1,
             type
@@ -223,12 +222,12 @@ class TideService(private val context: Context) {
     private suspend fun getTableCalculator(table: TideTable): TideTableWaterLevelCalculator {
         // Automatic nearby tides require on the fly locations rather than the location being part of the model
         val key = table to if (table.isAutomaticNearbyTide) {
-            locationKeyCache.getOrPut { TideLocationKey.of(locationSubsystem.location) }
+            locationKeyCache.getOrPut { TideLocationKey.of(harmonicsSource.currentLocation) }
         } else {
             null
         }
         return cache.getOrPut(key) {
-            val calculator = TideTableWaterLevelCalculator(context, table)
+            val calculator = TideTableWaterLevelCalculator(harmonicsSource, table)
             // Precompute to populate all lookups
             calculator.calculateSuspend(kotlin.time.Clock.System.now())
             calculator

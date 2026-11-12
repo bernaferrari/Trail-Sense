@@ -4,6 +4,7 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
+import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
