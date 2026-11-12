@@ -1,13 +1,11 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps
 
-import androidx.core.graphics.blue
-import androidx.core.graphics.green
-import androidx.core.graphics.red
 import com.kylecorry.sol.math.algebra.Matrix
 import com.kylecorry.sol.math.geometry.Gradients
 import kotlin.math.abs
 import kotlin.math.hypot
 
+/** Sobel gradients of a blurred grayscale copy of ARGB pixels. */
 class GradientCalculator {
 
     private val blurRadius = 2
@@ -47,7 +45,10 @@ class GradientCalculator {
         // Convert to grayscale
         for (i in pixels.indices) {
             val color = pixels[i]
-            blurred[i] = (color.red * 30 + color.green * 59 + color.blue * 11) / 100
+            val red = (color shr 16) and 0xFF
+            val green = (color shr 8) and 0xFF
+            val blue = color and 0xFF
+            blurred[i] = (red * 30 + green * 59 + blue * 11) / 100
         }
 
         val horizontal = IntArray(blurred.size)
