@@ -12,10 +12,10 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.not
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolDeclinationTest : ToolTestBase(Tools.DECLINATION) {
+class ToolDeclinationTest : ToolTestBase(ToolIds.DECLINATION) {
 
     @Test
     fun verifyBasicFunctionality() {

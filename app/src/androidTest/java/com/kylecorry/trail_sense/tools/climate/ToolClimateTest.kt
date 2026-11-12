@@ -8,10 +8,10 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolClimateTest : ToolTestBase(Tools.CLIMATE) {
+class ToolClimateTest : ToolTestBase(ToolIds.CLIMATE) {
 
     @Test
     fun verifyBasicFunctionality() {

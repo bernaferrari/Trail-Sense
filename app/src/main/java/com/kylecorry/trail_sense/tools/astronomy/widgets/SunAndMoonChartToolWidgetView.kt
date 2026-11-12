@@ -20,7 +20,7 @@ import com.kylecorry.trail_sense.tools.astronomy.ui.AstroChart
 import com.kylecorry.trail_sense.tools.astronomy.ui.AstroChartState
 import androidx.compose.ui.graphics.asImageBitmap
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.ChartToolWidgetViewBase
@@ -67,7 +67,7 @@ class SunAndMoonChartToolWidgetView : ChartToolWidgetViewBase() {
 
             content = ToolWidgetContent.Chart(
                 drawing = WidgetChart { scheme -> drawAstroChart(state, AstroChartColors.from(scheme), moonImage) },
-                clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.ASTRONOMY))
+                clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, ToolIds.ASTRONOMY))
             )
         }
 

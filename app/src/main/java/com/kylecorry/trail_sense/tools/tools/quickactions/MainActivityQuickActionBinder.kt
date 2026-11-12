@@ -7,6 +7,7 @@ import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonVie
 import com.kylecorry.trail_sense.shared.quickactions.IQuickActionBinder
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionFactory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 class MainActivityQuickActionBinder(
     private val host: TrailSenseDestinationHost,
@@ -38,8 +39,8 @@ class MainActivityQuickActionBinder(
             .filter { it.isOpen(currentRoute) || it.settingsRoute == currentRoute }
 
         val alwaysRecommended = listOf(
-            Tools.QUICK_ACTION_USER_GUIDE,
-            Tools.QUICK_ACTION_SETTINGS
+            ToolIds.QUICK_ACTION_USER_GUIDE,
+            ToolIds.QUICK_ACTION_SETTINGS
         )
 
         val activeToolQuickActions = activeTools

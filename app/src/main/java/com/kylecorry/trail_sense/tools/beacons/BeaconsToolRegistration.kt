@@ -30,7 +30,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object BeaconsToolRegistration : ToolRegistration {
@@ -55,7 +55,7 @@ object BeaconsToolRegistration : ToolRegistration {
 
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.BEACONS,
+            ToolIds.BEACONS,
             context.getString(R.string.beacons),
             TrailIcons.Location,
             Route.BeaconList(),
@@ -64,7 +64,7 @@ object BeaconsToolRegistration : ToolRegistration {
             settingsRoute = Route.BeaconSettings,
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_CREATE_BEACON,
+                    ToolIds.QUICK_ACTION_CREATE_BEACON,
                     context.getString(R.string.create_beacon),
                     ::QuickActionPlaceBeacon
                 )

@@ -62,6 +62,7 @@ import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAler
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -77,7 +78,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
-class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
+class ToolPathsTest : ToolTestBase(ToolIds.PATHS, Coordinate(42.03, -71.97)) {
 
     // Each navigator listens for location changes for as long as the process lives and saves its own
     // session when one arrives, so one left over from an earlier test would overwrite this test's session
@@ -470,7 +471,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
 
     private fun verifyQuickAction() {
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_BACKTRACK))
+        click(quickAction(ToolIds.QUICK_ACTION_BACKTRACK))
 
         // TODO: Figure out how to check this on staging builds
         if (AutomationLibrary.packageName == null) {
@@ -482,7 +483,7 @@ class ToolPathsTest : ToolTestBase(Tools.PATHS, Coordinate(42.03, -71.97)) {
         // Wait for the path to be created
         hasText("Today", waitForTime = GPS_WAIT_FOR_TIMEOUT)
 
-        click(quickAction(Tools.QUICK_ACTION_BACKTRACK))
+        click(quickAction(ToolIds.QUICK_ACTION_BACKTRACK))
 
         // TODO: Figure out how to check this on staging builds
         if (AutomationLibrary.packageName == null) {

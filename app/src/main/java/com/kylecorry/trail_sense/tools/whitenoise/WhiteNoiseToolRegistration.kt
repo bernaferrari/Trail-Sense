@@ -16,7 +16,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoiseService
 import com.kylecorry.trail_sense.tools.whitenoise.quickactions.QuickActionWhiteNoise
@@ -25,7 +25,7 @@ import com.kylecorry.trail_sense.tools.whitenoise.services.WhiteNoiseToolService
 object WhiteNoiseToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.WHITE_NOISE,
+            ToolIds.WHITE_NOISE,
             context.getString(R.string.tool_white_noise_title),
             TrailIcons.ToolWhiteNoise,
             Route.WhiteNoise,
@@ -34,7 +34,7 @@ object WhiteNoiseToolRegistration : ToolRegistration {
             guideId = R.raw.guide_tool_white_noise,
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_WHITE_NOISE,
+                    ToolIds.QUICK_ACTION_WHITE_NOISE,
                     context.getString(R.string.tool_white_noise_title),
                     ::QuickActionWhiteNoise
                 )

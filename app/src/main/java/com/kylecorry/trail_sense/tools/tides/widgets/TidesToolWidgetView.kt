@@ -5,7 +5,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.tools.tides.subsystem.TidesSubsystem
 import com.kylecorry.trail_sense.tools.tides.ui.TideFormatter
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.SimpleToolWidgetView
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
@@ -25,7 +25,7 @@ class TidesToolWidgetView : SimpleToolWidgetView() {
             title = if (tide == null) context.getString(R.string.no_tides) else tide.table.name,
             subtitle = tideName,
             icon = formatter.getTideTypeImage(tide?.now?.type),
-            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.TIDES))
+            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, ToolIds.TIDES))
         )
     }
 

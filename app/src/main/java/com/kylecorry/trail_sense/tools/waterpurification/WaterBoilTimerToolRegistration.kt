@@ -11,14 +11,14 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterPurificationTimerService
 
 object WaterBoilTimerToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.WATER_BOIL_TIMER,
+            ToolIds.WATER_BOIL_TIMER,
             context.getString(R.string.water_boil_timer),
             TrailIcons.ToolBoilDone,
             Route.WaterPurification,

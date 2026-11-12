@@ -30,7 +30,7 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.tools.tides.subsystem.TidesSubsystem
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.ChartToolWidgetViewBase
@@ -57,7 +57,7 @@ class TideChartToolWidgetView : ChartToolWidgetViewBase() {
             title = title,
             drawing = if (hasData) TideWidgetChart(levels, range!!, currentWaterLevel) else null,
             emptyText = if (hasData) null else context.getString(R.string.no_data),
-            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.TIDES))
+            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, ToolIds.TIDES))
         )
     }
 }

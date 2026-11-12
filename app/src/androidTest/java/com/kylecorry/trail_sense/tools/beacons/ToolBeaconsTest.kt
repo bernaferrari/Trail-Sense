@@ -25,11 +25,11 @@ import com.kylecorry.trail_sense.test_utils.TestData
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Assume.assumeFalse
 import org.junit.Test
 
-class ToolBeaconsTest : ToolTestBase(Tools.BEACONS, Coordinate(42.03, -71.97)) {
+class ToolBeaconsTest : ToolTestBase(ToolIds.BEACONS, Coordinate(42.03, -71.97)) {
 
     @Test
     fun verifyBasicFunctionality() {

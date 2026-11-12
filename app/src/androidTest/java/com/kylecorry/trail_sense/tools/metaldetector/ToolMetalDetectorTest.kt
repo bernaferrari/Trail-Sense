@@ -11,13 +11,14 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.unmute
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolMetalDetectorTest : ToolTestBase(Tools.METAL_DETECTOR) {
+class ToolMetalDetectorTest : ToolTestBase(ToolIds.METAL_DETECTOR) {
 
     @Test
     fun verifyBasicFunctionality() {
-        if (!Tools.isToolAvailable(context, Tools.METAL_DETECTOR)) {
+        if (!Tools.isToolAvailable(context, ToolIds.METAL_DETECTOR)) {
             return
         }
 

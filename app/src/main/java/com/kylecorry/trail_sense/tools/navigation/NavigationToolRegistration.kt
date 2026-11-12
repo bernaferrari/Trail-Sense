@@ -17,13 +17,13 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object NavigationToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.NAVIGATION,
+            ToolIds.NAVIGATION,
             context.getString(R.string.navigation),
             TrailIcons.CompassIcon,
             Route.Navigation(),

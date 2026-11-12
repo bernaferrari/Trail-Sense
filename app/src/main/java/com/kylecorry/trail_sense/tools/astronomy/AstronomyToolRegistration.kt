@@ -40,13 +40,13 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object AstronomyToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.ASTRONOMY,
+            ToolIds.ASTRONOMY,
             context.getString(R.string.astronomy),
             TrailIcons.Astronomy,
             Route.Astronomy,
@@ -55,17 +55,17 @@ object AstronomyToolRegistration : ToolRegistration {
             settingsRoute = Route.AstronomySettings,
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_SUNSET_ALERT,
+                    ToolIds.QUICK_ACTION_SUNSET_ALERT,
                     context.getString(R.string.sunset_alerts),
                     ::QuickActionSunsetAlert
                 ),
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_SUNRISE_ALERT,
+                    ToolIds.QUICK_ACTION_SUNRISE_ALERT,
                     context.getString(R.string.sunrise_alerts),
                     ::QuickActionSunriseAlert
                 ),
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_NIGHT_MODE,
+                    ToolIds.QUICK_ACTION_NIGHT_MODE,
                     context.getString(R.string.night),
                     ::QuickActionNightMode
                 )

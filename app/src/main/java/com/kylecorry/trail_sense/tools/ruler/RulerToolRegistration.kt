@@ -10,12 +10,12 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 object RulerToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.RULER,
+            ToolIds.RULER,
             context.getString(R.string.tool_ruler_title),
             TrailIcons.Ruler,
             Route.Ruler,
@@ -24,7 +24,7 @@ object RulerToolRegistration : ToolRegistration {
             settingsRoute = Route.RulerSettings,
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_RULER,
+                    ToolIds.QUICK_ACTION_RULER,
                     context.getString(R.string.tool_ruler_title),
                     ::QuickActionRuler
                 )

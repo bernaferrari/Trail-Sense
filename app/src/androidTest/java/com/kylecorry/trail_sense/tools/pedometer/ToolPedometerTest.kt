@@ -17,14 +17,15 @@ import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.DistanceAlerter
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.StepCounterService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 import kotlin.text.Regex
 
-class ToolPedometerTest : ToolTestBase(Tools.PEDOMETER) {
+class ToolPedometerTest : ToolTestBase(ToolIds.PEDOMETER) {
 
     @Test
     fun verifyBasicFunctionality() {
-        if (!Tools.isToolAvailable(context, Tools.PEDOMETER)) {
+        if (!Tools.isToolAvailable(context, ToolIds.PEDOMETER)) {
             return
         }
 
@@ -67,9 +68,9 @@ class ToolPedometerTest : ToolTestBase(Tools.PEDOMETER) {
 
     private fun verifyQuickAction() {
         openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_PEDOMETER))
+        click(quickAction(ToolIds.QUICK_ACTION_PEDOMETER))
         hasNotification(StepCounterService.NOTIFICATION_ID, title = string(R.string.pedometer))
-        click(quickAction(Tools.QUICK_ACTION_PEDOMETER))
+        click(quickAction(ToolIds.QUICK_ACTION_PEDOMETER))
         doesNotHaveNotification(StepCounterService.NOTIFICATION_ID)
         closeQuickActions()
     }

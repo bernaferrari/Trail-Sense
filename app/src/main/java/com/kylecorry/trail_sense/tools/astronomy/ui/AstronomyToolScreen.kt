@@ -116,6 +116,7 @@ import com.kylecorry.trail_sense.tools.astronomy.ui.items.SunListItemProducer
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.ARMode
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.openAugmentedReality
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -268,7 +269,7 @@ fun AstronomyToolScreen(
         null
     }
 
-    val show3d = remember(context) { Tools.isToolAvailable(context, Tools.AUGMENTED_REALITY) } && seeker == null
+    val show3d = remember(context) { Tools.isToolAvailable(context, ToolIds.AUGMENTED_REALITY) } && seeker == null
 
     val searchOptions = remember {
         listOf(

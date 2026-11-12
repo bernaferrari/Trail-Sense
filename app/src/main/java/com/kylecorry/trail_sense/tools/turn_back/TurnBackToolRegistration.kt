@@ -11,7 +11,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 import com.kylecorry.trail_sense.tools.turn_back.infrastructure.receivers.TurnBackAlarmReceiver
 import com.kylecorry.trail_sense.tools.turn_back.services.TurnBackToolService
@@ -19,7 +19,7 @@ import com.kylecorry.trail_sense.tools.turn_back.services.TurnBackToolService
 object TurnBackToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.TURN_BACK,
+            ToolIds.TURN_BACK,
             context.getString(R.string.tool_turn_back),
             TrailIcons.Undo,
             Route.TurnBack,

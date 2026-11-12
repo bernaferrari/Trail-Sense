@@ -23,7 +23,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIntentHandler
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object OfflineMapsToolRegistration : ToolRegistration {
@@ -47,7 +47,7 @@ object OfflineMapsToolRegistration : ToolRegistration {
 
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.OFFLINE_MAPS,
+            ToolIds.OFFLINE_MAPS,
             context.getString(R.string.offline_maps),
             TrailIcons.PhotoMaps,
             Route.OfflineMapList(),
@@ -57,7 +57,7 @@ object OfflineMapsToolRegistration : ToolRegistration {
             settingsRoute = Route.PhotoMapSettings,
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_OPEN_PHOTO_MAP,
+                    ToolIds.QUICK_ACTION_OPEN_PHOTO_MAP,
                     context.getString(R.string.open_photo_map),
                     ::QuickActionOpenPhotoMap
                 )

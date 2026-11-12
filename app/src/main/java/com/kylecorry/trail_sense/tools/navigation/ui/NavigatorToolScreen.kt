@@ -110,7 +110,7 @@ import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.ICompassView
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.MarkerCompassLayer
 import com.kylecorry.trail_sense.tools.navigation.ui.layers.compass.NavigationCompassLayer
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.MagnetometerDiagnosticScanner
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
@@ -957,10 +957,10 @@ private class NavigatorDisplay(
 
     private fun updateQuickActionAvailability() {
         // TODO: Extract this logic to the flashlight (if camera is in use)
-        if (userPrefs.navigation.rightButton == Tools.QUICK_ACTION_FLASHLIGHT) {
+        if (userPrefs.navigation.rightButton == ToolIds.QUICK_ACTION_FLASHLIGHT) {
             views.navigationTitle.rightButton.isClickable = !views.linearCompass.isCameraActive
         }
-        if (userPrefs.navigation.leftButton == Tools.QUICK_ACTION_FLASHLIGHT) {
+        if (userPrefs.navigation.leftButton == ToolIds.QUICK_ACTION_FLASHLIGHT) {
             views.navigationTitle.leftButton.isClickable = !views.linearCompass.isCameraActive
         }
     }

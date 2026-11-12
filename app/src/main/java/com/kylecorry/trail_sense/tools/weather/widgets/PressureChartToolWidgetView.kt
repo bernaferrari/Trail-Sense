@@ -31,7 +31,7 @@ import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.ChartToolWidgetViewBase
@@ -61,7 +61,7 @@ class PressureChartToolWidgetView : ChartToolWidgetViewBase() {
             title = context.getString(R.string.pressure),
             drawing = if (displayReadings.isEmpty()) null else PressureWidgetChart(pressureChartPoints(displayReadings)),
             emptyText = if (displayReadings.isEmpty()) context.getString(R.string.no_data) else null,
-            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.WEATHER))
+            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, ToolIds.WEATHER))
         )
     }
 }

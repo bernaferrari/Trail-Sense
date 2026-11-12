@@ -29,11 +29,11 @@ import com.kylecorry.trail_sense.test_utils.views.toolbarButton
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Assume.assumeFalse
 import org.junit.Test
 
-class ToolNavigationTest : ToolTestBase(Tools.NAVIGATION, Coordinate(42.03, -71.97)) {
+class ToolNavigationTest : ToolTestBase(ToolIds.NAVIGATION, Coordinate(42.03, -71.97)) {
     @Test
     fun verifyBasicFunctionality() {
         // Heading: the degrees, then the direction spelled out

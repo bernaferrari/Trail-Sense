@@ -18,7 +18,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnostic
 import com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionToolWidgets
 import com.kylecorry.trail_sense.tools.tools.services.WidgetUpdateToolService
@@ -26,7 +26,7 @@ import com.kylecorry.trail_sense.tools.tools.services.WidgetUpdateToolService
 object SettingsToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.SETTINGS,
+            ToolIds.SETTINGS,
             context.getString(R.string.settings),
             TrailIcons.Settings,
             Route.Settings,
@@ -68,12 +68,12 @@ object SettingsToolRegistration : ToolRegistration {
             ),
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_SETTINGS,
+                    ToolIds.QUICK_ACTION_SETTINGS,
                     context.getString(R.string.settings),
                     ::QuickActionSettings
                 ),
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_TOOL_WIDGETS,
+                    ToolIds.QUICK_ACTION_TOOL_WIDGETS,
                     context.getString(R.string.widgets),
                     ::QuickActionToolWidgets
                 )

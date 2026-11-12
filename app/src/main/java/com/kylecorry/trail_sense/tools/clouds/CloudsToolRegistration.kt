@@ -10,13 +10,13 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object CloudsToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.CLOUDS,
+            ToolIds.CLOUDS,
             context.getString(R.string.clouds),
             TrailIcons.ToolClouds,
             Route.Clouds(),
@@ -24,7 +24,7 @@ object CloudsToolRegistration : ToolRegistration {
             guideId = R.raw.guide_tool_clouds,
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_SCAN_CLOUD,
+                    ToolIds.QUICK_ACTION_SCAN_CLOUD,
                     context.getString(R.string.cloud_scanner),
                     ::QuickActionScanCloud
                 )

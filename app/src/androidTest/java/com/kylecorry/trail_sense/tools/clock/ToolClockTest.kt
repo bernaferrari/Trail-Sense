@@ -10,10 +10,10 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.handleExactAlarmsDialog
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.Side
 import com.kylecorry.trail_sense.test_utils.views.toolbarButton
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolClockTest : ToolTestBase(Tools.CLOCK) {
+class ToolClockTest : ToolTestBase(ToolIds.CLOCK) {
 
     @Test
     fun verifyBasicFunctionality() {

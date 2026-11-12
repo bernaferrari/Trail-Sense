@@ -83,6 +83,7 @@ import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsy
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.quickactions.QuickActionSheetState
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 import androidx.core.graphics.drawable.toDrawable
@@ -380,7 +381,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
             NotifyForkPoliciesCommand(this)
         ).execute()
 
-        if (!Tools.isToolAvailable(this, Tools.WEATHER)) {
+        if (!Tools.isToolAvailable(this, ToolIds.WEATHER)) {
             bottomNavigation.items.replaceAll {
                 if (it.route == Route.Weather) {
                     it.copy(visible = false)
@@ -567,7 +568,7 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
 
         // Open the left most item by default (and clear the back stack)
         val initialItem = if (SafeMode.isEnabled()) {
-            tools.first { it.id == Tools.SETTINGS }.route
+            tools.first { it.id == ToolIds.SETTINGS }.route
         } else {
             bottomNavigation.items.firstOrNull()?.route ?: Route.Tools
         }
@@ -581,11 +582,11 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
 
     private fun getPrimaryNavigationIcons(toolId: Long): Pair<ImageVector, ImageVector>? {
         return when (toolId) {
-            Tools.NAVIGATION -> TrailSenseIcons.Filled.Explore to TrailSenseIcons.Outlined.Explore
-            Tools.MAP -> TrailSenseIcons.Filled.Map to TrailSenseIcons.Outlined.Map
-            Tools.WEATHER -> TrailSenseIcons.Filled.PartlyCloudyDay to
+            ToolIds.NAVIGATION -> TrailSenseIcons.Filled.Explore to TrailSenseIcons.Outlined.Explore
+            ToolIds.MAP -> TrailSenseIcons.Filled.Map to TrailSenseIcons.Outlined.Map
+            ToolIds.WEATHER -> TrailSenseIcons.Filled.PartlyCloudyDay to
                     TrailSenseIcons.Outlined.PartlyCloudyDay
-            Tools.ASTRONOMY -> TrailSenseIcons.Filled.Stars2 to TrailSenseIcons.Outlined.Stars2
+            ToolIds.ASTRONOMY -> TrailSenseIcons.Filled.Stars2 to TrailSenseIcons.Outlined.Stars2
             else -> null
         }
     }

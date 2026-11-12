@@ -28,10 +28,11 @@ import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.test_utils.views.view
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
+class ToolAstronomyTest : ToolTestBase(ToolIds.ASTRONOMY, location) {
 
     @Test
     fun verifyBasicFunctionality() {
@@ -61,7 +62,7 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
         verifyQuickActions()
 
         // Verify the View in 3D button is visible and works
-        if (Tools.isToolAvailable(TestUtils.context, Tools.AUGMENTED_REALITY)) {
+        if (Tools.isToolAvailable(TestUtils.context, ToolIds.AUGMENTED_REALITY)) {
             // Wait for the disclaimer to disappear: it is a long snackbar now (with a learn more action), not a toast
             not(waitForTime = 15000) {
                 hasText(
@@ -87,7 +88,7 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
     @Test
     fun verifyNightMode() {
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_NIGHT_MODE))
+        click(quickAction(ToolIds.QUICK_ACTION_NIGHT_MODE))
 
         // TODO: Need to find a way to test this on staging builds
         if (AutomationLibrary.packageName == null) {
@@ -99,23 +100,23 @@ class ToolAstronomyTest : ToolTestBase(Tools.ASTRONOMY, location) {
         }
 
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_NIGHT_MODE))
+        click(quickAction(ToolIds.QUICK_ACTION_NIGHT_MODE))
     }
 
     private fun verifyQuickActions() {
         // Verify the sunset alert quick action
         TestUtils.openQuickActions()
-        click({ quickAction(Tools.QUICK_ACTION_SUNSET_ALERT) })
+        click({ quickAction(ToolIds.QUICK_ACTION_SUNSET_ALERT) })
 
         handleExactAlarmsDialog()
 
-        click({ quickAction(Tools.QUICK_ACTION_SUNSET_ALERT) })
+        click({ quickAction(ToolIds.QUICK_ACTION_SUNSET_ALERT) })
 
-        click({ quickAction(Tools.QUICK_ACTION_SUNRISE_ALERT) })
+        click({ quickAction(ToolIds.QUICK_ACTION_SUNRISE_ALERT) })
 
         handleExactAlarmsDialog()
 
-        click({ quickAction(Tools.QUICK_ACTION_SUNRISE_ALERT) })
+        click({ quickAction(ToolIds.QUICK_ACTION_SUNRISE_ALERT) })
 
         // TODO: Simulate time passing to verify the alerts are shown
 

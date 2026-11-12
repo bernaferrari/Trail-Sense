@@ -26,6 +26,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 @Composable
 fun ExperimentalSettingsToolScreen() {
@@ -38,7 +39,7 @@ fun ExperimentalSettingsToolScreen() {
         Sensors.hasGyroscope(context) && SensorService(context).hasCompass()
     }
     val showForecastSource = remember {
-        Tools.isToolAvailable(context, Tools.WEATHER) && isDebug()
+        Tools.isToolAvailable(context, ToolIds.WEATHER) && isDebug()
     }
     val showNotificationGrouping = remember {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA

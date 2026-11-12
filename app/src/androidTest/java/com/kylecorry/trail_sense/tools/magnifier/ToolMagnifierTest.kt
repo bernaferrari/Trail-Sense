@@ -10,13 +10,14 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.TestUtils.isCameraInUse
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolMagnifierTest : ToolTestBase(Tools.MAGNIFIER) {
+class ToolMagnifierTest : ToolTestBase(ToolIds.MAGNIFIER) {
 
     @Test
     fun verifyBasicFunctionality() {
-        if (!Tools.isToolAvailable(context, Tools.MAGNIFIER)) {
+        if (!Tools.isToolAvailable(context, ToolIds.MAGNIFIER)) {
             return
         }
 

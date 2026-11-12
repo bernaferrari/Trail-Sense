@@ -17,10 +17,10 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.openQuickActions
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolFlashlightTest : ToolTestBase(Tools.FLASHLIGHT) {
+class ToolFlashlightTest : ToolTestBase(ToolIds.FLASHLIGHT) {
 
     @Test
     fun verifyBasicFunctionality() {
@@ -64,19 +64,19 @@ class ToolFlashlightTest : ToolTestBase(Tools.FLASHLIGHT) {
         openQuickActions()
 
         if (isTorchAvailable(context)) {
-            click(quickAction(Tools.QUICK_ACTION_FLASHLIGHT))
+            click(quickAction(ToolIds.QUICK_ACTION_FLASHLIGHT))
             hasNotification(
                 FlashlightService.NOTIFICATION_ID,
                 title = string(R.string.flashlight_title)
             )
             isTrue { TestUtils.isTorchOn }
 
-            click(quickAction(Tools.QUICK_ACTION_FLASHLIGHT))
+            click(quickAction(ToolIds.QUICK_ACTION_FLASHLIGHT))
             doesNotHaveNotification(FlashlightService.NOTIFICATION_ID)
             isFalse { TestUtils.isTorchOn }
         }
 
-        click(quickAction(Tools.QUICK_ACTION_SCREEN_FLASHLIGHT))
+        click(quickAction(ToolIds.QUICK_ACTION_SCREEN_FLASHLIGHT))
         isVisible("red_white_switcher")
     }
 

@@ -12,13 +12,14 @@ import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolLightMeterTest : ToolTestBase(Tools.LIGHT_METER) {
+class ToolLightMeterTest : ToolTestBase(ToolIds.LIGHT_METER) {
 
     @Test
     fun verifyBasicFunctionality() {
-        if (!Tools.isToolAvailable(TestUtils.context, Tools.LIGHT_METER)) {
+        if (!Tools.isToolAvailable(TestUtils.context, ToolIds.LIGHT_METER)) {
             return
         }
 

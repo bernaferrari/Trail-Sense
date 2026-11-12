@@ -15,7 +15,7 @@ import com.kylecorry.andromeda.preferences.FloatPreference
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.sol.math.Range
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import kotlin.time.Duration
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
@@ -139,14 +139,14 @@ class WeatherPreferences(private val context: Context) : IWeatherPreferences {
         get() {
             val id = cache.getString(PreferenceKeys.weatherQuickActionLeft)
                 ?.toIntCompat()
-            return id ?: (Tools.CLOUDS.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET)
+            return id ?: (ToolIds.CLOUDS.toInt() + ToolIds.TOOL_QUICK_ACTION_OFFSET)
         }
 
     override val rightButton: Int
         get() {
             val id = cache.getString(PreferenceKeys.weatherQuickActionRight)
                 ?.toIntCompat()
-            return id ?: (Tools.TEMPERATURE_ESTIMATION.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET)
+            return id ?: (ToolIds.TEMPERATURE_ESTIMATION.toInt() + ToolIds.TOOL_QUICK_ACTION_OFFSET)
         }
 
     override val showColoredNotificationIcon: Boolean

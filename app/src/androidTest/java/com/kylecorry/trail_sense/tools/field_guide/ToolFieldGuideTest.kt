@@ -28,9 +28,10 @@ import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.test_utils.views.toolbarButton
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolFieldGuideTest : ToolTestBase(Tools.FIELD_GUIDE) {
+class ToolFieldGuideTest : ToolTestBase(ToolIds.FIELD_GUIDE) {
 
     @Test
     fun verifyBasicFunctionality() {

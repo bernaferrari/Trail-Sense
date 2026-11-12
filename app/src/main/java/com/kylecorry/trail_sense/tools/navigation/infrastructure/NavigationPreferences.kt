@@ -13,7 +13,7 @@ import com.kylecorry.trail_sense.settings.infrastructure.ICompassStylePreference
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 class NavigationPreferences(private val context: Context) : ICompassStylePreferences {
 
@@ -106,14 +106,14 @@ class NavigationPreferences(private val context: Context) : ICompassStylePrefere
         get() {
             val id = cache.getString(PreferenceKeys.navigationQuickActionLeft)
                 ?.toIntCompat()
-            return id ?: (Tools.PATHS.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET)
+            return id ?: (ToolIds.PATHS.toInt() + ToolIds.TOOL_QUICK_ACTION_OFFSET)
         }
 
     val rightButton: Int
         get() {
             val id = cache.getString(PreferenceKeys.navigationQuickActionRight)
                 ?.toIntCompat()
-            return id ?: (Tools.OFFLINE_MAPS.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET)
+            return id ?: (ToolIds.OFFLINE_MAPS.toInt() + ToolIds.TOOL_QUICK_ACTION_OFFSET)
         }
 
     var speedometerMode by StringEnumPreference(

@@ -17,11 +17,11 @@ import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 import kotlin.math.roundToInt
 
-class ToolPackingListTest : ToolTestBase(Tools.PACKING_LISTS) {
+class ToolPackingListTest : ToolTestBase(ToolIds.PACKING_LISTS) {
 
     @Test
     fun verifyBasicFunctionality() {

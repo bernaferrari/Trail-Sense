@@ -7,10 +7,10 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.click
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolDiagnosticsTest : ToolTestBase(Tools.DIAGNOSTICS) {
+class ToolDiagnosticsTest : ToolTestBase(ToolIds.DIAGNOSTICS) {
 
     @Test
     fun verifyBasicFunctionality() {

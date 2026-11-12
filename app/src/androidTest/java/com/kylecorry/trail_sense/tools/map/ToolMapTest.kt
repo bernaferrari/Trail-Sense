@@ -29,7 +29,7 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.TestUtils.waitFor
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.view
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Assert.assertEquals
 import org.junit.Assume.assumeFalse
 import org.junit.Test
@@ -38,7 +38,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class ToolMapTest : ToolTestBase(Tools.MAP, location) {
+class ToolMapTest : ToolTestBase(ToolIds.MAP, location) {
 
     // The map tool only draws when there is a visible offline map
     override fun seedData() {

@@ -43,6 +43,7 @@ import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.Sunset
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcastEffect
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import kotlinx.coroutines.launch
 import androidx.lifecycle.asLiveData
 
@@ -100,7 +101,7 @@ fun AstronomySettingsToolScreen() {
         timeOptions(formatter, listOf(0L, 15L, 30L, 45L, 60L, 90L, 120L))
     }
     val showStartCameraIn3D = remember(context) {
-        Tools.isToolAvailable(context, Tools.AUGMENTED_REALITY)
+        Tools.isToolAvailable(context, ToolIds.AUGMENTED_REALITY)
     }
 
     val generalTitle = stringResource(R.string.general)

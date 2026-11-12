@@ -11,11 +11,11 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.notifications.hasTitle
 import com.kylecorry.trail_sense.test_utils.notifications.notification
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterPurificationTimerService
 import org.junit.Test
 
-class ToolWaterBoilTimerTest : ToolTestBase(Tools.WATER_BOIL_TIMER) {
+class ToolWaterBoilTimerTest : ToolTestBase(ToolIds.WATER_BOIL_TIMER) {
 
     private val dial = id("water_boil_dial")
 

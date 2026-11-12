@@ -8,13 +8,13 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object TemperatureEstimateToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.TEMPERATURE_ESTIMATION,
+            ToolIds.TEMPERATURE_ESTIMATION,
             context.getString(R.string.tool_temperature_estimation_title),
             TrailIcons.Thermometer,
             Route.TemperatureEstimation,

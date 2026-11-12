@@ -19,13 +19,13 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object SensorsToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.SENSORS,
+            ToolIds.SENSORS,
             context.getString(R.string.sensors),
             TrailIcons.Sensors,
             Route.SensorDetails,
@@ -33,7 +33,7 @@ object SensorsToolRegistration : ToolRegistration {
             guideId = R.raw.guide_tool_sensors,
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_RECALIBRATE_ALTIMETER,
+                    ToolIds.QUICK_ACTION_RECALIBRATE_ALTIMETER,
                     context.getString(R.string.quick_action_recalibrate_altimeter),
                     ::QuickActionRecalibrateAltimeter
                 )

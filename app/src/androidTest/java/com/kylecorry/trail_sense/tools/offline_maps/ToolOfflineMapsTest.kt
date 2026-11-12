@@ -31,12 +31,12 @@ import com.kylecorry.trail_sense.test_utils.views.toolbarButton
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMapFileType
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import java.time.Instant
 
-class ToolOfflineMapsTest : ToolTestBase(Tools.OFFLINE_MAPS) {
+class ToolOfflineMapsTest : ToolTestBase(ToolIds.OFFLINE_MAPS) {
 
     @Test
     fun verifyPhotoMapsBasicFunctionality() {

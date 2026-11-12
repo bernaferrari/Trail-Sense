@@ -8,12 +8,12 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 object LightningStrikeDistanceToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.LIGHTNING_STRIKE_DISTANCE,
+            ToolIds.LIGHTNING_STRIKE_DISTANCE,
             context.getString(R.string.tool_lightning_title),
             TrailIcons.TorchOn,
             Route.Lightning,

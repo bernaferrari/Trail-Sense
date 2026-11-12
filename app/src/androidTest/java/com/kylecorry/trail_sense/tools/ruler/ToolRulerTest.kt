@@ -10,10 +10,10 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.quickAction
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolRulerTest : ToolTestBase(Tools.RULER) {
+class ToolRulerTest : ToolTestBase(ToolIds.RULER) {
     @Test
     fun verifyBasicFunctionality() {
         click(id("ruler"))
@@ -58,8 +58,8 @@ class ToolRulerTest : ToolTestBase(Tools.RULER) {
 
     private fun verifyQuickActions() {
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_RULER))
-        click(quickAction(Tools.QUICK_ACTION_RULER))
+        click(quickAction(ToolIds.QUICK_ACTION_RULER))
+        click(quickAction(ToolIds.QUICK_ACTION_RULER))
         TestUtils.closeQuickActions()
     }
 }

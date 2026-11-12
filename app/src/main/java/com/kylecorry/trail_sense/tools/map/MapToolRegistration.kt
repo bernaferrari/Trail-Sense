@@ -32,7 +32,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object MapToolRegistration : ToolRegistration {
@@ -47,7 +47,7 @@ object MapToolRegistration : ToolRegistration {
         )
 
         return Tool(
-            Tools.MAP,
+            ToolIds.MAP,
             context.getString(R.string.map),
             TrailIcons.Maps,
             Route.Map(),

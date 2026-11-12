@@ -31,7 +31,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object FlashlightToolRegistration : ToolRegistration {
@@ -40,7 +40,7 @@ object FlashlightToolRegistration : ToolRegistration {
         val hasFlashlight = FlashlightSubsystem.getInstance(context).isAvailable()
 
         return Tool(
-            Tools.FLASHLIGHT,
+            ToolIds.FLASHLIGHT,
             context.getString(R.string.flashlight_title),
             TrailIcons.Flashlight,
             Route.Flashlight,
@@ -53,12 +53,12 @@ object FlashlightToolRegistration : ToolRegistration {
             quickActions = listOfNotNull(
                 if (hasFlashlight)
                     ToolQuickAction(
-                        Tools.QUICK_ACTION_FLASHLIGHT,
+                        ToolIds.QUICK_ACTION_FLASHLIGHT,
                         context.getString(R.string.flashlight_title),
                         ::QuickActionFlashlight
                     ) else null,
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_SCREEN_FLASHLIGHT,
+                    ToolIds.QUICK_ACTION_SCREEN_FLASHLIGHT,
                     context.getString(R.string.screen_flashlight_full_name),
                     ::QuickActionScreenFlashlight
                 )

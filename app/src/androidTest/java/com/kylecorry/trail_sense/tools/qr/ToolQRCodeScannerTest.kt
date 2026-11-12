@@ -10,10 +10,10 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.TestUtils.isCameraInUse
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolQRCodeScannerTest : ToolTestBase(Tools.QR_CODE_SCANNER) {
+class ToolQRCodeScannerTest : ToolTestBase(ToolIds.QR_CODE_SCANNER) {
 
     @Test
     fun verifyBasicFunctionality() {

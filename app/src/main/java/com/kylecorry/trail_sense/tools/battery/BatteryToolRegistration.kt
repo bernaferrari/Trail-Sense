@@ -12,13 +12,13 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object BatteryToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.BATTERY,
+            ToolIds.BATTERY,
             context.getString(R.string.tool_battery_title),
             TrailIcons.ToolBattery,
             Route.Battery,
@@ -27,7 +27,7 @@ object BatteryToolRegistration : ToolRegistration {
             settingsRoute = Route.PowerSettings,
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_LOW_POWER_MODE,
+                    ToolIds.QUICK_ACTION_LOW_POWER_MODE,
                     context.getString(R.string.pref_low_power_mode_title),
                     ::QuickActionLowPowerMode
                 )

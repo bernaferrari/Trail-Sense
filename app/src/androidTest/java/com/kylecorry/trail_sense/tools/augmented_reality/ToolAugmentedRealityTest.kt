@@ -15,13 +15,14 @@ import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.desc
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolAugmentedRealityTest : ToolTestBase(Tools.AUGMENTED_REALITY) {
+class ToolAugmentedRealityTest : ToolTestBase(ToolIds.AUGMENTED_REALITY) {
 
     @Test
     fun verifyBasicFunctionality() {
-        if (!Tools.isToolAvailable(context, Tools.AUGMENTED_REALITY)) {
+        if (!Tools.isToolAvailable(context, ToolIds.AUGMENTED_REALITY)) {
             return
         }
 

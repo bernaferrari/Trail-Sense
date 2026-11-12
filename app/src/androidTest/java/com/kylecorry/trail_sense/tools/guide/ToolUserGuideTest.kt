@@ -14,9 +14,10 @@ import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.tools.guide.infrastructure.Guides
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolUserGuideTest : ToolTestBase(Tools.USER_GUIDE) {
+class ToolUserGuideTest : ToolTestBase(ToolIds.USER_GUIDE) {
 
     // The search field is the only text field on the page
     private val searchBox = { view(By.clazz("android.widget.EditText")) }
@@ -60,7 +61,7 @@ class ToolUserGuideTest : ToolTestBase(Tools.USER_GUIDE) {
     fun verifyQuickAction() {
         openQuickActions()
 
-        click(quickAction(Tools.QUICK_ACTION_USER_GUIDE))
+        click(quickAction(ToolIds.QUICK_ACTION_USER_GUIDE))
 
         // Verify it shows the user guide
         hasText("Tools")

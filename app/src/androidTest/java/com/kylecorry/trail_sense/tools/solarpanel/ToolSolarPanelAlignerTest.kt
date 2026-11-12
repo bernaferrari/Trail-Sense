@@ -14,12 +14,13 @@ import com.kylecorry.andromeda.core.time.ZonedDateTime
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.tools.solarpanel.domain.SolarPanelService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Test
 import kotlin.time.Instant
 
-class ToolSolarPanelAlignerTest : ToolTestBase(Tools.SOLAR_PANEL_ALIGNER, location) {
+class ToolSolarPanelAlignerTest : ToolTestBase(ToolIds.SOLAR_PANEL_ALIGNER, location) {
 
     override fun seedData() {
         // A fixed sunny moment (local noon on the June solstice at the test location), so both "Today" and the
@@ -34,7 +35,7 @@ class ToolSolarPanelAlignerTest : ToolTestBase(Tools.SOLAR_PANEL_ALIGNER, locati
 
     @Test
     fun verifyBasicFunctionality() {
-        if (!Tools.isToolAvailable(context, Tools.SOLAR_PANEL_ALIGNER)) {
+        if (!Tools.isToolAvailable(context, ToolIds.SOLAR_PANEL_ALIGNER)) {
             return
         }
 

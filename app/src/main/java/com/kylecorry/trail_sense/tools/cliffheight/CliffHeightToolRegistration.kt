@@ -9,12 +9,12 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 object CliffHeightToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.CLIFF_HEIGHT,
+            ToolIds.CLIFF_HEIGHT,
             context.getString(R.string.tool_cliff_height_title),
             TrailIcons.ToolCliffHeight,
             Route.CliffHeight,

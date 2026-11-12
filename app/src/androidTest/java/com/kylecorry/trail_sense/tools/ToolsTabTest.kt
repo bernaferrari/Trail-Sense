@@ -20,6 +20,7 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.openQuickActions
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
 class ToolsTabTest : ToolTestBase(0L) {
@@ -79,12 +80,12 @@ class ToolsTabTest : ToolTestBase(0L) {
     }
 
     private fun canUseQuickActions() {
-        click(quickAction(Tools.QUICK_ACTION_WHISTLE))
+        click(quickAction(ToolIds.QUICK_ACTION_WHISTLE))
     }
 
     private fun canUseBottomSheetQuickActions() {
         openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_WHISTLE))
+        click(quickAction(ToolIds.QUICK_ACTION_WHISTLE))
         closeQuickActions()
     }
 

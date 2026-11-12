@@ -59,6 +59,7 @@ import com.kylecorry.trail_sense.test_utils.views.longClick
 import com.kylecorry.trail_sense.test_utils.views.view
 import com.kylecorry.trail_sense.test_utils.views.viewWithText
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Assert.assertTrue
 import org.junit.rules.TestRule
 
@@ -353,7 +354,7 @@ object TestUtils {
         val userPrefs = UserPreferences(context)
         userPrefs.gps.accuracyFilter = GPSAccuracyFilter.None
         // The settings tool is the fastest to get to idle, which allows the tests to run faster
-        userPrefs.bottomNavigationTools = listOf(Tools.SETTINGS)
+        userPrefs.bottomNavigationTools = listOf(ToolIds.SETTINGS)
         userPrefs.useCompactMode = true
     }
 

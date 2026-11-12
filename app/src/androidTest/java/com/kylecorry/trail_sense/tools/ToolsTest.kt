@@ -19,6 +19,7 @@ import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
 class ToolsTest : ToolTestBase(0L) {
@@ -39,7 +40,7 @@ class ToolsTest : ToolTestBase(0L) {
 
         // Restart the app with Navigation tool (default)
         scenario.close()
-        scenario = TestUtils.startWithTool(Tools.NAVIGATION) {
+        scenario = TestUtils.startWithTool(ToolIds.NAVIGATION) {
             appNavigator = it.findNavigator()!!
         }
 
@@ -48,7 +49,7 @@ class ToolsTest : ToolTestBase(0L) {
 
         // Verify navigation tool is open
         isTrue {
-            Tools.getTool(TestUtils.context, Tools.NAVIGATION)!!
+            Tools.getTool(TestUtils.context, ToolIds.NAVIGATION)!!
                 .isOpen(appNavigator.currentRoute)
         }
     }
@@ -72,7 +73,7 @@ class ToolsTest : ToolTestBase(0L) {
         // reads the markdown service from the registry when it is first composed (and it is on every device)
         val markdown = DependencyRegistry.get<MarkdownService>()
         DependencyRegistry.remove<MarkdownService>()
-        scenario = TestUtils.startWithTool(Tools.ASTRONOMY)
+        scenario = TestUtils.startWithTool(ToolIds.ASTRONOMY)
 
         isTrue { calledOriginalHandler }
         hasText("An error occurred")

@@ -45,7 +45,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.map_layers.TrailMapsTileSour
 import com.kylecorry.trail_sense.tools.paths.map_layers.PathGeoJsonSource
 import com.kylecorry.trail_sense.tools.signal_finder.map_layers.CellTowerGeoJsonSource
 import com.kylecorry.trail_sense.tools.tides.map_layers.TideGeoJsonSource
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -242,12 +242,12 @@ class PreferenceMigrator private constructor() {
                 val toolQuickActionPrefs = PreferenceKeys.toolQuickActions
 
                 val replacementMap = mapOf(
-                    7 to Tools.OFFLINE_MAPS.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET,
-                    0 to Tools.PATHS.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET,
-                    12 to Tools.CLIMATE.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET,
-                    3 to Tools.TEMPERATURE_ESTIMATION.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET,
-                    2 to Tools.CLOUDS.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET,
-                    11 to Tools.LIGHTNING_STRIKE_DISTANCE.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET
+                    7 to ToolIds.OFFLINE_MAPS.toInt() + ToolIds.TOOL_QUICK_ACTION_OFFSET,
+                    0 to ToolIds.PATHS.toInt() + ToolIds.TOOL_QUICK_ACTION_OFFSET,
+                    12 to ToolIds.CLIMATE.toInt() + ToolIds.TOOL_QUICK_ACTION_OFFSET,
+                    3 to ToolIds.TEMPERATURE_ESTIMATION.toInt() + ToolIds.TOOL_QUICK_ACTION_OFFSET,
+                    2 to ToolIds.CLOUDS.toInt() + ToolIds.TOOL_QUICK_ACTION_OFFSET,
+                    11 to ToolIds.LIGHTNING_STRIKE_DISTANCE.toInt() + ToolIds.TOOL_QUICK_ACTION_OFFSET
                 )
 
                 for (pref in individualQuickActionPrefs) {

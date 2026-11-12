@@ -8,7 +8,7 @@ import com.kylecorry.luna.text.toIntCompat
 import com.kylecorry.andromeda.preferences.BooleanPreference
 import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 
@@ -122,14 +122,14 @@ class AstronomyPreferences(private val context: Context) {
         get() {
             val id = cache.getString(PreferenceKeys.astronomyQuickActionLeft)
                 ?.toIntCompat()
-            return id ?: Tools.QUICK_ACTION_FLASHLIGHT
+            return id ?: ToolIds.QUICK_ACTION_FLASHLIGHT
         }
 
     val rightButton: Int
         get() {
             val id = cache.getString(PreferenceKeys.astronomyQuickActionRight)
                 ?.toIntCompat()
-            return id ?: Tools.QUICK_ACTION_SUNSET_ALERT
+            return id ?: ToolIds.QUICK_ACTION_SUNSET_ALERT
         }
 
     val startCameraIn3DView by BooleanPreference(

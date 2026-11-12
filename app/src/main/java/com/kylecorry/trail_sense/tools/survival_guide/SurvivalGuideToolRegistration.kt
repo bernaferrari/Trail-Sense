@@ -10,12 +10,12 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 object SurvivalGuideToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.SURVIVAL_GUIDE,
+            ToolIds.SURVIVAL_GUIDE,
             context.getString(R.string.survival_guide),
             TrailIcons.SurvivalGuide,
             Route.SurvivalGuideList(),
@@ -24,7 +24,7 @@ object SurvivalGuideToolRegistration : ToolRegistration {
             additionalRoutes = listOf(Route.SurvivalGuideReader::class),
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_SURVIVAL_GUIDE,
+                    ToolIds.QUICK_ACTION_SURVIVAL_GUIDE,
                     context.getString(R.string.survival_guide),
                     ::QuickActionSurvivalGuide
                 )

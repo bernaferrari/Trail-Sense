@@ -10,12 +10,12 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 object ConvertToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.CONVERT,
+            ToolIds.CONVERT,
             context.getString(R.string.convert),
             TrailIcons.ToolDistanceConvert,
             Route.Convert,
@@ -23,7 +23,7 @@ object ConvertToolRegistration : ToolRegistration {
             guideId = R.raw.guide_tool_convert,
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_CONVERT,
+                    ToolIds.QUICK_ACTION_CONVERT,
                     context.getString(R.string.convert),
                     ::QuickActionConvert
                 )

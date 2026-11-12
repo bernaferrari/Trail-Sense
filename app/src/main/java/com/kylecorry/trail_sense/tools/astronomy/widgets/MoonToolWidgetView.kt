@@ -7,7 +7,7 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.navigation.NavigationUtils
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomySubsystem
 import com.kylecorry.trail_sense.tools.astronomy.ui.MoonPhaseImageMapper
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.SimpleToolWidgetView
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
@@ -35,7 +35,7 @@ class MoonToolWidgetView : SimpleToolWidgetView() {
             subtitle = formatter.formatMoonPhase(moon.phase),
             iconBitmap = bitmap,
             clickAction = WidgetClickAction.StartActivity(
-                NavigationUtils.toolIntent(context, Tools.ASTRONOMY)
+                NavigationUtils.toolIntent(context, ToolIds.ASTRONOMY)
             )
         )
     }

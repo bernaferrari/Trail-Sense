@@ -23,10 +23,10 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.Side
 import com.kylecorry.trail_sense.test_utils.views.toolbarButton
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolBallisticsTest : ToolTestBase(Tools.BALLISTICS) {
+class ToolBallisticsTest : ToolTestBase(ToolIds.BALLISTICS) {
 
     @Test
     fun verifyBasicFunctionality() {

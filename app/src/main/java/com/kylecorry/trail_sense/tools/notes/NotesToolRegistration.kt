@@ -10,13 +10,13 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object NotesToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.NOTES,
+            ToolIds.NOTES,
             context.getString(R.string.tool_notes_title),
             TrailIcons.ToolNotes,
             Route.Notes,
@@ -24,7 +24,7 @@ object NotesToolRegistration : ToolRegistration {
             guideId = R.raw.guide_tool_notes,
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_CREATE_NOTE,
+                    ToolIds.QUICK_ACTION_CREATE_NOTE,
                     context.getString(R.string.note),
                     ::QuickActionCreateNote
                 )

@@ -9,13 +9,13 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 object LocalTalkToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         // TODO: Have an open action rather than navigation ID
         return Tool(
-            Tools.LOCAL_TALK,
+            ToolIds.LOCAL_TALK,
             context.getString(R.string.local_talk),
             TrailIcons.VolumeUp,
             Route.LocalTalk,

@@ -24,17 +24,18 @@ import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorService
 import org.junit.Assume.assumeFalse
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 import java.time.Duration
 
-class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
+class ToolWeatherTest : ToolTestBase(ToolIds.WEATHER) {
 
     @Test
     fun verifyBasicFunctionality() {
-        if (!Tools.isToolAvailable(context, Tools.WEATHER)) {
+        if (!Tools.isToolAvailable(context, ToolIds.WEATHER)) {
             return
         }
 
@@ -128,7 +129,7 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
 
     private fun verifyQuickAction() {
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_WEATHER_MONITOR))
+        click(quickAction(ToolIds.QUICK_ACTION_WEATHER_MONITOR))
 
         // TODO: Figure out how to check this on staging builds
         if (AutomationLibrary.packageName == null) {
@@ -144,7 +145,7 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
             not { hasText(string(R.string.battery_settings_limit_accuracy)) }
         }
 
-        click(quickAction(Tools.QUICK_ACTION_WEATHER_MONITOR))
+        click(quickAction(ToolIds.QUICK_ACTION_WEATHER_MONITOR))
 
         // TODO: Figure out how to check this on staging builds
         if (AutomationLibrary.packageName == null) {
@@ -252,7 +253,7 @@ class ToolWeatherTest : ToolTestBase(Tools.WEATHER) {
         units: String = "hpa"
     ) {
         assumeFalse(isStagingBuild)
-        assumeTrue(Tools.isToolAvailable(TestUtils.context, Tools.WEATHER))
+        assumeTrue(Tools.isToolAvailable(TestUtils.context, ToolIds.WEATHER))
         setPressureUnits(units)
         relaunchTool {
             TestData.addPressureTrend(start, end, duration, interval = interval)

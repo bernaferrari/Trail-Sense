@@ -17,7 +17,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnostic
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 import com.kylecorry.trail_sense.tools.tools.widgets.RefreshWidgetAction
@@ -40,7 +40,7 @@ import com.kylecorry.trail_sense.tools.weather.widgets.WeatherToolWidgetView
 object WeatherToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.WEATHER,
+            ToolIds.WEATHER,
             context.getString(R.string.weather),
             TrailIcons.Cloud,
             Route.Weather,
@@ -50,7 +50,7 @@ object WeatherToolRegistration : ToolRegistration {
             initialize = { WeatherSubsystem.getInstance(it) },
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_WEATHER_MONITOR,
+                    ToolIds.QUICK_ACTION_WEATHER_MONITOR,
                     context.getString(R.string.weather_monitor),
                     ::QuickActionWeatherMonitor
                 )

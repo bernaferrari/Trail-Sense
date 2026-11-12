@@ -7,12 +7,13 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.TestUtils.isCameraInUse
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolMirrorTest : ToolTestBase(Tools.MIRROR_CAMERA) {
+class ToolMirrorTest : ToolTestBase(ToolIds.MIRROR_CAMERA) {
     @Test
     fun verifyBasicFunctionality() {
-        if (!Tools.isToolAvailable(context, Tools.MIRROR_CAMERA)) {
+        if (!Tools.isToolAvailable(context, ToolIds.MIRROR_CAMERA)) {
             return
         }
 

@@ -29,6 +29,7 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.grantPermission
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.viewWithResourceId
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Rule
 import org.junit.Test
 
@@ -58,13 +59,13 @@ class SmokeTest {
 
     // Tools that are the most important w/ actions or most likely to break with minification
     private val toolSmokeTests = mapOf<Long, () -> Unit>(
-        Tools.PATHS to ::smokeTestPaths,
-        Tools.OFFLINE_MAPS to ::smokeTestPhotoMaps,
-        Tools.CLOUDS to ::smokeTestClouds,
-        Tools.SURVIVAL_GUIDE to ::smokeTestSurvivalGuide,
-        Tools.FIELD_GUIDE to ::smokeTestFieldGuide,
-        Tools.USER_GUIDE to ::smokeTestUserGuide,
-        Tools.BEACONS to ::smokeTestBeacons
+        ToolIds.PATHS to ::smokeTestPaths,
+        ToolIds.OFFLINE_MAPS to ::smokeTestPhotoMaps,
+        ToolIds.CLOUDS to ::smokeTestClouds,
+        ToolIds.SURVIVAL_GUIDE to ::smokeTestSurvivalGuide,
+        ToolIds.FIELD_GUIDE to ::smokeTestFieldGuide,
+        ToolIds.USER_GUIDE to ::smokeTestUserGuide,
+        ToolIds.BEACONS to ::smokeTestBeacons
     )
 
     @Test

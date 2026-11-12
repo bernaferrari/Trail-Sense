@@ -11,13 +11,13 @@ import com.kylecorry.trail_sense.tools.signal_finder.map_layers.CellTowerGeoJson
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object SignalFinderToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.SIGNAL_FINDER,
+            ToolIds.SIGNAL_FINDER,
             context.getString(R.string.tool_signal_finder),
             TrailIcons.SignalCellular2,
             Route.SignalFinder,

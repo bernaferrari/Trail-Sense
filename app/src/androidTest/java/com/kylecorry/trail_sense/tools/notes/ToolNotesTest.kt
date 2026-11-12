@@ -12,10 +12,10 @@ import com.kylecorry.trail_sense.test_utils.TestUtils.back
 import com.kylecorry.trail_sense.test_utils.TestUtils.clickListItemMenu
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.quickAction
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolNotesTest : ToolTestBase(Tools.NOTES) {
+class ToolNotesTest : ToolTestBase(ToolIds.NOTES) {
     @Test
     fun verifyBasicFunctionality() {
         hasText(string(R.string.tool_notes_title))
@@ -69,7 +69,7 @@ class ToolNotesTest : ToolTestBase(Tools.NOTES) {
 
     private fun verifyQuickAction() {
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_CREATE_NOTE))
+        click(quickAction(ToolIds.QUICK_ACTION_CREATE_NOTE))
 
         input(id("title_edit"), "Quick action note")
         input(id("content_edit"), "This is a quick action note")

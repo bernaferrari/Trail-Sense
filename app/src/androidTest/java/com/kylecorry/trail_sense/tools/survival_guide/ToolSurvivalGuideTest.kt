@@ -14,10 +14,10 @@ import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
+class ToolSurvivalGuideTest : ToolTestBase(ToolIds.SURVIVAL_GUIDE) {
     @Test
     fun verifyBasicFunctionality() {
         // Accept the disclaimer
@@ -56,7 +56,7 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
 
     private fun verifyQuickAction() {
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_SURVIVAL_GUIDE))
+        click(quickAction(ToolIds.QUICK_ACTION_SURVIVAL_GUIDE))
 
         input(id("search"), "Eating fish")
         // Back would also clear the search, so only hide the keyboard
@@ -69,7 +69,7 @@ class ToolSurvivalGuideTest : ToolTestBase(Tools.SURVIVAL_GUIDE) {
         back()
 
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_SURVIVAL_GUIDE))
+        click(quickAction(ToolIds.QUICK_ACTION_SURVIVAL_GUIDE))
 
         input(id("search"), "Eating fish")
         TestUtils.closeKeyboard()

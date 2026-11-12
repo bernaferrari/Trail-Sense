@@ -11,10 +11,10 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.input
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolTemperatureEstimationTest : ToolTestBase(Tools.TEMPERATURE_ESTIMATION) {
+class ToolTemperatureEstimationTest : ToolTestBase(ToolIds.TEMPERATURE_ESTIMATION) {
 
     @Test
     fun verifyBasicFunctionality() {

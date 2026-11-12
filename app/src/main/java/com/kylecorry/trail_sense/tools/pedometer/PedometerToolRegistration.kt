@@ -31,7 +31,7 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 import com.kylecorry.trail_sense.tools.tools.widgets.RefreshWidgetAction
 
@@ -43,7 +43,7 @@ object PedometerToolRegistration : ToolRegistration {
             context.getString(R.string.alarm)
         )
         return Tool(
-            Tools.PEDOMETER,
+            ToolIds.PEDOMETER,
             context.getString(R.string.pedometer),
             TrailIcons.Steps,
             Route.Pedometer,
@@ -62,7 +62,7 @@ object PedometerToolRegistration : ToolRegistration {
             ),
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_PEDOMETER,
+                    ToolIds.QUICK_ACTION_PEDOMETER,
                     context.getString(R.string.pedometer),
                     ::QuickActionPedometer
                 )

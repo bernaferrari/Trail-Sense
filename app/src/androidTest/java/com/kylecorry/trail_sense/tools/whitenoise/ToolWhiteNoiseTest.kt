@@ -17,12 +17,12 @@ import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.notifications.hasTitle
 import com.kylecorry.trail_sense.test_utils.notifications.notification
 import com.kylecorry.trail_sense.test_utils.views.quickAction
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoiseService
 import org.junit.Test
 
 
-class ToolWhiteNoiseTest : ToolTestBase(Tools.WHITE_NOISE) {
+class ToolWhiteNoiseTest : ToolTestBase(ToolIds.WHITE_NOISE) {
 
     @Test
     fun verifyBasicFunctionality() {
@@ -98,7 +98,7 @@ class ToolWhiteNoiseTest : ToolTestBase(Tools.WHITE_NOISE) {
 
     private fun verifyQuickAction() {
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_WHITE_NOISE))
+        click(quickAction(ToolIds.QUICK_ACTION_WHITE_NOISE))
 
         // TODO: Figure out how to check this on staging builds
         if (AutomationLibrary.packageName == null) {
@@ -113,7 +113,7 @@ class ToolWhiteNoiseTest : ToolTestBase(Tools.WHITE_NOISE) {
         }
 
 
-        click(quickAction(Tools.QUICK_ACTION_WHITE_NOISE))
+        click(quickAction(ToolIds.QUICK_ACTION_WHITE_NOISE))
 
         // TODO: Figure out how to check this on staging builds
         if (AutomationLibrary.packageName == null) {

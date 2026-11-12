@@ -12,10 +12,10 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.scrollToEnd
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolTidesTest : ToolTestBase(Tools.TIDES) {
+class ToolTidesTest : ToolTestBase(ToolIds.TIDES) {
 
     @Test
     fun verifyBasicFunctionality() {

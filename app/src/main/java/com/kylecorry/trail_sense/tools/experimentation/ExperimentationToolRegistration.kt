@@ -9,12 +9,12 @@ import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 object ExperimentationToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.EXPERIMENTATION,
+            ToolIds.EXPERIMENTATION,
             "Experimentation",
             TrailIcons.Experimental,
             Route.Experimentation,

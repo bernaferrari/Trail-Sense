@@ -24,11 +24,11 @@ import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
 import com.kylecorry.trail_sense.tools.battery.infrastructure.persistence.BatteryRepo
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
-class ToolBatteryTest : ToolTestBase(Tools.BATTERY) {
+class ToolBatteryTest : ToolTestBase(ToolIds.BATTERY) {
 
     // The device was awake for 15 of the last 60 minutes
     override fun seedData() = runBlocking {

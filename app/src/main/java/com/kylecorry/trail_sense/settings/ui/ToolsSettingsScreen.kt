@@ -24,6 +24,7 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 import com.kylecorry.trail_sense.tools.tools.widgets.WidgetTheme
 
@@ -116,7 +117,7 @@ fun ToolsSettingsToolScreen() {
 
 private fun Context.pickQuickActions(prefs: UserPreferences) {
     val potentialActions = Tools.getQuickActions(this)
-        .filterNot { it.id == Tools.QUICK_ACTION_NONE }
+        .filterNot { it.id == ToolIds.QUICK_ACTION_NONE }
 
     val selected = prefs.toolQuickActions
 

@@ -19,7 +19,7 @@ import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.map.map_layers.ScaleBarLayer
 import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.navigation.map_layers.CompassOverlayLayer
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
 import com.kylecorry.trail_sense.tools.tools.widgets.ChartToolWidgetViewBase
@@ -43,7 +43,7 @@ class MapToolWidgetView : ChartToolWidgetViewBase() {
 
         return ToolWidgetContent.Chart(
             bitmap = renderedMap,
-            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.MAP))
+            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, ToolIds.MAP))
         )
     }
 

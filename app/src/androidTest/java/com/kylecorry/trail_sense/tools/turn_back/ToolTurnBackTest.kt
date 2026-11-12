@@ -12,10 +12,10 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils.handleExactAlarmsDialog
 import com.kylecorry.trail_sense.test_utils.TestUtils.pickTime
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolTurnBackTest : ToolTestBase(Tools.TURN_BACK) {
+class ToolTurnBackTest : ToolTestBase(ToolIds.TURN_BACK) {
 
     @Test
     fun verifyBasicFunctionality() {

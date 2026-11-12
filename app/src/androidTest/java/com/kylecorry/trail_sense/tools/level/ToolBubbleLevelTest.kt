@@ -8,10 +8,10 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.hasText
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isVisible
 import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolBubbleLevelTest : ToolTestBase(Tools.BUBBLE_LEVEL) {
+class ToolBubbleLevelTest : ToolTestBase(ToolIds.BUBBLE_LEVEL) {
 
     @Test
     fun verifyBasicFunctionality() {

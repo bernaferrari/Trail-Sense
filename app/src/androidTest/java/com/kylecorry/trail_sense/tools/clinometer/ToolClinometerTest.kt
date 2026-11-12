@@ -17,11 +17,11 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.string
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.test_utils.TestUtils.isCameraInUse
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 import kotlin.text.Regex
 
-class ToolClinometerTest : ToolTestBase(Tools.CLINOMETER) {
+class ToolClinometerTest : ToolTestBase(ToolIds.CLINOMETER) {
 
     @Test
     fun verifyBasicFunctionality() {

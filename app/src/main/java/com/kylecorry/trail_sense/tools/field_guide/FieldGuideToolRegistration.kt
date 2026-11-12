@@ -17,12 +17,12 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.field_guide.quickactions.QuickActionRecordSighting
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 object FieldGuideToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.FIELD_GUIDE,
+            ToolIds.FIELD_GUIDE,
             context.getString(R.string.field_guide),
             TrailIcons.FieldGuide,
             Route.FieldGuide,
@@ -37,7 +37,7 @@ object FieldGuideToolRegistration : ToolRegistration {
             ),
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_RECORD_SIGHTING,
+                    ToolIds.QUICK_ACTION_RECORD_SIGHTING,
                     context.getString(R.string.record_sighting),
                     ::QuickActionRecordSighting
                 )

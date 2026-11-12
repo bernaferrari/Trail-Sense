@@ -9,13 +9,13 @@ import com.kylecorry.trail_sense.tools.climate.infrastructure.ClimateSubsystem
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object ClimateToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.CLIMATE,
+            ToolIds.CLIMATE,
             context.getString(R.string.tool_climate),
             TrailIcons.TemperatureRange,
             Route.Climate,

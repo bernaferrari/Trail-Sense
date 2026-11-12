@@ -56,6 +56,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.Ph
 import com.kylecorry.trail_sense.tools.paths.infrastructure.PathsPreferences
 import com.kylecorry.trail_sense.tools.ruler.infrastructure.RulerPreferences
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.sort.ToolSortType
 import com.kylecorry.trail_sense.tools.turn_back.infrastructure.TurnBackPreferences
 import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterBoilTimerPreferences
@@ -422,9 +423,9 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
         get() {
             return cache.getIntArray(PreferenceKeys.toolQuickActions)
                 ?: listOf(
-                    Tools.QUICK_ACTION_FLASHLIGHT,
-                    Tools.QUICK_ACTION_WHISTLE,
-                    Tools.QUICK_ACTION_LOW_POWER_MODE,
+                    ToolIds.QUICK_ACTION_FLASHLIGHT,
+                    ToolIds.QUICK_ACTION_WHISTLE,
+                    ToolIds.QUICK_ACTION_LOW_POWER_MODE,
                 )
         }
         set(value) {
@@ -441,9 +442,9 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
                 ?.map { it.toLong() }
                 // Four tabs with Tools (the family's bar): the three most used, everything else one tap away.
                 ?: listOf(
-                    Tools.NAVIGATION,
-                    Tools.MAP,
-                    Tools.WEATHER
+                    ToolIds.NAVIGATION,
+                    ToolIds.MAP,
+                    ToolIds.WEATHER
                 ))
                 .padRight(maxLength, 0)
                 .subList(0, maxLength)
@@ -460,10 +461,10 @@ class UserPreferences(ctx: Context) : IDeclinationPreferences {
             // Navigation and Weather already have bottom-bar tabs, so the pins start with the next most loved
             // tools instead of repeating them.
             return cache.getLongArray(PreferenceKeys.pinnedTools) ?: listOf(
-                Tools.BEACONS,
-                Tools.PATHS,
-                Tools.ASTRONOMY,
-                Tools.USER_GUIDE
+                ToolIds.BEACONS,
+                ToolIds.PATHS,
+                ToolIds.ASTRONOMY,
+                ToolIds.USER_GUIDE
             )
         }
         set(value) {

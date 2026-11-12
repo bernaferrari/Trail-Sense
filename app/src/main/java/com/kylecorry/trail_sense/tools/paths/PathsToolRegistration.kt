@@ -31,13 +31,13 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object PathsToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.PATHS,
+            ToolIds.PATHS,
             context.getString(R.string.paths),
             TrailIcons.ToolBacktrack,
             Route.Paths,
@@ -46,7 +46,7 @@ object PathsToolRegistration : ToolRegistration {
             settingsRoute = Route.PathsSettings,
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_BACKTRACK,
+                    ToolIds.QUICK_ACTION_BACKTRACK,
                     context.getString(R.string.backtrack),
                     ::QuickActionBacktrack
                 )

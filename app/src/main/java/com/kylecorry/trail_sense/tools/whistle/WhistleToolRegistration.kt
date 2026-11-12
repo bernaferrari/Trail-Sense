@@ -12,13 +12,13 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.whistle.quickactions.QuickActionWhistle
 
 object WhistleToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
         return Tool(
-            Tools.WHISTLE,
+            ToolIds.WHISTLE,
             context.getString(R.string.tool_whistle_title),
             TrailIcons.ToolWhistle,
             Route.Whistle,
@@ -26,7 +26,7 @@ object WhistleToolRegistration : ToolRegistration {
             guideId = R.raw.guide_tool_whistle,
             quickActions = listOf(
                 ToolQuickAction(
-                    Tools.QUICK_ACTION_WHISTLE,
+                    ToolIds.QUICK_ACTION_WHISTLE,
                     context.getString(R.string.tool_whistle_title),
                     ::QuickActionWhistle
                 )

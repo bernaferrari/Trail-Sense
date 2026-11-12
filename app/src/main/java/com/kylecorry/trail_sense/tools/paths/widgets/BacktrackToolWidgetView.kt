@@ -12,6 +12,7 @@ import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.SimpleToolWidgetView
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.ToolWidgetContent
 import com.kylecorry.trail_sense.tools.tools.ui.widgets.WidgetClickAction
@@ -46,7 +47,7 @@ class BacktrackToolWidgetView : SimpleToolWidgetView() {
                 context.getString(R.string.off)
             },
             icon = TrailIcons.ToolBacktrack,
-            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, Tools.PATHS))
+            clickAction = WidgetClickAction.StartActivity(NavigationUtils.toolIntent(context, ToolIds.PATHS))
         )
     }
 }

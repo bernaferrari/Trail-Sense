@@ -33,7 +33,7 @@ import com.kylecorry.trail_sense.tools.navigation.map_layers.NavigationGeoJsonSo
 import com.kylecorry.trail_sense.tools.paths.map_layers.PathGeoJsonSource
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.map_layers.TrailMapsTileSource
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -293,8 +293,8 @@ class PreferenceMigratorTest {
 
         migrate(16)
 
-        val offlineMaps = Tools.OFFLINE_MAPS.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET
-        val paths = Tools.PATHS.toInt() + Tools.TOOL_QUICK_ACTION_OFFSET
+        val offlineMaps = ToolIds.OFFLINE_MAPS.toInt() + ToolIds.TOOL_QUICK_ACTION_OFFSET
+        val paths = ToolIds.PATHS.toInt() + ToolIds.TOOL_QUICK_ACTION_OFFSET
         assertEquals(offlineMaps.toString(), prefs.getString(leftKey))
         // 99 is not a legacy tool action, so it is left as-is
         assertEquals(listOf(paths, 99), prefs.getIntArray(arrayKey))

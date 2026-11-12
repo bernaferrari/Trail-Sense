@@ -9,11 +9,11 @@ import com.kylecorry.trail_sense.test_utils.AutomationLibrary.isTrue
 import com.kylecorry.trail_sense.test_utils.TestUtils
 import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.quickAction
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
 
-class ToolWhistleTest : ToolTestBase(Tools.WHISTLE) {
+class ToolWhistleTest : ToolTestBase(ToolIds.WHISTLE) {
 
     @Test
     fun verifyBasicFunctionality() {
@@ -51,7 +51,7 @@ class ToolWhistleTest : ToolTestBase(Tools.WHISTLE) {
 
     private fun verifyQuickAction() {
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_WHISTLE), holdDuration = 200)
+        click(quickAction(ToolIds.QUICK_ACTION_WHISTLE), holdDuration = 200)
         TestUtils.closeQuickActions()
     }
 }

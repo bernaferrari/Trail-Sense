@@ -17,10 +17,10 @@ import com.kylecorry.trail_sense.test_utils.ToolTestBase
 import com.kylecorry.trail_sense.test_utils.views.id
 import com.kylecorry.trail_sense.test_utils.views.quickAction
 import com.kylecorry.trail_sense.test_utils.views.view
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import org.junit.Test
 
-class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
+class ToolCloudsTest : ToolTestBase(ToolIds.CLOUDS) {
 
     @Test
     fun verifyBasicFunctionality() {
@@ -106,7 +106,7 @@ class ToolCloudsTest : ToolTestBase(Tools.CLOUDS) {
 
     private fun verifyQuickAction() {
         TestUtils.openQuickActions()
-        click(quickAction(Tools.QUICK_ACTION_SCAN_CLOUD))
+        click(quickAction(ToolIds.QUICK_ACTION_SCAN_CLOUD))
 
         click(R.id.capture_button)
 
