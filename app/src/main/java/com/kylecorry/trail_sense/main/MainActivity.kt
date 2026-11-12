@@ -1,6 +1,12 @@
 package com.kylecorry.trail_sense.main
 
 import androidx.compose.runtime.CompositionLocalProvider
+import com.kylecorry.trail_sense.shared.camera.LocalSightingCompassFactory
+import com.kylecorry.trail_sense.shared.camera.SightingCompassDialog
+import com.kylecorry.trail_sense.shared.camera.SightingCompassFactory
+import com.kylecorry.trail_sense.shared.sharing.LocalLocationSharer
+import com.kylecorry.trail_sense.shared.sharing.LocationSharer
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.share.shareLocation
 import com.kylecorry.trail_sense.shared.views.LocalErrorBanner
 import android.Manifest
 import android.app.Activity
@@ -104,6 +110,14 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
         get() = rootNavigator
 
     val errorBanner by lazy { ErrorBannerState() }
+
+    private val sightingCompassFactory = SightingCompassFactory { lifecycleOwner, scope, onSelect ->
+        SightingCompassDialog(this, lifecycleOwner, scope, onSelect)
+    }
+
+    private val locationSharer = LocationSharer { effects, navigator, location, title ->
+        shareLocation(this, effects, navigator, location, title = title)
+    }
     private val quickActionsSheet by lazy { QuickActionSheetState(this) }
     private val bottomNavigation = MainBottomNavigationState()
 
@@ -191,7 +205,11 @@ class MainActivity : ComponentActivity(), IntentResultRetriever, AppHostOwner {
                     )
                     return@TrailSenseAppTheme
                 }
-                CompositionLocalProvider(LocalErrorBanner provides errorBanner) {
+                CompositionLocalProvider(
+                    LocalErrorBanner provides errorBanner,
+                    LocalSightingCompassFactory provides sightingCompassFactory,
+                    LocalLocationSharer provides locationSharer
+                ) {
                 MainActivityContent(
                     appHost = appHost,
                     errorBanner = errorBanner,

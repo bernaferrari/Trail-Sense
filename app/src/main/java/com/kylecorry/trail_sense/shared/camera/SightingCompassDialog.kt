@@ -83,7 +83,7 @@ class SightingCompassDialog(
     private val lifecycleOwner: LifecycleOwner,
     private val coroutineScope: CoroutineScope,
     private val onSelect: (bearing: Float?) -> Unit
-) {
+) : SightingCompass {
 
     private val formatter by lazy { FormatService.getInstance(context) }
     private var camera: CameraState? = null
@@ -92,7 +92,7 @@ class SightingCompassDialog(
     private var bearingState by mutableStateOf<Float?>(null)
     private var compassRange by mutableStateOf(180f)
 
-    var bearing: Float?
+    override var bearing: Float?
         get() = bearingState
         set(value) {
             bearingState = value
@@ -101,12 +101,12 @@ class SightingCompassDialog(
 
     private val fovRunner = CoroutineQueueRunner(1, dispatcher = Dispatchers.Default)
 
-    fun show() {
+    override fun show() {
         isVisible = true
     }
 
     @Composable
-    fun Content() {
+    override fun Content() {
         if (!isVisible) {
             return
         }
@@ -196,7 +196,7 @@ class SightingCompassDialog(
         close(cancelled = false)
     }
 
-    fun dismiss() {
+    override fun dismiss() {
         close(cancelled = false)
     }
 

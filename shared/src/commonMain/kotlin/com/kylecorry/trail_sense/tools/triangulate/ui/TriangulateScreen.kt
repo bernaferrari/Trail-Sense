@@ -3,8 +3,15 @@
 
 package com.kylecorry.trail_sense.tools.triangulate.ui
 
+import com.kylecorry.sol.math.MathExtensions.toRadians
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
-import com.kylecorry.trail_sense.shared.views.compose.from
 
 import com.kylecorry.trail_sense.shared.sensors.SensorRefreshPolicy
 
@@ -50,9 +57,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.drawText
@@ -63,11 +68,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import com.kylecorry.trail_sense.shared.camera.rememberSightingCompass
+import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
+import com.kylecorry.trail_sense.shared.sensors.ISensorSubsystem
+import com.kylecorry.trail_sense.shared.sharing.LocalLocationSharer
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.preferences.putOrRemoveCoordinate
 import com.kylecorry.andromeda.preferences.putOrRemoveFloat
@@ -77,20 +86,13 @@ import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.AppUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.camera.SightingCompassDialog
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.dialogs.item
-import com.kylecorry.trail_sense.shared.dialogs.snackbar
-import com.kylecorry.trail_sense.shared.extensions.from
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.icons.trail.BaselineRefresh24
 import com.kylecorry.trail_sense.shared.icons.trail.Beacon
@@ -102,9 +104,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseAppNavigation
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
-import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.sensors.gps.GPSLocationSource
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
@@ -126,7 +126,6 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBearingDialog
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -135,21 +134,22 @@ import kotlinx.coroutines.withContext
 fun TriangulateToolScreen(
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
+    val host = AppHost.current()
+    val strings = LocalAppStrings.current
+    val sharer = LocalLocationSharer.current
     val appNavigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     val viewModel = viewModel {
         TriangulateViewModel(
-            preferences = PreferencesSubsystem.getInstance(appContext).preferences,
+            preferences = getAppService<Preferences>(),
             sensorService = getAppService<SensorService>()
         )
     }
-    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
-    val prefs = remember(appContext) { UserPreferences(appContext) }
-    val hasCompass = remember(appContext) { getAppService<SensorService>().hasCompass() }
+    val formatService = remember { FormatService.getInstance() }
+    val prefs = remember { getAppService<UserPreferences>() }
+    val hasCompass = remember { getAppService<SensorService>().hasCompass() }
 
     LifecycleResumeEffect(viewModel) {
         viewModel.onResume()
@@ -158,18 +158,13 @@ fun TriangulateToolScreen(
 
     // The camera sighting is a rendering object, so it lives in the composition; its bearing follows the compass.
     var cameraBearingIndex by remember { mutableStateOf<Int?>(null) }
-    val cameraSheet = remember(context, lifecycleOwner) {
-        SightingCompassDialog(context, lifecycleOwner, lifecycleOwner.lifecycleScope) { bearing ->
-            cameraBearingIndex?.let { viewModel.updateBearing(it, bearing, false) }
-        }
-    }
-    DisposableEffect(cameraSheet) {
-        onDispose { cameraSheet.dismiss() }
+    val cameraSheet = rememberSightingCompass { bearing ->
+        cameraBearingIndex?.let { viewModel.updateBearing(it, bearing, false) }
     }
     val compassBearing = viewModel.compassBearing
     LaunchedEffect(compassBearing) {
         if (compassBearing != null) {
-            cameraSheet.bearing = compassBearing
+            cameraSheet?.bearing = compassBearing
         }
     }
 
@@ -190,14 +185,14 @@ fun TriangulateToolScreen(
             formatService.formatDistance(it, Units.getDecimalPlaces(it.units))
         }
         return buildString {
-            append(context.getString(R.string.location_number, index))
+            append(strings.get(Res.string.location_number, index))
             if (distance != null) {
                 appendLine()
                 append(
                     if (shouldCalculateMyLocation) {
-                        context.getString(R.string.distance_away_from_self, formattedDistance)
+                        strings.get(Res.string.distance_away_from_self, formattedDistance)
                     } else {
-                        context.getString(R.string.distance_away_from_destination, formattedDistance)
+                        strings.get(Res.string.distance_away_from_destination, formattedDistance)
                     }
                 )
             }
@@ -208,7 +203,7 @@ fun TriangulateToolScreen(
         title = if (hasLocation) {
             formatService.formatLocation(location!!)
         } else {
-            stringResource(R.string.could_not_triangulate)
+            appString(Res.string.could_not_triangulate)
         },
         actionsVisible = hasLocation,
         navigateVisible = !shouldCalculateMyLocation,
@@ -217,15 +212,14 @@ fun TriangulateToolScreen(
         location1Title = locationTitle(1),
         location2Title = locationTitle(2),
         location1Instructions = if (shouldCalculateMyLocation) {
-            stringResource(R.string.triangulate_self_location_1_instructions)
+            appString(Res.string.triangulate_self_location_1_instructions)
         } else {
-            stringResource(R.string.triangulate_destination_location_1_instructions)
+            appString(Res.string.triangulate_destination_location_1_instructions)
         },
         location2Instructions = if (shouldCalculateMyLocation) {
-            stringResource(R.string.triangulate_self_location_2_instructions)
+            appString(Res.string.triangulate_self_location_2_instructions)
         } else {
-            stringResource(
-                R.string.triangulate_destination_location_2_instructions,
+            appString(Res.string.triangulate_destination_location_2_instructions,
                 formatService.formatDistance(
                     recommendedMinDistance,
                     Units.getDecimalPlaces(recommendedMinDistance.units)
@@ -246,27 +240,31 @@ fun TriangulateToolScreen(
         hasCompass = hasCompass,
         onModeChanged = viewModel::changeMode,
         onCreateBeacon = {
-            viewModel.result?.let { AppUtils.placeBeacon(context, GeoUri(it)) }
+            viewModel.result?.let { appNavigator.navigate(Route.PlaceBeacon(initialLocation = it.toRouteLocation())) }
         },
         onNavigate = {
             viewModel.result?.let {
-                Navigator.getInstance(context).navigateTo(
+                getAppService<INavigator>().navigateTo(
                     it,
-                    context.getString(R.string.location),
+                    strings.get(Res.string.location),
                     BeaconOwner.Triangulate
                 )
                 TrailSenseAppNavigation(appNavigator).navigate(Route.Navigation())
             }
         },
-        onShareLocation = {
-            viewModel.result?.let {
-                scope.launch { shareLocation(context, appNavigator, effects, it) }
+        onShareLocation = sharer?.let {
+            {
+                viewModel.result?.let { location ->
+                    scope.launch {
+                        sharer.share(effects, appNavigator, location, strings.get(Res.string.location))
+                    }
+                }
             }
         },
         onUpdateGpsOverride = {
             viewModel.result?.let { coord ->
                 prefs.gps.locationOverride = coord
-                Alerts.snackbar(context, context.getString(R.string.location_override_updated))
+                Alerts.snackbar(host, strings.get(Res.string.location_override_updated))
             }
         },
         onLocation1Change = { viewModel.updateLocation(1, it) },
@@ -275,30 +273,34 @@ fun TriangulateToolScreen(
         onBearing2Change = { bearing, trueNorth -> viewModel.updateBearing(2, bearing, trueNorth) },
         onCompassBearing1Click = { viewModel.setBearingFromCompass(1) },
         onCompassBearing2Click = { viewModel.setBearingFromCompass(2) },
-        onCameraBearing1Click = {
-            scope.launch {
-                if (effects.requestPermission(AppPermission.Camera)) {
-                    cameraBearingIndex = 1
-                    cameraSheet.show()
-                } else {
-                    effects.explainPermissionDenied(AppPermission.Camera)
+        onCameraBearing1Click = cameraSheet?.let { sheet ->
+            {
+                scope.launch {
+                    if (effects.requestPermission(AppPermission.Camera)) {
+                        cameraBearingIndex = 1
+                        sheet.show()
+                    } else {
+                        effects.explainPermissionDenied(AppPermission.Camera)
+                    }
                 }
             }
         },
-        onCameraBearing2Click = {
-            scope.launch {
-                if (effects.requestPermission(AppPermission.Camera)) {
-                    cameraBearingIndex = 2
-                    cameraSheet.show()
-                } else {
-                    effects.explainPermissionDenied(AppPermission.Camera)
+        onCameraBearing2Click = cameraSheet?.let { sheet ->
+            {
+                scope.launch {
+                    if (effects.requestPermission(AppPermission.Camera)) {
+                        cameraBearingIndex = 2
+                        sheet.show()
+                    } else {
+                        effects.explainPermissionDenied(AppPermission.Camera)
+                    }
                 }
             }
         },
         onReset = viewModel::reset,
         modifier = modifier.fillMaxSize()
     )
-    cameraSheet.Content()
+    cameraSheet?.Content()
 }
 
 /**
@@ -491,7 +493,7 @@ private fun TriangulateScreen(
     onModeChanged: (Boolean) -> Unit,
     onCreateBeacon: () -> Unit,
     onNavigate: () -> Unit,
-    onShareLocation: () -> Unit,
+    onShareLocation: (() -> Unit)?,
     onUpdateGpsOverride: () -> Unit,
     onLocation1Change: (Coordinate?) -> Unit,
     onLocation2Change: (Coordinate?) -> Unit,
@@ -499,8 +501,8 @@ private fun TriangulateScreen(
     onBearing2Change: (Float?, Boolean) -> Unit,
     onCompassBearing1Click: () -> Unit,
     onCompassBearing2Click: () -> Unit,
-    onCameraBearing1Click: () -> Unit,
-    onCameraBearing2Click: () -> Unit,
+    onCameraBearing1Click: (() -> Unit)?,
+    onCameraBearing2Click: (() -> Unit)?,
     onReset: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -515,14 +517,14 @@ private fun TriangulateScreen(
     }
 
     TrailSensePage(
-        title = stringResource(R.string.tool_triangulate_title),
-        backLabel = stringResource(R.string.back),
+        title = appString(Res.string.tool_triangulate_title),
+        backLabel = appString(Res.string.back),
         modifier = modifier,
         actions = {
             IconButton(onClick = onReset, modifier = Modifier.testTag("reset_btn")) {
                 Icon(
                     imageVector = TrailIcons.BaselineRefresh24,
-                    contentDescription = stringResource(R.string.reset)
+                    contentDescription = appString(Res.string.reset)
                 )
             }
         }
@@ -530,12 +532,12 @@ private fun TriangulateScreen(
         item(key = "mode") {
             TrailSenseConnectedChoice(
                 options = listOf(
-                    TrailSenseChoice(false, stringResource(R.string.destination), TrailIcons.Flag),
-                    TrailSenseChoice(true, stringResource(R.string.my_location), TrailIcons.Location)
+                    TrailSenseChoice(false, appString(Res.string.destination), TrailIcons.Flag),
+                    TrailSenseChoice(true, appString(Res.string.my_location), TrailIcons.Location)
                 ),
                 selected = shouldCalculateMyLocation,
                 onSelect = onModeChanged,
-                label = stringResource(R.string.location_to_triangulate)
+                label = appString(Res.string.location_to_triangulate)
             )
         }
 
@@ -577,25 +579,27 @@ private fun TriangulateScreen(
                 if (navigateVisible) {
                     row { position ->
                         TrailSenseListItem(
-                            title = stringResource(R.string.create_beacon),
+                            title = appString(Res.string.create_beacon),
                             icon = rememberVectorPainter(TrailIcons.Beacon),
                             position = position,
                             onClick = onCreateBeacon
                         )
                     }
                 }
-                row { position ->
-                    TrailSenseListItem(
-                        title = stringResource(R.string.share_ellipsis),
-                        icon = rememberVectorPainter(TrailIcons.Share),
-                        position = position,
-                        onClick = onShareLocation
-                    )
+                if (onShareLocation != null) {
+                    row { position ->
+                        TrailSenseListItem(
+                            title = appString(Res.string.share_ellipsis),
+                            icon = rememberVectorPainter(TrailIcons.Share),
+                            position = position,
+                            onClick = onShareLocation
+                        )
+                    }
                 }
                 if (updateGpsOverrideVisible) {
                     row { position ->
                         TrailSenseListItem(
-                            title = stringResource(R.string.update_gps_override),
+                            title = appString(Res.string.update_gps_override),
                             icon = rememberVectorPainter(TrailIcons.Satellite),
                             position = position,
                             onClick = onUpdateGpsOverride
@@ -682,25 +686,25 @@ private fun TriangulateAnswer(
                 autoSize = TextAutoSize.StepBased(minFontSize = 18.sp, maxFontSize = display.fontSize)
             )
             Text(
-                text = stringResource(if (shouldCalculateMyLocation) R.string.my_location else R.string.destination),
+                text = appString(if (shouldCalculateMyLocation) Res.string.my_location else Res.string.destination),
                 style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center,
                 color = scheme.onSurfaceVariant
             )
             Spacer(Modifier.height(TrailSenseSpacing.md))
             com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
-                text = stringResource(if (navigateVisible) R.string.navigate else R.string.create_beacon),
+                text = appString(if (navigateVisible) Res.string.navigate else Res.string.create_beacon),
                 onClick = if (navigateVisible) onNavigate else onCreateBeacon,
                 icon = if (navigateVisible) TrailIcons.NavigationArrow else TrailIcons.Beacon,
                 modifier = Modifier.fillMaxWidth()
             )
         } else {
             Text(
-                text = stringResource(
+                text = appString(
                     when (completed) {
-                        0 -> R.string.places_triangulate_take_first
-                        1 -> R.string.places_triangulate_take_second
-                        else -> R.string.places_triangulate_check
+                        0 -> Res.string.places_triangulate_take_first
+                        1 -> Res.string.places_triangulate_take_second
+                        else -> Res.string.places_triangulate_check
                     }
                 ),
                 style = MaterialTheme.typography.headlineSmall,
@@ -738,11 +742,11 @@ private fun TriangulateSighting(
     onCoordinateChange: (Coordinate?) -> Unit,
     onBearingChange: (Float?, Boolean) -> Unit,
     onCompassBearingClick: () -> Unit,
-    onCameraBearingClick: () -> Unit,
+    onCameraBearingClick: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     // The controller's title is "Location n" with the distance to the answer on a second line.
-    val lines = title.ifBlank { stringResource(R.string.location_number, number) }.split('\n', limit = 2)
+    val lines = title.ifBlank { appString(Res.string.location_number, number) }.split('\n', limit = 2)
     var showManualEntry by remember { mutableStateOf(false) }
 
     TrailSenseRowGroup(
@@ -811,8 +815,7 @@ private fun TriangulateBearingRow(
     onClick: () -> Unit,
     onClear: () -> Unit
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
     val scheme = MaterialTheme.colorScheme
     val rotation by animateFloatAsState(
         targetValue = bearing ?: 0f,
@@ -830,7 +833,7 @@ private fun TriangulateBearingRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 72.dp)
-                .clickable(onClickLabel = stringResource(R.string.enter_manually), onClick = onClick)
+                .clickable(onClickLabel = appString(Res.string.enter_manually), onClick = onClick)
                 .testTag("manual_bearing")
                 .padding(horizontal = TrailSenseSpacing.lg, vertical = TrailSenseSpacing.md),
             verticalAlignment = Alignment.CenterVertically
@@ -847,16 +850,16 @@ private fun TriangulateBearingRow(
             Spacer(Modifier.width(TrailSenseSpacing.md))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
                 Text(
-                    text = stringResource(R.string.bearing),
+                    text = appString(Res.string.bearing),
                     style = MaterialTheme.typography.titleMedium,
                     color = scheme.onSurface
                 )
                 Text(
                     text = if (bearing != null) {
                         "${formatter.formatDegrees(bearing, replace360 = true)} · " +
-                                stringResource(if (trueNorth) R.string.true_north else R.string.magnetic_north)
+                                appString(if (trueNorth) Res.string.true_north else Res.string.magnetic_north)
                     } else {
-                        stringResource(R.string.direction_not_set)
+                        appString(Res.string.direction_not_set)
                     },
                     modifier = Modifier.testTag("bearing"),
                     style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
@@ -868,7 +871,7 @@ private fun TriangulateBearingRow(
                 IconButton(onClick = onClear, modifier = Modifier.testTag("clear_btn")) {
                     Icon(
                         TrailIcons.Cancel,
-                        contentDescription = stringResource(android.R.string.cancel),
+                        contentDescription = systemString(SystemString.Cancel),
                         tint = scheme.onSurfaceVariant
                     )
                 }
@@ -886,9 +889,9 @@ private fun TriangulateBearingButtons(
     isActive: Boolean,
     compassBearingText: String,
     onCompassClick: () -> Unit,
-    onCameraClick: () -> Unit
+    onCameraClick: (() -> Unit)?
 ) {
-    val compassLabel = stringResource(R.string.places_triangulate_compass)
+    val compassLabel = appString(Res.string.places_triangulate_compass)
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
@@ -909,15 +912,17 @@ private fun TriangulateBearingButtons(
                     .testTag("compass_bearing")
             )
         }
-        com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
-            text = stringResource(R.string.camera),
-            onClick = onCameraClick,
-            icon = TrailIcons.Camera,
-            style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
-            modifier = Modifier
-                .weight(1f)
-                .testTag("camera_btn")
-        )
+        if (onCameraClick != null) {
+            com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
+                text = appString(Res.string.camera),
+                onClick = onCameraClick,
+                icon = TrailIcons.Camera,
+                style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Tonal,
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("camera_btn")
+            )
+        }
     }
 }
 
@@ -933,9 +938,10 @@ private fun CoordinateInput(
     position: TrailSenseGroupPosition,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
-    val sensors = remember { SensorSubsystem.getInstance(context) }
+    val host = AppHost.current()
+    val strings = LocalAppStrings.current
+    val formatter = remember { FormatService.getInstance() }
+    val sensors = remember { getAppService<ISensorSubsystem>() }
     val gps = remember { getAppService<SensorService>().getGPS() }
     val scope = rememberCoroutineScope()
     var coordinateText by remember(coordinate, formatter) {
@@ -967,14 +973,14 @@ private fun CoordinateInput(
     }
 
     val isInvalid = coordinateText.isNotBlank() && parsedCoordinate == null
-    val autofillLabel = stringResource(R.string.autofill_source)
+    val autofillLabel = appString(Res.string.autofill_source)
     TrailSenseInputField(
         value = coordinateText,
         onValueChange = {
             coordinateText = it
             onCoordinateChange(Coordinate.parse(it))
         },
-        label = stringResource(R.string.location),
+        label = appString(Res.string.location),
         modifier = modifier
             .heightIn(min = 72.dp)
             .testTag(tag),
@@ -982,7 +988,7 @@ private fun CoordinateInput(
         keyboardType = KeyboardType.Text,
         enabled = !isLoadingLocation,
         isError = isInvalid,
-        errorText = stringResource(R.string.coordinate_input_invalid_location),
+        errorText = appString(Res.string.coordinate_input_invalid_location),
         leadingIcon = {
             if (isLoadingLocation) {
                 Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
@@ -1001,11 +1007,11 @@ private fun CoordinateInput(
                         .semantics { contentDescription = autofillLabel },
                     onClick = {
                         Pickers.item(
-                            context,
-                            context.getString(R.string.autofill_source),
+                            host,
+                            strings.get(Res.string.autofill_source),
                             listOf(
-                                context.getString(R.string.gps),
-                                context.getString(R.string.beacon)
+                                strings.get(Res.string.gps),
+                                strings.get(Res.string.beacon)
                             ),
                             0
                         ) { selection ->
@@ -1013,7 +1019,7 @@ private fun CoordinateInput(
                                 0 -> autofillFromGps()
                                 1 -> scope.launch {
                                     val beacon = BeaconPickers.pickBeacon(
-                                        AppHost.from(context),
+                                        host,
                                         sort = ClosestBeaconSort(getAppService<IBeaconService>(), gps::location)
                                     ) ?: return@launch
                                     coordinateText = formatter.formatLocation(beacon.coordinate)
@@ -1038,7 +1044,7 @@ private fun CoordinateInput(
             ) {
                 Icon(
                     imageVector = TrailIcons.Help,
-                    contentDescription = stringResource(R.string.location_input_help_title),
+                    contentDescription = appString(Res.string.location_input_help_title),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -1048,10 +1054,10 @@ private fun CoordinateInput(
     if (showHelp) {
         TrailSenseDialog(
             onDismissRequest = { showHelp = false },
-            title = stringResource(R.string.location_input_help_title),
-            confirmText = stringResource(android.R.string.ok)
+            title = appString(Res.string.location_input_help_title),
+            confirmText = systemString(SystemString.Ok)
         ) {
-            Text(stringResource(R.string.location_input_help))
+            Text(appString(Res.string.location_input_help))
         }
     }
 }
@@ -1059,19 +1065,17 @@ private fun CoordinateInput(
 @Preview(showBackground = true)
 @Composable
 private fun TriangulateScreenPreview() {
-    val context = LocalContext.current
     TrailSenseTheme {
         TriangulateScreen(
-            title = context.getString(R.string.could_not_triangulate),
+            title = appString(Res.string.could_not_triangulate),
             actionsVisible = true,
             navigateVisible = true,
             updateGpsOverrideVisible = false,
             shouldCalculateMyLocation = false,
-            location1Title = context.getString(R.string.location_number, 1),
-            location2Title = context.getString(R.string.location_number, 2),
-            location1Instructions = context.getString(R.string.triangulate_destination_location_1_instructions),
-            location2Instructions = context.getString(
-                R.string.triangulate_destination_location_2_instructions,
+            location1Title = appString(Res.string.location_number, 1),
+            location2Title = appString(Res.string.location_number, 2),
+            location1Instructions = appString(Res.string.triangulate_destination_location_1_instructions),
+            location2Instructions = getAppService<AppStrings>().get(Res.string.triangulate_destination_location_2_instructions,
                 "30 m"
             ),
             location1Complete = false,
@@ -1129,7 +1133,7 @@ private fun SightingPlot(
     val density = androidx.compose.ui.platform.LocalDensity.current
     val measurer = androidx.compose.ui.text.rememberTextMeasurer()
     val labelStyle = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
-    val north = stringResource(R.string.direction_north)
+    val north = appString(Res.string.direction_north)
 
     val progress by animateFloatAsState(
         targetValue = completed / 2f,
@@ -1203,7 +1207,7 @@ private fun SightingPlot(
                 val center = Offset(size.width / 2f, size.height / 2f)
                 fun screen(p: Offset) = Offset(center.x + p.x * radiusPx, center.y - p.y * radiusPx)
                 fun direction(bearing: Float): Offset {
-                    val rad = Math.toRadians(bearing.toDouble())
+                    val rad = bearing.toDouble().toRadians()
                     return Offset(kotlin.math.sin(rad).toFloat(), kotlin.math.cos(rad).toFloat())
                 }
 
@@ -1310,7 +1314,7 @@ private fun SightingPlot(
 private class SightingProjection(points: List<Coordinate>) {
     private val originLatitude = points.map { it.latitude }.average().takeIf { !it.isNaN() } ?: 0.0
     private val originLongitude = points.map { it.longitude }.average().takeIf { !it.isNaN() } ?: 0.0
-    private val metersPerDegreeLongitude = 111_320.0 * kotlin.math.cos(Math.toRadians(originLatitude))
+    private val metersPerDegreeLongitude = 111_320.0 * kotlin.math.cos(originLatitude.toRadians())
     private val scale: Float
 
     init {
