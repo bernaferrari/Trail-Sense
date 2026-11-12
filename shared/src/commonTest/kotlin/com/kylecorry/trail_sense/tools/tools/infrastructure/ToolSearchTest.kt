@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.text.RawText
+import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnostic
 import com.kylecorry.trail_sense.tools.tools.ui.sort.AlphabeticalToolSort
 import kotlin.reflect.KClass
 import kotlin.test.Test
@@ -26,6 +27,7 @@ class ToolSearchTest {
         override val guideId: RawText? = null
         override val isExperimental: Boolean = false
         override val settingsRoute: Route? = null
+        override val diagnostics: List<ToolDiagnostic> = emptyList()
     }
 
     @Test

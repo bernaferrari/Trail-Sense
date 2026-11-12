@@ -3,12 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
-import androidx.compose.runtime.rememberCoroutineScope
 
-import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 
 import androidx.compose.ui.semantics.stateDescription
 
@@ -49,11 +45,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.R
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
+import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.icons.trail.Altitude
 import com.kylecorry.trail_sense.shared.icons.trail.BackupRestore
 import com.kylecorry.trail_sense.shared.icons.trail.Barometer
@@ -73,8 +68,10 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
-import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.platform.LocalPlatformContext
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolDescriptor
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticResult
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticSeverity
 import com.kylecorry.trail_sense.tools.tools.ui.items.DiagnosticItem
@@ -91,20 +88,20 @@ private const val DIAGNOSTICS_SETTLE_MILLIS = 3000L
  * scanners have had a chance to report.
  */
 @Composable
-internal fun DiagnosticsScreen(
+fun DiagnosticsScreen(
     onShowSensorDetails: () -> Unit,
     onShowDiagnostic: (DiagnosticItem) -> Unit,
     onExportLogs: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
+    val context = LocalPlatformContext.current
     val dispatcher = rememberSystemBack()
-    val tools = remember { Tools.getTools(context) }
+    val tools = remember { getAppService<ToolCatalog>().getTools() }
     val diagnosticIdToTool = remember(tools) {
-        val toolMap = mutableMapOf<String, List<Tool>>()
+        val toolMap = mutableMapOf<String, List<ToolDescriptor>>()
         tools.forEach {
             it.diagnostics.forEach { diagnostic ->
-                toolMap[diagnostic.id] = toolMap.getOrDefault(diagnostic.id, listOf()) + it
+                toolMap[diagnostic.id] = toolMap[diagnostic.id].orEmpty() + it
             }
         }
         toolMap
@@ -140,13 +137,13 @@ internal fun DiagnosticsScreen(
     val warnings = items.filter { it.result.severity == ToolDiagnosticSeverity.Warning }
 
     // One question: is anything stopping a tool from working? The issue count answers it; each issue is one row.
-    val toolsTitle = stringResource(R.string.sky_diagnostics_tools)
-    val errorsTitle = pluralStringResource(R.plurals.diagnostics_error_count, errors.size, errors.size)
-    val warningsTitle = pluralStringResource(R.plurals.diagnostics_warning_count, warnings.size, warnings.size)
+    val toolsTitle = stringResource(Res.string.sky_diagnostics_tools)
+    val errorsTitle = pluralStringResource(Res.plurals.diagnostics_error_count, errors.size, errors.size)
+    val warningsTitle = pluralStringResource(Res.plurals.diagnostics_warning_count, warnings.size, warnings.size)
     TrailSensePage(
-        title = stringResource(R.string.diagnostics),
+        title = stringResource(Res.string.diagnostics),
         onBack = { dispatcher?.invoke() },
-        backLabel = stringResource(R.string.back),
+        backLabel = stringResource(Res.string.back),
         modifier = modifier.testTag("diagnostics_list")
     ) {
         item(key = "hero") {
@@ -175,8 +172,8 @@ internal fun DiagnosticsScreen(
         trailSenseSection(key = "actions", title = toolsTitle) {
             row { position ->
                 SkyValueRow(
-                    title = stringResource(R.string.pref_sensor_details_title),
-                    subtitle = stringResource(R.string.diagnostics_sensor_details_summary),
+                    title = stringResource(Res.string.pref_sensor_details_title),
+                    subtitle = stringResource(Res.string.diagnostics_sensor_details_summary),
                     icon = Icons.Default.Sensors,
                     position = position,
                     onClick = onShowSensorDetails,
@@ -186,8 +183,8 @@ internal fun DiagnosticsScreen(
             }
             row { position ->
                 SkyValueRow(
-                    title = stringResource(R.string.export_logs),
-                    subtitle = stringResource(R.string.diagnostics_export_logs_summary),
+                    title = stringResource(Res.string.export_logs),
+                    subtitle = stringResource(Res.string.diagnostics_export_logs_summary),
                     icon = Icons.Default.Download,
                     position = position,
                     onClick = onExportLogs,
@@ -228,15 +225,15 @@ private fun DiagnosticsHero(loaded: Boolean, errorCount: Int, warningCount: Int,
     val issueCount = errorCount + warningCount
     val title = when {
         // The count is in the cookie, so the title is only the words.
-        issueCount > 0 -> pluralStringResource(R.plurals.diagnostics_issues_found, issueCount)
-        loaded -> stringResource(R.string.no_issues)
-        else -> stringResource(R.string.diagnostics_checking)
+        issueCount > 0 -> pluralStringResource(Res.plurals.diagnostics_issues_found, issueCount)
+        loaded -> stringResource(Res.string.no_issues)
+        else -> stringResource(Res.string.diagnostics_checking)
     }
     // One quiet line under the count only when there are none, saying why that is good news; the sections below
     // already split errors from warnings.
     val supporting = when {
         issueCount > 0 -> null
-        loaded -> stringResource(R.string.diagnostics_no_issues_summary)
+        loaded -> stringResource(Res.string.diagnostics_no_issues_summary)
         else -> null
     }
     val progress by animateFloatAsState(
@@ -293,7 +290,7 @@ private fun DiagnosticListItem(
 ) {
     val severity = item.result.severity
     val isError = severity == ToolDiagnosticSeverity.Error
-    val severityLabel = stringResource(if (isError) R.string.error else R.string.warning)
+    val severityLabel = stringResource(if (isError) Res.string.error else Res.string.warning)
     SkyValueRow(
         title = item.result.name,
         subtitle = item.result.description,
@@ -354,29 +351,4 @@ private fun statusIcon(severity: ToolDiagnosticSeverity): ImageVector {
         ToolDiagnosticSeverity.Error -> Icons.Default.ErrorOutline
         ToolDiagnosticSeverity.Warning -> Icons.Default.WarningAmber
     }
-}
-
-/** Diagnostics: what is wrong with the sensors and permissions, each with its fix, and the logs to export. */
-@Composable
-fun DiagnosticsToolScreen() {
-    val context = LocalContext.current
-    val navigator = LocalNavigator.current
-    val effects = LocalScreenEffects.current
-    val scope = rememberCoroutineScope()
-    DiagnosticsScreen(
-        onShowSensorDetails = {
-            navigator.navigate(Route.SensorDetails)
-        },
-        onShowDiagnostic = {
-            DiagnosticAlerter(context).alert(it) { action ->
-                action.action(context, navigator)
-            }
-        },
-        onExportLogs = {
-            scope.launch {
-                // The activity implements the Activity-only IntentResultRetriever the file picker needs.
-                DownloadDiagnosticsLogsCommand(context, context as IntentResultRetriever, effects).execute()
-            }
-        }
-    )
 }

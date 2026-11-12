@@ -26,7 +26,7 @@ data class Tool(
     val notificationChannels: List<ToolNotificationChannel> = emptyList(),
     val notificationChannelGroups: List<ToolNotificationChannelGroup> = emptyList(),
     val services: List<ToolService> = emptyList(),
-    val diagnostics: List<ToolDiagnostic> = emptyList(),
+    override val diagnostics: List<ToolDiagnostic> = emptyList(),
     val intentHandlers: List<ToolIntentHandler> = emptyList(),
     val isAvailable: (context: Context) -> Boolean = { true },
     val broadcasts: List<ToolBroadcast> = emptyList(),

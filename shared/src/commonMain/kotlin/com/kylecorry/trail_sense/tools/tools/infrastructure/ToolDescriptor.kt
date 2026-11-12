@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.data.Identifiable
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.text.RawText
+import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnostic
 import kotlin.reflect.KClass
 
 /**
@@ -22,6 +23,9 @@ interface ToolDescriptor : Identifiable {
 
     /** Other screens that belong to this tool (its editors and details), so its tab stays lit on them. */
     val additionalRoutes: List<KClass<out Route>>
+
+    /** Checks that tell the user why this tool may not work well on their device. */
+    val diagnostics: List<ToolDiagnostic>
 
     fun isOpen(current: Route?): Boolean {
         current ?: return false

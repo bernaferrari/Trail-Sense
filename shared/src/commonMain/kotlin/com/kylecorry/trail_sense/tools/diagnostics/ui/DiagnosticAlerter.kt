@@ -1,16 +1,19 @@
 package com.kylecorry.trail_sense.tools.diagnostics.ui
 
-import android.content.Context
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.dialogs.DialogLabels
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticSeverity
 import com.kylecorry.trail_sense.tools.tools.ui.items.DiagnosticItem
-import com.kylecorry.trail_sense.shared.dialogs.dialog
 
-class DiagnosticAlerter(private val context: Context) {
+class DiagnosticAlerter {
 
     fun alert(
         item: DiagnosticItem,
@@ -18,20 +21,18 @@ class DiagnosticAlerter(private val context: Context) {
     ) {
         val affectedTools = item.tools.sortedBy { it.name }.joinToString("\n") { "- ${it.name}" }
 
-        val message = context.getString(
-            R.string.diagnostic_message_template,
+        val message = getAppService<AppStrings>().get(Res.string.diagnostic_message_template,
             getSeverityName(item.result.severity),
             item.result.description,
             affectedTools,
-            item.result.resolution ?: context.getString(R.string.no_resolution)
+            item.result.resolution ?: getAppService<AppStrings>().get(Res.string.no_resolution)
         )
 
-        Alerts.dialog(
-            context,
+        Alerts.dialog(AppHost.current(),
             item.result.name,
             DependencyRegistry.get<MarkdownService>().toMarkdown(message),
-            cancelText = if (item.result.action != null) context.getString(android.R.string.cancel) else null,
-            okText = item.result.action?.name ?: context.getString(android.R.string.ok)
+            cancelText = if (item.result.action != null) DialogLabels.Cancel else null,
+            okText = item.result.action?.name ?: DialogLabels.Ok
         ) { cancelled ->
             if (!cancelled) {
                 item.result.action?.let(onAction)
@@ -42,8 +43,8 @@ class DiagnosticAlerter(private val context: Context) {
 
     private fun getSeverityName(status: ToolDiagnosticSeverity): String {
         return when (status) {
-            ToolDiagnosticSeverity.Error -> context.getString(R.string.error)
-            ToolDiagnosticSeverity.Warning -> context.getString(R.string.warning)
+            ToolDiagnosticSeverity.Error -> getAppService<AppStrings>().get(Res.string.error)
+            ToolDiagnosticSeverity.Warning -> getAppService<AppStrings>().get(Res.string.warning)
         }
     }
 
