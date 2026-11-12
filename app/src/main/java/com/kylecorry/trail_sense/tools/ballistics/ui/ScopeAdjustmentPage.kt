@@ -6,6 +6,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.semantics.Role
+import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -574,7 +575,7 @@ private fun <T, U> UnitAmountField(
         value = amountText,
         onValueChange = {
             amountText = it
-            onValueChange(it.toFloatOrNull()?.let { amount -> createValue(amount, unit) })
+            onValueChange(it.toDecimalInputOrNull()?.let { amount -> createValue(amount, unit) })
         },
         label = label,
         position = position,
@@ -591,7 +592,7 @@ private fun <T, U> UnitAmountField(
             onSelect = {
                 unit = it
                 isPickingUnit = false
-                onValueChange(amountText.toFloatOrNull()?.let { amount -> createValue(amount, it) })
+                onValueChange(amountText.toDecimalInputOrNull()?.let { amount -> createValue(amount, it) })
             },
             onDismiss = { isPickingUnit = false }
         )

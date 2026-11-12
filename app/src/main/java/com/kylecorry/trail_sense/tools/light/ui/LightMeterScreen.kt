@@ -13,6 +13,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
+import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
@@ -151,7 +152,7 @@ fun LightMeterScreen(
         }
     }
 
-    val beamDistance = beamDistanceAmount.toFloatOrNull()?.let {
+    val beamDistance = beamDistanceAmount.toDecimalInputOrNull()?.let {
         Distance.from(it, beamDistanceUnit)
     }
     val candela = beamDistance?.let {

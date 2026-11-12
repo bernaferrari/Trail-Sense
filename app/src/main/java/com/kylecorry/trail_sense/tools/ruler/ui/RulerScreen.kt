@@ -52,6 +52,7 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.layout.PaddingValues
+import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -383,8 +384,8 @@ private fun formatScale(
 ): String? {
     return when (scaleMode) {
         MapScaleMode.Fractional -> {
-            val from = fractionalFrom.toFloatOrNull() ?: return null
-            val to = fractionalTo.toFloatOrNull() ?: return null
+            val from = fractionalFrom.toDecimalInputOrNull() ?: return null
+            val to = fractionalTo.toDecimalInputOrNull() ?: return null
             "${DecimalFormatter.format(from, 2, false)} : ${DecimalFormatter.format(to, 2, false)}"
         }
 
@@ -740,7 +741,7 @@ private fun DistanceAmountInput(
         value = amount,
         onValueChange = {
             amount = it
-            onValueChange(it.toFloatOrNull()?.let { amountValue -> Distance.from(amountValue, unit) })
+            onValueChange(it.toDecimalInputOrNull()?.let { amountValue -> Distance.from(amountValue, unit) })
         },
         label = label,
         position = position,
@@ -757,7 +758,7 @@ private fun DistanceAmountInput(
             onSelect = {
                 unit = it
                 isPickingUnit = false
-                onValueChange(amount.toFloatOrNull()?.let { amountValue -> Distance.from(amountValue, it) })
+                onValueChange(amount.toDecimalInputOrNull()?.let { amountValue -> Distance.from(amountValue, it) })
             },
             onDismiss = { isPickingUnit = false }
         )
@@ -794,8 +795,8 @@ private fun calculateMapDistance(
         }
 
         MapScaleMode.Fractional -> {
-            val ratioFrom = fractionalFrom.toFloatOrNull()
-            val ratioTo = fractionalTo.toFloatOrNull()
+            val ratioFrom = fractionalFrom.toDecimalInputOrNull()
+            val ratioTo = fractionalTo.toDecimalInputOrNull()
             if (ratioFrom == null || ratioTo == null) {
                 null
             } else {

@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
 import com.kylecorry.andromeda.core.math.DecimalFormatter
+import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import java.io.Serializable
 import java.math.BigDecimal
@@ -80,7 +81,7 @@ fun <T : Serializable> SimpleConvertScreen(
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
 
-    val amount = parseAmount(input)
+    val amount = input.toDecimalInputOrNull()
     val from = if (topActive) top else bottom
     val to = if (topActive) bottom else top
     val converted = amount?.let { convert(it, from, to) }
@@ -183,13 +184,6 @@ fun <T : Serializable> SimpleConvertScreen(
             )
         }
     }
-}
-
-/** Reads what was typed, accepting either decimal separator. Null while there's nothing to convert. */
-internal fun parseAmount(text: String): Float? {
-    val normalized = text.replace(',', '.')
-    if (normalized.isBlank() || normalized == "-" || normalized == ".") return null
-    return normalized.toFloatOrNull()
 }
 
 /** A value as plain, editable digits: at most 4 decimals, no grouping, '.' as the separator. */

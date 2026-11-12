@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.temperature_estimation.ui
 
+import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import kotlin.time.Duration.Companion.days
 
 import kotlin.time.Duration.Companion.seconds
@@ -246,14 +247,14 @@ private fun TemperatureEstimationScreen(
         outputUnits = temperatureUnits
     )?.takeIf { !it.value.isNaN() }
 
-    val base = baseTemperatureText.toFloatOrNull()?.let {
+    val base = baseTemperatureText.toDecimalInputOrNull()?.let {
         Temperature.from(it, baseTemperatureUnit).convertTo(temperatureUnits)
     }
-    val baseElevation = baseElevationText.toFloatOrNull()?.let { Distance.from(it, baseElevationUnit) }
-    val destElevation = destElevationText.toFloatOrNull()?.let { Distance.from(it, destElevationUnit) }
-    val humidity = humidityText.toFloatOrNull()
+    val baseElevation = baseElevationText.toDecimalInputOrNull()?.let { Distance.from(it, baseElevationUnit) }
+    val destElevation = destElevationText.toDecimalInputOrNull()?.let { Distance.from(it, destElevationUnit) }
+    val humidity = humidityText.toDecimalInputOrNull()
     val humidityError = humidityText.isNotEmpty() && (humidity == null || humidity !in 0f..100f)
-    val hasConditions = (humidity != null && !humidityError) || windSpeedText.toFloatOrNull() != null
+    val hasConditions = (humidity != null && !humidityError) || windSpeedText.toDecimalInputOrNull() != null
     // The estimate is an answer only when it says something new: a destination, or how it feels with humidity or wind.
     val answer = estimated?.takeIf { destElevation != null || hasConditions }
 
@@ -913,18 +914,18 @@ private fun estimateTemperature(
     outputUnits: TemperatureUnits
 ): Temperature? {
     var temp = Temperature.from(
-        baseTemperatureText.toFloatOrNull() ?: return null,
+        baseTemperatureText.toDecimalInputOrNull() ?: return null,
         baseTemperatureUnit
     ).convertTo(TemperatureUnits.Celsius)
 
-    val destinationElevation = destElevationText.toFloatOrNull()?.let {
+    val destinationElevation = destElevationText.toDecimalInputOrNull()?.let {
         Distance.from(it, destElevationUnit).meters()
     }
-    val baseElevation = baseElevationText.toFloatOrNull()?.let {
+    val baseElevation = baseElevationText.toDecimalInputOrNull()?.let {
         Distance.from(it, baseElevationUnit).meters()
     }
-    val humidity = humidityText.toFloatOrNull()?.takeIf { it in 0f..100f }
-    val windSpeed = windSpeedText.toFloatOrNull()?.let {
+    val humidity = humidityText.toDecimalInputOrNull()?.takeIf { it in 0f..100f }
+    val windSpeed = windSpeedText.toDecimalInputOrNull()?.let {
         Speed.from(it, windSpeedUnit.distance, windSpeedUnit.time)
     }
 

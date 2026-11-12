@@ -36,6 +36,7 @@ import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.sol.units.Bearing
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.semantics.Role
@@ -212,7 +213,7 @@ private fun ManualBearingDialog(
         mutableStateOf(initialBearing?.let { DecimalFormatter.format(it, 1) } ?: "")
     }
     var trueNorth by remember(initialTrueNorth) { mutableStateOf(initialTrueNorth) }
-    val parsedBearing = bearingText.toFloatOrNull()?.let { Bearing.getBearing(it) }
+    val parsedBearing = bearingText.toDecimalInputOrNull()?.let { Bearing.getBearing(it) }
 
     TrailSenseDialog(
         onDismissRequest = onDismiss,

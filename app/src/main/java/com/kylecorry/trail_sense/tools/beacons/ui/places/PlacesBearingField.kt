@@ -55,6 +55,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.CompassIcon
 import com.kylecorry.trail_sense.shared.icons.trail.Edit
 import com.kylecorry.trail_sense.shared.icons.trail.NavigationArrow
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -243,7 +244,7 @@ internal fun PlacesBearingDialog(
         mutableStateOf(initialBearing?.let { DecimalFormatter.format(it, 1) } ?: "")
     }
     var trueNorth by remember(initialTrueNorth) { mutableStateOf(initialTrueNorth) }
-    val parsedBearing = bearingText.toFloatOrNull()?.let { Bearing.getBearing(it) }
+    val parsedBearing = bearingText.toDecimalInputOrNull()?.let { Bearing.getBearing(it) }
 
     TrailSenseDialog(
         onDismissRequest = onDismiss,
