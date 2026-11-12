@@ -6,6 +6,7 @@ import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.augmented_reality.domain.position.GeographicARPoint
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.beacons.domain.icon
 
 data class BeaconGuidanceTarget(
     val beacon: Beacon

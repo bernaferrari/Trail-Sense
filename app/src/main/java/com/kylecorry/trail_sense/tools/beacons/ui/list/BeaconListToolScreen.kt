@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui.list
 
+import com.kylecorry.trail_sense.tools.beacons.domain.icon
 import kotlin.time.Clock
 
 import android.content.Context

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.layers.compass
 
+import com.kylecorry.trail_sense.tools.beacons.domain.icon
 import com.kylecorry.trail_sense.tools.beacons.ui.polygon
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.graphics.Color

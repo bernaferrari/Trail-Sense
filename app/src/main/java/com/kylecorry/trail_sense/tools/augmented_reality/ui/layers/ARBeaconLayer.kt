@@ -17,6 +17,7 @@ import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceL
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.ARGuidanceTarget
 import com.kylecorry.trail_sense.tools.augmented_reality.ui.guidance.BeaconGuidanceTarget
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
+import com.kylecorry.trail_sense.tools.beacons.domain.icon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.ui.DrawerBitmapLoader

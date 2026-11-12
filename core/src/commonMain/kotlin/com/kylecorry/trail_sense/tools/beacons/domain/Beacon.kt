@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.tools.beacons.domain
 
-import android.graphics.Color
 import androidx.annotation.ColorInt
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappableLocation
 
 data class Beacon(
@@ -16,7 +16,7 @@ data class Beacon(
     override val elevation: Float? = null,
     val temporary: Boolean = false,
     val owner: BeaconOwner = BeaconOwner.User,
-    @ColorInt override val color: Int = Color.BLACK,
+    @ColorInt override val color: Int = ColorInts.Black,
     override val icon: BeaconIcon? = null,
     val shape: BeaconShape = BeaconShape.Cookie
 ) : IBeacon, IMappableLocation {

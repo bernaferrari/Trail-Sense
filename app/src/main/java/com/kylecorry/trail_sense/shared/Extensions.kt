@@ -40,9 +40,7 @@ fun GeoUri.Companion.from(beacon: Beacon): GeoUri {
     val params = mutableMapOf(
         "label" to beacon.name
     )
-    if (beacon.elevation != null) {
-        params["ele"] = beacon.elevation.roundPlaces(2).toString()
-    }
+    beacon.elevation?.let { params["ele"] = it.roundPlaces(2).toString() }
 
     return GeoUri(beacon.coordinate, null, params)
 }

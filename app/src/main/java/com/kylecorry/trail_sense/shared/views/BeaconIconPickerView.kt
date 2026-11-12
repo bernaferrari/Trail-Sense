@@ -32,6 +32,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconIcon
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
+import com.kylecorry.trail_sense.tools.beacons.domain.icon
 
 @Composable
 fun BeaconIconPickerDialog(

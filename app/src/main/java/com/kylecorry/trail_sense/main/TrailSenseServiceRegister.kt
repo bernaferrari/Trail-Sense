@@ -80,7 +80,3 @@ object TrailSenseServiceRegister {
         }
     }
 }
-
-inline fun <reified T : Any> getAppService(): T {
-    return DependencyRegistry.get()
-}

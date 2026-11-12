@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.shared.dem.colors
 
-import android.graphics.Color
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.core.ui.colormaps.SampledColorMap
 import com.kylecorry.trail_sense.shared.colors.AppColor
+import com.kylecorry.trail_sense.shared.colors.ColorInts
 
 class WhiteToRedSlopeColorMap : SlopeColorMap {
     private val map = SampledColorMap(
         mapOf(
-            5 / 90f to Color.WHITE,
+            5 / 90f to ColorInts.White,
             10 / 90f to AppColor.Yellow.color,
             25 / 90f to Colors.interpolate(AppColor.Yellow.color, AppColor.Red.color, 0.5f),
             1f to AppColor.Red.color

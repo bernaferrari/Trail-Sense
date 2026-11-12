@@ -19,6 +19,7 @@ import com.kylecorry.sol.science.astronomy.SunTimesMode
 import com.kylecorry.sol.units.Temperature
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.tools.beacons.domain.icon
 import com.kylecorry.trail_sense.tools.tides.domain.TideDetails
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
