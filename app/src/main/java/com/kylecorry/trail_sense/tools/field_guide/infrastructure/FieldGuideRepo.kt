@@ -20,7 +20,7 @@ class FieldGuideRepo private constructor(private val context: Context) {
     suspend fun getAllPages(): List<FieldGuidePage> = onIO {
         val saved = pageDao.getAllPages().map { it.toFieldGuidePage() }
         val sightings = sightingDao.getAllSightings().map { it.toSighting() }
-        val all = BuiltInFieldGuide.getFieldGuide(context) + saved
+        val all = BuiltInFieldGuide.getFieldGuide() + saved
         val hidden = preferences.hiddenPageIds.toSet()
         all.map {
             it.copy(
@@ -32,7 +32,7 @@ class FieldGuideRepo private constructor(private val context: Context) {
 
     suspend fun getPage(id: Long): FieldGuidePage? = onIO {
         val page = if (id < 0) {
-            BuiltInFieldGuide.getFieldGuidePage(context, id)
+            BuiltInFieldGuide.getFieldGuidePage(id)
         } else {
             pageDao.getPage(id)?.toFieldGuidePage()
         }
