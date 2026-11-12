@@ -81,9 +81,9 @@ class WhiteNoiseService : AndromedaService() {
         const val NOTIFICATION_ID = 9874333
         private const val TAG = "WhiteNoiseService"
         const val NOTIFICATION_CHANNEL_ID = "white_noise"
-        const val CACHE_KEY_OFF_TIME = "cache_white_noise_off_at"
+        const val CACHE_KEY_OFF_TIME = WhiteNoisePlayer.CACHE_KEY_OFF_TIME
 
-        const val CACHE_KEY_SLEEP_SOUND_ID = "cache_sleep_sound_id"
+        const val CACHE_KEY_SLEEP_SOUND_ID = WhiteNoisePlayer.CACHE_KEY_SLEEP_SOUND_ID
 
         var isRunning = false
             private set

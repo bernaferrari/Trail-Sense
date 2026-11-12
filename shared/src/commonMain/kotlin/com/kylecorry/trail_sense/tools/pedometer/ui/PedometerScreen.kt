@@ -2,6 +2,19 @@
 
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
+import com.kylecorry.sol.math.MathExtensions.toRadians
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.dialogs.UnitPickers
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
+import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.IPedometerSubsystem
+
+import com.kylecorry.trail_sense.shared.views.compose.drawCenteredText
 import com.kylecorry.trail_sense.shared.views.compose.chartHeight
 
 import androidx.compose.animation.animateContentSize
@@ -49,26 +62,20 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.andromeda.core.sensors.Speedometer
-import com.kylecorry.andromeda.sense.pedometer.AndroidPedometer
+import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.andromeda.sense.pedometer.Pedometer
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FeatureState
@@ -77,11 +84,8 @@ import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.dialogs.date
-import com.kylecorry.trail_sense.shared.dialogs.dialog
 import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import com.kylecorry.trail_sense.shared.time.minusDays
@@ -102,14 +106,13 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
-import com.kylecorry.trail_sense.tools.pedometer.PedometerToolRegistration
+import com.kylecorry.trail_sense.tools.pedometer.PedometerBroadcasts
 import com.kylecorry.trail_sense.tools.pedometer.domain.HourlyStepCount
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackingPeriod
 import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculator
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.AveragePaceSpeedometer
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.CurrentPaceSpeedometer
-import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.PedometerSubsystem
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -125,7 +128,7 @@ import kotlinx.datetime.LocalDate
  */
 @Composable
 internal fun PedometerScreen(
-    pedometer: PedometerSubsystem,
+    pedometer: IPedometerSubsystem,
     prefs: UserPreferences,
     formatService: FormatService,
     onReset: () -> Unit,
@@ -133,7 +136,6 @@ internal fun PedometerScreen(
     onToggleDistanceAlert: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val stepTracker = remember { getAppService<StepTrackerService>() }
     val paceCalculator = remember(prefs.pedometer.strideLength) {
@@ -146,7 +148,7 @@ internal fun PedometerScreen(
         AveragePaceSpeedometer(stepTracker, paceCalculator, prefs.pedometer)
     }
     val instantSpeedometer = remember(paceCalculator) {
-        CurrentPaceSpeedometer(AndroidPedometer(context), paceCalculator)
+        CurrentPaceSpeedometer(getAppService<SensorService>().getPedometer(), paceCalculator)
     }
     var refreshKey by remember { mutableIntStateOf(0) }
     var openPeriod by remember { mutableStateOf<StepTrackingPeriod?>(null) }
@@ -169,11 +171,11 @@ internal fun PedometerScreen(
         }
         averageSpeedometer.start(listener)
         instantSpeedometer.start(listener)
-        ToolBroadcasts.subscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, stepsListener)
+        ToolBroadcasts.subscribe(PedometerBroadcasts.STEPS_CHANGED, stepsListener)
         onDispose {
             averageSpeedometer.stop(listener)
             instantSpeedometer.stop(listener)
-            ToolBroadcasts.unsubscribe(PedometerToolRegistration.BROADCAST_STEPS_CHANGED, stepsListener)
+            ToolBroadcasts.unsubscribe(PedometerBroadcasts.STEPS_CHANGED, stepsListener)
         }
     }
 
@@ -214,13 +216,13 @@ internal fun PedometerScreen(
         PedometerDataPoint(
             tag = "pedometer_speed",
             title = currentSpeed,
-            label = stringResource(R.string.current_speed),
+            label = appString(Res.string.current_speed),
             icon = TrailIcons.Speed
         ),
         PedometerDataPoint(
             tag = "pedometer_average_speed",
             title = averageSpeed,
-            label = stringResource(R.string.average_speed),
+            label = appString(Res.string.average_speed),
             icon = TrailIcons.Speed
         )
     )
@@ -228,13 +230,13 @@ internal fun PedometerScreen(
         PedometerDataPoint(
             tag = "pedometer_pace",
             title = currentPace,
-            label = stringResource(R.string.current_pace),
+            label = appString(Res.string.current_pace),
             icon = TrailIcons.ToolClock
         ),
         PedometerDataPoint(
             tag = "pedometer_average_pace",
             title = averagePace,
-            label = stringResource(R.string.average_pace),
+            label = appString(Res.string.average_pace),
             icon = TrailIcons.ToolClock
         )
     )
@@ -250,12 +252,12 @@ internal fun PedometerScreen(
     }
     val dispatcher = rememberSystemBack()
     val isOn = state == FeatureState.On
-    val speedTitle = stringResource(R.string.speed)
+    val speedTitle = appString(Res.string.speed)
 
     TrailSensePage(
-        title = stringResource(R.string.pedometer),
+        title = appString(Res.string.pedometer),
         onBack = { dispatcher?.invoke() },
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier,
         actions = {
             IconButton(
@@ -272,7 +274,7 @@ internal fun PedometerScreen(
             ) {
                 Icon(
                     painter = rememberVectorPainter(TrailIcons.ToolClock),
-                    contentDescription = stringResource(R.string.history)
+                    contentDescription = appString(Res.string.history)
                 )
             }
         }
@@ -294,7 +296,7 @@ internal fun PedometerScreen(
         trailSenseSection(key = "controls") {
             row { position ->
                 TrailSenseSwitchRow(
-                    label = stringResource(R.string.distance_alert),
+                    label = appString(Res.string.distance_alert),
                     checked = goal != null,
                     onCheckedChange = { onToggleDistanceAlert() },
                     summary = goalText,
@@ -334,9 +336,8 @@ internal fun PedometerScreen(
             formatter = sessionFormatter,
             onDismiss = { showSessions = false },
             onDelete = { period, title ->
-                Alerts.dialog(
-                    context,
-                    context.getString(R.string.delete),
+                Alerts.dialog(AppHost.current(),
+                    getAppService<AppStrings>().get(Res.string.delete),
                     title
                 ) { cancelled ->
                     if (!cancelled) {
@@ -368,7 +369,6 @@ private fun HourlyStepsHistory(
     paceCalculator: StrideLengthPaceCalculator,
     refreshKey: Int
 ) {
-    val context = LocalContext.current
     val stepTracker = remember { getAppService<StepTrackerService>() }
     // Saveable so the chosen day and hour survive the history scrolling out of the lazy page and back.
     var selectedDate by rememberSaveable { mutableStateOf(today()) }
@@ -408,7 +408,7 @@ private fun HourlyStepsHistory(
     }
 
     TrailSenseRowGroup(
-        title = stringResource(R.string.history),
+        title = appString(Res.string.history),
         modifier = Modifier.animateContentSize(MaterialTheme.motionScheme.fastSpatialSpec())
     ) {
         row { position ->
@@ -424,7 +424,7 @@ private fun HourlyStepsHistory(
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                            contentDescription = stringResource(R.string.previous)
+                            contentDescription = appString(Res.string.previous)
                         )
                     }
                     Text(
@@ -434,7 +434,7 @@ private fun HourlyStepsHistory(
                             .clip(MaterialTheme.shapes.large)
                             .combinedClickable(
                                 onClick = {
-                                    Pickers.date(context, selectedDate) { picked ->
+                                    Pickers.date(AppHost.current(), selectedDate) { picked ->
                                         if (picked != null) {
                                             selectDate(picked)
                                         }
@@ -456,7 +456,7 @@ private fun HourlyStepsHistory(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = stringResource(R.string.next)
+                                    contentDescription = appString(Res.string.next)
                                 )
                             }
                         }
@@ -470,13 +470,13 @@ private fun HourlyStepsHistory(
                     PedometerDataPoint(
                         tag = "hourly_steps_total_steps",
                         title = DecimalFormatter.format(totalSteps, 0),
-                        label = stringResource(R.string.steps),
+                        label = appString(Res.string.steps),
                         icon = TrailIcons.Steps
                     ),
                     PedometerDataPoint(
                         tag = "hourly_steps_total_distance",
                         title = formatStepsDistance(totalSteps),
-                        label = stringResource(R.string.distance),
+                        label = appString(Res.string.distance),
                         icon = TrailIcons.Ruler
                     )
                 ),
@@ -500,8 +500,7 @@ private fun HourlyStepsHistory(
         if (selectedHour != null) {
             row { position ->
                 PedometerMetricPair(
-                    label = stringResource(
-                        R.string.dash_separated_pair,
+                    label = appString(Res.string.dash_separated_pair,
                         formatService.formatTime(selectedHour.startTime, false),
                         formatService.formatTime(selectedHour.endTime, false)
                     ),
@@ -510,13 +509,13 @@ private fun HourlyStepsHistory(
                         PedometerDataPoint(
                             tag = "hourly_steps_details_steps",
                             title = DecimalFormatter.format(selectedHour.steps, 0),
-                            label = stringResource(R.string.steps),
+                            label = appString(Res.string.steps),
                             icon = TrailIcons.Steps
                         ),
                         PedometerDataPoint(
                             tag = "hourly_steps_details_distance",
                             title = formatStepsDistance(selectedHour.steps),
-                            label = stringResource(R.string.distance),
+                            label = appString(Res.string.distance),
                             icon = TrailIcons.Ruler
                         )
                     ),
@@ -568,7 +567,7 @@ private fun PedometerHero(
             )
             if (goal != null) {
                 Text(
-                    text = stringResource(R.string.pedometer_of_goal, goal),
+                    text = appString(Res.string.pedometer_of_goal, goal),
                     modifier = Modifier
                         .alignByBaseline()
                         .padding(start = TrailSenseSpacing.sm),
@@ -580,7 +579,7 @@ private fun PedometerHero(
         // The button already says whether it runs; while it does, one quiet line says since when.
         if (isOn && since != null) {
             Text(
-                text = stringResource(R.string.pedometer_counting_since, since),
+                text = appString(Res.string.pedometer_counting_since, since),
                 modifier = Modifier
                     .padding(top = TrailSenseSpacing.xs)
                     .testTag("pedometer_session_time"),
@@ -597,7 +596,7 @@ private fun PedometerHero(
             horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)
         ) {
             com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
-                text = stringResource(if (isOn) R.string.stop else R.string.start),
+                text = appString(if (isOn) Res.string.stop else Res.string.start),
                 onClick = onToggle,
                 icon = if (isOn) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
                 style = if (isOn) {
@@ -610,7 +609,7 @@ private fun PedometerHero(
                     .testTag("play_btn")
             )
             com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
-                text = stringResource(R.string.reset),
+                text = appString(Res.string.reset),
                 onClick = onReset,
                 icon = TrailIcons.BaselineRefresh24,
                 style = com.kylecorry.trail_sense.shared.views.compose.TrailSenseButtonStyle.Outlined,
@@ -691,7 +690,7 @@ private fun StepTrail(
                     }
                 }
                 val degrees = -90f + i * 360f / TRAIL_PRINTS
-                val theta = Math.toRadians(degrees.toDouble())
+                val theta = degrees.toDouble().toRadians()
                 // Left and right feet sit either side of the path.
                 val r = ring + if (i % 2 == 0) -side else side
                 val at = Offset(
@@ -715,7 +714,7 @@ private fun StepTrail(
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = stringResource(R.string.steps),
+                text = appString(Res.string.steps),
                 style = MaterialTheme.typography.titleSmall,
                 color = scheme.onSurfaceVariant
             )
@@ -773,6 +772,7 @@ private fun HourlyStepsBars(
     val track = scheme.onSurface.copy(alpha = 0.06f)
     val label = scheme.onSurfaceVariant
     val labelSize = with(androidx.compose.ui.platform.LocalDensity.current) { 11.sp.toPx() }
+    val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
     val currentHours by rememberUpdatedState(hours)
     Canvas(
         modifier = modifier.pointerInput(Unit) {
@@ -790,12 +790,7 @@ private fun HourlyStepsBars(
         val slot = size.width / hours.size
         val width = (slot * 0.64f).coerceAtLeast(2.dp.toPx())
         val max = (hours.maxOf { it.steps }.coerceAtLeast(100L)).toFloat()
-        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            color = label.toArgb()
-            textSize = labelSize
-            textAlign = android.graphics.Paint.Align.CENTER
-            fontFeatureSettings = "tnum"
-        }
+        val labelStyle = androidx.compose.ui.text.TextStyle(color = label, fontSize = 11.sp, fontFeatureSettings = "tnum")
         hours.forEachIndexed { index, hour ->
             val x = slot * index + (slot - width) / 2f
             drawRoundRect(track, Offset(x, 0f), androidx.compose.ui.geometry.Size(width, chartHeight), CornerRadius(width / 2f))
@@ -809,11 +804,12 @@ private fun HourlyStepsBars(
                 )
             }
             if (index % 6 == 0) {
-                drawContext.canvas.nativeCanvas.drawText(
+                drawCenteredText(
+                    textMeasurer,
                     formatHour(hour.startTime),
                     slot * index + slot / 2f,
                     size.height - 2.dp.toPx(),
-                    paint
+                    labelStyle
                 )
             }
         }
@@ -866,11 +862,11 @@ private fun PedometerSessionsDialog(
 ) {
     TrailSenseDialog(
         onDismissRequest = onDismiss,
-        title = stringResource(R.string.history),
-        confirmText = stringResource(android.R.string.ok)
+        title = appString(Res.string.history),
+        confirmText = systemString(SystemString.Ok)
     ) {
         if (sessions.isEmpty()) {
-            Text(stringResource(R.string.no_pedometer_sessions))
+            Text(appString(Res.string.no_pedometer_sessions))
         } else {
             Column(
                 modifier = Modifier
@@ -918,7 +914,7 @@ private fun PedometerSessionRow(
             IconButton(onClick = { menuOpen = true }) {
                 Icon(
                     painter = rememberVectorPainter(TrailIcons.MenuDots),
-                    contentDescription = stringResource(R.string.delete)
+                    contentDescription = appString(Res.string.delete)
                 )
             }
             DropdownMenu(
@@ -926,7 +922,7 @@ private fun PedometerSessionRow(
                 onDismissRequest = { menuOpen = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text(stringResource(R.string.delete)) },
+                    text = { Text(appString(Res.string.delete)) },
                     onClick = {
                         menuOpen = false
                         onDelete(period, title)
@@ -942,7 +938,7 @@ private fun speedText(speedometer: Speedometer, formatService: FormatService): S
     return if (speedometer.hasValidReading) {
         formatService.formatSpeed(speedometer.speed.value)
     } else {
-        stringResource(R.string.dash)
+        appString(Res.string.dash)
     }
 }
 
@@ -951,7 +947,7 @@ private fun paceText(speedometer: Speedometer, formatService: FormatService): St
     return if (speedometer.hasValidReading) {
         formatService.formatPace(speedometer.speed.value)
     } else {
-        stringResource(R.string.dash)
+        appString(Res.string.dash)
     }
 }
 
@@ -974,12 +970,11 @@ private data class PedometerDataPoint(
 /** The Pedometer tool: today's steps and distance, with the counter, the reset and the distance alert. */
 @Composable
 fun PedometerToolScreen() {
-    val context = LocalContext.current
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
-    val pedometer = remember(context) { PedometerSubsystem.getInstance(context.applicationContext) }
-    val prefs = remember(context) { UserPreferences(context.applicationContext) }
-    val formatter = remember(context) { FormatService.getInstance(context) }
+    val pedometer = remember { getAppService<IPedometerSubsystem>() }
+    val prefs = remember { getAppService<UserPreferences>() }
+    val formatter = remember { FormatService.getInstance() }
 
     fun startStepCounter() {
         scope.launch {
@@ -997,7 +992,7 @@ fun PedometerToolScreen() {
         prefs = prefs,
         formatService = formatter,
         onReset = {
-            Alerts.dialog(context, context.getString(R.string.reset_distance_title)) {
+            Alerts.dialog(AppHost.current(), getAppService<AppStrings>().get(Res.string.reset_distance_title)) {
                 if (!it) {
                     scope.launch {
                         getAppService<StepTrackerService>().startNewStepTrackingPeriod()
@@ -1020,10 +1015,9 @@ fun PedometerToolScreen() {
             val alertDistance = prefs.pedometer.alertDistance
             if (alertDistance == null) {
                 val units = formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
-                CustomUiUtils.pickDistance(
-                    context,
+                UnitPickers.distance(AppHost.current(),
                     units,
-                    title = context.getString(R.string.distance_alert),
+                    title = getAppService<AppStrings>().get(Res.string.distance_alert),
                 ) { distance, _ ->
                     if (distance != null) {
                         prefs.pedometer.alertDistance = distance
@@ -1031,11 +1025,9 @@ fun PedometerToolScreen() {
                 }
             } else {
                 val distance = alertDistance.convertTo(prefs.baseDistanceUnits).toRelativeDistance()
-                Alerts.dialog(
-                    context,
-                    context.getString(R.string.distance_alert),
-                    context.getString(
-                        R.string.remove_distance_alert,
+                Alerts.dialog(AppHost.current(),
+                    getAppService<AppStrings>().get(Res.string.distance_alert),
+                    getAppService<AppStrings>().get(Res.string.remove_distance_alert,
                         formatter.formatDistance(
                             distance,
                             Units.getDecimalPlaces(distance.units),

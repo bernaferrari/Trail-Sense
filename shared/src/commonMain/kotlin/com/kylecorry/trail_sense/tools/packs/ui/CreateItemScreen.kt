@@ -1,11 +1,16 @@
 @file:Suppress("FunctionNaming")
 
 package com.kylecorry.trail_sense.tools.packs.ui
+
+import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.navigation.Route
 
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 
-import android.text.InputType
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -35,20 +40,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.luna.text.toDoubleCompat
 import com.kylecorry.sol.units.Weight
 import com.kylecorry.sol.units.WeightUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -58,7 +57,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.packs.domain.ItemCategory
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
-import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
+import com.kylecorry.trail_sense.tools.packs.infrastructure.IPackRepo
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryIconMapper
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryStringMapper
 import kotlinx.coroutines.Dispatchers
@@ -68,17 +67,16 @@ import kotlin.math.floor
 
 @Composable
 fun CreateItemToolScreen(route: Route.CreatePackItem) {
-    val context = LocalContext.current.applicationContext
     val navigator = LocalNavigator.current
     val viewModel = viewModel {
         CreateItemViewModel(
             route = route,
-            repo = PackRepo.getInstance(context),
-            preferences = DependencyRegistry.get<PreferencesSubsystem>().preferences
+            repo = getAppService<IPackRepo>(),
+            preferences = getAppService<Preferences>()
         )
     }
-    val nameMapper = remember(context) { ItemCategoryStringMapper() }
-    val formatService = remember(context) { FormatService.getInstance(context) }
+    val nameMapper = remember { ItemCategoryStringMapper() }
+    val formatService = remember { FormatService.getInstance() }
     val categories = remember(nameMapper) {
         ItemCategory.entries.map { it to nameMapper.getString(it) }.sortedBy { it.second }
     }
@@ -89,7 +87,7 @@ fun CreateItemToolScreen(route: Route.CreatePackItem) {
     }
 
     CreateItemScreen(
-        title = stringResource(if (route.editItemId == 0L) R.string.create_item_title else R.string.edit_item_title),
+        title = appString(if (route.editItemId == 0L) Res.string.create_item_title else Res.string.edit_item_title),
         name = viewModel.name,
         amount = viewModel.amountText,
         desiredAmount = viewModel.desiredAmountText,
@@ -119,7 +117,7 @@ fun CreateItemToolScreen(route: Route.CreatePackItem) {
  */
 internal class CreateItemViewModel(
     private val route: Route.CreatePackItem,
-    private val repo: PackRepo,
+    private val repo: IPackRepo,
     private val preferences: Preferences
 ) : ViewModel() {
 
@@ -229,11 +227,11 @@ private fun CreateItemScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null
 ) {
-    val weightTitle = stringResource(R.string.weight_per_item)
+    val weightTitle = appString(Res.string.weight_per_item)
     TrailSensePage(
         title = title,
         onBack = onBack,
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier.testTag("create_item_title")
     ) {
         trailSenseSection(key = "details") {
@@ -241,8 +239,8 @@ private fun CreateItemScreen(
                 TrailSenseGroupCard(position = position) {
                     PackTextInput(
                         text = name,
-                        label = stringResource(R.string.name),
-                        inputType = InputType.TYPE_CLASS_TEXT,
+                        label = appString(Res.string.name),
+                        keyboardType = KeyboardType.Text,
                         tag = "name_edit",
                         onTextChange = onNameChange
                     )
@@ -258,7 +256,7 @@ private fun CreateItemScreen(
             }
             row { position ->
                 TrailSenseSwitchRow(
-                    label = stringResource(R.string.packing_list_optional),
+                    label = appString(Res.string.packing_list_optional),
                     checked = isOptional,
                     onCheckedChange = onOptionalChange,
                     position = position,
@@ -273,16 +271,16 @@ private fun CreateItemScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
                         PackTextInput(
                             text = amount,
-                            label = stringResource(R.string.packed_amount),
-                            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL,
+                            label = appString(Res.string.packed_amount),
+                            keyboardType = KeyboardType.Decimal,
                             tag = "count_edit",
                             onTextChange = onAmountChange,
                             modifier = Modifier.weight(1f)
                         )
                         PackTextInput(
                             text = desiredAmount,
-                            label = stringResource(R.string.desired_amount),
-                            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL,
+                            label = appString(Res.string.desired_amount),
+                            keyboardType = KeyboardType.Decimal,
                             tag = "desired_amount_edit",
                             onTextChange = onDesiredAmountChange,
                             modifier = Modifier.weight(1f)
@@ -307,7 +305,7 @@ private fun CreateItemScreen(
 
         item(key = "save") {
             com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
-                text = stringResource(R.string.save),
+                text = appString(Res.string.save),
                 onClick = onSave,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -321,18 +319,11 @@ private fun CreateItemScreen(
 private fun PackTextInput(
     text: String,
     label: String,
-    inputType: Int,
+    keyboardType: KeyboardType,
     tag: String,
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val keyboardType = when {
-        inputType and InputType.TYPE_CLASS_NUMBER == InputType.TYPE_CLASS_NUMBER -> {
-            androidx.compose.ui.text.input.KeyboardType.Decimal
-        }
-
-        else -> androidx.compose.ui.text.input.KeyboardType.Text
-    }
     com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField(
         value = text,
         onValueChange = onTextChange,
@@ -363,7 +354,7 @@ private fun CategoryInput(
             leading = { com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowWell(rememberVectorPainter(iconMapper.getIconVector(category))) }
         ) {
             Text(
-                text = stringResource(R.string.category),
+                text = appString(Res.string.category),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -407,8 +398,7 @@ private fun WeightInput(
     onWeightChange: (Weight?, WeightUnits?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatService = remember { FormatService.getInstance(context) }
+    val formatService = remember { FormatService.getInstance() }
     var unit by remember(units) {
         mutableStateOf(selectedUnit ?: weight?.units ?: units.firstOrNull())
     }
@@ -449,7 +439,7 @@ private fun WeightInput(
                 .weight(1f)
                 .testTag("item_weight_input"),
             // The unit picker beside the fields names the unit, so this field is always just "Weight".
-            label = stringResource(R.string.weight),
+            label = appString(Res.string.weight),
             keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
             inCard = true
         )
@@ -465,7 +455,7 @@ private fun WeightInput(
                 modifier = Modifier
                     .weight(1f)
                     .testTag("item_weight_ounces_input"),
-                label = stringResource(R.string.ounces_weight),
+                label = appString(Res.string.ounces_weight),
                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
                 inCard = true
             )

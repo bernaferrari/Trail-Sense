@@ -11,4 +11,7 @@ interface IPedometerSubsystem {
 
     fun enable()
     fun disable()
+
+    /** Whether the pedometer is off only because the activity permission is missing. */
+    fun isDisabledDueToPermissions(): Boolean
 }

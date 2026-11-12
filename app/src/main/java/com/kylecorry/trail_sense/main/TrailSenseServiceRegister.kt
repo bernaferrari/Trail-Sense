@@ -74,6 +74,10 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.WeatherSubsystem
+import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.AndroidWaterPurificationTimer
+import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterPurificationTimer
+import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.AndroidWhiteNoisePlayer
+import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoisePlayer
 
 object TrailSenseServiceRegister {
     fun setup(context: Context) {
@@ -131,6 +135,8 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(IFieldGuideRepo::class) { FieldGuideRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(INavigator::class) { Navigator.getInstance(appContext) }
         DependencyRegistry.addSingleton<ElevationModel>(DEM)
+        DependencyRegistry.addSingleton<WaterPurificationTimer>(AndroidWaterPurificationTimer(appContext))
+        DependencyRegistry.addSingleton<WhiteNoisePlayer>(AndroidWhiteNoisePlayer(appContext))
         DependencyRegistry.addSingleton(MapService::class) { MapService(MapRepo.getInstance(appContext)) }
 
         // Map layers

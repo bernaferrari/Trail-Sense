@@ -2,6 +2,12 @@
 
 package com.kylecorry.trail_sense.tools.whitenoise.ui
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.andromeda.preferences.Preferences
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import kotlin.time.Duration.Companion.seconds
 
 import kotlin.time.Clock
@@ -57,20 +63,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.graphics.shapes.toPath
-import androidx.compose.ui.graphics.asComposePath
+import com.kylecorry.trail_sense.shared.views.compose.toComposePath
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
@@ -81,7 +82,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
 import com.kylecorry.trail_sense.shared.views.compose.trailSensePressScale
 import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.SleepSound
-import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoiseService
+import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoisePlayer
 import kotlinx.coroutines.delay
 import kotlin.time.Duration
 
@@ -93,32 +94,32 @@ import kotlin.time.Duration
 fun WhiteNoiseScreen(
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val cache = remember { PreferencesSubsystem.getInstance(context).preferences }
+    val player = remember { getAppService<WhiteNoisePlayer>() }
+    val cache = remember { getAppService<Preferences>() }
     val soundTypes = remember {
         listOf(
-            SleepSound.WhiteNoise to context.getString(R.string.sleep_sound_white_noise),
-            SleepSound.PinkNoise to context.getString(R.string.sleep_sound_pink_noise),
-            SleepSound.BrownNoise to context.getString(R.string.sleep_sound_brown_noise),
-            SleepSound.Crickets to context.getString(R.string.sleep_sound_crickets),
-            SleepSound.CricketsNoChirp to context.getString(R.string.sleep_sound_crickets_no_chirping),
-            SleepSound.OceanWaves to context.getString(R.string.sleep_sound_ocean_waves),
-            SleepSound.Fan to context.getString(R.string.sleep_sound_fan)
+            SleepSound.WhiteNoise to getAppService<AppStrings>().get(Res.string.sleep_sound_white_noise),
+            SleepSound.PinkNoise to getAppService<AppStrings>().get(Res.string.sleep_sound_pink_noise),
+            SleepSound.BrownNoise to getAppService<AppStrings>().get(Res.string.sleep_sound_brown_noise),
+            SleepSound.Crickets to getAppService<AppStrings>().get(Res.string.sleep_sound_crickets),
+            SleepSound.CricketsNoChirp to getAppService<AppStrings>().get(Res.string.sleep_sound_crickets_no_chirping),
+            SleepSound.OceanWaves to getAppService<AppStrings>().get(Res.string.sleep_sound_ocean_waves),
+            SleepSound.Fan to getAppService<AppStrings>().get(Res.string.sleep_sound_fan)
         )
     }
 
     var selectedSound by remember {
         mutableStateOf(
             SleepSound.entries.withId(
-                cache.getLong(WhiteNoiseService.CACHE_KEY_SLEEP_SOUND_ID)
+                cache.getLong(WhiteNoisePlayer.CACHE_KEY_SLEEP_SOUND_ID)
                     ?: SleepSound.PinkNoise.id
             ) ?: SleepSound.PinkNoise
         )
     }
-    var isRunning by remember { mutableStateOf(WhiteNoiseService.isRunning) }
+    var isRunning by remember { mutableStateOf(player.isRunning) }
     var showSoundPicker by remember { mutableStateOf(false) }
     var useSleepTimer by remember {
-        val stopTime = cache.getInstant(WhiteNoiseService.CACHE_KEY_OFF_TIME)
+        val stopTime = cache.getInstant(WhiteNoisePlayer.CACHE_KEY_OFF_TIME)
         mutableStateOf(stopTime != null && stopTime > kotlin.time.Clock.System.now())
     }
     var hours by remember { mutableStateOf("00") }
@@ -140,16 +141,16 @@ fun WhiteNoiseScreen(
     }
 
     fun stopWhiteNoise() {
-        WhiteNoiseService.stop(context)
-        WhiteNoiseService.clearSleepTimer(context)
+        player.stop()
+        player.clearSleepTimer()
         isRunning = false
     }
 
     LaunchedEffect(Unit) {
         setDuration(Duration.ZERO)
         while (true) {
-            isRunning = WhiteNoiseService.isRunning
-            val stopTime = cache.getInstant(WhiteNoiseService.CACHE_KEY_OFF_TIME)
+            isRunning = player.isRunning
+            val stopTime = cache.getInstant(WhiteNoisePlayer.CACHE_KEY_OFF_TIME)
             if (stopTime != null && stopTime > kotlin.time.Clock.System.now()) {
                 useSleepTimer = true
                 setDuration((stopTime - (Clock.System.now())))
@@ -162,9 +163,9 @@ fun WhiteNoiseScreen(
 
     // One question: is the sound playing, and which one?
     TrailSensePage(
-        title = stringResource(R.string.tool_white_noise_title),
+        title = appString(Res.string.tool_white_noise_title),
         onBack = rememberTrailSenseBack(),
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = modifier
     ) {
         item(key = "player") {
@@ -177,14 +178,13 @@ fun WhiteNoiseScreen(
                     isRunning = isRunning,
                     sound = selectedSound,
                     soundName = soundName,
-                    contentDescription = stringResource(R.string.tool_white_noise_title),
-                    stateDescription = stringResource(if (isRunning) R.string.on else R.string.off),
+                    contentDescription = appString(Res.string.tool_white_noise_title),
+                    stateDescription = appString(if (isRunning) Res.string.on else Res.string.off),
                     onClick = {
                         if (isRunning) {
                             stopWhiteNoise()
                         } else {
-                            WhiteNoiseService.play(
-                                context,
+                            player.play(
                                 null,
                                 if (useSleepTimer) currentDuration() else null
                             )
@@ -195,8 +195,7 @@ fun WhiteNoiseScreen(
 
                 // The sound's name is the checked row below, so the object only carries one line: what a tap does.
                 Text(
-                    text = stringResource(
-                        if (isRunning) R.string.white_noise_tap_to_stop else R.string.white_noise_tap_to_play
+                    text = appString(if (isRunning) Res.string.white_noise_tap_to_stop else Res.string.white_noise_tap_to_play
                     ),
                     modifier = Modifier.padding(top = TrailSenseSpacing.xs),
                     style = MaterialTheme.typography.titleMedium,
@@ -211,7 +210,7 @@ fun WhiteNoiseScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)
             ) {
-                TrailSenseGroupHeader(stringResource(R.string.tool_sound))
+                TrailSenseGroupHeader(appString(Res.string.tool_sound))
                 // Every sound one tap away instead of behind a dialog, as one quiet list with the chosen one checked.
                 Column(
                     verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs),
@@ -225,7 +224,7 @@ fun WhiteNoiseScreen(
                             onClick = {
                                 if (sound.first != selectedSound) {
                                     selectedSound = sound.first
-                                    cache.putLong(WhiteNoiseService.CACHE_KEY_SLEEP_SOUND_ID, sound.first.id)
+                                    cache.putLong(WhiteNoisePlayer.CACHE_KEY_SLEEP_SOUND_ID, sound.first.id)
                                     stopWhiteNoise()
                                 }
                             }
@@ -234,7 +233,7 @@ fun WhiteNoiseScreen(
                 }
                 Spacer(Modifier.height(TrailSenseSpacing.lg))
                 TrailSenseSwitchRow(
-                    label = stringResource(R.string.sleep_timer),
+                    label = appString(Res.string.sleep_timer),
                     checked = useSleepTimer,
                     onCheckedChange = {
                         useSleepTimer = it
@@ -260,9 +259,9 @@ fun WhiteNoiseScreen(
                                 TrailSenseChoice(
                                     value = mins.minutes,
                                     label = if (mins < 60) {
-                                        stringResource(R.string.white_noise_minutes_short, mins.toInt())
+                                        appString(Res.string.white_noise_minutes_short, mins.toInt())
                                     } else {
-                                        stringResource(R.string.white_noise_hours_short, (mins / 60).toInt())
+                                        appString(Res.string.white_noise_hours_short, (mins / 60).toInt())
                                     }
                                 )
                             },
@@ -271,7 +270,7 @@ fun WhiteNoiseScreen(
                                 setDuration(it)
                                 stopWhiteNoise()
                             },
-                            label = stringResource(R.string.sleep_timer),
+                            label = appString(Res.string.sleep_timer),
                             modifier = Modifier.padding(TrailSenseSpacing.md)
                         )
                     }
@@ -282,7 +281,7 @@ fun WhiteNoiseScreen(
                         val last = TrailSenseGroupPosition(isFirst = false, isLast = true)
                         DurationField(
                             value = hours,
-                            label = stringResource(R.string.hours),
+                            label = appString(Res.string.hours),
                             modifier = Modifier.weight(1f),
                             position = last,
                             onChange = {
@@ -292,7 +291,7 @@ fun WhiteNoiseScreen(
                         )
                         DurationField(
                             value = minutes,
-                            label = stringResource(R.string.minutes),
+                            label = appString(Res.string.minutes),
                             modifier = Modifier.weight(1f),
                             position = last,
                             onChange = {
@@ -302,7 +301,7 @@ fun WhiteNoiseScreen(
                         )
                         DurationField(
                             value = seconds,
-                            label = stringResource(R.string.seconds),
+                            label = appString(Res.string.seconds),
                             modifier = Modifier.weight(1f),
                             position = last,
                             onChange = {
@@ -460,9 +459,7 @@ private class NoiseMorphShape(
         layoutDirection: androidx.compose.ui.unit.LayoutDirection,
         density: androidx.compose.ui.unit.Density
     ): androidx.compose.ui.graphics.Outline {
-        val path = morph.toPath(progress)
-        path.transform(android.graphics.Matrix().apply { setScale(size.width, size.height) })
-        return androidx.compose.ui.graphics.Outline.Generic(path.asComposePath())
+        return androidx.compose.ui.graphics.Outline.Generic(morph.toComposePath(progress, size.width, size.height))
     }
 }
 

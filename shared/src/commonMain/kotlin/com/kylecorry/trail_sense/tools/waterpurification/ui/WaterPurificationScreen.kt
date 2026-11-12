@@ -3,6 +3,13 @@
 
 package com.kylecorry.trail_sense.tools.waterpurification.ui
 
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
+
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.main.getAppService
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
@@ -55,15 +62,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.kylecorry.andromeda.preferences.Preferences
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.BaselinePlayArrow24
 import com.kylecorry.trail_sense.shared.icons.trail.BaselineStop24
 import com.kylecorry.trail_sense.shared.icons.trail.Check
@@ -77,7 +80,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
-import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterPurificationTimerService
+import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterPurificationTimer
 import kotlinx.coroutines.delay
 import kotlin.time.Duration
 import kotlin.math.PI
@@ -85,7 +88,6 @@ import kotlin.math.sin
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.waterpurification.domain.WaterService
 import kotlinx.coroutines.withTimeoutOrNull
@@ -103,7 +105,6 @@ internal fun WaterPurificationScreen(
     formatService: FormatService,
     getSelectedDuration: suspend (TimeSelection) -> Duration
 ) {
-    val context = LocalContext.current
     var selectedTime by remember { mutableStateOf(TimeSelection.Auto) }
     var duration by remember { mutableStateOf<Duration?>(null) }
     var remaining by remember { mutableStateOf<Duration?>(null) }
@@ -123,7 +124,7 @@ internal fun WaterPurificationScreen(
 
     fun stop() {
         cache.remove(WATER_PURIFICATION_END_TIME_KEY)
-        WaterPurificationTimerService.stop(context)
+        getAppService<WaterPurificationTimer>().stop()
         remaining = null
     }
 
@@ -135,7 +136,7 @@ internal fun WaterPurificationScreen(
         label = "purificationProgress"
     )
     val durationOptions = listOf(
-        TrailSenseChoice(TimeSelection.Auto, stringResource(R.string.auto)),
+        TrailSenseChoice(TimeSelection.Auto, appString(Res.string.auto)),
         TrailSenseChoice(
             TimeSelection.LowAltitude,
             formatService.formatDuration(1.minutes, short = true)
@@ -148,9 +149,9 @@ internal fun WaterPurificationScreen(
 
     // One question: how much longer does the water need to boil?
     TrailSensePage(
-        title = stringResource(R.string.water_boil_timer),
+        title = appString(Res.string.water_boil_timer),
         onBack = rememberTrailSenseBack(),
-        backLabel = stringResource(R.string.back)
+        backLabel = appString(Res.string.back)
     ) {
         item("dial") {
             Column(
@@ -164,8 +165,7 @@ internal fun WaterPurificationScreen(
                 )
                 // The verdict, right under the pot.
                 Text(
-                    text = stringResource(
-                        if (isRunning) R.string.water_boil_verdict_running else R.string.water_boil_verdict_idle
+                    text = appString(if (isRunning) Res.string.water_boil_verdict_running else Res.string.water_boil_verdict_idle
                     ),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
@@ -189,13 +189,13 @@ internal fun WaterPurificationScreen(
                     options = durationOptions,
                     selected = selectedTime,
                     onSelect = { selectedTime = it },
-                    label = stringResource(R.string.duration)
+                    label = appString(Res.string.duration)
                 )
             }
 
             // The one action on the screen is primary; cancelling is a quiet tonal secondary.
             com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
-                text = stringResource(if (isRunning) android.R.string.cancel else R.string.start),
+                text = if (isRunning) systemString(SystemString.Cancel) else appString(Res.string.start),
                 enabled = displayed != null,
                 icon = if (isRunning) TrailIcons.BaselineStop24 else TrailIcons.BaselinePlayArrow24,
                 style = if (isRunning) {
@@ -212,10 +212,7 @@ internal fun WaterPurificationScreen(
                             WATER_PURIFICATION_END_TIME_KEY,
                             kotlin.time.Clock.System.now().plus(selectedDuration)
                         )
-                        WaterPurificationTimerService.start(
-                            context,
-                            selectedDuration.inWholeSeconds
-                        )
+                        getAppService<WaterPurificationTimer>().start(selectedDuration.inWholeSeconds)
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -223,11 +220,11 @@ internal fun WaterPurificationScreen(
           }
         }
 
-        trailSenseSection(key = "steps", title = context.getString(R.string.steps)) {
+        trailSenseSection(key = "steps", title = getAppService<AppStrings>().get(Res.string.steps)) {
             val steps = listOf(
-                context.getString(R.string.one) to context.getString(R.string.water_purification_step_1),
-                context.getString(R.string.two) to context.getString(R.string.water_purification_step_2),
-                context.getString(R.string.three) to context.getString(R.string.water_purification_step_3)
+                getAppService<AppStrings>().get(Res.string.one) to getAppService<AppStrings>().get(Res.string.water_purification_step_1),
+                getAppService<AppStrings>().get(Res.string.two) to getAppService<AppStrings>().get(Res.string.water_purification_step_2),
+                getAppService<AppStrings>().get(Res.string.three) to getAppService<AppStrings>().get(Res.string.water_purification_step_3)
             )
             steps.forEachIndexed { index, (number, text) ->
                 row { position ->
@@ -369,7 +366,7 @@ private fun BoilPot(
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = stringResource(if (isRunning) R.string.water_boil_left else R.string.water_boil_for),
+                    text = appString(if (isRunning) Res.string.water_boil_left else Res.string.water_boil_for),
                     style = MaterialTheme.typography.titleSmall,
                     color = inkColor.copy(alpha = 0.8f)
                 )
@@ -381,7 +378,7 @@ private fun BoilPot(
                     )
                 } else {
                     Text(
-                        text = "%d:%02d".format(seconds / 60, seconds % 60),
+                        text = "${seconds / 60}:${(seconds % 60).toString().padStart(2, '0')}",
                         style = MaterialTheme.typography.displayLarge.copy(fontFeatureSettings = "tnum"),
                         fontWeight = FontWeight.SemiBold,
                         color = inkColor
@@ -475,10 +472,9 @@ internal enum class TimeSelection {
 /** The water boil timer: auto picks the time from the altitude, falling back to three minutes. */
 @Composable
 fun WaterPurificationToolScreen() {
-    val context = LocalContext.current.applicationContext
-    val altimeter = remember(context) { getAppService<SensorService>().getAltimeter() }
-    val formatService = remember(context) { FormatService.getInstance(context) }
-    val cache = remember(context) { PreferencesSubsystem.getInstance(context).preferences }
+    val altimeter = remember { getAppService<SensorService>().getAltimeter() }
+    val formatService = remember { FormatService.getInstance() }
+    val cache = remember { getAppService<Preferences>() }
     val boilTime = remember(altimeter) { BoilTime(altimeter) }
     WaterPurificationScreen(
         cache = cache,

@@ -3,15 +3,19 @@
 
 package com.kylecorry.trail_sense.tools.light.ui
 
+import com.kylecorry.sol.math.MathExtensions.toRadians
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
 import com.kylecorry.trail_sense.main.getAppService
-import android.graphics.Paint
+import com.kylecorry.trail_sense.shared.views.compose.drawCenteredText
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.ui.graphics.toArgb
 import com.kylecorry.trail_sense.shared.text.toDecimalInputOrNull
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
@@ -25,9 +29,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.lerp
 import kotlin.math.log10
-import androidx.compose.ui.graphics.asComposePath
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.graphics.shapes.Morph
-import androidx.graphics.shapes.toPath
+import com.kylecorry.trail_sense.shared.views.compose.toComposePath
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,11 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -66,14 +66,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.kylecorry.sol.science.optics.Optics
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInputField
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseOptionsDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.shared.DistanceUtils
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlin.math.ln
@@ -84,8 +82,7 @@ import kotlin.math.max
 fun LightMeterScreen(
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatter = remember { FormatService.getInstance(context) }
+    val formatter = remember { FormatService.getInstance() }
     val lightSensor = remember { getAppService<SensorService>().getLightSensor() }
     val distanceUnits = remember {
         formatter.sortDistanceUnits(DistanceUtils.hikingDistanceUnits)
@@ -134,7 +131,7 @@ fun LightMeterScreen(
     // flashlight is its own section under it, in the order you do it: the distance, the brightest reading, then what
     // that means (intensity, reach) and the scene it lights.
     TrailSensePage(
-        title = stringResource(R.string.tool_light_meter_title),
+        title = appString(Res.string.tool_light_meter_title),
         modifier = modifier
     ) {
         item("hero") {
@@ -148,12 +145,12 @@ fun LightMeterScreen(
         // Testing a flashlight is a second job: one row until it is asked for, so the reading stays the screen's topic.
         trailSenseSection(
             "flashlight",
-            footer = if (isTestingFlashlight) context.getString(R.string.light_meter_preview_hint) else null
+            footer = if (isTestingFlashlight) getAppService<AppStrings>().get(Res.string.light_meter_preview_hint) else null
         ) {
             row { position ->
                 com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem(
-                    title = stringResource(R.string.light_meter_flashlight_title),
-                    subtitle = stringResource(R.string.light_meter_flashlight_summary),
+                    title = appString(Res.string.light_meter_flashlight_title),
+                    subtitle = appString(Res.string.light_meter_flashlight_summary),
                     icon = androidx.compose.ui.graphics.vector.rememberVectorPainter(TrailIcons.Flashlight),
                     position = position,
                     onClick = { isTestingFlashlight = !isTestingFlashlight },
@@ -177,7 +174,7 @@ fun LightMeterScreen(
                         beamDistanceAmount = it
                         maxLux = 0f
                     },
-                    label = stringResource(R.string.distance),
+                    label = appString(Res.string.distance),
                     modifier = Modifier.testTag("beam_distance"),
                     position = position,
                     unit = formatter.getDistanceUnitName(beamDistanceUnit, true),
@@ -187,9 +184,9 @@ fun LightMeterScreen(
             if (maxLux > 0f) {
                 row { position ->
                     LightValueRow(
-                        label = stringResource(R.string.light_meter_peak_label),
+                        label = appString(Res.string.light_meter_peak_label),
                         value = formatter.formatLux(maxLux),
-                        supportingText = stringResource(R.string.light_meter_tap_to_reset),
+                        supportingText = appString(Res.string.light_meter_tap_to_reset),
                         position = position,
                         onClick = { maxLux = 0f },
                         modifier = Modifier.testTag("light_peak")
@@ -199,14 +196,14 @@ fun LightMeterScreen(
             if (beamDistance != null) {
                 row { position ->
                     LightValueRow(
-                        label = stringResource(R.string.light_meter_intensity),
+                        label = appString(Res.string.light_meter_intensity),
                         value = formatter.formatCandela(candela),
                         position = position
                     )
                 }
                 row { position ->
                     LightValueRow(
-                        label = stringResource(R.string.light_meter_reach),
+                        label = appString(Res.string.light_meter_reach),
                         value = formatter.formatDistance(Optics.lightBeamDistance(candela).convertTo(beamDistance.units)),
                         position = position
                     )
@@ -232,7 +229,7 @@ fun LightMeterScreen(
 
     if (showUnitPicker) {
         TrailSenseOptionsDialog(
-            title = stringResource(R.string.distance),
+            title = appString(Res.string.distance),
             options = distanceUnits.map { formatter.getDistanceUnitName(it, false) to it },
             selected = beamDistanceUnit,
             onSelect = {
@@ -276,14 +273,14 @@ private fun LightHero(
     val scheme = MaterialTheme.colorScheme
     val position = lightScalePosition(illuminance)
     val animatedPosition by animateFloatAsState(position, MaterialTheme.motionScheme.slowSpatialSpec(), label = "lux")
-    val verdict = stringResource(
+    val verdict = appString(
         when {
-            illuminance < 1f -> R.string.light_verdict_dark
-            illuminance < 50f -> R.string.light_verdict_dim
-            illuminance < 1000f -> R.string.light_verdict_indoor
-            illuminance < 10_000f -> R.string.light_verdict_overcast
-            illuminance < 50_000f -> R.string.light_verdict_daylight
-            else -> R.string.light_verdict_sun
+            illuminance < 1f -> Res.string.light_verdict_dark
+            illuminance < 50f -> Res.string.light_verdict_dim
+            illuminance < 1000f -> Res.string.light_verdict_indoor
+            illuminance < 10_000f -> Res.string.light_verdict_overcast
+            illuminance < 50_000f -> Res.string.light_verdict_daylight
+            else -> Res.string.light_verdict_sun
         }
     )
     // "Pitch dark · your eyes need..." reads as a headline and its explanation.
@@ -344,7 +341,7 @@ private fun LightHero(
                 // Notches between the four bands, so the fill's position has meaning.
                 val ringRadius = arcSize.width / 2f
                 for (band in 1..3) {
-                    val angle = Math.toRadians((135.0 + 270.0 * band / 4.0))
+                    val angle = ((135.0 + 270.0 * band / 4.0)).toRadians()
                     val dir = Offset(kotlin.math.cos(angle).toFloat(), kotlin.math.sin(angle).toFloat())
                     drawLine(
                         surface,
@@ -374,23 +371,23 @@ private fun LightHero(
                         center = sunCenter
                     )
                 }
-                val shape = sunMorph.toPath(b)
-                shape.transform(
-                    android.graphics.Matrix().apply {
-                        setScale(body, body)
-                        postTranslate(sunCenter.x - body / 2f, sunCenter.y - body / 2f)
-                        postRotate(spin, sunCenter.x, sunCenter.y)
-                    }
+                val shape = sunMorph.toComposePath(
+                    b,
+                    scaleX = body,
+                    dx = sunCenter.x - body / 2f,
+                    dy = sunCenter.y - body / 2f
                 )
-                drawPath(
-                    shape.asComposePath(),
-                    Brush.radialGradient(
-                        0f to lerp(sun, Color.White, 0.22f * b),
-                        1f to sun,
-                        center = sunCenter,
-                        radius = body / 2f
+                rotate(spin, pivot = sunCenter) {
+                    drawPath(
+                        shape,
+                        Brush.radialGradient(
+                            0f to lerp(sun, Color.White, 0.22f * b),
+                            1f to sun,
+                            center = sunCenter,
+                            radius = body / 2f
+                        )
                     )
-                )
+                }
             }
             Text(
                 text = luxText,
@@ -409,12 +406,12 @@ private fun LightHero(
               horizontalArrangement = Arrangement.SpaceBetween
           ) {
               Text(
-                  stringResource(R.string.light_meter_scale_dark),
+                  appString(Res.string.light_meter_scale_dark),
                   style = MaterialTheme.typography.labelMedium,
                   color = scheme.onSurfaceVariant
               )
               Text(
-                  stringResource(R.string.light_meter_scale_bright),
+                  appString(Res.string.light_meter_scale_bright),
                   style = MaterialTheme.typography.labelMedium,
                   color = scheme.onSurfaceVariant
               )
@@ -477,11 +474,12 @@ private fun LightBeamChart(
     val treeDark = scheme.primary.copy(alpha = 0.35f)
     val treeLit = scheme.tertiary
     val labelColor = scheme.onSurfaceVariant
+    val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
     Box(modifier = modifier) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val step = if (units == DistanceUnits.Feet) 3 else 1
-            val fullMoon = android.hardware.SensorManager.LIGHT_FULLMOON
-            val sunrise = android.hardware.SensorManager.LIGHT_SUNRISE
+            val fullMoon = LIGHT_FULL_MOON_LUX
+            val sunrise = LIGHT_SUNRISE_LUX
             val minLux = ln(fullMoon - 0.05f)
             val maxLuxLn = ln(sunrise)
             fun brightness(index: Int): Float {
@@ -518,21 +516,17 @@ private fun LightBeamChart(
                 topLeft = Offset(0f, groundTop),
                 size = Size(size.width, size.height - groundTop)
             )
-            val paint = Paint().apply {
-                color = labelColor.toArgb()
-                textAlign = Paint.Align.CENTER
-                textSize = 13.dp.toPx()
-                isFakeBoldText = true
-                isAntiAlias = true
-            }
+            val labelStyle = androidx.compose.ui.text.TextStyle(
+                color = labelColor,
+                fontSize = 13.dp.toSp(),
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+            )
             listOf(9, 24, 49, 74).forEach { index ->
                 val center = (index + 0.5f) * colWidth
                 val b = brightness(index)
                 val tree = lerp(treeDark, treeLit, b)
                 drawTree(this, center, groundTop, 44.dp.toPx(), tree)
-                drawIntoCanvas {
-                    it.nativeCanvas.drawText(((index + 1) * step).toString(), center, size.height - 7.dp.toPx(), paint)
-                }
+                drawCenteredText(textMeasurer, ((index + 1) * step).toString(), center, size.height - 7.dp.toPx(), labelStyle)
             }
         }
     }
@@ -558,3 +552,7 @@ private fun drawTree(
         drawPath(path, color)
     }
 }
+
+// Android's SensorManager.LIGHT_FULLMOON and LIGHT_SUNRISE, the ends of the beam chart's brightness scale.
+private const val LIGHT_FULL_MOON_LUX = 0.25f
+private const val LIGHT_SUNRISE_LUX = 400f
