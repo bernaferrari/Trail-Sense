@@ -1,6 +1,8 @@
 package com.kylecorry.trail_sense.tools.convert.ui
 
-import android.content.Context
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+
 import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
@@ -25,12 +27,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.domain.BuiltInCoordinateFormat
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
@@ -38,9 +37,9 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
  * Coordinates in the same card as the units: the location you type or paste on top, the same place in the chosen
  * format underneath. The format is the answer's pill; its choices take the keyboard's place.
  */
-class CoordinateConverterPage(context: Context) : ConverterPage {
+class CoordinateConverterPage : ConverterPage {
 
-    private val formatService = FormatService.getInstance(context)
+    private val formatService = FormatService.getInstance()
     private val formats = BuiltInCoordinateFormat.entries
 
     @Composable
@@ -80,7 +79,7 @@ class CoordinateConverterPage(context: Context) : ConverterPage {
                     active = true,
                     picking = false,
                     dimmed = picking,
-                    unit = stringResource(R.string.location),
+                    unit = appString(Res.string.location),
                     onPickUnit = null,
                     onActivate = { picking = false },
                     copyText = null,
@@ -103,7 +102,7 @@ class CoordinateConverterPage(context: Context) : ConverterPage {
                     IconButton(onClick = { clipboard.getText()?.text?.trim()?.let { coordinateText = it } }) {
                         Icon(
                             Icons.Rounded.ContentPaste,
-                            contentDescription = stringResource(R.string.convert_paste),
+                            contentDescription = appString(Res.string.convert_paste),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -122,13 +121,13 @@ class CoordinateConverterPage(context: Context) : ConverterPage {
                         isLast = true
                     )
                 ) {
-                    ConvertValue(result, placeholder = stringResource(R.string.dash))
+                    ConvertValue(result, placeholder = appString(Res.string.dash))
                 }
             }
 
             if (isInvalid) {
                 Text(
-                    stringResource(R.string.coordinate_input_invalid_location),
+                    appString(Res.string.coordinate_input_invalid_location),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(horizontal = TrailSenseSpacing.lg)

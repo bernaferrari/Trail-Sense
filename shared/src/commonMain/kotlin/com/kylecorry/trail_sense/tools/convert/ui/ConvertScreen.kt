@@ -3,6 +3,9 @@
 
 package com.kylecorry.trail_sense.tools.convert.ui
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -34,12 +37,9 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoiceDefaults
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
@@ -54,10 +54,9 @@ private const val DEFAULT_CATEGORY = 1
 fun ConvertScreen(
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val pages = remember(context) {
+    val pages = remember {
         listOf(
-            CoordinateConverterPage(context),
+            CoordinateConverterPage(),
             DistanceConverterPage(),
             TemperatureConverterPage(),
             VolumeConverterPage(),
@@ -66,12 +65,12 @@ fun ConvertScreen(
         )
     }
     val names = listOf(
-        stringResource(R.string.coordinates_tab),
-        stringResource(R.string.distance),
-        stringResource(R.string.temperature),
-        stringResource(R.string.volume),
-        stringResource(R.string.weight),
-        stringResource(R.string.time)
+        appString(Res.string.coordinates_tab),
+        appString(Res.string.distance),
+        appString(Res.string.temperature),
+        appString(Res.string.volume),
+        appString(Res.string.weight),
+        appString(Res.string.time)
     )
     ConverterTabs(
         pages = pages,
@@ -99,7 +98,7 @@ fun ConverterTabs(
     val saved = rememberSaveableStateHolder()
 
     TrailSenseInstrumentScaffold(
-        title = stringResource(R.string.convert),
+        title = appString(Res.string.convert),
         largeTitle = true,
         modifier = modifier
     ) {

@@ -546,3 +546,9 @@ us_pints
 us_quarts
 us_tablespoons
 us_teaspoons
+convert
+convert_paste
+coordinate_input_invalid_location
+coordinates_tab
+volume
+weight
