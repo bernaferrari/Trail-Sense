@@ -1,24 +1,22 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.commands
 
-import android.content.Context
-import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.commands.generic.CoroutineCommand
+import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
-import com.kylecorry.trail_sense.shared.dialogs.text
 
-class EditOfflineMapAttributionCommand(
-    private val context: Context
-) : CoroutineCommand<VectorMap> {
+class EditOfflineMapAttributionCommand : CoroutineCommand<VectorMap> {
     private val service = getAppService<MapService>()
 
     override suspend fun execute(value: VectorMap) {
         val attribution = CoroutinePickers.text(
-            context,
-            context.getString(R.string.attribution),
-            hint = context.getString(R.string.attribution),
+            AppHost.current(),
+            getAppService<AppStrings>().get(Res.string.attribution),
+            hint = getAppService<AppStrings>().get(Res.string.attribution),
             default = value.attribution.orEmpty()
         ) ?: return
 

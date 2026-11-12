@@ -23,43 +23,43 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.p
 import com.kylecorry.trail_sense.tools.offline_maps.map_layers.PhotoMapTileSource
 import java.util.UUID
 
-class MapRepo private constructor(context: Context) {
+class MapRepo private constructor(context: Context) : IMapRepo {
     private val offlineMapFileDao = AppDatabase.getInstance(context).vectorMapDao()
     private val photoMapDao = AppDatabase.getInstance(context).photoMapDao()
     private val mapGroupDao = AppDatabase.getInstance(context).mapGroupDao()
     private val files = FileSubsystem.getInstance(context)
     private val tileCache = getAppService<PersistentTileCache>()
 
-    suspend fun getPhotoMaps(): List<PhotoMap> = onIO {
+    override suspend fun getPhotoMaps(): List<PhotoMap> = onIO {
         val photoMaps = photoMapDao.getAll()
         val runner = ParallelCoroutineRunner(MAX_PARALLEL)
         runner.map(photoMaps, ::convertToMap)
     }
 
-    suspend fun getVectorMaps(): List<VectorMap> = onIO {
+    override suspend fun getVectorMaps(): List<VectorMap> = onIO {
         offlineMapFileDao.getAllSync().map { convertToMap(it) }
     }
 
-    suspend fun getMapGroup(id: Long): MapGroup? = onIO {
+    override suspend fun getMapGroup(id: Long): MapGroup? = onIO {
         mapGroupDao.get(id)?.toMapGroup()
     }
 
-    suspend fun getPhotoMap(id: Long): PhotoMap? = onIO {
+    override suspend fun getPhotoMap(id: Long): PhotoMap? = onIO {
         photoMapDao.get(id)?.let { convertToMap(it) }
     }
 
-    suspend fun getVectorMap(id: Long): VectorMap? = onIO {
+    override suspend fun getVectorMap(id: Long): VectorMap? = onIO {
         offlineMapFileDao.get(id)?.let { convertToMap(it) }
     }
 
-    suspend fun delete(map: PhotoMap) = onIO {
+    override suspend fun delete(map: PhotoMap) = onIO {
         tryOrNothing { files.delete(map.filename) }
         tryOrNothing { files.delete(map.pdfFileName) }
         photoMapDao.delete(PhotoMapEntity.from(map))
         invalidatePhotoMapCache(map.id)
     }
 
-    suspend fun delete(map: VectorMap) = onIO {
+    override suspend fun delete(map: VectorMap) = onIO {
         if (map.isExternal) {
             releaseExternalAccessIfUnused(map)
         } else {
@@ -68,7 +68,7 @@ class MapRepo private constructor(context: Context) {
         offlineMapFileDao.delete(VectorMapEntity.from(map))
     }
 
-    suspend fun copyToAppStorage(map: VectorMap): VectorMap? = onIO {
+    override suspend fun copyToAppStorage(map: VectorMap): VectorMap? = onIO {
         if (!map.isExternal) {
             return@onIO map
         }
@@ -94,11 +94,11 @@ class MapRepo private constructor(context: Context) {
         }
     }
 
-    suspend fun delete(group: MapGroup) {
+    override suspend fun delete(group: MapGroup) {
         mapGroupDao.delete(MapGroupEntity.from(group))
     }
 
-    suspend fun add(group: MapGroup): Long = onIO {
+    override suspend fun add(group: MapGroup): Long = onIO {
         if (group.id != 0L) {
             mapGroupDao.update(MapGroupEntity.from(group))
             group.id
@@ -107,27 +107,27 @@ class MapRepo private constructor(context: Context) {
         }
     }
 
-    suspend fun add(map: PhotoMap): Long = onIO {
+    override suspend fun add(map: PhotoMap): Long = onIO {
         val newId = photoMapDao.upsert(PhotoMapEntity.from(map)).getUpsertedId(map.id)
         invalidatePhotoMapCache(newId)
         newId
     }
 
-    suspend fun add(file: VectorMap): Long = onIO {
+    override suspend fun add(file: VectorMap): Long = onIO {
         offlineMapFileDao.upsert(VectorMapEntity.from(file)).getUpsertedId(file.id)
     }
 
-    suspend fun getPhotoMaps(parentId: Long?): List<PhotoMap> = onIO {
+    override suspend fun getPhotoMaps(parentId: Long?): List<PhotoMap> = onIO {
         val maps = photoMapDao.getAllWithParent(parentId)
         val runner = ParallelCoroutineRunner(MAX_PARALLEL)
         runner.map(maps, ::convertToMap)
     }
 
-    suspend fun getVectorMaps(parentId: Long?): List<VectorMap> = onIO {
+    override suspend fun getVectorMaps(parentId: Long?): List<VectorMap> = onIO {
         offlineMapFileDao.getAllWithParent(parentId).map { convertToMap(it) }
     }
 
-    suspend fun getMapGroups(parentId: Long?): List<MapGroup> = onIO {
+    override suspend fun getMapGroups(parentId: Long?): List<MapGroup> = onIO {
         mapGroupDao.getAllWithParent(parentId).map { it.toMapGroup() }
     }
 

@@ -37,6 +37,8 @@ import com.kylecorry.trail_sense.shared.text.StringLoader
 import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.persistence.MapRepo
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.tides.infrastructure.persistence.ITideTableRepo
@@ -90,6 +92,7 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton<IBeaconService>(BeaconService(appContext))
         DependencyRegistry.addSingleton(IWeatherSubsystem::class) { WeatherSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(ITideTableRepo::class) { TideTableRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(MapService::class) { MapService(MapRepo.getInstance(appContext)) }
 
         // Map layers
         DependencyRegistry.addSingleton(MapLayerLoader(appContext))

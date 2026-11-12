@@ -2,91 +2,89 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui
 
-import androidx.core.net.toUri
-
-import com.kylecorry.trail_sense.shared.navigation.Route
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.sol.units.Coordinate
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.PhotoMapPreferences
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.hasPdf
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-
-import androidx.compose.foundation.layout.Arrangement
-import com.kylecorry.trail_sense.shared.views.OfflineMapsEmptyIllustration
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
-import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
-import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.content.Context
 import android.content.ContextWrapper
-import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
-import androidx.compose.ui.platform.LocalContext
-import com.kylecorry.trail_sense.main.MainActivity
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.andromeda.print.Printer
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.andromeda.print.Printer
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.item
+import com.kylecorry.trail_sense.shared.dialogs.loading
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
+import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.views.OfflineMapsEmptyIllustration
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
+import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
+import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
 import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.groups.MapGroup
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
@@ -102,8 +100,10 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create.Create
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create.CreateMapFromUriCommand
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create.ICreateMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.groups.MapGroupLoader
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.PhotoMapPreferences
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.MapCleanupCommand
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.PrintMapCommand
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.hasPdf
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.reduce.HighQualityMapReducer
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.CreateMapGroupCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.DeleteMapCommand
@@ -116,10 +116,8 @@ import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.MapGroupAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.mappers.VectorMapAction
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapExportService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.dialogs.item
-import com.kylecorry.trail_sense.shared.dialogs.loading
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun OfflineMapListToolScreen(
@@ -137,7 +135,7 @@ fun OfflineMapListToolScreen(
         val appContext = context.applicationContext
         val appGps = getAppService<SensorService>().getGPS()
         OfflineMapListViewModel(
-            MapService.getInstance(appContext),
+            getAppService<MapService>(),
             UserPreferences(appContext).photoMaps,
             locationProvider = { appGps.location }
         )
@@ -233,8 +231,8 @@ fun OfflineMapListToolScreen(
         }
     }
 
-    fun delete(map: IMap) = runAndRefresh { DeleteMapCommand(context, viewModel.mapService).execute(map) }
-    fun rename(map: IMap) = runAndRefresh { RenameMapCommand(context, viewModel.mapService).execute(map) }
+    fun delete(map: IMap) = runAndRefresh { DeleteMapCommand(viewModel.mapService).execute(map) }
+    fun rename(map: IMap) = runAndRefresh { RenameMapCommand(viewModel.mapService).execute(map) }
     fun move(map: IMap) = runAndRefresh { MoveMapCommand(context, viewModel.mapService).execute(map) }
 
     fun view(map: IMap) {
@@ -296,7 +294,7 @@ fun OfflineMapListToolScreen(
         onCreateAction = { action ->
             when (action) {
                 OfflineMapCreateAction.CreateGroup -> runAndRefresh {
-                    CreateMapGroupCommand(context, viewModel.mapService).execute(viewModel.rootId)
+                    CreateMapGroupCommand(viewModel.mapService).execute(viewModel.rootId)
                 }
 
                 OfflineMapCreateAction.ImportFile -> createMap(
@@ -330,7 +328,7 @@ fun OfflineMapListToolScreen(
                 VectorMapAction.View -> view(map)
                 VectorMapAction.Rename -> rename(map)
                 VectorMapAction.EditAttribution -> runAndRefresh {
-                    EditOfflineMapAttributionCommand(context).execute(map)
+                    EditOfflineMapAttributionCommand().execute(map)
                 }
 
                 VectorMapAction.Export -> exportService.export(map)

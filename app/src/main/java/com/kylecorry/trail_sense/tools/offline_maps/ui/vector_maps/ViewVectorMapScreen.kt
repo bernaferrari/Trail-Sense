@@ -117,7 +117,7 @@ fun ViewVectorMapToolScreen(route: Route.VectorMapView) {
         onRename = {
             viewModel.map?.let {
                 scope.launch {
-                    RenameMapCommand(context, getAppService()).execute(it)
+                    RenameMapCommand(getAppService()).execute(it)
                     viewModel.load()
                 }
             }
@@ -125,7 +125,7 @@ fun ViewVectorMapToolScreen(route: Route.VectorMapView) {
         onEditAttribution = {
             viewModel.map?.let {
                 scope.launch {
-                    EditOfflineMapAttributionCommand(context).execute(it)
+                    EditOfflineMapAttributionCommand().execute(it)
                     viewModel.load()
                 }
             }
@@ -134,7 +134,7 @@ fun ViewVectorMapToolScreen(route: Route.VectorMapView) {
         onDelete = {
             viewModel.map?.let {
                 scope.launch {
-                    DeleteMapCommand(context, getAppService()).execute(it)
+                    DeleteMapCommand(getAppService()).execute(it)
                     viewModel.onDeleteAttempted(it)
                 }
             }

@@ -97,7 +97,7 @@ fun PhotoMapsToolScreen(
             MapContextualAction.Rename -> map?.let {
                 scope.launch {
                     viewModel.getLatest(it)?.let { latest ->
-                        RenameMapCommand(context, getAppService()).execute(latest)
+                        RenameMapCommand(getAppService()).execute(latest)
                         viewModel.reloadName(latest.id)
                     }
                 }
@@ -124,7 +124,7 @@ fun PhotoMapsToolScreen(
 
             MapContextualAction.Delete -> map?.let {
                 scope.launch {
-                    DeleteMapCommand(context, getAppService()).execute(it)
+                    DeleteMapCommand(getAppService()).execute(it)
                     navigator.popBackStack()
                 }
             }

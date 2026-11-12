@@ -1,24 +1,24 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.commands
 
-import android.content.Context
 import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.commands.generic.CoroutineCommand
+import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.tools.offline_maps.domain.groups.MapGroup
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
-import com.kylecorry.trail_sense.shared.dialogs.text
 
 class CreateMapGroupCommand(
-    private val context: Context,
     private val mapService: MapService
 ) : CoroutineCommand<Long?> {
     override suspend fun execute(value: Long?) {
         val name = onMain {
             CoroutinePickers.text(
-                context,
-                context.getString(R.string.name),
-                hint = context.getString(R.string.name)
+                AppHost.current(),
+                getAppService<AppStrings>().get(Res.string.name),
+                hint = getAppService<AppStrings>().get(Res.string.name)
             )
         } ?: return
         mapService.add(MapGroup(0, name, value))

@@ -71,9 +71,6 @@ object OfflineMapsToolRegistration : ToolRegistration {
                 *ToolDiagnosticFactory.compass(context)
             ).distinctBy { it.id },
             intentHandlers = listOf(importMapIntentHandler),
-            singletons = listOf(
-                MapService::getInstance
-            ),
             broadcasts = listOf(
                 ToolBroadcast(BROADCAST_OFFLINE_MAP_CHANGED, "Offline map changed"),
                 ToolBroadcast(BROADCAST_OFFLINE_MAP_ADDED, "Offline map added"),

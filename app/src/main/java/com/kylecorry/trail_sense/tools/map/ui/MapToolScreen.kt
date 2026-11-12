@@ -2,19 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.map.ui
 
-import androidx.compose.runtime.saveable.rememberSaveable
-import com.kylecorry.andromeda.torch.screenBrightness
-
-import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
-
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import android.content.ContextWrapper
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
@@ -24,91 +13,100 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.luna.concurrency.onMain
-import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.extensions.withSuspendableCancelableLoading
-import java.util.concurrent.atomic.AtomicBoolean
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.tryOrNothing
-import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
 import com.kylecorry.andromeda.torch.ScreenTorch
+import com.kylecorry.andromeda.torch.screenBrightness
+import com.kylecorry.luna.concurrency.onMain
+import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.settings.ui.ImproveAccuracyAlerter
+import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.DistanceUtils.toRelativeDistance
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dem.DEM
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.extensions.inBackground
+import com.kylecorry.trail_sense.shared.extensions.withSuspendableCancelableLoading
+import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.preferences.ui.MapLayersSheetState
 import com.kylecorry.trail_sense.shared.map_layers.ui.MapAttributionState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getAttribution
-import com.kylecorry.trail_sense.main.MainActivity
-import com.kylecorry.trail_sense.shared.extensions.inBackground
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
-import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import android.content.ContextWrapper
-import kotlinx.coroutines.launch
+import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
+import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
+import com.kylecorry.trail_sense.shared.sensors.rememberNavigationSensors
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.views.DateTimeSliderSheetState
 import com.kylecorry.trail_sense.shared.views.SensorStatusBadgeView
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseElevation
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMotion
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
-import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
+import com.kylecorry.trail_sense.shared.views.compose.locationDetailStats
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.map.MapToolRegistration
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationScreenLock
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.navigation.ui.NavigationSheetView
-import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.MapDistanceSheetState
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
+import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.MapDistanceSheetState
 import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.CreatePathCommand
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Instant
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.sol.science.geology.CoordinateBounds
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
-import com.kylecorry.trail_sense.shared.sensors.rememberNavigationSensors
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.kylecorry.trail_sense.shared.views.compose.locationDetailStats
 
 /** The map tool: the map with its controls and sheets, or a prompt to add one when no visible map can be drawn. */
 @Composable
@@ -118,7 +116,7 @@ fun MapToolScreen(startPathCreation: Boolean = false, modifier: Modifier = Modif
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val viewModel = viewModel { MapToolViewModel(MapService.getInstance(appContext)) }
+    val viewModel = viewModel { MapToolViewModel(getAppService<MapService>()) }
     val resumeCount = rememberResumeCount()
     // The map, its controls and sheets are rendering objects that live as long as the screen, so the controller that
     // wires them stays in the composition; only whether there is a map to show lives in the ViewModel.

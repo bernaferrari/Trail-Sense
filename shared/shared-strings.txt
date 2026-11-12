@@ -413,3 +413,5 @@ waypoints_to_be_deleted
 weather
 wetland
 worm
+attribution
+delete_map_group_message
