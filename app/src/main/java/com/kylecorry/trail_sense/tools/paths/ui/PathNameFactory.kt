@@ -8,12 +8,12 @@ class PathNameFactory(private val context: Context) {
 
     private val formatService = FormatService.getInstance(context)
 
-    @Suppress("IfThenToElvis")
     fun getName(path: Path): String {
+        val name = path.name
         val start = path.metadata.duration?.start
         val end = path.metadata.duration?.end
-        return if (path.name != null) {
-            path.name
+        return if (name != null) {
+            name
         } else if (start != null && end != null) {
             formatService.formatTimeSpan(start, end, true)
         } else {

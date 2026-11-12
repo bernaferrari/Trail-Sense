@@ -39,6 +39,8 @@ kotlin {
             api(libs.kotlinx.coroutines.core)
             implementation(libs.atomicfu)
             implementation(libs.androidx.collection)
+            // Resource and color annotations (@ColorInt, @RawRes...) are multiplatform
+            api(libs.androidx.annotation)
             api(libs.andromeda.core)
             api(libs.andromeda.sense)
             api(libs.andromeda.sound)

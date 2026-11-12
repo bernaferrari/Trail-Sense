@@ -104,11 +104,8 @@ class ImportPathsCommand(
             .associateWith { pathService.addGroup(PathGroup(0, it, parentId)) }
 
         for (path in paths) {
-            val parent = if (path.parent != null) {
-                groupIdMap[path.parent.name]
-            } else {
-                parentId
-            }
+            val parentGroup = path.parent
+            val parent = if (parentGroup != null) groupIdMap[parentGroup.name] else parentId
             // Create the path
             val pathToCreate = path.path.copy(parentId = parent)
             val pathId = pathService.addPath(pathToCreate)
