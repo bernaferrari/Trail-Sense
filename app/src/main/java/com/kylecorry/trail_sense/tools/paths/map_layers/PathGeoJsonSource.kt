@@ -1,7 +1,8 @@
 package com.kylecorry.trail_sense.tools.paths.map_layers
 
+import com.kylecorry.trail_sense.main.getAppService
 import android.content.Context
-import android.os.Bundle
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
@@ -17,6 +18,9 @@ import com.kylecorry.trail_sense.tools.paths.ui.asMappable
 import kotlinx.coroutines.flow.first
 
 class PathGeoJsonSource : GeoJsonSource {
+
+    private val context: Context
+        get() = getAppService()
     private val pathService = DependencyRegistry.get<PathService>()
     private val pathLoader = PathLoader(pathService)
     private var paths = emptyList<Path>()
@@ -25,10 +29,9 @@ class PathGeoJsonSource : GeoJsonSource {
     private var loaded = false
 
     override suspend fun load(
-        context: Context,
         bounds: CoordinateBounds,
         zoom: Int,
-        params: Bundle
+        params: MapLayerValues
     ): GeoJsonObject {
         if (pathService.changeKey != lastChangeKey) {
             lastChangeKey = pathService.changeKey

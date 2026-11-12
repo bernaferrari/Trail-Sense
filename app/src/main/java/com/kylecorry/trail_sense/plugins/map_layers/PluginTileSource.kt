@@ -1,12 +1,12 @@
 package com.kylecorry.trail_sense.plugins.map_layers
 
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import kotlin.time.Clock
 
 import android.Manifest
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.Bundle
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.plugins.infrastructure.PluginGuard
@@ -28,7 +28,7 @@ class PluginTileSource(private val packageId: String, private val endpoint: Stri
     override suspend fun loadTile(
         context: Context,
         tile: Tile,
-        params: Bundle
+        params: MapLayerValues
     ): Bitmap? {
         val payload = Payload(
             tile.x,

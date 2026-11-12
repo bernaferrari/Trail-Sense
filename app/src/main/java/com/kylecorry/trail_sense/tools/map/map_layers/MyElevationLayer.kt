@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.map.map_layers
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import android.content.Context
 import com.kylecorry.trail_sense.shared.colors.ColorInts
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.canvas.MapDrawer
@@ -46,7 +45,6 @@ class MyElevationLayer : OverlayLayer() {
     }
 
     override fun drawOverlay(
-        context: Context,
         drawer: MapDrawer,
         map: IMapView
     ) {

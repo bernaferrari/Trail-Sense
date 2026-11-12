@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.map_layers
 
+import com.kylecorry.trail_sense.main.getAppService
 import android.content.Context
 import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.canvas.MapDrawer
@@ -11,6 +12,9 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.overlay.OverlayLaye
 
 // TODO: Allow setting of position
 class CompassOverlayLayer : OverlayLayer() {
+
+    private val context: Context
+        get() = getAppService()
 
     override val layerId: String = LAYER_ID
 
@@ -30,7 +34,6 @@ class CompassOverlayLayer : OverlayLayer() {
         }
 
     override fun drawOverlay(
-        context: Context,
         drawer: MapDrawer,
         map: IMapView
     ) {

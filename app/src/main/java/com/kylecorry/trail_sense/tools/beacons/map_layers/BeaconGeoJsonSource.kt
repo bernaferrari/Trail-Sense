@@ -1,9 +1,8 @@
 package com.kylecorry.trail_sense.tools.beacons.map_layers
 
-import android.content.Context
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 
 import android.graphics.Color
-import android.os.Bundle
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -25,10 +24,9 @@ class BeaconGeoJsonSource : GeoJsonSource {
     private val navigator = DependencyRegistry.get<Navigator>()
 
     override suspend fun load(
-        context: Context,
         bounds: CoordinateBounds,
         zoom: Int,
-        params: Bundle
+        params: MapLayerValues
     ): GeoJsonObject {
         val highlighted = (navigator.getDestination() as? Destination.Beacon)?.beacon
 

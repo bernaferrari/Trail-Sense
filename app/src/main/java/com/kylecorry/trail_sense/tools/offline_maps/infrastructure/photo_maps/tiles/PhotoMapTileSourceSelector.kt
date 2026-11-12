@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.tiles
 
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.os.Bundle
 import androidx.core.graphics.alpha
 import androidx.core.graphics.createBitmap
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.use
@@ -37,7 +37,7 @@ class PhotoMapTileSourceSelector(
 
     private val recentMaps: MutableSet<PhotoMap> = ConcurrentHashMap.newKeySet()
 
-    override suspend fun loadTile(context: Context, tile: Tile, params: Bundle): Bitmap? {
+    override suspend fun loadTile(context: Context, tile: Tile, params: MapLayerValues): Bitmap? {
         val loaders = getRegionLoaders(tile.getBounds())
 
         val maps = loaders.map { it.map }.distinct()

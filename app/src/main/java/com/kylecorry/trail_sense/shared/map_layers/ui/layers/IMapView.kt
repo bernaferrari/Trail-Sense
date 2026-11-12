@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers
 
 import android.content.Context
-import android.os.Bundle
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -127,13 +126,11 @@ suspend fun IMapView.setLayersWithPreferences(
         } + additionalLayers
     }
 
-    val layerPreferences = repo.getLayerPreferencesBundle(mapId, newLayerIds)
-    layerPreferences.forEach { (layerId, bundle) ->
-        definitions[layerId]?.preferences?.forEach { preference ->
-            if (!bundle.containsKey(preference.id)) {
-                bundle.putDefault(preference.id, preference.defaultValue)
-            }
-        }
+    val layerPreferences = repo.getLayerPreferenceValues(mapId, newLayerIds).mapValues { (layerId, values) ->
+        val defaults = definitions[layerId]?.preferences
+            ?.associate { it.id to it.defaultValue.takeIf(::isLayerPreferenceValue) }
+            ?: emptyMap()
+        values.withDefaults(defaults)
     }
 
     val layersToPreference = layers.map { layer ->
@@ -154,14 +151,9 @@ suspend fun IMapView.setLayersWithPreferences(
     setLayers(actualLayers.map { it.first })
 }
 
-private fun Bundle.putDefault(key: String, value: Any?) {
-    when (value) {
-        is Boolean -> putBoolean(key, value)
-        is Int -> putInt(key, value)
-        is Float -> putFloat(key, value)
-        is Long -> putLong(key, value)
-        is String -> putString(key, value)
-    }
+/** The value types a layer preference can hold (any other default is left unset). */
+private fun isLayerPreferenceValue(value: Any?): Boolean {
+    return value is Boolean || value is Int || value is Float || value is Long || value is String
 }
 
 fun IMapView.getLayerById(layerId: String): ILayer? {

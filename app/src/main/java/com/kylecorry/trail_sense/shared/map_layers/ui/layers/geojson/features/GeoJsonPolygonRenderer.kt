@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.features
 
-import android.content.Context
 import com.kylecorry.trail_sense.shared.colors.ColorInts
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
@@ -52,7 +51,6 @@ class GeoJsonPolygonRenderer : FeatureRenderer() {
     }
 
     private suspend fun renderFeaturesInBackground(
-        context: Context,
         viewBounds: Rectangle,
         bounds: CoordinateBounds,
         projection: IMapViewProjection,
@@ -128,7 +126,6 @@ class GeoJsonPolygonRenderer : FeatureRenderer() {
     }
 
     override fun draw(
-        context: Context,
         drawer: MapDrawer,
         map: IMapView,
         features: List<GeoJsonFeature>

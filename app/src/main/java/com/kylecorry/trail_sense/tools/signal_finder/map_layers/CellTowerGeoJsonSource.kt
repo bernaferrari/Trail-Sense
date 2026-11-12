@@ -1,8 +1,9 @@
 package com.kylecorry.trail_sense.tools.signal_finder.map_layers
 
+import com.kylecorry.trail_sense.main.getAppService
 import android.content.Context
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import android.graphics.Color
-import android.os.Bundle
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.andromeda.geojson.GeoJsonObject
@@ -16,13 +17,15 @@ import com.kylecorry.trail_sense.tools.signal_finder.infrastructure.CellTowerMod
 
 class CellTowerGeoJsonSource : GeoJsonSource {
 
+    private val context: Context
+        get() = getAppService()
+
     private var featureName: String? = null
 
     override suspend fun load(
-        context: Context,
         bounds: CoordinateBounds,
         zoom: Int,
-        params: Bundle
+        params: MapLayerValues
     ): GeoJsonObject {
 
         if (featureName == null) {

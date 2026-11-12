@@ -1,12 +1,13 @@
 package com.kylecorry.trail_sense.tools.field_guide.map_layers
 
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
-import android.os.Bundle
 import android.util.Size
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
@@ -32,6 +33,9 @@ import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuideFormatService
 
 class FieldGuideSightingGeoJsonSource : GeoJsonSource {
 
+    private val context: Context
+        get() = getAppService()
+
     private val repo = DependencyRegistry.get<FieldGuideRepo>()
     private val files = DependencyRegistry.get<FileSubsystem>()
     var nameFormat = ""
@@ -55,10 +59,9 @@ class FieldGuideSightingGeoJsonSource : GeoJsonSource {
     )
 
     override suspend fun load(
-        context: Context,
         bounds: CoordinateBounds,
         zoom: Int,
-        params: Bundle
+        params: MapLayerValues
     ): GeoJsonObject {
         val preferences = params.getPreferences()
         val showImages =

@@ -1,9 +1,10 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles
 
+import android.content.Context
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import kotlin.time.Clock
 import kotlin.time.Duration
 
-import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Path
@@ -53,6 +54,9 @@ open class TileMapLayer<T : TileSource>(
     private val refreshBroadcasts: List<String> = emptyList(),
     private val cacheKeys: List<String>? = null
 ) : IAsyncLayer {
+
+    private val context: Context
+        get() = getAppService()
     private val runtimeId = UUID.randomUUID().toString()
     private var _timeOverride: Instant? = null
     private var _renderTime: Instant = Clock.System.now()
@@ -72,7 +76,7 @@ open class TileMapLayer<T : TileSource>(
     private val srcPoints = FloatArray(8)
     private val dstPoints = FloatArray(8)
     private val clipPath = Path()
-    protected var layerPreferences: Bundle = Bundle()
+    protected var layerPreferences: MapLayerValues = MapLayerValues.Empty
     private var featureId: String? = null
     private var wasOverTileLimit = false
     private val visibleTiles = VisibleTileCache(MAX_TILES)
@@ -104,7 +108,7 @@ open class TileMapLayer<T : TileSource>(
     }
 
     init {
-        taskRunner.addTask { _: Context, _: Rectangle, _: CoordinateBounds, projection: IMapViewProjection ->
+        taskRunner.addTask { _: Rectangle, _: CoordinateBounds, projection: IMapViewProjection ->
             queue.setMapProjection(projection)
         }
     }
@@ -129,7 +133,7 @@ open class TileMapLayer<T : TileSource>(
         refresh()
     }
 
-    override fun draw(context: Context, drawer: MapDrawer, map: IMapView) {
+    override fun draw(drawer: MapDrawer, map: IMapView) {
         // Avoid drawing while in safe mode
         if (SafeMode.isEnabled()) {
             return
@@ -139,10 +143,10 @@ open class TileMapLayer<T : TileSource>(
         if (shouldMultiply) {
             // Before Android 10 there is no separable multiply blend, so the layer is only made translucent
             drawer.withLayer(multiplyAlpha, multiply = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                renderTiles(context, drawer, map)
+                renderTiles(drawer, map)
             }
         } else {
-            renderTiles(context, drawer, map)
+            renderTiles(drawer, map)
         }
     }
 
@@ -152,14 +156,13 @@ open class TileMapLayer<T : TileSource>(
         }
 
         taskRunner.scheduleUpdate(
-            state.context,
             state.viewBounds,
             state.bounds,
             state.projection
         )
     }
 
-    override fun drawOverlay(context: Context, drawer: MapDrawer, map: IMapView) {
+    override fun drawOverlay(drawer: MapDrawer, map: IMapView) {
         // Do nothing
     }
 
@@ -175,7 +178,7 @@ open class TileMapLayer<T : TileSource>(
         return false
     }
 
-    private fun renderTiles(context: Context, drawer: MapDrawer, map: IMapView) {
+    private fun renderTiles(drawer: MapDrawer, map: IMapView) {
         val bounds = map.mapBounds
         val projection = map.mapProjection
         val desiredTiles = visibleTiles.get(bounds, projection.zoom.roundToInt(), zoomOffset)
@@ -538,8 +541,8 @@ open class TileMapLayer<T : TileSource>(
         _renderTime = _timeOverride ?: Clock.System.now()
     }
 
-    override fun setPreferences(preferences: Bundle) {
-        layerPreferences = Bundle(preferences)
+    override fun setPreferences(preferences: MapLayerValues) {
+        layerPreferences = preferences
         if (shouldMultiply) {
             multiplyAlpha = Interpolation.map(
                 preferences.getInt(

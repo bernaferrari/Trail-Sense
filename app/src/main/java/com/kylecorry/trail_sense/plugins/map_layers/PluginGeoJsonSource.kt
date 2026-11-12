@@ -1,10 +1,9 @@
 package com.kylecorry.trail_sense.plugins.map_layers
 
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import kotlin.time.Clock
 
 import android.Manifest
-import android.content.Context
-import android.os.Bundle
 import com.kylecorry.andromeda.geojson.GeoJsonConvert
 import com.kylecorry.andromeda.geojson.GeoJsonObject
 import com.kylecorry.sol.science.geology.CoordinateBounds
@@ -28,10 +27,9 @@ class PluginGeoJsonSource(private val packageId: String, private val endpoint: S
     private val connectionLock = Mutex()
 
     override suspend fun load(
-        context: Context,
         bounds: CoordinateBounds,
         zoom: Int,
-        params: Bundle
+        params: MapLayerValues
     ): GeoJsonObject? {
         val payload = Payload(
             bounds.north,

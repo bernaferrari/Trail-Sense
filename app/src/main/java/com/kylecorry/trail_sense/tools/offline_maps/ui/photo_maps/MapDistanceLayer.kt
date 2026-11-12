@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
-import android.content.Context
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.colors.ColorInts
-import android.os.Bundle
 import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.units.Coordinate
@@ -85,7 +84,7 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
 
     override val layerId: String = LAYER_ID
 
-    override fun setPreferences(preferences: Bundle) {
+    override fun setPreferences(preferences: MapLayerValues) {
         // Do nothing
     }
 
@@ -93,7 +92,7 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
         updateListener = listener
     }
 
-    override fun draw(context: Context, drawer: MapDrawer, map: IMapView) {
+    override fun draw(drawer: MapDrawer, map: IMapView) {
         val points = editor.points
         if (!isEnabled || points.isEmpty()) {
             return
@@ -159,7 +158,6 @@ class MapDistanceLayer : IAsyncLayer, IDraggableLayer {
     }
 
     override fun drawOverlay(
-        context: Context,
         drawer: MapDrawer,
         map: IMapView
     ) {

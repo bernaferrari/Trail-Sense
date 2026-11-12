@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.tools.tides.map_layers
 
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.tools.tides.infrastructure.model.TideService
 import android.content.Context
 import android.graphics.Color
-import android.os.Bundle
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
@@ -31,10 +31,9 @@ class TideGeoJsonSource : GeoJsonSource {
     private val minZoomLevel = 8
 
     override suspend fun load(
-        context: Context,
         bounds: CoordinateBounds,
         zoom: Int,
-        params: Bundle
+        params: MapLayerValues
     ): GeoJsonObject {
         val preferences = params.getPreferences()
         val showModeledTides =

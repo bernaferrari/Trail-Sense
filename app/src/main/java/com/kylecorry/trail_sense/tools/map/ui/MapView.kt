@@ -287,7 +287,7 @@ class MapView(private val context: Context) : IMapView {
 
         drawRotatedLayers()
         drawer.pop()
-        layerManager.drawOverlay(context, drawer, this)
+        layerManager.drawOverlay(drawer, this)
 
         if (isLayerDragging && layerManager.isMagnifierVisible) {
             magnifier.draw(drawer, layerTouch, ::drawRotatedLayers)
@@ -301,7 +301,7 @@ class MapView(private val context: Context) : IMapView {
             lastScale = scale
             layerManager.invalidate()
         }
-        layerManager.draw(context, drawer, this)
+        layerManager.draw(drawer, this)
         drawer.pop()
     }
 

@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers
 
-import android.content.Context
-import android.os.Bundle
 import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.sol.math.interpolation.Interpolation
@@ -34,19 +32,19 @@ interface ILayer {
     /**
      * Set the preferences of the layer
      */
-    fun setPreferences(preferences: Bundle)
+    fun setPreferences(preferences: MapLayerValues)
 
     /**
      * Draw the layer on the map.
      * Transforms are already applied to the canvas.
      */
-    fun draw(context: Context, drawer: MapDrawer, map: IMapView)
+    fun draw(drawer: MapDrawer, map: IMapView)
 
     /**
      * Draw the overlay on the map.
      * This is drawn on top of the map and is not transformed.
      */
-    fun drawOverlay(context: Context, drawer: MapDrawer, map: IMapView)
+    fun drawOverlay(drawer: MapDrawer, map: IMapView)
 
     /**
      * Invalidate the layer

@@ -1,8 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources
 
-import android.content.Context
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 
-import android.os.Bundle
 import com.kylecorry.andromeda.geojson.GeoJsonObject
 import com.kylecorry.sol.science.geology.CoordinateBounds
 
@@ -11,10 +10,9 @@ class ConfigurableGeoJsonSource(initialData: GeoJsonObject? = null) : GeoJsonSou
     var data: GeoJsonObject? = initialData
 
     override suspend fun load(
-        context: Context,
         bounds: CoordinateBounds,
         zoom: Int,
-        params: Bundle
+        params: MapLayerValues
     ): GeoJsonObject? {
         return data
     }

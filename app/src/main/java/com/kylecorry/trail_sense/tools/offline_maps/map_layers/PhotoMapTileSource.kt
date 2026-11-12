@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.tools.offline_maps.map_layers
 
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.os.Bundle
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.cache.InvalidatableCachedValue
@@ -34,7 +34,7 @@ class PhotoMapTileSource : TileSource {
     override suspend fun loadTile(
         context: Context,
         tile: Tile,
-        params: Bundle
+        params: MapLayerValues
     ): Bitmap? {
         val preferences = params.getPreferences()
         val loadPdfs = preferences.getBoolean(

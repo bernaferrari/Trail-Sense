@@ -4,10 +4,10 @@ import com.kylecorry.andromeda.preferences.putAll
 
 import com.kylecorry.andromeda.preferences.getAll
 
-import android.os.Bundle
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.preferences.Preference
 import com.kylecorry.andromeda.preferences.PreferenceType
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.text.LevenshteinDistance
 
@@ -41,28 +41,23 @@ class MapLayerPreferenceRepo {
         return preferences
     }
 
-    fun getLayerPreferencesBundle(
+    fun getLayerPreferenceValues(
         mapId: String,
         layerIds: List<String>
-    ): Map<String, Bundle> {
+    ): Map<String, MapLayerValues> {
         val preferences = getLayerPreferences(mapId, layerIds)
-        val bundles = mutableMapOf<String, Bundle>()
-        for (layerId in layerIds) {
+        return layerIds.associateWith { layerId ->
             val layerPreferences = preferences[layerId] ?: emptyList()
-            val bundle = Bundle()
-            for (preference in layerPreferences) {
-                val key = preference.key
-                when (preference.type) {
-                    PreferenceType.Int -> bundle.putInt(key, preference.value as Int)
-                    PreferenceType.Boolean -> bundle.putBoolean(key, preference.value as Boolean)
-                    PreferenceType.String -> bundle.putString(key, preference.value as String)
-                    PreferenceType.Float -> bundle.putFloat(key, preference.value as Float)
-                    PreferenceType.Long -> bundle.putLong(key, preference.value as Long)
+            MapLayerValues(layerPreferences.associate { preference ->
+                preference.key to when (preference.type) {
+                    PreferenceType.Int -> preference.value as Int
+                    PreferenceType.Boolean -> preference.value as Boolean
+                    PreferenceType.String -> preference.value as String
+                    PreferenceType.Float -> preference.value as Float
+                    PreferenceType.Long -> preference.value as Long
                 }
-            }
-            bundles[layerId] = bundle
+            })
         }
-        return bundles
     }
 
     fun copyLayerPreferences(

@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.map_layers
 
-import android.content.Context
 import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.trail_sense.shared.canvas.withLayerOpacity
 import com.kylecorry.andromeda.core.units.PixelCoordinate
@@ -74,7 +73,7 @@ class MapViewLayerManager(private val invalidateView: () -> Unit) {
 
         // Layers added after the view last changed still need to load for it
         viewState.value?.let {
-            viewState.value = MapViewState(it.context, it.viewBounds, it.bounds, it.projection)
+            viewState.value = MapViewState(it.viewBounds, it.bounds, it.projection)
         }
         invalidateView()
     }
@@ -107,11 +106,11 @@ class MapViewLayerManager(private val invalidateView: () -> Unit) {
     }
 
 
-    fun drawOverlay(context: Context, drawer: MapDrawer, map: IMapView) {
+    fun drawOverlay(drawer: MapDrawer, map: IMapView) {
         layers.forEach {
             try {
                 drawer.withLayerOpacity(it.opacity) {
-                    it.drawOverlay(context, drawer, map)
+                    it.drawOverlay(drawer, map)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -120,12 +119,12 @@ class MapViewLayerManager(private val invalidateView: () -> Unit) {
         }
     }
 
-    fun draw(context: Context, drawer: MapDrawer, map: IMapView) {
-        publishViewState(context, drawer, map)
+    fun draw(drawer: MapDrawer, map: IMapView) {
+        publishViewState(drawer, map)
         layers.forEach {
             try {
                 drawer.withLayerOpacity(it.opacity) {
-                    it.draw(context, drawer, map)
+                    it.draw(drawer, map)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -134,14 +133,14 @@ class MapViewLayerManager(private val invalidateView: () -> Unit) {
         }
     }
 
-    private fun publishViewState(context: Context, drawer: MapDrawer, map: IMapView) {
+    private fun publishViewState(drawer: MapDrawer, map: IMapView) {
         val projection = map.mapProjection
         val bounds = map.mapBounds
         val current = viewState.value
         if (current != null && current.projection === projection && current.bounds == bounds) {
             return
         }
-        viewState.value = MapViewState(context, drawer.getBounds(45f), bounds, projection)
+        viewState.value = MapViewState(drawer.getBounds(45f), bounds, projection)
     }
 
     private fun notifyViewChanged(state: MapViewState, layers: List<ILayer>) {

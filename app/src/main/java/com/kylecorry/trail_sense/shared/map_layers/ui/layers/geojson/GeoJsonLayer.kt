@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson
 
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import kotlin.time.Clock
 import kotlin.time.Duration
 
-import android.content.Context
 import android.os.Bundle
 import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -51,7 +51,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
         source.cleanup()
     }
     private var onFeatureClick: OnGeoJsonFeatureClickListener? = null
-    protected var layerPreferences: Bundle = Bundle()
+    protected var layerPreferences: MapLayerValues = MapLayerValues.Empty
     private var featureId: String? = null
     private var isWidget = false
     private val refreshTimer = refreshInterval?.let { CoroutineTimer { refresh() } }
@@ -86,7 +86,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
         val prefs = DependencyRegistry.get<UserPreferences>()
         renderer.configureLineStringRenderer(shouldRenderWithDrawLines = prefs.paths.useFastPathRendering)
         renderer.setOnClickListener(this::onClick)
-        taskRunner.addTask { context, viewBounds, bounds, projection ->
+        taskRunner.addTask { viewBounds, bounds, projection ->
             isInvalid = false
             val zoomLevel = projection.zoom.roundToInt()
             try {
@@ -99,14 +99,14 @@ open class GeoJsonLayer<T : GeoJsonSource>(
                     }
                 }
 
-                val params = Bundle().apply {
-                    putLong(MapLayerParams.PARAM_TIME, _renderTime.toEpochMilliseconds())
-                    putBoolean(MapLayerParams.PARAM_IS_WIDGET, isWidget)
-                }
-                params.putBundle(MapLayerParams.PARAM_PREFERENCES, layerPreferences)
-                featureId?.let { params.putString(MapLayerParams.PARAM_FEATURE_ID, it) }
+                val params = MapLayerValues.of(
+                    MapLayerParams.PARAM_TIME to _renderTime.toEpochMilliseconds(),
+                    MapLayerParams.PARAM_IS_WIDGET to isWidget,
+                    MapLayerParams.PARAM_PREFERENCES to layerPreferences,
+                    MapLayerParams.PARAM_FEATURE_ID to featureId
+                )
                 val obj =
-                    source.load(context, bounds, zoomLevel, params) ?: GeoJsonFeatureCollection(
+                    source.load(bounds, zoomLevel, params) ?: GeoJsonFeatureCollection(
                         emptyList()
                     )
                 if (isStopped) return@addTask
@@ -126,8 +126,8 @@ open class GeoJsonLayer<T : GeoJsonSource>(
         renderer.setHasUpdateListener(listener)
     }
 
-    override fun setPreferences(preferences: Bundle) {
-        layerPreferences = Bundle(preferences)
+    override fun setPreferences(preferences: MapLayerValues) {
+        layerPreferences = preferences
         percentOpacity = preferences.getInt(
             DefaultMapLayerDefinitions.OPACITY,
             DefaultMapLayerDefinitions.DEFAULT_OPACITY
@@ -152,13 +152,12 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     }
 
     override fun draw(
-        context: Context,
         drawer: MapDrawer,
         map: IMapView
     ) {
         if (isStopped) return
         isWidget = map.isWidget
-        renderer.draw(context, drawer, map)
+        renderer.draw(drawer, map)
     }
 
     override fun onViewChanged(state: MapViewState) {
@@ -170,7 +169,6 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     private fun requestUpdate(state: MapViewState) {
         if (isStopped) return
         taskRunner.scheduleUpdate(
-            state.context,
             state.viewBounds,
             state.bounds,
             state.projection,
@@ -179,7 +177,6 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     }
 
     override fun drawOverlay(
-        context: Context,
         drawer: MapDrawer,
         map: IMapView
     ) {

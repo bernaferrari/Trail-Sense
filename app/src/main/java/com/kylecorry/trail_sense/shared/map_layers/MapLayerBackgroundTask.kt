@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.map_layers
 
-import android.content.Context
 import com.kylecorry.luna.concurrency.CoroutineQueueRunner
 import com.kylecorry.luna.concurrency.Parallel
 import com.kylecorry.sol.math.geometry.Rectangle
@@ -32,9 +31,9 @@ class MapLayerBackgroundTask {
     private var isDirty = true
 
     private val tasks =
-        mutableListOf<suspend (context: Context, viewBounds: Rectangle, bounds: CoordinateBounds, projection: IMapViewProjection) -> Unit>()
+        mutableListOf<suspend (viewBounds: Rectangle, bounds: CoordinateBounds, projection: IMapViewProjection) -> Unit>()
 
-    fun addTask(task: suspend (context: Context, viewBounds: Rectangle, bounds: CoordinateBounds, projection: IMapViewProjection) -> Unit) {
+    fun addTask(task: suspend (viewBounds: Rectangle, bounds: CoordinateBounds, projection: IMapViewProjection) -> Unit) {
         synchronized(taskLock) {
             tasks.add(task)
         }
@@ -46,17 +45,16 @@ class MapLayerBackgroundTask {
     }
 
     fun scheduleUpdate(
-        context: Context,
         viewBounds: Rectangle,
         bounds: CoordinateBounds,
         projection: IMapViewProjection,
         isInvalid: Boolean = false,
         snapToTiles: Boolean = true,
-        update: suspend (context: Context, viewBounds: Rectangle, bounds: CoordinateBounds, projection: IMapViewProjection) -> Unit = { context, viewBounds, bounds, projection ->
+        update: suspend (viewBounds: Rectangle, bounds: CoordinateBounds, projection: IMapViewProjection) -> Unit = { viewBounds, bounds, projection ->
             val taskCopy = synchronized(taskLock) {
                 tasks.toList()
             }
-            Parallel.forEach(taskCopy.map { { it(context, viewBounds, bounds, projection) } })
+            Parallel.forEach(taskCopy.map { { it(viewBounds, bounds, projection) } })
         }
     ) {
         val zoom = projection.zoom.roundToInt()
@@ -115,7 +113,7 @@ class MapLayerBackgroundTask {
                     lock.withLock {
                         lastRun = RunKey(newBounds, zoom)
                     }
-                    update(context, viewBounds, newBounds, projection)
+                    update(viewBounds, newBounds, projection)
                 }
 
                 val scaleSignificantlyChanged =

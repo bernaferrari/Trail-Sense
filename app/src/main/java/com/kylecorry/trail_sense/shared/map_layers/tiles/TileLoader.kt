@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles
 
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -8,7 +9,6 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
-import android.os.Bundle
 import com.kylecorry.andromeda.bitmaps.BitmapUtils.use
 import com.kylecorry.andromeda.bitmaps.operations.Pad
 import com.kylecorry.andromeda.bitmaps.operations.Resize
@@ -88,7 +88,7 @@ class TileLoader(
     fun loadTiles(
         tiles: List<Tile>,
         time: Instant,
-        preferences: Bundle = Bundle(),
+        preferences: MapLayerValues = MapLayerValues.Empty,
         featureId: String? = null,
         isWidget: Boolean = false,
         isHighDetailMode: Boolean = false,
@@ -104,13 +104,13 @@ class TileLoader(
             tileCache.resize(cacheSize)
         }
 
-        val params = Bundle().apply {
-            putLong(MapLayerParams.PARAM_TIME, time.toEpochMilliseconds())
-            putBoolean(MapLayerParams.PARAM_IS_WIDGET, isWidget)
-            putBoolean(MapLayerParams.PARAM_HIGH_DETAIL_MODE, isHighDetailMode)
-            putBundle(MapLayerParams.PARAM_PREFERENCES, Bundle(preferences))
-        }
-        featureId?.let { params.putString(MapLayerParams.PARAM_FEATURE_ID, it) }
+        val params = MapLayerValues.of(
+            MapLayerParams.PARAM_TIME to time.toEpochMilliseconds(),
+            MapLayerParams.PARAM_IS_WIDGET to isWidget,
+            MapLayerParams.PARAM_HIGH_DETAIL_MODE to isHighDetailMode,
+            MapLayerParams.PARAM_PREFERENCES to preferences,
+            MapLayerParams.PARAM_FEATURE_ID to featureId
+        )
         val imageTiles = tileCache.getOrPut(tiles) { tile, key ->
             ImageTile(
                 key = key,
@@ -136,7 +136,7 @@ class TileLoader(
         sourceSelector: TileSource,
         context: Context,
         tile: Tile,
-        params: Bundle
+        params: MapLayerValues
     ): Bitmap? {
         val cacheKey = key
         val existing = if (cacheKey != null && persistentCache != null) {

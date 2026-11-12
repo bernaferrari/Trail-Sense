@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.overlay
 
-import android.content.Context
-import android.os.Bundle
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.ILayer
@@ -9,12 +8,11 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 
 abstract class OverlayLayer : ILayer {
 
-    override fun setPreferences(preferences: Bundle) {
+    override fun setPreferences(preferences: MapLayerValues) {
         // Do nothing
     }
 
     override fun draw(
-        context: Context,
         drawer: MapDrawer,
         map: IMapView
     ) {

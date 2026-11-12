@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.offline_maps.map_layers
 
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import android.content.Context
 import android.graphics.Bitmap
-import android.os.Bundle
 import com.kylecorry.luna.cache.MemoryCachedValue
 import com.kylecorry.luna.concurrency.onDefault
 import com.kylecorry.trail_sense.main.getAppService
@@ -36,7 +36,7 @@ class TrailMapsTileSource : TileSource {
     override suspend fun loadTile(
         context: Context,
         tile: Tile,
-        params: Bundle
+        params: MapLayerValues
     ): Bitmap? = onDefault {
         val featureId = params.getString(MapLayerParams.PARAM_FEATURE_ID)?.toLongOrNull()
         val highDetailMode = params.getBoolean(MapLayerParams.PARAM_HIGH_DETAIL_MODE, false)

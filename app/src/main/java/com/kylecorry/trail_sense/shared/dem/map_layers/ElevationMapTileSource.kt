@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.shared.dem.map_layers
 
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.tiles.toSize
 import android.content.Context
 
 import android.graphics.Bitmap
-import android.os.Bundle
 import com.kylecorry.andromeda.bitmaps.operations.Dither
 import com.kylecorry.andromeda.bitmaps.operations.applyOperations
 import com.kylecorry.trail_sense.shared.dem.DEM
@@ -18,7 +18,7 @@ import com.kylecorry.trail_sense.tools.map.map_layers.BaseMapTileSource
 
 class ElevationMapTileSource : TileSource {
 
-    override suspend fun loadTile(context: Context, tile: Tile, params: Bundle): Bitmap? {
+    override suspend fun loadTile(context: Context, tile: Tile, params: MapLayerValues): Bitmap? {
         val preferences = params.getPreferences()
         val strategyId = preferences.getString(COLOR)?.toLongOrNull()
         val colorScale = ElevationColorMapFactory().getElevationColorMap(

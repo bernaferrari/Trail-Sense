@@ -260,12 +260,12 @@ abstract class BasePhotoMapView : EnhancedImageView, IMapView {
             onImageLoadedListener?.invoke()
         }
 
-        layerManager.draw(context, drawer, this)
+        layerManager.draw(drawer, this)
     }
 
     override fun drawOverlay() {
         super.drawOverlay()
-        layerManager.drawOverlay(context, drawer, this)
+        layerManager.drawOverlay(drawer, this)
     }
 
     open fun showMap(map: PhotoMap) {

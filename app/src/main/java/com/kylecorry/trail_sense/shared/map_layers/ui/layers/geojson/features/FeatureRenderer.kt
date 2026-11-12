@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.features
 
-import android.content.Context
 import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
@@ -19,7 +18,7 @@ abstract class FeatureRenderer : IGeoJsonFeatureRenderer {
     private var features: List<GeoJsonFeature> = emptyList()
     private var updateListener: (() -> Unit)? = null
 
-    private var backgroundAction: (suspend (context: Context, viewBounds: Rectangle, bounds: CoordinateBounds, mapProjection: IMapViewProjection, features: List<GeoJsonFeature>) -> Unit)? =
+    private var backgroundAction: (suspend (viewBounds: Rectangle, bounds: CoordinateBounds, mapProjection: IMapViewProjection, features: List<GeoJsonFeature>) -> Unit)? =
         null
     private val taskRunner = MapLayerBackgroundTask()
 
@@ -40,24 +39,23 @@ abstract class FeatureRenderer : IGeoJsonFeatureRenderer {
         updateListener = listener
     }
 
-    protected fun setRunInBackgroundWhenChanged(action: (suspend (context: Context, viewBounds: Rectangle, bounds: CoordinateBounds, mapProjection: IMapViewProjection, features: List<GeoJsonFeature>) -> Unit)?) {
+    protected fun setRunInBackgroundWhenChanged(action: (suspend (viewBounds: Rectangle, bounds: CoordinateBounds, mapProjection: IMapViewProjection, features: List<GeoJsonFeature>) -> Unit)?) {
         backgroundAction = action
     }
 
     abstract fun draw(
-        context: Context,
         drawer: MapDrawer,
         map: IMapView,
         features: List<GeoJsonFeature>
     )
 
-    override fun draw(context: Context, drawer: MapDrawer, map: IMapView) {
+    override fun draw(drawer: MapDrawer, map: IMapView) {
         // Avoid drawing while in safe mode
         if (SafeMode.isEnabled()) {
             return
         }
 
-        draw(context, drawer, map, features)
+        draw(drawer, map, features)
     }
 
     override fun onViewChanged(state: MapViewState) {
@@ -70,16 +68,15 @@ abstract class FeatureRenderer : IGeoJsonFeatureRenderer {
             return
         }
         taskRunner.scheduleUpdate(
-            state.context,
             state.viewBounds,
             state.bounds,
             state.projection,
             isInvalid,
             snapToTiles = false
-        ) { context, viewBounds, bounds, projection ->
+        ) { viewBounds, bounds, projection ->
             isInvalid = false
             try {
-                backgroundAction?.invoke(context, viewBounds, bounds, projection, features)
+                backgroundAction?.invoke(viewBounds, bounds, projection, features)
                 updateListener?.invoke()
             } catch (e: CancellationException) {
                 throw e

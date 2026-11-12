@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.map.map_layers
 
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -8,7 +9,6 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Path
-import android.os.Bundle
 import androidx.core.graphics.createBitmap
 import com.kylecorry.andromeda.canvas.CanvasDrawer
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -30,15 +30,17 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 
 class MyLocationGeoJsonSource : GeoJsonSource {
 
+    private val context: Context
+        get() = getAppService()
+
     private var arrowBitmap: Bitmap? = null
     private var arrowBitmapKey: ArrowBitmapKey? = null
     private val hasCompass = DependencyRegistry.get<SensorService>().hasCompass()
 
     override suspend fun load(
-        context: Context,
         bounds: CoordinateBounds,
         zoom: Int,
-        params: Bundle
+        params: MapLayerValues
     ): GeoJsonObject {
         val preferences = params.getPreferences()
         val drawAccuracy = preferences.getBoolean(

@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.tools.map.map_layers
 
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.os.Bundle
 import androidx.core.graphics.toColorInt
 import com.kylecorry.andromeda.bitmaps.operations.Conditional
 import com.kylecorry.andromeda.bitmaps.operations.ReplaceColor
@@ -76,7 +76,7 @@ class BaseMapTileSource : TileSource {
     override suspend fun loadTile(
         context: Context,
         tile: Tile,
-        params: Bundle
+        params: MapLayerValues
     ): Bitmap? {
         return internalSelector.loadTile(context, tile, params)
     }
