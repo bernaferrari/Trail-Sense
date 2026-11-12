@@ -3,21 +3,6 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
-import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.text.font.FontWeight
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,36 +12,49 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMarkdown
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
-import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
-import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearchResult
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
+import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseMarkdown
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideDetails
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.GuideLoader
+import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
+import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearchResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -298,7 +296,7 @@ fun SurvivalGuideListToolScreen(route: Route.SurvivalGuideList) {
     val openSearchResult: (SurvivalGuideSearchResult) -> Unit = { result ->
         navigator.navigate(
             Route.SurvivalGuideReader(
-                chapterResourceId = result.chapter.resource,
+                chapter = result.chapter.resource,
                 headerIndex = result.headingIndex
             )
         )
@@ -307,20 +305,20 @@ fun SurvivalGuideListToolScreen(route: Route.SurvivalGuideList) {
     val listItems = if (viewModel.query.isBlank() || viewModel.searchResults.isEmpty()) {
         viewModel.chapters.map {
             SurvivalGuideListItem(
-                id = it.chapter.resource.toLong(),
+                id = it.chapter.resource.name.hashCode().toLong(),
                 title = it.chapter.title,
                 subtitle = it.sections.firstOrNull()?.summary,
                 icon = it.chapter.icon,
                 tag = null,
                 onClick = {
-                    navigator.navigate(Route.SurvivalGuideReader(chapterResourceId = it.chapter.resource))
+                    navigator.navigate(Route.SurvivalGuideReader(chapter = it.chapter.resource))
                 }
             )
         }
     } else {
         viewModel.searchResults.map {
             SurvivalGuideListItem(
-                id = it.chapter.resource.toLong(),
+                id = it.chapter.resource.name.hashCode().toLong(),
                 title = it.heading ?: overview,
                 subtitle = it.summary,
                 icon = it.chapter.icon,

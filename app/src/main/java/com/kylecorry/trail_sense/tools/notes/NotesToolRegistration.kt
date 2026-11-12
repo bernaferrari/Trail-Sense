@@ -1,16 +1,16 @@
 package com.kylecorry.trail_sense.tools.notes
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.notes.quickactions.QuickActionCreateNote
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object NotesToolRegistration : ToolRegistration {
@@ -21,7 +21,7 @@ object NotesToolRegistration : ToolRegistration {
             TrailIcons.ToolNotes,
             Route.Notes,
             ToolCategory.Other,
-            guideId = R.raw.guide_tool_notes,
+            guideId = RawTexts.guide_tool_notes,
             quickActions = listOf(
                 ToolQuickAction(
                     ToolIds.QUICK_ACTION_CREATE_NOTE,

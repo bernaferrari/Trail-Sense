@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.tools.lightning
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 
 object LightningStrikeDistanceToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
@@ -19,7 +19,7 @@ object LightningStrikeDistanceToolRegistration : ToolRegistration {
             Route.Lightning,
             ToolCategory.Weather,
             context.getString(R.string.tool_lightning_description),
-            guideId = R.raw.guide_tool_lightning_strike_distance
+            guideId = RawTexts.guide_tool_lightning_strike_distance
         )
     }
 }

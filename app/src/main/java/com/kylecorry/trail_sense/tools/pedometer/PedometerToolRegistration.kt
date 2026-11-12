@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.tools.pedometer
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import android.hardware.Sensor
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.pedometer.actions.PausePedometerAction
 import com.kylecorry.trail_sense.tools.pedometer.actions.ResumePedometerAction
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
@@ -25,13 +25,13 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolEventEmitter
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 import com.kylecorry.trail_sense.tools.tools.widgets.RefreshWidgetAction
 
@@ -48,7 +48,7 @@ object PedometerToolRegistration : ToolRegistration {
             TrailIcons.Steps,
             Route.Pedometer,
             ToolCategory.Distance,
-            guideId = R.raw.guide_tool_pedometer,
+            guideId = RawTexts.guide_tool_pedometer,
             settingsRoute = Route.PedometerSettings,
             initialize = { PedometerSubsystem.getInstance(it) },
             singletons = listOf(

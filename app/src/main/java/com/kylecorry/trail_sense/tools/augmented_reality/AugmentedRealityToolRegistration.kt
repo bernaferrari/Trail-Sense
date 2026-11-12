@@ -6,6 +6,7 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.shared.volume.SystemVolumeAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
@@ -24,7 +25,7 @@ object AugmentedRealityToolRegistration : ToolRegistration {
             Route.AugmentedReality(),
             ToolCategory.Other,
             context.getString(R.string.augmented_reality_description),
-            guideId = R.raw.guide_tool_augmented_reality,
+            guideId = RawTexts.guide_tool_augmented_reality,
             settingsRoute = Route.AugmentedRealitySettings,
             isAvailable = { getAppService<SensorService>().hasCompass() },
             volumeActions = listOf(

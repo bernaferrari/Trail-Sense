@@ -3,38 +3,31 @@
 
 package com.kylecorry.trail_sense.tools.cliffheight.ui
 
-import com.kylecorry.trail_sense.main.getAppService
-import kotlin.time.Duration
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Button
-import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.milliseconds
-
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +47,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -65,22 +60,27 @@ import com.kylecorry.andromeda.core.math.DecimalFormatter
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.icons.trail.BaselinePlayArrow24
 import com.kylecorry.trail_sense.shared.icons.trail.BaselineStop24
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.cliffheight.domain.CliffHeightService
-import kotlinx.coroutines.delay
-import kotlin.time.Instant
-import com.kylecorry.trail_sense.shared.CustomUiUtils
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
+import kotlinx.coroutines.delay
 
 /**
  * Cliff height, in the boiler's shape: the cliff itself is the object. A stone falls down its face in real time
@@ -446,7 +446,7 @@ fun CliffHeightToolScreen() {
             UserGuideUtils.showGuide(
                 context,
                 navigator,
-                R.raw.guide_tool_cliff_height
+                RawTexts.guide_tool_cliff_height
             )
         }
     )

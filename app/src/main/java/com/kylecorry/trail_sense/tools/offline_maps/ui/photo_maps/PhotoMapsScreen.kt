@@ -39,9 +39,12 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.dialogs.item
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
@@ -52,15 +55,13 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.ca
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.PrintMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.DeleteMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.RenameMapCommand
+import kotlin.math.absoluteValue
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlin.math.absoluteValue
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.dialogs.item
 
 @Composable
 fun PhotoMapsToolScreen(
@@ -93,7 +94,7 @@ fun PhotoMapsToolScreen(
         val map = viewModel.map
         when (action) {
             MapContextualAction.Calibrate -> viewModel.calibrate()
-            MapContextualAction.Guide -> UserGuideUtils.openGuide(context, navigator, R.raw.guide_tool_offline_maps)
+            MapContextualAction.Guide -> UserGuideUtils.openGuide(context, navigator, RawTexts.guide_tool_offline_maps)
             MapContextualAction.Rename -> map?.let {
                 scope.launch {
                     viewModel.getLatest(it)?.let { latest ->

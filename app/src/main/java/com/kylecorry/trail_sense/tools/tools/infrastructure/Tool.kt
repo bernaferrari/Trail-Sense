@@ -1,12 +1,13 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure
 
-import androidx.compose.ui.graphics.vector.ImageVector
 import android.content.Context
-import kotlin.reflect.KClass
-import com.kylecorry.trail_sense.shared.navigation.Route
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.data.Identifiable
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawText
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnostic
+import kotlin.reflect.KClass
 
 data class Tool(
     override val id: Long,
@@ -15,7 +16,7 @@ data class Tool(
     val route: Route,
     val category: ToolCategory,
     val description: String? = null,
-    val guideId: Int? = null,
+    val guideId: RawText? = null,
     val isExperimental: Boolean = false,
     val settingsRoute: Route? = null,
     val quickActions: List<ToolQuickAction> = emptyList(),

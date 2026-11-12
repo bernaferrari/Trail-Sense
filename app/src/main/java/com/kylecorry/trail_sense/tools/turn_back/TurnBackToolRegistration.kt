@@ -1,17 +1,17 @@
 package com.kylecorry.trail_sense.tools.turn_back
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 import com.kylecorry.trail_sense.tools.turn_back.infrastructure.receivers.TurnBackAlarmReceiver
 import com.kylecorry.trail_sense.tools.turn_back.services.TurnBackToolService
@@ -24,7 +24,7 @@ object TurnBackToolRegistration : ToolRegistration {
             TrailIcons.Undo,
             Route.TurnBack,
             ToolCategory.Time,
-            guideId = R.raw.guide_tool_turn_back,
+            guideId = RawTexts.guide_tool_turn_back,
             settingsRoute = Route.TurnBackSettings,
             notificationChannelGroups = listOf(
                 ToolNotificationChannelGroup(

@@ -5,6 +5,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.Apps
 import com.kylecorry.trail_sense.shared.icons.trail.Layers
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuide
 import com.kylecorry.trail_sense.tools.guide.domain.UserGuideCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -35,7 +36,7 @@ object Guides {
                     UserGuide(
                         context.getString(R.string.guide_map_layers),
                         null,
-                        R.raw.guide_tool_map_layers,
+                        RawTexts.guide_tool_map_layers,
                         TrailIcons.Layers
                     )
                 } else null
@@ -57,7 +58,7 @@ object Guides {
                     UserGuide(
                         context.getString(R.string.tools),
                         null,
-                        R.raw.guide_tool_tools,
+                        RawTexts.guide_tool_tools,
                         TrailIcons.Apps
                     )
                 )

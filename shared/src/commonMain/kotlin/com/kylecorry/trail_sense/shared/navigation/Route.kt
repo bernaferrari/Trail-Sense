@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.shared.navigation
 
 import androidx.navigation3.runtime.NavKey
+import com.kylecorry.trail_sense.shared.text.RawText
 import kotlinx.serialization.Serializable
 
 /**
@@ -97,10 +98,10 @@ sealed interface Route : NavKey {
 
     // Guides
     @Serializable data object GuideList : Route
-    /** [contents] and [chapterResourceId] are the guide's text resource. */
-    @Serializable data class Guide(val name: String, val contents: Int) : Route
+    /** [contents] and [chapter] are the guide's bundled text. */
+    @Serializable data class Guide(val name: String, val contents: RawText) : Route
     @Serializable data class SurvivalGuideList(val searchQuery: String = "") : Route
-    @Serializable data class SurvivalGuideReader(val chapterResourceId: Int, val headerIndex: Int = 0) : Route
+    @Serializable data class SurvivalGuideReader(val chapter: RawText, val headerIndex: Int = 0) : Route
 
     // Packing lists, notes, clouds, tides
     @Serializable data object PackList : Route

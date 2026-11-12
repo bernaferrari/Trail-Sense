@@ -50,6 +50,7 @@ import com.kylecorry.trail_sense.shared.preferences.onChange
 import com.kylecorry.trail_sense.shared.safeRoundToInt
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.thermometer.ThermometerSource
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.shared.views.UserError
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
@@ -246,7 +247,7 @@ fun ThermometerSettingsToolScreen() {
                         UserGuideUtils.showGuide(
                             context,
                             navigator,
-                            R.raw.guide_tool_settings
+                            RawTexts.guide_tool_settings
                         )
                     },
                     position = position

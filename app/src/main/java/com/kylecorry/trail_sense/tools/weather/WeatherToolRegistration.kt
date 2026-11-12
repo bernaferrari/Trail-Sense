@@ -1,23 +1,23 @@
 package com.kylecorry.trail_sense.tools.weather
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.andromeda.sense.Sensors
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnostic
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 import com.kylecorry.trail_sense.tools.tools.widgets.RefreshWidgetAction
@@ -45,7 +45,7 @@ object WeatherToolRegistration : ToolRegistration {
             TrailIcons.Cloud,
             Route.Weather,
             ToolCategory.Weather,
-            guideId = R.raw.guide_tool_weather,
+            guideId = RawTexts.guide_tool_weather,
             settingsRoute = Route.WeatherSettings,
             initialize = { WeatherSubsystem.getInstance(it) },
             quickActions = listOf(

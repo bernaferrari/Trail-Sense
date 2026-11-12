@@ -74,6 +74,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.shared.time.nowLocal
 import com.kylecorry.trail_sense.shared.time.toInstant
 import com.kylecorry.trail_sense.shared.time.toLocalDateTime
@@ -211,7 +212,7 @@ fun CreateTideToolScreen(route: Route.CreateTide) {
             UserGuideUtils.showGuide(
                 context,
                 navigator,
-                R.raw.guide_tool_tides
+                RawTexts.guide_tool_tides
             )
         },
         onSave = viewModel::saveTide,

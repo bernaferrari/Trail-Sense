@@ -7,6 +7,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.sensors.ILocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.sensors.quickactions.QuickActionRecalibrateAltimeter
 import com.kylecorry.trail_sense.tools.sensors.widgets.AppWidgetElevation
 import com.kylecorry.trail_sense.tools.sensors.widgets.AppWidgetLocation
@@ -30,7 +31,7 @@ object SensorsToolRegistration : ToolRegistration {
             TrailIcons.Sensors,
             Route.SensorDetails,
             ToolCategory.Other,
-            guideId = R.raw.guide_tool_sensors,
+            guideId = RawTexts.guide_tool_sensors,
             quickActions = listOf(
                 ToolQuickAction(
                     ToolIds.QUICK_ACTION_RECALIBRATE_ALTIMETER,

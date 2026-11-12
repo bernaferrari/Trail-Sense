@@ -18,6 +18,8 @@ import com.kylecorry.trail_sense.shared.device.DeviceProfile
 import com.kylecorry.trail_sense.shared.device.DeviceSubsystem
 import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
+import com.kylecorry.trail_sense.shared.images.AndroidBundledImages
+import com.kylecorry.trail_sense.shared.images.BundledImages
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.logging.AndroidLogger
 import com.kylecorry.trail_sense.shared.logging.Logger
@@ -32,7 +34,9 @@ import com.kylecorry.trail_sense.shared.sensors.LocationSubsystem
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.SensorSubsystem
 import com.kylecorry.trail_sense.shared.text.AndroidAppStrings
+import com.kylecorry.trail_sense.shared.text.AndroidRawTextReader
 import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.text.RawTextReader
 import com.kylecorry.trail_sense.shared.text.StringLoader
 import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
@@ -58,6 +62,8 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton<Logger>(AndroidLogger(appContext))
         DependencyRegistry.addSingleton(StringLoader(appContext))
         DependencyRegistry.addSingleton<AppStrings>(AndroidAppStrings(appContext))
+        DependencyRegistry.addSingleton<RawTextReader>(AndroidRawTextReader(appContext))
+        DependencyRegistry.addSingleton<BundledImages>(AndroidBundledImages(appContext))
         DependencyRegistry.addSingleton(FormatService.getInstance(appContext))
         DependencyRegistry.addSingleton(PreferencesSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton<Preferences>(PreferencesSubsystem.getInstance(appContext).preferences)

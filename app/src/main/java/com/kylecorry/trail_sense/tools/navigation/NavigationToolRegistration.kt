@@ -1,14 +1,14 @@
 package com.kylecorry.trail_sense.tools.navigation
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 import com.kylecorry.trail_sense.tools.navigation.map_layers.NavigationGeoJsonSource
 import com.kylecorry.trail_sense.tools.paths.ui.PathBackgroundColor
@@ -16,8 +16,8 @@ import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object NavigationToolRegistration : ToolRegistration {
@@ -28,7 +28,7 @@ object NavigationToolRegistration : ToolRegistration {
             TrailIcons.CompassIcon,
             Route.Navigation(),
             ToolCategory.Location,
-            guideId = R.raw.guide_tool_navigation,
+            guideId = RawTexts.guide_tool_navigation,
             settingsRoute = Route.NavigationSettings,
             diagnostics = listOf(
                 *ToolDiagnosticFactory.sightingCompass(context),

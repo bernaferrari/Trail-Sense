@@ -1,16 +1,16 @@
 package com.kylecorry.trail_sense.tools.survival_guide
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.survival_guide.quickactions.QuickActionSurvivalGuide
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 
 object SurvivalGuideToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
@@ -20,7 +20,7 @@ object SurvivalGuideToolRegistration : ToolRegistration {
             TrailIcons.SurvivalGuide,
             Route.SurvivalGuideList(),
             ToolCategory.Books,
-            guideId = R.raw.guide_tool_survival_guide,
+            guideId = RawTexts.guide_tool_survival_guide,
             additionalRoutes = listOf(Route.SurvivalGuideReader::class),
             quickActions = listOf(
                 ToolQuickAction(

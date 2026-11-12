@@ -3,10 +3,11 @@ package com.kylecorry.trail_sense.tools.survival_guide.infrastructure
 import android.content.Context
 import com.kylecorry.luna.concurrency.ParallelCoroutineRunner
 import com.kylecorry.luna.concurrency.onIO
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.RawTextReader
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
-import com.kylecorry.trail_sense.shared.text.readRawText
 
 data class GuideSection(
     val level: Int?,
@@ -28,7 +29,7 @@ class GuideLoader(private val context: Context) {
     }
 
     suspend fun load(chapter: Chapter, includeContent: Boolean = true): GuideDetails = onIO {
-        val text = context.readRawText(chapter.resource)
+        val text = getAppService<RawTextReader>().read(chapter.resource)
         val sections = TextUtils.groupSections(TextUtils.getSections(text), null)
 
         var guideSections = sections.map {

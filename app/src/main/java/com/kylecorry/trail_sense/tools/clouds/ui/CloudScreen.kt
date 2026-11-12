@@ -4,114 +4,111 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
-import kotlin.time.Clock
-
-import com.kylecorry.trail_sense.shared.time.toLocalDate
-
-import kotlin.time.Duration.Companion.hours
-
-import com.kylecorry.trail_sense.main.persistence.IReadingRepo
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
-import com.kylecorry.trail_sense.shared.views.compose.AppPermission
-import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-import com.kylecorry.andromeda.core.system.IntentResultRetriever
-import androidx.activity.compose.LocalActivity
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import androidx.compose.material3.MaterialShapes
-import com.kylecorry.trail_sense.shared.views.CloudsEmptyIllustration
-import androidx.compose.material3.toShape
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
-import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.kylecorry.andromeda.core.system.IntentResultRetriever
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.persistence.IReadingRepo
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.dialogs.CoroutineAlerts
+import com.kylecorry.trail_sense.shared.dialogs.dialog
+import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
+import com.kylecorry.trail_sense.shared.time.toLocalDate
+import com.kylecorry.trail_sense.shared.views.CloudsEmptyIllustration
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.AppPermission
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
-import androidx.compose.ui.graphics.graphicsLayer
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudObservation
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
-import com.kylecorry.trail_sense.shared.dialogs.dialog
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 @Composable
 fun CloudToolScreen(route: Route.Clouds) {
@@ -168,7 +165,7 @@ fun CloudToolScreen(route: Route.Clouds) {
         subtitle = subtitle,
         clouds = clouds ?: emptyList(),
         onGuideClick = {
-            UserGuideUtils.showGuide(context, navigator, R.raw.guide_tool_clouds)
+            UserGuideUtils.showGuide(context, navigator, RawTexts.guide_tool_clouds)
         },
         onCameraClick = ::addFromCamera,
         onFileClick = {

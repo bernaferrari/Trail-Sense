@@ -1,19 +1,19 @@
 package com.kylecorry.trail_sense.tools.flashlight
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
+import com.kylecorry.trail_sense.shared.views.compose.screenControllerAs
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightService
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.flashlight.quickactions.QuickActionFlashlight
 import com.kylecorry.trail_sense.tools.flashlight.quickactions.QuickActionScreenFlashlight
 import com.kylecorry.trail_sense.tools.flashlight.services.FlashlightToolService
-import com.kylecorry.trail_sense.shared.views.compose.screenControllerAs
 import com.kylecorry.trail_sense.tools.flashlight.ui.FlashlightController
 import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightController
 import com.kylecorry.trail_sense.tools.flashlight.volumeactions.FlashlightToggleVolumeAction
@@ -23,6 +23,7 @@ import com.kylecorry.trail_sense.tools.flashlight.widgets.FlashlightToolWidgetVi
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
@@ -31,7 +32,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object FlashlightToolRegistration : ToolRegistration {
@@ -48,7 +48,7 @@ object FlashlightToolRegistration : ToolRegistration {
             initialize = {
                 DependencyRegistry.addSingleton(FlashlightSubsystem.getInstance(it))
             },
-            guideId = R.raw.guide_tool_flashlight,
+            guideId = RawTexts.guide_tool_flashlight,
             settingsRoute = Route.FlashlightSettings,
             quickActions = listOfNotNull(
                 if (hasFlashlight)

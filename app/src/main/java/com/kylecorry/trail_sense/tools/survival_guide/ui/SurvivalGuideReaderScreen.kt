@@ -3,24 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
-import com.kylecorry.trail_sense.shared.text.toSpanned
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
-
 import android.content.Context
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.CoroutineScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialShapes
-import androidx.compose.material3.toShape
-import androidx.compose.ui.text.font.FontWeight
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
-import com.kylecorry.trail_sense.tools.guide.ui.ArticleBody
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
@@ -31,10 +14,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
@@ -42,53 +27,68 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
-import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.text.TextUtils
-import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
-import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
 import androidx.core.net.toUri
+import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.print.ColorMode
 import com.kylecorry.andromeda.print.Orientation
 import com.kylecorry.andromeda.print.Printer
 import com.kylecorry.andromeda.print.ScaleMode
+import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.loading
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
+import com.kylecorry.trail_sense.shared.text.RawTextReader
+import com.kylecorry.trail_sense.shared.text.TextUtils
+import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
+import com.kylecorry.trail_sense.shared.text.toSpanned
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
+import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.tools.guide.ui.ArticleBody
+import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.kylecorry.trail_sense.shared.text.readRawText
-import com.kylecorry.trail_sense.shared.dialogs.loading
 
 /**
  * One survival guide chapter: the chapter's introduction as plain reading text, then its sections as one group of
@@ -356,7 +356,7 @@ private fun ReaderHero(@Suppress("UNUSED_PARAMETER") chapter: Chapter, sections:
 fun SurvivalGuideReaderToolScreen(route: Route.SurvivalGuideReader) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val chapterResourceId = route.chapterResourceId
+    val chapterResourceId = route.chapter
     val chapter = remember(chapterResourceId) {
         Chapters.getChapters(context).firstOrNull { it.resource == chapterResourceId }
     }
@@ -368,7 +368,7 @@ fun SurvivalGuideReaderToolScreen(route: Route.SurvivalGuideReader) {
     }
     val content by produceState<String?>(null, chapterResourceId) {
         value = withContext(Dispatchers.IO) {
-            context.readRawText(chapterResourceId)
+            getAppService<RawTextReader>().read(chapterResourceId)
         }
     }
     SurvivalGuideReaderScreen(
@@ -394,7 +394,7 @@ private fun printChapter(context: Context, scope: CoroutineScope, chapter: Chapt
             printer.setScaleMode(ScaleMode.Fit)
             printer.setOrientation(Orientation.Portrait)
             val content = TextUtils.removeMarkdownComments(
-                "# ${chapter.title}\n" + context.readRawText(chapter.resource)
+                "# ${chapter.title}\n" + getAppService<RawTextReader>().read(chapter.resource)
             )
             val file = files.createTemp("pdf")
             val parsed = markdown.toMarkdown(content)

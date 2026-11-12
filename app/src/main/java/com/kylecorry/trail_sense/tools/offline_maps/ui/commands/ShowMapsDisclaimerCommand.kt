@@ -4,10 +4,11 @@ import android.content.Context
 import android.text.util.Linkify
 import androidx.core.text.toSpannable
 import androidx.core.text.util.LinkifyCompat
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.commands.Command
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 
 class ShowMapsDisclaimerCommand(
@@ -31,7 +32,7 @@ class ShowMapsDisclaimerCommand(
                 UserGuideUtils.showGuide(
                     context,
                     appNavigator,
-                    R.raw.guide_tool_offline_maps
+                    RawTexts.guide_tool_offline_maps
                 )
             }
         }

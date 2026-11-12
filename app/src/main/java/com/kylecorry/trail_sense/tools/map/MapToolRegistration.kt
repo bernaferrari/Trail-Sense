@@ -1,8 +1,5 @@
 package com.kylecorry.trail_sense.tools.map
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.dem.colors.ElevationColorStrategy
@@ -13,11 +10,14 @@ import com.kylecorry.trail_sense.shared.dem.map_layers.ElevationMapTileSource
 import com.kylecorry.trail_sense.shared.dem.map_layers.HillshadeMapTileSource
 import com.kylecorry.trail_sense.shared.dem.map_layers.RuggednessMapTileSource
 import com.kylecorry.trail_sense.shared.dem.map_layers.SlopeMapTileSource
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.map.map_layers.BaseMapTileSource
 import com.kylecorry.trail_sense.tools.map.map_layers.MyElevationLayer
 import com.kylecorry.trail_sense.tools.map.map_layers.MyLocationGeoJsonSource
@@ -29,10 +29,10 @@ import com.kylecorry.trail_sense.tools.sensors.SensorsToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object MapToolRegistration : ToolRegistration {
@@ -53,7 +53,7 @@ object MapToolRegistration : ToolRegistration {
             Route.Map(),
             ToolCategory.Location,
             settingsRoute = Route.MapSettings,
-            guideId = R.raw.guide_tool_map,
+            guideId = RawTexts.guide_tool_map,
             diagnostics = listOf(
                 ToolDiagnosticFactory.gps(context),
                 *ToolDiagnosticFactory.compass(context)

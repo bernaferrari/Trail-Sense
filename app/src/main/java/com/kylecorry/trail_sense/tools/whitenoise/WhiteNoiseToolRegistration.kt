@@ -1,22 +1,22 @@
 package com.kylecorry.trail_sense.tools.whitenoise
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.shared.volume.SystemVolumeAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 import com.kylecorry.trail_sense.tools.whitenoise.infrastructure.WhiteNoiseService
 import com.kylecorry.trail_sense.tools.whitenoise.quickactions.QuickActionWhiteNoise
@@ -31,7 +31,7 @@ object WhiteNoiseToolRegistration : ToolRegistration {
             Route.WhiteNoise,
             ToolCategory.Other,
             context.getString(R.string.tool_white_noise_summary),
-            guideId = R.raw.guide_tool_white_noise,
+            guideId = RawTexts.guide_tool_white_noise,
             quickActions = listOf(
                 ToolQuickAction(
                     ToolIds.QUICK_ACTION_WHITE_NOISE,

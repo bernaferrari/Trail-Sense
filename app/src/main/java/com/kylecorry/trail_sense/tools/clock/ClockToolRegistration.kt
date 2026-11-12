@@ -1,18 +1,18 @@
 package com.kylecorry.trail_sense.tools.clock
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.clock.infrastructure.NextMinuteBroadcastReceiver
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object ClockToolRegistration : ToolRegistration {
@@ -23,7 +23,7 @@ object ClockToolRegistration : ToolRegistration {
             TrailIcons.ToolClock,
             Route.Clock,
             ToolCategory.Time,
-            guideId = R.raw.guide_tool_clock,
+            guideId = RawTexts.guide_tool_clock,
             settingsRoute = Route.ClockSettings,
             notificationChannelGroups = listOf(
                 ToolNotificationChannelGroup(

@@ -1,17 +1,17 @@
 package com.kylecorry.trail_sense.tools.offline_maps
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.extensions.findNavigator
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerAttribution
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.offline_maps.map_layers.PhotoMapTileSource
 import com.kylecorry.trail_sense.tools.offline_maps.map_layers.TrailMapsTileSource
@@ -19,10 +19,10 @@ import com.kylecorry.trail_sense.tools.offline_maps.quickactions.QuickActionOpen
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIntentHandler
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object OfflineMapsToolRegistration : ToolRegistration {
@@ -52,7 +52,7 @@ object OfflineMapsToolRegistration : ToolRegistration {
             Route.OfflineMapList(),
             ToolCategory.Location,
             context.getString(R.string.offline_maps_summary),
-            guideId = R.raw.guide_tool_offline_maps,
+            guideId = RawTexts.guide_tool_offline_maps,
             settingsRoute = Route.PhotoMapSettings,
             quickActions = listOf(
                 ToolQuickAction(

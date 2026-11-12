@@ -1,17 +1,17 @@
 package com.kylecorry.trail_sense.tools.signal_finder
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerAttribution
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.signal_finder.map_layers.CellTowerGeoJsonSource
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object SignalFinderToolRegistration : ToolRegistration {
@@ -26,7 +26,7 @@ object SignalFinderToolRegistration : ToolRegistration {
             diagnostics = listOf(
                 ToolDiagnosticFactory.gps(context)
             ),
-            guideId = R.raw.guide_tool_signal_finder,
+            guideId = RawTexts.guide_tool_signal_finder,
             mapLayers = listOf(
                 MapLayerDefinition(
                     CellTowerGeoJsonSource.SOURCE_ID,

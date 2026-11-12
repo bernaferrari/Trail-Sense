@@ -1,15 +1,13 @@
 package com.kylecorry.trail_sense.tools.tides
 
-import kotlin.time.Duration.Companion.minutes
-
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.tides.map_layers.TideGeoJsonSource
 import com.kylecorry.trail_sense.tools.tides.widgets.AppWidgetTideChart
 import com.kylecorry.trail_sense.tools.tides.widgets.AppWidgetTides
@@ -17,11 +15,12 @@ import com.kylecorry.trail_sense.tools.tides.widgets.TideChartToolWidgetView
 import com.kylecorry.trail_sense.tools.tides.widgets.TidesToolWidgetView
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSummarySize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolWidget
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
+import kotlin.time.Duration.Companion.minutes
 
 object TidesToolRegistration : ToolRegistration {
     override fun getTool(context: Context): Tool {
@@ -31,7 +30,7 @@ object TidesToolRegistration : ToolRegistration {
             TrailIcons.TideTable,
             Route.Tides,
             ToolCategory.Time,
-            guideId = R.raw.guide_tool_tides,
+            guideId = RawTexts.guide_tool_tides,
             settingsRoute = Route.TideSettings,
             additionalRoutes = listOf(
                 Route.TideList::class,

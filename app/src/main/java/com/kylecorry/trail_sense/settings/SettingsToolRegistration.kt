@@ -12,6 +12,7 @@ import com.kylecorry.trail_sense.settings.quickactions.QuickActionSettings
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolBroadcast
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
@@ -31,7 +32,7 @@ object SettingsToolRegistration : ToolRegistration {
             TrailIcons.Settings,
             Route.Settings,
             ToolCategory.Other,
-            guideId = R.raw.guide_tool_settings,
+            guideId = RawTexts.guide_tool_settings,
             additionalRoutes = listOf(
                 Route.UnitSettings::class,
                 Route.PrivacySettings::class,

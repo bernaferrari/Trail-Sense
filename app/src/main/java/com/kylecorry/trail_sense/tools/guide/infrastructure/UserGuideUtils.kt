@@ -1,18 +1,17 @@
 package com.kylecorry.trail_sense.tools.guide.infrastructure
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
 import android.content.Context
-import androidx.annotation.RawRes
+import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.text.RawText
 
 object UserGuideUtils {
 
-    fun showGuide(context: Context, appNavigator: TrailSenseNavigator, @RawRes guideId: Int) {
+    fun showGuide(context: Context, appNavigator: TrailSenseNavigator, guideId: RawText) {
         openGuide(context, appNavigator, guideId)
     }
 
-    fun openGuide(context: Context, appNavigator: TrailSenseNavigator, @RawRes guideId: Int) {
+    fun openGuide(context: Context, appNavigator: TrailSenseNavigator, guideId: RawText) {
         val guides = Guides.guides(context)
 
         val guide = guides.flatMap { it.guides }.firstOrNull { it.contents == guideId }

@@ -3,11 +3,12 @@ package com.kylecorry.trail_sense.tools.tides.ui
 import android.content.Context
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
-import com.kylecorry.trail_sense.settings.PreferenceKeys
-import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.commands.Command
+import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
 
 class ShowTideDisclaimerCommand(
@@ -42,7 +43,7 @@ class ShowTideDisclaimerCommand(
                 UserGuideUtils.openGuide(
                     context,
                     appNavigator,
-                    R.raw.guide_tool_tides
+                    RawTexts.guide_tool_tides
                 )
             } else {
                 onAgree()

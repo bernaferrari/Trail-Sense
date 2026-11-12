@@ -1,18 +1,18 @@
 package com.kylecorry.trail_sense.tools.whistle
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.shared.volume.SystemVolumeAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolVolumeActionPriority
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.whistle.quickactions.QuickActionWhistle
 
 object WhistleToolRegistration : ToolRegistration {
@@ -23,7 +23,7 @@ object WhistleToolRegistration : ToolRegistration {
             TrailIcons.ToolWhistle,
             Route.Whistle,
             ToolCategory.Signaling,
-            guideId = R.raw.guide_tool_whistle,
+            guideId = RawTexts.guide_tool_whistle,
             quickActions = listOf(
                 ToolQuickAction(
                     ToolIds.QUICK_ACTION_WHISTLE,

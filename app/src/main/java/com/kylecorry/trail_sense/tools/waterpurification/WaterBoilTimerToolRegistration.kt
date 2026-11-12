@@ -1,17 +1,17 @@
 package com.kylecorry.trail_sense.tools.waterpurification
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannel
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolNotificationChannelGroup
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterPurificationTimerService
 
@@ -24,7 +24,7 @@ object WaterBoilTimerToolRegistration : ToolRegistration {
             Route.WaterPurification,
             ToolCategory.Time,
             context.getString(R.string.tool_boil_summary),
-            guideId = R.raw.guide_tool_water_boil_timer,
+            guideId = RawTexts.guide_tool_water_boil_timer,
             settingsRoute = Route.WaterBoilSettings,
             notificationChannelGroups = listOf(
                 ToolNotificationChannelGroup(

@@ -6,6 +6,7 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.sensors.SensorService
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
@@ -21,7 +22,7 @@ object SolarPanelAlignerToolRegistration : ToolRegistration {
             Route.SolarPanel,
             ToolCategory.Power,
             context.getString(R.string.tool_solar_panel_summary),
-            guideId = R.raw.guide_tool_solar_panel_aligner,
+            guideId = RawTexts.guide_tool_solar_panel_aligner,
             isAvailable = { getAppService<SensorService>().hasCompass() },
             diagnostics = listOf(
                 ToolDiagnosticFactory.gps(context),

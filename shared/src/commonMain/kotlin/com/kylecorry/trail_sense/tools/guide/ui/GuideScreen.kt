@@ -3,7 +3,6 @@
 
 package com.kylecorry.trail_sense.tools.guide.ui
 
-import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,29 +25,33 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
+import com.kylecorry.trail_sense.shared.text.RawText
+import com.kylecorry.trail_sense.shared.text.RawTextReader
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.text.TextUtils.TextSection
+import com.kylecorry.trail_sense.shared.text.appPluralString
+import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.kylecorry.trail_sense.shared.text.readRawText
 
 /**
  * One user guide as an article: a book-shaped hero with the reading time, a contents strip that jumps to a section,
  * the introduction, then each section under a numbered heading in reading typography. Text is selectable.
  */
 @Composable
-internal fun GuideScreen(name: String, resource: Int) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+fun GuideScreen(name: String, resource: RawText) {
     val dispatcher = rememberSystemBack()
     var sections by remember { mutableStateOf<List<TextSection>?>(null) }
     val listState = rememberLazyListState()
@@ -56,7 +59,7 @@ internal fun GuideScreen(name: String, resource: Int) {
 
     LaunchedEffect(resource) {
         sections = withContext(Dispatchers.IO) {
-            val content = context.readRawText(resource)
+            val content = getAppService<RawTextReader>().read(resource)
             TextUtils.groupSections(TextUtils.getSections(content), null).flatten()
         }
     }
@@ -65,7 +68,7 @@ internal fun GuideScreen(name: String, resource: Int) {
     TrailSensePage(
         title = name,
         onBack = { dispatcher?.invoke() },
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         state = listState,
         modifier = Modifier.testTag("guide_scroll")
     ) {
@@ -121,7 +124,7 @@ internal fun GuideScreen(name: String, resource: Int) {
 private fun GuideHero(@Suppress("UNUSED_PARAMETER") title: String, minutes: Int, sections: Int) {
     Text(
         listOfNotNull(
-            stringResource(R.string.sky_minutes_read, minutes),
+            appString(Res.string.sky_minutes_read, minutes),
             if (sections > 0) pluralSections(sections) else null
         ).joinToString(" · "),
         style = MaterialTheme.typography.bodyLarge,
@@ -132,14 +135,14 @@ private fun GuideHero(@Suppress("UNUSED_PARAMETER") title: String, minutes: Int,
 
 @Composable
 private fun pluralSections(count: Int): String =
-    androidx.compose.ui.res.pluralStringResource(R.plurals.sky_sections, count, count)
+    appPluralString(Res.plurals.sky_sections, count, count)
 
 /** The guide's sections as tappable chips, numbered like their headings. */
 @Composable
 private fun GuideContents(titles: List<String>, onSelect: (Int) -> Unit) {
     Column {
         Text(
-            stringResource(R.string.sky_in_this_guide),
+            appString(Res.string.sky_in_this_guide),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = TrailSenseSpacing.lg, bottom = TrailSenseSpacing.sm)

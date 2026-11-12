@@ -12,6 +12,7 @@ import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.map_layers.BeaconGeoJsonSource
 import com.kylecorry.trail_sense.tools.beacons.quickactions.QuickActionPlaceBeacon
@@ -57,7 +58,7 @@ object BeaconsToolRegistration : ToolRegistration {
             TrailIcons.Location,
             Route.BeaconList(),
             ToolCategory.Location,
-            guideId = R.raw.guide_tool_beacons,
+            guideId = RawTexts.guide_tool_beacons,
             settingsRoute = Route.BeaconSettings,
             quickActions = listOf(
                 ToolQuickAction(

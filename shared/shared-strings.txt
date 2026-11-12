@@ -473,3 +473,6 @@ solar_turn_right
 tilt
 tool_solar_panel_title
 up_to_amount
+sky_in_this_guide
+sky_minutes_read
+sky_sections

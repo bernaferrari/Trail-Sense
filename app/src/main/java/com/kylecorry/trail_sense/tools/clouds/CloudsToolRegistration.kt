@@ -1,16 +1,16 @@
 package com.kylecorry.trail_sense.tools.clouds
 
-import com.kylecorry.trail_sense.shared.navigation.Route
-
-import com.kylecorry.trail_sense.shared.icons.trail.*
 import android.content.Context
 import com.kylecorry.trail_sense.R
+import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.clouds.quickactions.QuickActionScanCloud
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolQuickAction
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolRegistration
-import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticFactory
 
 object CloudsToolRegistration : ToolRegistration {
@@ -21,7 +21,7 @@ object CloudsToolRegistration : ToolRegistration {
             TrailIcons.ToolClouds,
             Route.Clouds(),
             ToolCategory.Weather,
-            guideId = R.raw.guide_tool_clouds,
+            guideId = RawTexts.guide_tool_clouds,
             quickActions = listOf(
                 ToolQuickAction(
                     ToolIds.QUICK_ACTION_SCAN_CLOUD,

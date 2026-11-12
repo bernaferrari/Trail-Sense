@@ -19,12 +19,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -40,8 +39,10 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.icons.trail.Info
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.images.BundledImages
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
@@ -152,7 +153,7 @@ internal fun rememberInlineMarkdown(text: String, accent: Color, link: Color): A
 
 /** The body text style for reading: large, airy, full contrast. */
 @Composable
-internal fun articleBodyStyle() = MaterialTheme.typography.bodyLarge.copy(
+fun articleBodyStyle() = MaterialTheme.typography.bodyLarge.copy(
     lineHeight = 27.sp,
     letterSpacing = 0.2.sp,
     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
@@ -160,7 +161,7 @@ internal fun articleBodyStyle() = MaterialTheme.typography.bodyLarge.copy(
 
 /** Renders markdown as a column of reading blocks. */
 @Composable
-internal fun ArticleBody(markdown: String, modifier: Modifier = Modifier) {
+fun ArticleBody(markdown: String, modifier: Modifier = Modifier) {
     val blocks = remember(markdown) { parseArticle(markdown) }
     ArticleBlocks(blocks, modifier)
 }
@@ -239,16 +240,8 @@ internal fun ArticleBlocks(blocks: List<ArticleBlock>, modifier: Modifier = Modi
 /** A picture from the app's assets, full width in a rounded frame on the quiet container. */
 @Composable
 private fun ArticleImage(block: ArticleBlock.Image) {
-    val context = androidx.compose.ui.platform.LocalContext.current
     val bitmap by androidx.compose.runtime.produceState<androidx.compose.ui.graphics.ImageBitmap?>(null, block.path) {
-        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            runCatching {
-                val asset = block.path.removePrefix("file:///android_asset/")
-                context.assets.open(asset).use { stream ->
-                    android.graphics.BitmapFactory.decodeStream(stream)?.asImageBitmap()
-                }
-            }.getOrNull()
-        }
+        value = getAppService<BundledImages>().load(block.path)
     }
     val image = bitmap ?: return
     Surface(
@@ -270,7 +263,7 @@ private fun ArticleImage(block: ArticleBlock.Image) {
 
 /** A numbered section heading: the number in a cookie badge, the title beside it. */
 @Composable
-internal fun ArticleSectionHeading(number: Int?, title: String, modifier: Modifier = Modifier) {
+fun ArticleSectionHeading(number: Int?, title: String, modifier: Modifier = Modifier) {
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         if (number != null) {
             TrailSenseShapeBadge(

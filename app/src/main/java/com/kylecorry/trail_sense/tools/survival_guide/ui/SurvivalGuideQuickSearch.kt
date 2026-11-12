@@ -1,7 +1,5 @@
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
-import androidx.compose.ui.semantics.testTagsAsResourceId
-import androidx.compose.ui.semantics.semantics
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,8 +11,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +26,8 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.SurvivalGuide
@@ -38,10 +38,10 @@ import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.AppOverlay
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
+import com.kylecorry.trail_sense.shared.views.compose.from
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearch
 import com.kylecorry.trail_sense.tools.survival_guide.infrastructure.SurvivalGuideSearchResult
 import kotlinx.coroutines.delay
-import com.kylecorry.trail_sense.shared.views.compose.from
 
 /**
  * The survival guide quick action: a sheet over the current screen with a search and its best answer, as upstream's
@@ -60,7 +60,7 @@ fun showSurvivalGuideQuickSearch(context: Context, navigator: TrailSenseNavigato
                 overlay?.remove()
                 navigator.navigate(
                     Route.SurvivalGuideReader(
-                        chapterResourceId = result.chapter.resource,
+                        chapter = result.chapter.resource,
                         headerIndex = result.headingIndex
                     )
                 )
