@@ -3,14 +3,15 @@
 
 package com.kylecorry.trail_sense.tools.flashlight.ui
 
-import com.kylecorry.andromeda.torch.screenBrightness
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
+
 
 import com.kylecorry.trail_sense.settings.PreferenceKeys
 import com.kylecorry.trail_sense.shared.views.compose.KeepScreenOn
 
-import androidx.activity.compose.LocalActivity
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
-import androidx.compose.ui.platform.LocalContext
 import com.kylecorry.andromeda.preferences.Preferences
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -38,8 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseConnectedChoice
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
@@ -52,9 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.sol.math.interpolation.Interpolation.map
-import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 
 /**
  * The screen as a light: the whole screen is the lamp (white or red), with one dark floating panel at the bottom for
@@ -102,7 +99,7 @@ fun ScreenFlashlightScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(R.string.brightness),
+                        text = appString(Res.string.brightness),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f)
                     )
@@ -127,16 +124,16 @@ fun ScreenFlashlightScreen(
                 )
                 TrailSenseConnectedChoice(
                     options = listOf(
-                        TrailSenseChoice(false, stringResource(R.string.screen_flashlight_white)),
-                        TrailSenseChoice(true, stringResource(R.string.screen_flashlight_red))
+                        TrailSenseChoice(false, appString(Res.string.screen_flashlight_white)),
+                        TrailSenseChoice(true, appString(Res.string.screen_flashlight_red))
                     ),
                     selected = isRedLight,
                     onSelect = { onToggleColor() },
-                    label = stringResource(R.string.color),
+                    label = appString(Res.string.color),
                     modifier = Modifier.testTag("red_white_switcher")
                 )
                 com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton(
-                    text = stringResource(R.string.turn_off),
+                    text = appString(Res.string.turn_off),
                     onClick = onTurnOff,
                     icon = Icons.Rounded.PowerSettingsNew,
                     modifier = Modifier
@@ -148,18 +145,24 @@ fun ScreenFlashlightScreen(
     }
 }
 
+/**
+ * Lights the screen itself: [on] takes a brightness from 0.1 to 1. Supplied by the platform, which owns the window's
+ * brightness.
+ */
+interface ScreenLight {
+    fun on(brightness: Float)
+    fun off()
+}
+
 /** The screen flashlight: lit while the screen is resumed, and the volume buttons step its brightness. */
 @Composable
-fun ScreenFlashlightToolScreen(offerController: @Composable (Any) -> Unit = {}) {
+fun ScreenFlashlightToolScreen(light: ScreenLight, offerController: @Composable (Any) -> Unit = {}) {
     val lifecycleOwner = LocalLifecycleOwner.current
-    val context = LocalContext.current
-    // The screen torch drives the activity's window brightness.
-    val window = requireNotNull(LocalActivity.current).window
     val dispatcher = rememberSystemBack()
-    val state = remember(window) {
+    val state = remember(light) {
         ScreenFlashlightState(
-            torch = ScreenTorch(screenBrightness(window)),
-            cache = PreferencesSubsystem.getInstance(context).preferences,
+            torch = light,
+            cache = getAppService<Preferences>(),
             brightnessKey = PreferenceKeys.screenTorchBrightness
         )
     }
@@ -193,7 +196,7 @@ fun ScreenFlashlightToolScreen(offerController: @Composable (Any) -> Unit = {}) 
 }
 
 private class ScreenFlashlightState(
-    private val torch: ScreenTorch,
+    private val torch: ScreenLight,
     private val cache: Preferences,
     private val brightnessKey: String
 ) : ScreenFlashlightController {

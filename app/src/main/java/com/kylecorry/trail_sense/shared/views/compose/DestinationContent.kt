@@ -70,7 +70,7 @@ import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuideSettingsToolScre
 import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuideToolScreen
 import com.kylecorry.trail_sense.tools.field_guide.ui.SightingListToolScreen
 import com.kylecorry.trail_sense.tools.flashlight.ui.FlashlightToolScreen
-import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightToolScreen
+import com.kylecorry.trail_sense.tools.flashlight.ui.ScreenFlashlightAndroidToolScreen
 import com.kylecorry.trail_sense.tools.guide.ui.GuideListToolScreen
 import com.kylecorry.trail_sense.tools.guide.ui.GuideScreen
 import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
@@ -206,7 +206,7 @@ fun DestinationContent(
 
             // --- Tools with their own state holder ---
             Route.Tools -> ToolsHomeScreen(quickActionHost = this, onController = { screenController = it })
-            Route.ScreenFlashlight -> ScreenFlashlightToolScreen(offerController = { ScreenControllerEffect(this, it) })
+            Route.ScreenFlashlight -> ScreenFlashlightAndroidToolScreen(offerController = { ScreenControllerEffect(this, it) })
             Route.Notes -> NotesToolScreen()
             is Route.NoteEditor -> NoteEditorToolScreen(route)
             is Route.SurvivalGuideReader -> SurvivalGuideReaderToolScreen(route)

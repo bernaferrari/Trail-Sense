@@ -1257,3 +1257,17 @@ clouds_empty_description
 file
 manual
 sky_clouds_log
+about_feedback_body
+about_feedback_title
+about_open_source
+about_privacy_summary
+about_tagline
+about_version
+color
+pref_github_title
+pref_open_source_licenses_title
+pref_privacy_policy_title
+privacy_policy_url
+screen_flashlight_red
+screen_flashlight_white
+turn_off
