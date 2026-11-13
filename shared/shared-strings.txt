@@ -1286,3 +1286,4 @@ reduce_map_resolution_crop_disclaimer
 reduce_map_resolution_crop_disclaimer_shown
 reduce_pdf_resolution
 reduce_photo_resolution
+experimental
