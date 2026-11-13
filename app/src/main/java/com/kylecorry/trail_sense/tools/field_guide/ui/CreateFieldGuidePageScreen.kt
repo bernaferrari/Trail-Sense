@@ -22,6 +22,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import android.graphics.Bitmap
+import com.kylecorry.trail_sense.shared.images.rememberAppImage
 import android.net.Uri
 import android.util.Size
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
@@ -579,16 +580,8 @@ private fun FieldGuideImage(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val files = remember(context) { FileSubsystem.getInstance(context) }
-    var bitmap by remember(path) { mutableStateOf<Bitmap?>(null) }
+    val bitmap = rememberAppImage(path, 500)
     var menuOpen by remember(path) { mutableStateOf(false) }
-
-    LaunchedEffect(path) {
-        bitmap = withContext(Dispatchers.IO) {
-            files.bitmap(path, Size(500, 500))
-        }
-    }
 
     Box(modifier = modifier) {
         FieldGuideBitmapImage(

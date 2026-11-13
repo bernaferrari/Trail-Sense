@@ -3,6 +3,20 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.appPluralString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.dialogs.disclaimer
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
+import com.kylecorry.trail_sense.shared.images.AppImages
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideImageCleanup
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.platform.LocalDensity
+
+import kotlinx.coroutines.IO
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
 
 import androidx.lifecycle.viewModelScope
@@ -10,7 +24,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
-import androidx.compose.ui.platform.LocalContext
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -19,8 +32,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
-import android.graphics.Bitmap
-import android.util.Size
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,15 +65,9 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import com.kylecorry.andromeda.core.system.Resources
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.shared.CustomUiUtils
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -72,35 +77,32 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
-import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideCleanupCommand
-import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.kylecorry.trail_sense.shared.dialogs.dialog
 
 @Composable
 fun FieldGuideToolScreen() {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
+    val host = AppHost.current()
+    val strings = LocalAppStrings.current
     val navigator = LocalNavigator.current
-    val formatter = remember(appContext) { FieldGuideFormatService(UserPreferences(appContext)) }
-    val tagNameMapper = remember(appContext) { FieldGuideTagNameMapper() }
-    val files = remember(appContext) { FileSubsystem.getInstance(appContext) }
+    val formatter = remember { FieldGuideFormatService(getAppService<UserPreferences>()) }
+    val tagNameMapper = remember { FieldGuideTagNameMapper() }
+    val thumbnailSize = with(LocalDensity.current) { 48.dp.roundToPx() }
     val viewModel = viewModel {
         FieldGuideListViewModel(
-            repo = FieldGuideRepo.getInstance(appContext),
-            cleanup = { FieldGuideCleanupCommand(appContext).execute() },
+            repo = getAppService<IFieldGuideRepo>(),
+            cleanup = { getAppService<FieldGuideImageCleanup>().cleanup() },
             sortName = { formatter.formatName(it).lowercase() },
             tagName = tagNameMapper::getName
         )
     }
 
     LaunchedEffect(Unit) {
-        CustomUiUtils.disclaimer(
-            context,
-            context.getString(R.string.disclaimer_message_title),
-            context.getString(R.string.field_guide_disclaimer),
+        Alerts.disclaimer(
+            host,
+            strings.get(Res.string.disclaimer_message_title),
+            strings.get(Res.string.field_guide_disclaimer),
             "field_guide_disclaimer",
             cancelText = null
         )
@@ -124,8 +126,7 @@ fun FieldGuideToolScreen() {
                 FieldGuideListItem.TagItem(
                     tag = tag,
                     title = tagNameMapper.getName(tag),
-                    subtitle = context.resources.getQuantityString(
-                        R.plurals.page_group_summary,
+                    subtitle = strings.plural(Res.plurals.page_group_summary,
                         count,
                         count
                     ),
@@ -165,8 +166,8 @@ fun FieldGuideToolScreen() {
         onEditPage = { navigator.navigate(Route.CreateFieldGuidePage(pageId = it.id)) },
         onDeletePage = { page ->
             Alerts.dialog(
-                context,
-                context.getString(R.string.delete),
+                host,
+                strings.get(Res.string.delete),
                 formatter.formatName(page)
             ) { cancelled ->
                 if (!cancelled) {
@@ -176,9 +177,9 @@ fun FieldGuideToolScreen() {
         },
         onHidePage = { page ->
             Alerts.dialog(
-                context,
-                context.getString(R.string.hide),
-                context.getString(R.string.hide_field_guide_page_message, formatter.formatName(page))
+                host,
+                strings.get(Res.string.hide),
+                strings.get(Res.string.hide_field_guide_page_message, formatter.formatName(page))
             ) { cancelled ->
                 if (!cancelled) {
                     viewModel.hidePage(page)
@@ -186,15 +187,7 @@ fun FieldGuideToolScreen() {
             }
         },
         loadThumbnail = { page ->
-            onIO {
-                val path = page.images.firstOrNull() ?: return@onIO null
-                val size = Resources.dp(appContext, 48f).toInt()
-                try {
-                    files.bitmap(path, Size(size, size))
-                } catch (e: Exception) {
-                    null
-                }
-            }
+            page.images.firstOrNull()?.let { getAppService<AppImages>().load(it, thumbnailSize) }
         },
         onCreate = {
             navigator.navigate(Route.CreateFieldGuidePage(classificationId = viewModel.tagFilter?.id ?: 0L))
@@ -206,7 +199,7 @@ fun FieldGuideToolScreen() {
  * The field guide's pages (cleaned up and reread each time the list is shown), the search text and the category
  * being browsed, and which pages they leave.
  */
-internal class FieldGuideListViewModel(
+class FieldGuideListViewModel(
     private val repo: IFieldGuideRepo,
     private val cleanup: suspend () -> Unit,
     private val sortName: (FieldGuidePage) -> String,
@@ -322,7 +315,7 @@ private fun FieldGuideScreen(
     onEditPage: (FieldGuidePage) -> Unit,
     onDeletePage: (FieldGuidePage) -> Unit,
     onHidePage: (FieldGuidePage) -> Unit,
-    loadThumbnail: suspend (FieldGuidePage) -> Bitmap?,
+    loadThumbnail: suspend (FieldGuidePage) -> ImageBitmap?,
     onCreate: () -> Unit
 ) {
     val isBrowsing = tagFilter == null && query.isBlank()
@@ -330,7 +323,7 @@ private fun FieldGuideScreen(
     val pages = items.items.filterIsInstance<FieldGuideListItem.PageItem>()
     val categories = items.items.filterIsInstance<FieldGuideListItem.TagItem>()
     val sections = remember(pages) { groupPagesByLetter(pages) }
-    val noPagesDescription = stringResource(R.string.field_guide_no_pages_description)
+    val noPagesDescription = appString(Res.string.field_guide_no_pages_description)
 
     // While there is more list under it, the button folds to its icon so it covers only the rows' empty trailing
     // edge; at the end of the list (which leaves room for it) it shows its label again.
@@ -342,10 +335,10 @@ private fun FieldGuideScreen(
     // One question: what is this plant or animal? Search and the kinds answer it; the page count is the one figure.
     TrailSensePage(
         state = listState,
-        title = stringResource(R.string.field_guide),
+        title = appString(Res.string.field_guide),
         subtitle = selectedTagName,
         onBack = onBack,
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         modifier = Modifier.testTag("list"),
         // Room under the last row for the floating button.
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
@@ -368,7 +361,7 @@ private fun FieldGuideScreen(
                         contentDescription = null
                     )
                 },
-                text = { Text(stringResource(R.string.add)) }
+                text = { Text(appString(Res.string.add)) }
             )
         }
     ) {
@@ -385,8 +378,8 @@ private fun FieldGuideScreen(
             TrailSenseSearchBar(
                 value = query,
                 onValueChange = onQueryChange,
-                placeholder = stringResource(R.string.search),
-                clearContentDescription = stringResource(R.string.field_guide_clear_search),
+                placeholder = appString(Res.string.search),
+                clearContentDescription = appString(Res.string.field_guide_clear_search),
                 modifier = Modifier.testTag("search")
             )
         }
@@ -416,12 +409,12 @@ private fun FieldGuideScreen(
             item(key = "empty") {
                 TrailSenseEmptyState(
                     icon = Icons.AutoMirrored.Rounded.MenuBook,
-                    title = stringResource(R.string.no_pages),
+                    title = appString(Res.string.no_pages),
                     description = noPagesDescription,
                     modifier = Modifier
                         .fillParentMaxHeight(0.9f)
                         .testTag("empty_text"),
-                    actionLabel = stringResource(R.string.create_page),
+                    actionLabel = appString(Res.string.create_page),
                     actionIcon = Icons.Rounded.Add,
                     onAction = onCreate
                 )
@@ -522,11 +515,11 @@ private fun FieldGuidePageRow(
     onEditPage: (FieldGuidePage) -> Unit,
     onDeletePage: (FieldGuidePage) -> Unit,
     onHidePage: (FieldGuidePage) -> Unit,
-    loadThumbnail: suspend (FieldGuidePage) -> Bitmap?
+    loadThumbnail: suspend (FieldGuidePage) -> ImageBitmap?
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     var thumbnail by remember(item.page.id, item.page.images) {
-        mutableStateOf<Bitmap?>(null)
+        mutableStateOf<ImageBitmap?>(null)
     }
 
     LaunchedEffect(item.page.id, item.page.images) {
@@ -554,7 +547,7 @@ private fun FieldGuidePageRow(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.MoreVert,
-                        contentDescription = stringResource(R.string.field_guide_more_options),
+                        contentDescription = appString(Res.string.field_guide_more_options),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -564,7 +557,7 @@ private fun FieldGuidePageRow(
                 ) {
                     if (item.page.isReadOnly) {
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.hide)) },
+                            text = { Text(appString(Res.string.hide)) },
                             onClick = {
                                 menuOpen = false
                                 onHidePage(item.page)
@@ -572,14 +565,14 @@ private fun FieldGuidePageRow(
                         )
                     } else {
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.edit)) },
+                            text = { Text(appString(Res.string.edit)) },
                             onClick = {
                                 menuOpen = false
                                 onEditPage(item.page)
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.delete)) },
+                            text = { Text(appString(Res.string.delete)) },
                             onClick = {
                                 menuOpen = false
                                 onDeletePage(item.page)
@@ -632,13 +625,13 @@ private fun FieldGuideNotebookHero(
             .padding(horizontal = TrailSenseSpacing.lg)
     ) {
         Text(
-            androidx.compose.ui.res.pluralStringResource(R.plurals.page_group_summary, pages, pages),
+            appPluralString(Res.plurals.page_group_summary, pages, pages),
             style = MaterialTheme.typography.displaySmall.copy(fontFeatureSettings = "tnum"),
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-            stringResource(R.string.sky_field_guide_kinds, kinds),
+            appString(Res.string.sky_field_guide_kinds, kinds),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = TrailSenseSpacing.xxs)
@@ -658,13 +651,12 @@ private fun FieldGuideCategoryGrid(categories: List<FieldGuideListItem.TagItem>)
                 SkyValueRow(
                     title = category.title,
                     subtitle = if (category.count > 0) {
-                        androidx.compose.ui.res.pluralStringResource(
-                            R.plurals.page_group_summary,
+                        appPluralString(Res.plurals.page_group_summary,
                             category.count,
                             category.count
                         )
                     } else {
-                        stringResource(R.string.no_pages)
+                        appString(Res.string.no_pages)
                     },
                     icon = category.icon,
                     position = position,

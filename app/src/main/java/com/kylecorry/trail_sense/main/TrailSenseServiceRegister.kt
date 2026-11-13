@@ -16,6 +16,8 @@ import com.kylecorry.trail_sense.tools.flashlight.infrastructure.IFlashlightSubs
 import com.kylecorry.trail_sense.tools.flashlight.infrastructure.FlashlightSubsystem
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.subsystem.IPedometerSubsystem
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideImageCleanup
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideCleanupCommand
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
 import com.kylecorry.trail_sense.shared.dem.ElevationModel
@@ -173,6 +175,9 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(IFlashlightSubsystem::class) { FlashlightSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IPedometerSubsystem::class) { PedometerSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IFieldGuideRepo::class) { FieldGuideRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(FieldGuideImageCleanup::class) {
+            FieldGuideImageCleanup { FieldGuideCleanupCommand(appContext).execute() }
+        }
         DependencyRegistry.addSingleton(INavigator::class) { Navigator.getInstance(appContext) }
         DependencyRegistry.addSingleton<ElevationModel>(DEM)
         DependencyRegistry.addSingleton<WaterPurificationTimer>(AndroidWaterPurificationTimer(appContext))

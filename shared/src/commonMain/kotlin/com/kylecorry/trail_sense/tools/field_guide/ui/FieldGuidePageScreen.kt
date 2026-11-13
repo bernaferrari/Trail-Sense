@@ -3,6 +3,13 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.appPluralString
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.text.AppStrings
+
+import kotlinx.coroutines.IO
 import com.kylecorry.trail_sense.shared.text.withWebLinks
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
 import androidx.lifecycle.viewModelScope
@@ -18,7 +25,6 @@ import com.kylecorry.trail_sense.tools.guide.ui.articleBodyStyle
 import com.kylecorry.trail_sense.tools.weather.ui.SkyValueRow
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import android.graphics.Bitmap
 import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,18 +51,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
+import com.kylecorry.trail_sense.shared.images.rememberAppImage
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
 import com.kylecorry.trail_sense.shared.UserPreferences
-import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLinkedText
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
@@ -64,33 +66,29 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTagType
-import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
 fun FieldGuidePageToolScreen(route: Route.FieldGuidePage) {
-    val context = LocalContext.current.applicationContext
     val navigator = LocalNavigator.current
     val viewModel = viewModel {
-        FieldGuidePageViewModel(route.pageId.takeIf { it != 0L }, FieldGuideRepo.getInstance(context))
+        FieldGuidePageViewModel(route.pageId.takeIf { it != 0L }, getAppService<IFieldGuideRepo>())
     }
-    val files = remember(context) { FileSubsystem.getInstance(context) }
-    val tagNameMapper = remember(context) { FieldGuideTagNameMapper() }
+    val tagNameMapper = remember { FieldGuideTagNameMapper() }
 
     LifecycleResumeEffect(viewModel) {
         viewModel.loadPage()
         onPauseOrDispose { }
     }
 
-    val formatter = remember(context) {
-        FieldGuideFormatService(UserPreferences(context))
+    val formatter = remember {
+        FieldGuideFormatService(getAppService<UserPreferences>())
     }
     val dispatcher = rememberSystemBack()
     FieldGuidePageScreen(
         page = viewModel.page,
-        files = files,
         tagNameMapper = tagNameMapper,
         formatter = formatter,
         onBack = { dispatcher?.invoke() },
@@ -104,7 +102,7 @@ fun FieldGuidePageToolScreen(route: Route.FieldGuidePage) {
 }
 
 /** One field guide page, reread each time it's shown so edits and new sightings appear. */
-internal class FieldGuidePageViewModel(
+class FieldGuidePageViewModel(
     private val pageId: Long?,
     private val repo: IFieldGuideRepo
 ) : ViewModel() {
@@ -124,22 +122,21 @@ internal class FieldGuidePageViewModel(
 @Composable
 private fun FieldGuidePageScreen(
     page: FieldGuidePage?,
-    files: FileSubsystem,
     tagNameMapper: FieldGuideTagNameMapper,
     formatter: FieldGuideFormatService,
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onSightings: () -> Unit
 ) {
-    val context = LocalContext.current
-    val dates = remember(context) { FormatService.getInstance(context) }
-    val editLabel = stringResource(R.string.edit)
+    val strings = LocalAppStrings.current
+    val dates = remember { FormatService.getInstance() }
+    val editLabel = appString(Res.string.edit)
 
     // One question: what is this, and have I seen it? The photo and its names answer it; sightings and details follow.
     TrailSensePage(
         title = page?.let { formatter.formatTitle(it).text }.orEmpty(),
         onBack = onBack,
-        backLabel = stringResource(R.string.back),
+        backLabel = appString(Res.string.back),
         actions = {
             if (page != null && !page.isReadOnly) {
                 IconButton(
@@ -169,7 +166,6 @@ private fun FieldGuidePageScreen(
             item(key = "hero") {
                 FieldGuidePageHero(
                     images = page.images,
-                    files = files,
                     otherName = otherName,
                     classification = classification.joinToString(" · ")
                 )
@@ -180,20 +176,18 @@ private fun FieldGuidePageScreen(
             row { position ->
                 val lastSeen = page.sightings.mapNotNull { it.time }.maxOrNull()
                 val subtitle = listOfNotNull(
-                    pluralStringResource(
-                        R.plurals.field_guide_sighting_count,
+                    appPluralString(Res.plurals.field_guide_sighting_count,
                         page.sightings.size,
                         page.sightings.size
                     ),
                     lastSeen?.let {
-                        stringResource(
-                            R.string.field_guide_last_seen,
+                        appString(Res.string.field_guide_last_seen,
                             dates.formatRelativeDateTime(it, includeSeconds = false)
                         )
                     }
                 ).joinToString(" · ")
                 SkyValueRow(
-                    title = stringResource(R.string.sightings),
+                    title = appString(Res.string.sightings),
                     subtitle = subtitle,
                     icon = TrailIcons.Binoculars,
                     value = page.sightings.size.toString(),
@@ -213,7 +207,7 @@ private fun FieldGuidePageScreen(
 
         val notes = page.notes.orEmpty()
         if (notes.isNotBlank()) {
-            trailSenseSection(key = "notes", title = context.getString(R.string.note)) {
+            trailSenseSection(key = "notes", title = getAppService<AppStrings>().get(Res.string.note)) {
                 row { _ ->
                     // Notes read as an article, straight on the page.
                     LinkifiedNotes(
@@ -227,20 +221,20 @@ private fun FieldGuidePageScreen(
         }
 
         val detailTypes = listOf(
-            FieldGuidePageTagType.Location to R.string.location,
-            FieldGuidePageTagType.Habitat to R.string.habitat,
-            FieldGuidePageTagType.ActivityPattern to R.string.activity_pattern,
-            FieldGuidePageTagType.HumanInteraction to R.string.human_interaction
+            FieldGuidePageTagType.Location to Res.string.location,
+            FieldGuidePageTagType.Habitat to Res.string.habitat,
+            FieldGuidePageTagType.ActivityPattern to Res.string.activity_pattern,
+            FieldGuidePageTagType.HumanInteraction to Res.string.human_interaction
         ).mapNotNull { (type, label) ->
             val names = page.tags
                 .filter { it.type == type }
                 .sortedBy { it.ordinal }
                 .map { tagNameMapper.getName(it) }
-            if (names.isEmpty()) null else Triple(type, context.getString(label), names.joinToString(", "))
+            if (names.isEmpty()) null else Triple(type, strings.get(label), names.joinToString(", "))
         }
 
         if (detailTypes.isNotEmpty()) {
-            trailSenseSection(key = "details", title = context.getString(R.string.details)) {
+            trailSenseSection(key = "details", title = getAppService<AppStrings>().get(Res.string.details)) {
                 detailTypes.forEach { (type, label, value) ->
                     row { position ->
                         SkyValueRow(
@@ -268,7 +262,6 @@ private fun FieldGuidePageScreen(
 @Composable
 private fun FieldGuidePageHero(
     images: List<String>,
-    files: FileSubsystem,
     otherName: AnnotatedString?,
     classification: String
 ) {
@@ -276,7 +269,7 @@ private fun FieldGuidePageHero(
     Column(Modifier.fillMaxWidth()) {
         if (images.isNotEmpty()) {
             Box(Modifier.clip(RoundedCornerShape(TrailSenseShape.hero))) {
-                FieldGuideImagePager(images = images, files = files)
+                FieldGuideImagePager(images = images)
             }
         }
         val hasFacts = otherName != null || classification.isNotBlank()
@@ -312,7 +305,6 @@ private fun FieldGuidePageHero(
 @Composable
 private fun FieldGuideImagePager(
     images: List<String>,
-    files: FileSubsystem
 ) {
     val pagerState = rememberPagerState(pageCount = { images.size })
     val scope = rememberCoroutineScope()
@@ -332,7 +324,6 @@ private fun FieldGuideImagePager(
         ) { index ->
             FieldGuidePageImage(
                 path = images[index],
-                files = files,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -347,7 +338,7 @@ private fun FieldGuideImagePager(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(R.string.image_index, page + 1, images.size),
+                text = appString(Res.string.image_index, page + 1, images.size),
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = TrailSenseSpacing.lg)
@@ -365,7 +356,7 @@ private fun FieldGuideImagePager(
             ) {
                 Icon(
                     painter = rememberVectorPainter(TrailIcons.Prev),
-                    contentDescription = stringResource(R.string.previous)
+                    contentDescription = appString(Res.string.previous)
                 )
             }
             IconButton(
@@ -381,7 +372,7 @@ private fun FieldGuideImagePager(
             ) {
                 Icon(
                     painter = rememberVectorPainter(TrailIcons.KeyboardArrowRight),
-                    contentDescription = stringResource(R.string.next)
+                    contentDescription = appString(Res.string.next)
                 )
             }
         }
@@ -391,16 +382,9 @@ private fun FieldGuideImagePager(
 @Composable
 private fun FieldGuidePageImage(
     path: String,
-    files: FileSubsystem,
     modifier: Modifier = Modifier
 ) {
-    var bitmap by remember(path) { mutableStateOf<Bitmap?>(null) }
-
-    LaunchedEffect(path, files) {
-        bitmap = withContext(Dispatchers.IO) {
-            files.bitmap(path, 1000, 500)
-        }
-    }
+    val bitmap = rememberAppImage(path, maxWidth = 1000, maxHeight = 500)
 
     FieldGuideBitmapImage(
         bitmap = bitmap,
