@@ -1287,3 +1287,11 @@ reduce_map_resolution_crop_disclaimer_shown
 reduce_pdf_resolution
 reduce_photo_resolution
 experimental
+active_time
+elapsed_time
+pedometer_disclaimer
+pref_odometer_reset_daily_title
+pref_pedometer_average_pace_time_title
+pref_pedometer_history_days_title
+request_permission
+use_alarm_for_distance_alert
