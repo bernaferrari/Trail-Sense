@@ -70,6 +70,8 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.platform.LocalPlatformContext
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import androidx.compose.runtime.rememberCoroutineScope
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolDescriptor
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticResult
@@ -91,7 +93,7 @@ private const val DIAGNOSTICS_SETTLE_MILLIS = 3000L
 fun DiagnosticsScreen(
     onShowSensorDetails: () -> Unit,
     onShowDiagnostic: (DiagnosticItem) -> Unit,
-    onExportLogs: () -> Unit,
+    onExportLogs: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     val context = LocalPlatformContext.current
@@ -181,15 +183,17 @@ fun DiagnosticsScreen(
                     trailing = { DiagnosticsChevron() }
                 )
             }
-            row { position ->
-                SkyValueRow(
-                    title = appString(Res.string.export_logs),
-                    subtitle = appString(Res.string.diagnostics_export_logs_summary),
-                    icon = Icons.Default.Download,
-                    position = position,
-                    onClick = onExportLogs,
-                    modifier = Modifier.testTag("download_logs")
-                )
+            if (onExportLogs != null) {
+                row { position ->
+                    SkyValueRow(
+                        title = appString(Res.string.export_logs),
+                        subtitle = appString(Res.string.diagnostics_export_logs_summary),
+                        icon = Icons.Default.Download,
+                        position = position,
+                        onClick = onExportLogs,
+                        modifier = Modifier.testTag("download_logs")
+                    )
+                }
             }
         }
     }
@@ -351,4 +355,26 @@ private fun statusIcon(severity: ToolDiagnosticSeverity): ImageVector {
         ToolDiagnosticSeverity.Error -> Icons.Default.ErrorOutline
         ToolDiagnosticSeverity.Warning -> Icons.Default.WarningAmber
     }
+}
+
+/**
+ * Diagnostics: what is wrong with the sensors and permissions, each with its fix. [exportLogs] saves the app's logs
+ * to a file the person picks, on platforms that keep them; the row is hidden when null.
+ */
+@Composable
+fun DiagnosticsToolScreen(exportLogs: (suspend () -> Unit)?) {
+    val context = LocalPlatformContext.current
+    val navigator = LocalNavigator.current
+    val scope = rememberCoroutineScope()
+    DiagnosticsScreen(
+        onShowSensorDetails = {
+            navigator.navigate(Route.SensorDetails)
+        },
+        onShowDiagnostic = {
+            DiagnosticAlerter().alert(it) { action ->
+                action.action(context, navigator)
+            }
+        },
+        onExportLogs = exportLogs?.let { export -> { scope.launch { export() } } }
+    )
 }
