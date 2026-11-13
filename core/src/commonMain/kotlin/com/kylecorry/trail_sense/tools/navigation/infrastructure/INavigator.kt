@@ -1,11 +1,13 @@
 package com.kylecorry.trail_sense.tools.navigation.infrastructure
 
+import com.kylecorry.sol.units.Bearing
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.domain.guidance.Guidance
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /** Starts and stops navigating to a beacon (or to a spot, through a hidden temporary beacon). */
@@ -36,6 +38,15 @@ interface INavigator {
 
     /** Where the person is navigating: a path, a beacon or a bearing, in that order, or null. */
     suspend fun getDestination(): Destination?
+
+    /** Where the person is navigating, as it changes: a path, a beacon or a bearing, in that order, or null. */
+    val destination: Flow<Destination?>
+
+    /** Navigates along [bearing] (as read from the compass), starting from [startingLocation] when known. */
+    suspend fun navigateToBearing(bearing: Float, startingLocation: Coordinate? = null)
+
+    /** The bearing from [myLocation] to [destination], with the current declination. */
+    fun getBearing(myLocation: Coordinate, destination: Destination): Bearing
 
     /** True while a path navigation is being restored in the background. */
     val isRestoringNavigation: StateFlow<Boolean>

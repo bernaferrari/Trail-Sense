@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.infrastructure
 
+import kotlinx.coroutines.flow.Flow
 import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.luna.concurrency.BackgroundTask
@@ -83,12 +84,11 @@ class Navigator private constructor(context: Context) : INavigator {
     private val pathNavigator = PathNavigator(context)
     override val isRestoringNavigation: StateFlow<Boolean> = pathNavigator.isRestoring
 
-    val destination =
+    override val destination: Flow<Destination?> =
         combine(bearingDestination, beaconDestination, pathNavigator.destination) { bearing, beacon, path ->
             path ?: beacon ?: bearing
         }
 
-    val destination2 = destination
 
     suspend fun navigateAlongPath(path: Path, follow: PathFollow) {
         pathNavigator.navigate(path, follow)
@@ -232,7 +232,7 @@ class Navigator private constructor(context: Context) : INavigator {
         return destination.firstOrNull()
     }
 
-    suspend fun navigateToBearing(bearing: Float, startingLocation: Coordinate? = null) {
+    override suspend fun navigateToBearing(bearing: Float, startingLocation: Coordinate?) {
         pathNavigator.cancel()
         clearBeaconDestination()
         val navigationBearing = NavigationBearing(
@@ -250,7 +250,7 @@ class Navigator private constructor(context: Context) : INavigator {
         bearings.setBearing(null)
     }
 
-    fun getBearing(
+    override fun getBearing(
         myLocation: Coordinate,
         destination: Destination
     ): Bearing {

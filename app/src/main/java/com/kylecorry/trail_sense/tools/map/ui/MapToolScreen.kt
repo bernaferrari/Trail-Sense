@@ -243,7 +243,7 @@ private class MapController(
     @Composable
     private fun Effects(resumeCount: Int) {
         val navigation = rememberNavigationSensors(tag = "MapToolScreen", trueNorth = true)
-        val destination by navigator.destination2.collectAsStateWithLifecycle(
+        val destination by navigator.destination.collectAsStateWithLifecycle(
             initialValue = null,
             minActiveState = Lifecycle.State.RESUMED
         )

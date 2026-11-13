@@ -1,11 +1,11 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import kotlinx.coroutines.IO
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.kylecorry.andromeda.core.sensors.Quality
 import com.kylecorry.andromeda.sense.clinometer.Clinometer
@@ -23,14 +23,13 @@ import com.kylecorry.trail_sense.shared.navigation.RouteLocation
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.NavigationPreferences
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnosticResult
-import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
+import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
@@ -46,7 +45,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** The compass's sensors, made once per screen from the app's sensor service. */
-internal class NavigatorSensors(sensorService: SensorService, userPrefs: UserPreferences) {
+class NavigatorSensors(sensorService: SensorService, userPrefs: UserPreferences) {
     val orientation = sensorService.getOrientation()
     val compass = sensorService.getCompass(orientation)
     val gps = sensorService.getGPS(frequency = 200.milliseconds)
@@ -62,13 +61,13 @@ internal class NavigatorSensors(sensorService: SensorService, userPrefs: UserPre
  * and which sheet or dialog is open. Plain Kotlin over the navigator, the repositories and the sensors; the dials and
  * the radar map are rendering objects that stay with the composition and read from here.
  */
-internal class NavigatorViewModel(
+class NavigatorViewModel(
     route: Route.Navigation,
     val sensors: NavigatorSensors,
-    private val navigator: Navigator,
-    private val beaconRepo: BeaconRepo,
+    private val navigator: INavigator,
+    beaconUpdates: Flow<List<Beacon>>,
     pathService: IPathService,
-    weatherRepo: WeatherRepo,
+    weatherRepo: IWeatherRepo,
     private val prefs: NavigationPreferences,
     val useTrueNorth: Boolean,
     diagnostics: List<Flow<List<ToolDiagnosticResult>>>,
@@ -100,7 +99,7 @@ internal class NavigatorViewModel(
         private set
 
     /** The destination as the navigator reports it. */
-    val destination: Flow<Destination?> = navigator.destination2
+    val destination: Flow<Destination?> = navigator.destination
 
     var declination by mutableFloatStateOf(0f)
         private set
@@ -155,7 +154,7 @@ internal class NavigatorViewModel(
         }
 
         viewModelScope.launch {
-            navigator.destination2.collect {
+            navigator.destination.collect {
                 currentDestination = it
                 updateNearbyBeacons()
             }
@@ -170,7 +169,7 @@ internal class NavigatorViewModel(
         }
 
         viewModelScope.launch {
-            beaconRepo.getBeacons().collect {
+            beaconUpdates.collect {
                 beacons = it
                 updateNearbyBeacons()
             }

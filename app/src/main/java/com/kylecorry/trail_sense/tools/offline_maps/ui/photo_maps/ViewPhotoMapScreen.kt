@@ -203,7 +203,7 @@ internal class ViewPhotoMapViewModel(
 
     init {
         viewModelScope.launch {
-            navigationService.destination2.collect {
+            navigationService.destination.collect {
                 destination = it
             }
         }
