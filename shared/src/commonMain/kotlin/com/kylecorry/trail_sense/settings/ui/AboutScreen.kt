@@ -3,13 +3,12 @@
 
 package com.kylecorry.trail_sense.settings.ui
 
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.text.appString
 
-import androidx.compose.ui.platform.LocalContext
 
-import com.kylecorry.trail_sense.shared.navigation.Route
 
-import android.content.Intent
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,13 +42,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.core.system.Intents
-import com.kylecorry.andromeda.core.system.Package
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.Trail
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
@@ -59,36 +54,21 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 
 private const val GITHUB_URL = "https://github.com/kylecorry31/Trail-Sense"
 
-@Composable
-fun AboutToolScreen() {
-    val context = LocalContext.current
-    val navigator = LocalNavigator.current
-    AboutScreen(
-        version = Package.getVersionName(context),
-        onOpenUrl = { context.startActivity(Intents.url(it)) },
-        onEmailDeveloper = {
-            val intent = Intents.email(context.getString(R.string.email), context.getString(R.string.app_name))
-            context.startActivity(Intent.createChooser(intent, context.getString(R.string.pref_email_title)))
-        },
-        onLicenses = { navigator.navigate(Route.Licenses) }
-    )
-}
-
 /**
  * About, in WiFi Weakspot's shape: who the app is (name, one line, version), the two things people come here for
  * (the code and a way to reach the developer) as two cards, and privacy as one quiet line with its links. Each fact
  * appears once.
  */
 @Composable
-private fun AboutScreen(
+fun AboutScreen(
     version: String,
     onOpenUrl: (String) -> Unit,
     onEmailDeveloper: () -> Unit,
     onLicenses: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
-    val privacyUrl = stringResource(R.string.privacy_policy_url)
-    TrailSensePage(title = stringResource(R.string.pref_category_about), backLabel = stringResource(R.string.back), modifier = Modifier.testTag("about")) {
+    val privacyUrl = appString(Res.string.privacy_policy_url)
+    TrailSensePage(title = appString(Res.string.pref_category_about), backLabel = appString(Res.string.back), modifier = Modifier.testTag("about")) {
         item("identity") {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Surface(
@@ -102,14 +82,14 @@ private fun AboutScreen(
                     }
                 }
                 Text(
-                    stringResource(R.string.app_name),
+                    appString(Res.string.app_name),
                     modifier = Modifier.padding(top = 20.dp),
                     style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    stringResource(R.string.about_tagline),
+                    appString(Res.string.about_tagline),
                     modifier = Modifier.padding(top = 6.dp),
                     style = MaterialTheme.typography.titleMedium,
                     color = scheme.onSurfaceVariant,
@@ -121,7 +101,7 @@ private fun AboutScreen(
                     modifier = Modifier.padding(top = TrailSenseSpacing.lg)
                 ) {
                     Text(
-                        stringResource(R.string.about_version, version),
+                        appString(Res.string.about_version, version),
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         style = MaterialTheme.typography.labelLarge,
                         color = scheme.onSurfaceVariant
@@ -139,8 +119,8 @@ private fun AboutScreen(
                 horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 AboutCard(
-                    title = stringResource(R.string.pref_github_title),
-                    body = stringResource(R.string.about_open_source),
+                    title = appString(Res.string.pref_github_title),
+                    body = appString(Res.string.about_open_source),
                     icon = Icons.Rounded.Code,
                     container = scheme.primaryContainer,
                     content = scheme.onPrimaryContainer,
@@ -150,8 +130,8 @@ private fun AboutScreen(
                     modifier = Modifier.weight(1f)
                 )
                 AboutCard(
-                    title = stringResource(R.string.about_feedback_title),
-                    body = stringResource(R.string.about_feedback_body),
+                    title = appString(Res.string.about_feedback_title),
+                    body = appString(Res.string.about_feedback_body),
                     icon = Icons.Rounded.Email,
                     container = scheme.secondaryContainer,
                     content = scheme.onSecondaryContainer,
@@ -173,19 +153,19 @@ private fun AboutScreen(
             ) {
                 Icon(Icons.Outlined.VerifiedUser, null, Modifier.size(20.dp), tint = scheme.onSurfaceVariant)
                 Text(
-                    stringResource(R.string.about_privacy_summary),
+                    appString(Res.string.about_privacy_summary),
                     style = MaterialTheme.typography.bodySmall,
                     color = scheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xs)) {
                     TrailSenseButton(
-                        text = stringResource(R.string.pref_privacy_policy_title),
+                        text = appString(Res.string.pref_privacy_policy_title),
                         style = TrailSenseButtonStyle.Text,
                         onClick = { onOpenUrl(privacyUrl) }
                     )
                     TrailSenseButton(
-                        text = stringResource(R.string.pref_open_source_licenses_title),
+                        text = appString(Res.string.pref_open_source_licenses_title),
                         style = TrailSenseButtonStyle.Text,
                         onClick = onLicenses
                     )
