@@ -320,7 +320,7 @@ fun PathsToolScreen(
             showBacktrackFrequencyPicker = true
         },
         onBacktrackToggleClick = {
-            ToggleBacktrackCommand(context, effects, scope).execute()
+            ToggleBacktrackCommand(effects, scope).execute()
         },
         modifier = modifier.fillMaxSize()
     )

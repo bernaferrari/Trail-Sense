@@ -2,6 +2,8 @@ package com.kylecorry.trail_sense.tools.paths.quickactions
 
 import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
 import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
+import androidx.lifecycle.lifecycleScope
 
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionButtonView
@@ -31,7 +33,7 @@ class QuickActionBacktrack(btn: QuickActionButtonView, host: AndroidDestinationH
 
     override fun onClick() {
         super.onClick()
-        val command = ToggleBacktrackCommand(host)
+        val command = ToggleBacktrackCommand(host as ScreenEffects, host.lifecycleOwner.lifecycleScope)
         command.execute()
     }
 }
