@@ -1,31 +1,34 @@
 package com.kylecorry.trail_sense.settings.ui
 
-import android.content.Context
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.main.getAppService
 
-import androidx.compose.ui.platform.LocalContext
+
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.infrastructure.CameraPreferences
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
-import com.kylecorry.trail_sense.shared.dialogs.item
 
 @Composable
 fun CameraSettingsToolScreen() {
-    val context = LocalContext.current
-    val prefs = remember { UserPreferences(context).camera }
-    val projectionNames = context.projectionTypeNames()
+    val host = AppHost.current()
+    val strings = LocalAppStrings.current
+    val prefs = remember { getAppService<UserPreferences>().camera }
+    val projectionNames = projectionTypeNames(strings)
     val projectionTypes = projectionNames.keys.toList()
     var projectionType by remember { mutableStateOf(prefs.projectionType) }
-    val title = stringResource(R.string.projection_type)
-    SettingsList(title = stringResource(R.string.camera)) {
+    val title = appString(Res.string.projection_type)
+    SettingsList(title = appString(Res.string.camera)) {
         trailSenseSection("projection") {
             row { position ->
                 SettingsPickerRow(
@@ -33,7 +36,7 @@ fun CameraSettingsToolScreen() {
                     selected = projectionNames.getValue(projectionType),
                     onClick = {
                         Pickers.item(
-                            context,
+                            host,
                             title,
                             projectionNames.values.toList(),
                             projectionTypes.indexOf(projectionType)
@@ -51,15 +54,15 @@ fun CameraSettingsToolScreen() {
     }
 }
 
-private fun Context.projectionTypeNames(): Map<CameraPreferences.ProjectionType, String> {
+private fun projectionTypeNames(strings: AppStrings): Map<CameraPreferences.ProjectionType, String> {
     return mapOf(
         CameraPreferences.ProjectionType.EstimatedIntrinsics to
-                "${getString(R.string.projection_estimated_intrinsics)} (${
-                    getString(R.string.default_string)
+                "${strings.get(Res.string.projection_estimated_intrinsics)} (${
+                    strings.get(Res.string.default_string)
                 })",
         CameraPreferences.ProjectionType.ManufacturerIntrinsics to
-                getString(R.string.projection_manufacturer_intrinsics),
-        CameraPreferences.ProjectionType.Perspective to getString(R.string.projection_perspective),
-        CameraPreferences.ProjectionType.Linear to getString(R.string.projection_linear)
+                strings.get(Res.string.projection_manufacturer_intrinsics),
+        CameraPreferences.ProjectionType.Perspective to strings.get(Res.string.projection_perspective),
+        CameraPreferences.ProjectionType.Linear to strings.get(Res.string.projection_linear)
     )
 }
