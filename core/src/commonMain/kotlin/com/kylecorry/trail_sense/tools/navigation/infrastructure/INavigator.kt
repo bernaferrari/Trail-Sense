@@ -7,6 +7,8 @@ import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.navigation.domain.Destination
 import com.kylecorry.trail_sense.tools.navigation.domain.guidance.Guidance
+import com.kylecorry.trail_sense.tools.navigation.domain.paths.PathFollow
+import com.kylecorry.trail_sense.tools.paths.domain.Path
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -44,6 +46,9 @@ interface INavigator {
 
     /** Navigates along [bearing] (as read from the compass), starting from [startingLocation] when known. */
     suspend fun navigateToBearing(bearing: Float, startingLocation: Coordinate? = null)
+
+    /** Follows [path] in the [follow] direction, replacing any beacon or bearing destination. */
+    suspend fun navigateAlongPath(path: Path, follow: PathFollow)
 
     /** The bearing from [myLocation] to [destination], with the current declination. */
     fun getBearing(myLocation: Coordinate, destination: Destination): Bearing

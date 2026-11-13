@@ -1318,3 +1318,13 @@ places_backtrack_on_description
 places_backtrack_on_title
 simplify
 temporary
+ascent
+descent
+difficulty
+highest_point_elevation
+lowest_point_elevation
+path_direction_to_end
+path_direction_to_start
+point
+points
+recording

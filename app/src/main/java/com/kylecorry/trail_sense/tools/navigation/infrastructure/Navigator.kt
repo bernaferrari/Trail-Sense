@@ -90,7 +90,7 @@ class Navigator private constructor(context: Context) : INavigator {
         }
 
 
-    suspend fun navigateAlongPath(path: Path, follow: PathFollow) {
+    override suspend fun navigateAlongPath(path: Path, follow: PathFollow) {
         pathNavigator.navigate(path, follow)
         clearBeaconDestination()
         clearBearing()
