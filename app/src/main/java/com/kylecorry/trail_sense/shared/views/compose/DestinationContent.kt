@@ -61,7 +61,7 @@ import com.kylecorry.trail_sense.tools.clouds.ui.CloudToolScreen
 import com.kylecorry.trail_sense.tools.comms.TrailSenseCommsToolScreen
 import com.kylecorry.trail_sense.tools.convert.ui.ConvertScreen
 import com.kylecorry.trail_sense.tools.declination.ui.DeclinationScreen
-import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticsToolScreen
+import com.kylecorry.trail_sense.tools.diagnostics.ui.DiagnosticsAndroidToolScreen
 import com.kylecorry.trail_sense.tools.experimentation.ExperimentationContent
 import com.kylecorry.trail_sense.tools.field_guide.ui.CreateFieldGuidePageToolScreen
 import com.kylecorry.trail_sense.tools.field_guide.ui.CreateFieldGuideSightingToolScreen
@@ -85,7 +85,7 @@ import com.kylecorry.trail_sense.tools.navigation.ui.NavigatorToolScreen
 import com.kylecorry.trail_sense.tools.notes.ui.NoteEditorToolScreen
 import com.kylecorry.trail_sense.tools.notes.ui.NotesToolScreen
 import com.kylecorry.trail_sense.tools.offline_maps.ui.OfflineMapListToolScreen
-import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapsToolScreen
+import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapsAndroidToolScreen
 import com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps.ViewVectorMapToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.CreateItemToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackItemListToolScreen
@@ -152,7 +152,7 @@ fun DestinationContent(
             Route.Experimentation -> ExperimentationContent()
             is Route.ErrorHandler -> ErrorHandlerToolScreen(this, route)
             Route.GuideList -> GuideListToolScreen()
-            Route.Diagnostics -> DiagnosticsToolScreen()
+            Route.Diagnostics -> DiagnosticsAndroidToolScreen()
 
             // --- Settings screens ---
             Route.CellSignalSettings -> CellSignalSettingsToolScreen()
@@ -260,7 +260,7 @@ fun DestinationContent(
             is Route.SightingList -> SightingListToolScreen(route)
             is Route.CreateFieldGuidePage -> CreateFieldGuidePageToolScreen(route)
             is Route.CreateFieldGuideSighting -> CreateFieldGuideSightingToolScreen(route)
-            is Route.PhotoMaps -> PhotoMapsToolScreen(route)
+            is Route.PhotoMaps -> PhotoMapsAndroidToolScreen(route)
             Route.Clinometer -> ClinometerToolScreen(
                 onController = { screenController = it }
             )

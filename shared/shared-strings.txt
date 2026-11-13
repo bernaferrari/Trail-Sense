@@ -1226,3 +1226,11 @@ field_guide_name_both
 field_guide_name_common
 field_guide_name_display
 field_guide_name_scientific
+center
+change_map_projection
+map_auto_rotated
+map_calibration_clear_message
+map_options
+measure
+rotation_amount
+trace

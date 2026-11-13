@@ -1,7 +1,12 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
-import android.content.Context
-import android.content.ContextWrapper
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
+import org.jetbrains.compose.resources.StringResource
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,24 +28,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kylecorry.andromeda.print.Printer
 import com.kylecorry.sol.math.trigonometry.Trigonometry
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
-import com.kylecorry.trail_sense.shared.dialogs.dialog
-import com.kylecorry.trail_sense.shared.dialogs.item
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -52,7 +49,6 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProject
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.calibration.MapRotationCalculator
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.PrintMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.DeleteMapCommand
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.RenameMapCommand
 import kotlin.math.absoluteValue
@@ -63,29 +59,32 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
+/**
+ * A photo map's screen: its title bar and menu, and the step it needs (warping, calibration or the map itself) shown
+ * by [child]. The steps draw the map image with the platform's renderer. [exportMap] and [printMap] are the platform's
+ * export and print; their menu items are hidden when null.
+ */
 @Composable
 fun PhotoMapsToolScreen(
     route: Route.PhotoMaps,
+    exportMap: ((PhotoMap) -> Unit)?,
+    printMap: (suspend (PhotoMap) -> Unit)?,
+    child: @Composable (PhotoMapChildHost) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
+    val host = AppHost.current()
+    val strings = LocalAppStrings.current
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     val formatter = remember { getAppService<FormatService>() }
     val viewModel = viewModel {
         PhotoMapsViewModel(getAppService(), route.mapId, route.autoLockLocation)
     }
-    val exportService = remember(context, effects, lifecycleOwner) {
-        // Exporting picks a file through the activity's result launcher (an Activity-only API).
-        PhotoMapExportService(context, requireNotNull(context.findMainActivity()), effects, lifecycleOwner)
-    }
-
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                PhotoMapsEvent.MapAutoRotated -> effects.showMessage(context.getString(R.string.map_auto_rotated))
+                PhotoMapsEvent.MapAutoRotated -> effects.showMessage(strings.get(Res.string.map_auto_rotated))
             }
         }
     }
@@ -105,7 +104,7 @@ fun PhotoMapsToolScreen(
             }
 
             MapContextualAction.ChangeProjection -> changeProjection(
-                context,
+                host,
                 formatter,
                 current = map?.georeference?.projectionType,
                 showConfirmation = viewModel.childSpec is PhotoMapChildSpec.Calibration,
@@ -116,11 +115,11 @@ fun PhotoMapsToolScreen(
                 viewModel.sendToChild(PhotoMapChildCommand.Measure)
 
             MapContextualAction.Export -> map?.let {
-                scope.launch { viewModel.getLatest(it)?.let(exportService::export) }
+                scope.launch { viewModel.getLatest(it)?.let { latest -> exportMap?.invoke(latest) } }
             }
 
             MapContextualAction.Print -> map?.let {
-                scope.launch { PrintMapCommand(context).execute(it) }
+                scope.launch { printMap?.invoke(it) }
             }
 
             MapContextualAction.Delete -> map?.let {
@@ -138,11 +137,11 @@ fun PhotoMapsToolScreen(
     PhotoMapsScreen(
         title = viewModel.title,
         subtitle = viewModel.rotation?.let {
-            stringResource(R.string.rotation_amount, formatter.formatDegrees(it))
+            appString(Res.string.rotation_amount, formatter.formatDegrees(it))
         },
         showRecenter = viewModel.showRecenter,
         onRecenter = { viewModel.sendToChild(PhotoMapChildCommand.Recenter) },
-        menuActions = getMenuActions(viewModel.childSpec),
+        menuActions = getMenuActions(viewModel.childSpec, canExport = exportMap != null, canPrint = printMap != null),
         onMenuAction = ::onMenuAction,
         childSpec = viewModel.childSpec,
         childKey = viewModel.childGeneration,
@@ -150,20 +149,13 @@ fun PhotoMapsToolScreen(
         onWarpComplete = viewModel::onWarpComplete,
         onCalibrationRotation = viewModel::showRotation,
         onCalibrationComplete = viewModel::onCalibrationComplete,
+        child = child,
         modifier = modifier
     )
 }
 
-private tailrec fun Context.findMainActivity(): MainActivity? {
-    return when (this) {
-        is MainActivity -> this
-        is ContextWrapper -> baseContext.findMainActivity()
-        else -> null
-    }
-}
-
 private fun changeProjection(
-    context: Context,
+    host: AppHost,
     formatter: FormatService,
     current: MapProjectionType?,
     showConfirmation: Boolean,
@@ -172,8 +164,8 @@ private fun changeProjection(
     val projections = MapProjectionType.entries
     val projectionNames = projections.map { formatter.formatMapProjection(it) }
     Pickers.item(
-        context,
-        context.getString(R.string.change_map_projection),
+        host,
+        getAppService<AppStrings>().get(Res.string.change_map_projection),
         projectionNames,
         projections.indexOf(current)
     ) {
@@ -181,9 +173,9 @@ private fun changeProjection(
         val newProjection = projections[it]
         if (showConfirmation) {
             Alerts.dialog(
-                context,
-                context.getString(R.string.change_map_projection),
-                context.getString(R.string.map_calibration_clear_message)
+                host,
+                getAppService<AppStrings>().get(Res.string.change_map_projection),
+                getAppService<AppStrings>().get(Res.string.map_calibration_clear_message)
             ) { cancelled ->
                 if (!cancelled) {
                     onChange(newProjection)
@@ -196,7 +188,11 @@ private fun changeProjection(
 }
 
 /** The menu's actions for the open child screen, in order. */
-private fun getMenuActions(childSpec: PhotoMapChildSpec?): List<MapContextualAction> {
+internal fun getMenuActions(
+    childSpec: PhotoMapChildSpec?,
+    canExport: Boolean,
+    canPrint: Boolean
+): List<MapContextualAction> {
     val isMapView = childSpec is PhotoMapChildSpec.View
     val isCalibration = childSpec is PhotoMapChildSpec.Calibration
     return listOfNotNull(
@@ -207,31 +203,31 @@ private fun getMenuActions(childSpec: PhotoMapChildSpec?): List<MapContextualAct
         MapContextualAction.Measure.takeIf { isMapView },
         MapContextualAction.CreatePath.takeIf { isMapView },
         MapContextualAction.AdjustLayers.takeIf { isMapView },
-        MapContextualAction.Export.takeIf { isMapView },
-        MapContextualAction.Print.takeIf { isMapView && Printer.canPrint() },
+        MapContextualAction.Export.takeIf { isMapView && canExport },
+        MapContextualAction.Print.takeIf { isMapView && canPrint },
         MapContextualAction.Delete,
         MapContextualAction.Trace.takeIf { isMapView }
     )
 }
 
-private fun MapContextualAction.label(): Int {
+private fun MapContextualAction.label(): StringResource {
     return when (this) {
-        MapContextualAction.Calibrate -> R.string.calibrate
-        MapContextualAction.Guide -> R.string.tool_user_guide_title
-        MapContextualAction.Rename -> R.string.rename
-        MapContextualAction.ChangeProjection -> R.string.change_map_projection
-        MapContextualAction.Measure -> R.string.measure
-        MapContextualAction.CreatePath -> R.string.create_path
-        MapContextualAction.AdjustLayers -> R.string.layers
-        MapContextualAction.Export -> R.string.export
-        MapContextualAction.Print -> R.string.print
-        MapContextualAction.Delete -> R.string.delete
-        MapContextualAction.Trace -> R.string.trace
+        MapContextualAction.Calibrate -> Res.string.calibrate
+        MapContextualAction.Guide -> Res.string.tool_user_guide_title
+        MapContextualAction.Rename -> Res.string.rename
+        MapContextualAction.ChangeProjection -> Res.string.change_map_projection
+        MapContextualAction.Measure -> Res.string.measure
+        MapContextualAction.CreatePath -> Res.string.create_path
+        MapContextualAction.AdjustLayers -> Res.string.layers
+        MapContextualAction.Export -> Res.string.export
+        MapContextualAction.Print -> Res.string.print
+        MapContextualAction.Delete -> Res.string.delete
+        MapContextualAction.Trace -> Res.string.trace
     }
 }
 
 /** What the open child screen (view or calibration) is asked to do from the title bar. */
-internal enum class PhotoMapChildCommand {
+enum class PhotoMapChildCommand {
     Recenter,
     Reload,
     Measure,
@@ -239,11 +235,11 @@ internal enum class PhotoMapChildCommand {
     AdjustLayers
 }
 
-internal enum class PhotoMapsEvent {
+enum class PhotoMapsEvent {
     MapAutoRotated
 }
 
-internal class PhotoMapsViewModel(
+class PhotoMapsViewModel(
     private val service: MapService,
     private val mapId: Long,
     private val autoLockLocation: Boolean
@@ -381,6 +377,7 @@ private fun PhotoMapsScreen(
     onWarpComplete: () -> Unit,
     onCalibrationRotation: (Float) -> Unit,
     onCalibrationComplete: () -> Unit,
+    child: @Composable (PhotoMapChildHost) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -403,32 +400,16 @@ private fun PhotoMapsScreen(
             ) {
                 childSpec?.let { spec ->
                     key(spec.key, childKey) {
-                        val viewModelKey = "${spec.key}-$childKey"
-                        when (spec) {
-                            is PhotoMapChildSpec.Warp -> WarpMapToolScreen(
-                                modifier = Modifier.fillMaxSize(),
-                                mapId = spec.mapId,
-                                viewModelKey = viewModelKey,
-                                onComplete = onWarpComplete
-                            )
-
-                            is PhotoMapChildSpec.Calibration -> PhotoMapCalibrationToolScreen(
-                                modifier = Modifier.fillMaxSize(),
-                                mapId = spec.mapId,
-                                viewModelKey = viewModelKey,
+                        child(
+                            PhotoMapChildHost(
+                                spec = spec,
+                                viewModelKey = "${spec.key}-$childKey",
                                 commands = childCommands,
-                                onRotation = onCalibrationRotation,
-                                onComplete = onCalibrationComplete
+                                onWarpComplete = onWarpComplete,
+                                onCalibrationRotation = onCalibrationRotation,
+                                onCalibrationComplete = onCalibrationComplete
                             )
-
-                            is PhotoMapChildSpec.View -> ViewPhotoMapToolScreen(
-                                modifier = Modifier.fillMaxSize(),
-                                mapId = spec.mapId,
-                                viewModelKey = viewModelKey,
-                                autoLockLocation = spec.autoLockLocation,
-                                commands = childCommands
-                            )
-                        }
+                        )
                     }
                 }
             }
@@ -454,14 +435,14 @@ private fun PhotoMapHeader(
         actions = {
             if (showRecenter) {
                 IconButton(onClick = onRecenter, modifier = Modifier.testTag("map_recenter_btn")) {
-                    Icon(rememberVectorPainter(TrailIcons.Recenter), contentDescription = stringResource(R.string.center))
+                    Icon(rememberVectorPainter(TrailIcons.Recenter), contentDescription = appString(Res.string.center))
                 }
             }
             Box {
                 IconButton(onClick = { isMenuOpen = true }, modifier = Modifier.testTag("map_menu_btn")) {
                     Icon(
                         rememberVectorPainter(TrailIcons.MenuDots),
-                        contentDescription = stringResource(R.string.map_options)
+                        contentDescription = appString(Res.string.map_options)
                     )
                 }
                 DropdownMenu(
@@ -470,7 +451,7 @@ private fun PhotoMapHeader(
                 ) {
                     menuActions.forEach { action ->
                         DropdownMenuItem(
-                            text = { Text(stringResource(action.label())) },
+                            text = { Text(appString(action.label())) },
                             onClick = {
                                 isMenuOpen = false
                                 onMenuAction(action)
@@ -483,7 +464,18 @@ private fun PhotoMapHeader(
     )
 }
 
-internal sealed class PhotoMapChildSpec(val key: String) {
+/** One step of a photo map's screen, and what it reports back. */
+class PhotoMapChildHost(
+    val spec: PhotoMapChildSpec,
+    /** Changes each time the step reopens, so its view model starts fresh. */
+    val viewModelKey: String,
+    val commands: Flow<PhotoMapChildCommand>,
+    val onWarpComplete: () -> Unit,
+    val onCalibrationRotation: (Float) -> Unit,
+    val onCalibrationComplete: () -> Unit
+)
+
+sealed class PhotoMapChildSpec(val key: String) {
     data class Warp(val mapId: Long) : PhotoMapChildSpec("warp-$mapId")
     data class Calibration(val mapId: Long) : PhotoMapChildSpec("calibration-$mapId")
     data class View(val mapId: Long, val autoLockLocation: Boolean) :
@@ -499,14 +491,15 @@ private fun PhotoMapsScreenPreview() {
             subtitle = "Rotation: 2°",
             showRecenter = true,
             onRecenter = {},
-            menuActions = getMenuActions(null),
+            menuActions = getMenuActions(null, canExport = true, canPrint = true),
             onMenuAction = {},
             childSpec = null,
             childKey = 0,
             childCommands = kotlinx.coroutines.flow.emptyFlow(),
             onWarpComplete = {},
             onCalibrationRotation = {},
-            onCalibrationComplete = {}
+            onCalibrationComplete = {},
+            child = {}
         )
     }
 }
