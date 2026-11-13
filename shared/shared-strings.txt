@@ -1253,3 +1253,7 @@ move_to
 no_offline_maps
 on_map
 show_all
+clouds_empty_description
+file
+manual
+sky_clouds_log

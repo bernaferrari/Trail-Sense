@@ -300,8 +300,7 @@ private fun CloudResultsScreen(
 
     selectedCloudImage?.let { cloud ->
         CloudImageDialog(
-            title = details.getCloudName(cloud),
-            drawable = details.getCloudImage(context, cloud),
+            cloud = cloud,
             onDismiss = { selectedCloudImage = null }
         )
     }
