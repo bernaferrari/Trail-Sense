@@ -268,19 +268,17 @@ object AstronomyToolRegistration : ToolRegistration {
         )
     }
 
-    const val BROADCAST_SUNSET_ALERTS_ENABLED = "astronomy-broadcast-sunset-alerts-enabled"
-    const val BROADCAST_SUNSET_ALERTS_DISABLED = "astronomy-broadcast-sunset-alerts-disabled"
-    const val BROADCAST_SUNSET_ALERTS_STATE_CHANGED =
-        "astronomy-broadcast-sunset-alerts-state-changed"
+    const val BROADCAST_SUNSET_ALERTS_ENABLED = AstronomyBroadcasts.SUNSET_ALERTS_ENABLED
+    const val BROADCAST_SUNSET_ALERTS_DISABLED = AstronomyBroadcasts.SUNSET_ALERTS_DISABLED
+    const val BROADCAST_SUNSET_ALERTS_STATE_CHANGED = AstronomyBroadcasts.SUNSET_ALERTS_STATE_CHANGED
 
-    const val BROADCAST_SUNRISE_ALERTS_ENABLED = "astronomy-broadcast-sunrise-alerts-enabled"
-    const val BROADCAST_SUNRISE_ALERTS_DISABLED = "astronomy-broadcast-sunrise-alerts-disabled"
-    const val BROADCAST_SUNRISE_ALERTS_STATE_CHANGED =
-        "astronomy-broadcast-sunrise-alerts-state-changed"
+    const val BROADCAST_SUNRISE_ALERTS_ENABLED = AstronomyBroadcasts.SUNRISE_ALERTS_ENABLED
+    const val BROADCAST_SUNRISE_ALERTS_DISABLED = AstronomyBroadcasts.SUNRISE_ALERTS_DISABLED
+    const val BROADCAST_SUNRISE_ALERTS_STATE_CHANGED = AstronomyBroadcasts.SUNRISE_ALERTS_STATE_CHANGED
 
-    const val SERVICE_SUNSET_ALERTS = "astronomy-service-sunset-alerts"
-    const val SERVICE_SUNRISE_ALERTS = "astronomy-service-sunrise-alerts"
-    const val SERVICE_ASTRONOMY_ALERTS = "astronomy-service-astronomy-alerts"
+    const val SERVICE_SUNSET_ALERTS = AstronomyBroadcasts.SERVICE_SUNSET_ALERTS
+    const val SERVICE_SUNRISE_ALERTS = AstronomyBroadcasts.SERVICE_SUNRISE_ALERTS
+    const val SERVICE_ASTRONOMY_ALERTS = AstronomyBroadcasts.SERVICE_ASTRONOMY_ALERTS
 
     const val WIDGET_SUN = "astronomy-widget-sun"
     const val WIDGET_MOON = "astronomy-widget-moon"
