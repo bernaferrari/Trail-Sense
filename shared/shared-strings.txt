@@ -1328,3 +1328,10 @@ path_direction_to_start
 point
 points
 recording
+clock_device_time_accurate
+clock_device_time_fast
+clock_device_time_slow
+clock_waiting_for_gps
+no_gps_signal
+pip_button
+reload
