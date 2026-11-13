@@ -99,7 +99,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseGroupShape
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
-import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
+import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsText
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudObservation
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
 import com.kylecorry.trail_sense.tools.guide.infrastructure.UserGuideUtils
@@ -123,7 +123,7 @@ fun CloudToolScreen(route: Route.Clouds) {
     val scope = rememberCoroutineScope()
     val viewModel = viewModel { CloudViewModel(CloudRepo.getInstance(appContext)) }
     val formatter = remember(appContext) { FormatService.getInstance(appContext) }
-    val cloudDetailsService = remember(appContext) { CloudDetailsService(appContext) }
+    val cloudDetailsService = remember { CloudDetailsText() }
     val files = remember(appContext) { FileSubsystem.getInstance(appContext) }
     val clouds by viewModel.clouds.collectAsStateWithLifecycle()
     val subtitle = stringResource(

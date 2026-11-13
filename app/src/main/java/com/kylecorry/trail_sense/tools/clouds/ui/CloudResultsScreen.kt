@@ -103,7 +103,6 @@ import androidx.compose.ui.semantics.Role
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ClassificationResult
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.ICloudClassifier
 import com.kylecorry.trail_sense.tools.clouds.domain.classification.SoftmaxCloudClassifier
-import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsService
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudObservation
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
 import kotlinx.coroutines.launch
