@@ -1,8 +1,5 @@
-package com.kylecorry.trail_sense.tools.weather.ui
+package com.kylecorry.trail_sense.shared.permissions
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.alerts.IAlerter
 import com.kylecorry.trail_sense.shared.generated.resources.*
@@ -13,10 +10,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
- * Offers to lift battery restrictions after the weather monitor starts: a long snackbar whose Learn more asks to
+ * Offers to lift battery restrictions after a background tool starts: a long snackbar whose Learn more asks to
  * ignore battery optimizations, then says so when allowed. The screen-effects form of RemoveBatteryRestrictionsAlerter.
  */
-class WeatherBatteryRestrictionsAlerter(
+class BatteryRestrictionsAlerter(
     private val effects: ScreenEffects,
     private val scope: CoroutineScope
 ) : IAlerter {

@@ -334,7 +334,7 @@ fun PathsToolScreen(
             showSeconds = true,
             onDurationPicked = {
                 if (it != null) {
-                    ChangeBacktrackFrequencyCommand(context, scope) {
+                    ChangeBacktrackFrequencyCommand(AppHost.from(context), scope) {
                         viewModel.updateBacktrackStatus()
                     }.execute(it)
                 }

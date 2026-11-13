@@ -19,6 +19,7 @@ import androidx.lifecycle.ViewModel
 import com.kylecorry.trail_sense.shared.io.ExportService
 import com.kylecorry.trail_sense.shared.notifications.NotificationChannelControl
 import com.kylecorry.trail_sense.shared.permissions.BatteryRestrictionPrompt
+import com.kylecorry.trail_sense.shared.permissions.BatteryRestrictionsAlerter
 import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.shared.text.LocalAppStrings
 import com.kylecorry.trail_sense.tools.weather.WeatherBroadcasts
@@ -112,7 +113,7 @@ fun WeatherSettingsScreen(
         viewModel.events.collect {
             when (it) {
                 WeatherSettingsEvent.MonitorEnabled -> getAppService<BatteryRestrictionPrompt>().request(
-                    WeatherBatteryRestrictionsAlerter(effects, scope)
+                    BatteryRestrictionsAlerter(effects, scope)
                 )
             }
         }

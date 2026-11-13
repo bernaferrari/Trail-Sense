@@ -71,6 +71,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ViewModel
 import com.kylecorry.trail_sense.shared.dialogs.showComposeContentDialog
 import com.kylecorry.trail_sense.shared.permissions.BatteryRestrictionPrompt
+import com.kylecorry.trail_sense.shared.permissions.BatteryRestrictionsAlerter
 import com.kylecorry.trail_sense.shared.text.LocalAppStrings
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -373,7 +374,7 @@ fun WeatherToolScreen(
             scope.launch {
                 when (viewModel.toggleMonitor()) {
                     FeatureState.Off -> getAppService<BatteryRestrictionPrompt>().request(
-                        WeatherBatteryRestrictionsAlerter(effects, scope)
+                        BatteryRestrictionsAlerter(effects, scope)
                     )
 
                     FeatureState.Unavailable -> effects.showMessage(

@@ -48,6 +48,8 @@ import com.kylecorry.andromeda.sound.ToneGenerator
 import com.kylecorry.trail_sense.shared.images.AndroidBundledImages
 import com.kylecorry.trail_sense.shared.images.BundledImages
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.tools.paths.infrastructure.BacktrackRestarter
+import com.kylecorry.trail_sense.tools.paths.infrastructure.BacktrackScheduler
 import com.kylecorry.trail_sense.tools.astronomy.infrastructure.receivers.enableAstronomyAlert
 import com.kylecorry.trail_sense.tools.astronomy.ui.AstronomyAlertEnabler
 import com.kylecorry.trail_sense.shared.permissions.BatteryRestrictionPrompt
@@ -152,6 +154,9 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(IWeatherRepo::class) { WeatherRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(AstronomyAlertEnabler::class) {
             AstronomyAlertEnabler { serviceId, effects, scope -> enableAstronomyAlert(appContext, serviceId, effects, scope) }
+        }
+        DependencyRegistry.addSingleton(BacktrackRestarter::class) {
+            BacktrackRestarter { BacktrackScheduler.restart(appContext) }
         }
         DependencyRegistry.addSingleton(WeatherMonitorRestarter::class) {
             WeatherMonitorRestarter { WeatherMonitorScheduler.restart(appContext) }
