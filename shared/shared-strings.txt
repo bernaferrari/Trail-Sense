@@ -1305,3 +1305,16 @@ places_beacon_verdict
 places_empty_description
 places_hidden
 save_a_place
+create_path_on_map
+keep_forever
+merge
+path_group_summary
+paths_clear_search
+paths_empty_description
+places_backtrack_every
+places_backtrack_off_description
+places_backtrack_off_title
+places_backtrack_on_description
+places_backtrack_on_title
+simplify
+temporary
