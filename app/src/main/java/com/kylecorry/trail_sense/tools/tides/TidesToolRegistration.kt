@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.tides
 import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -40,7 +40,7 @@ object TidesToolRegistration : ToolRegistration {
                 ToolDiagnosticFactory.gps(context)
             ),
             mapLayers = listOf(
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     TideGeoJsonSource.SOURCE_ID,
                     context.getString(R.string.tides),
                     description = context.getString(R.string.map_layer_tides_description),

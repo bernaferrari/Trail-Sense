@@ -21,7 +21,7 @@ import com.kylecorry.trail_sense.plugins.map_layers.PluginGeoJsonSource
 import com.kylecorry.trail_sense.plugins.map_layers.PluginTileSource
 import com.kylecorry.trail_sense.shared.ProguardIgnore
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerAttribution
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
 
 class PluginLoader(
@@ -117,7 +117,7 @@ class PluginLoader(
         packageId: String,
         pluginName: String,
         layer: RegistrationMapLayerResponse
-    ): MapLayerDefinition? {
+    ): AndroidMapLayerDefinition? {
         val layerType = mapLayerType(layer.layerType)
         if (!PluginGuard.isValidEndpoint(layer.endpoint) || layer.name.isBlank() || layerType == null) {
             return null
@@ -133,7 +133,7 @@ class PluginLoader(
                 it.alwaysShow
             )
         }
-        return MapLayerDefinition(
+        return AndroidMapLayerDefinition(
             "plugin::$packageId::${layer.endpoint}",
             "${pluginName}: ${layer.name.take(PluginGuard.MAX_LAYER_NAME_LENGTH)}",
             isConfigurable = true,

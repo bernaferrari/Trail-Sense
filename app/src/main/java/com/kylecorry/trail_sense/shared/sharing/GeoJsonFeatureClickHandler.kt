@@ -71,7 +71,6 @@ object GeoJsonFeatureClickHandler {
                 ShareAction.Open -> {
                     layer?.openFeature?.invoke(
                         feature,
-                        host.context,
                         host.navigator
                     )
                 }

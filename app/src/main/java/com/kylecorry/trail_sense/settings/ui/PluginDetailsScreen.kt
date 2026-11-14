@@ -39,7 +39,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.plugins.domain.Plugin
 import com.kylecorry.trail_sense.plugins.domain.PluginResourceServiceDetails
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
@@ -246,7 +246,7 @@ private suspend fun loadDetails(
 
 @Composable
 private fun getMapLayers(
-    mapLayers: List<MapLayerDefinition>?,
+    mapLayers: List<AndroidMapLayerDefinition>?,
     pluginName: String?
 ): List<MapLayerDetails> {
     val layers = mapLayers.orEmpty()

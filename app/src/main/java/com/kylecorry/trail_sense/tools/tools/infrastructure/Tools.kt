@@ -12,7 +12,7 @@ import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.settings.SettingsToolRegistration
 import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.quickactions.QuickActionOpenTool
 import com.kylecorry.trail_sense.shared.views.QuickActionNone
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyToolRegistration
@@ -136,7 +136,7 @@ object Tools {
         return tools.filter { !availableOnly || it.isAvailable(context) }
     }
 
-    fun getMapLayerDefinition(context: Context, sourceId: String): MapLayerDefinition? {
+    fun getMapLayerDefinition(context: Context, sourceId: String): AndroidMapLayerDefinition? {
         return getTools(context).flatMap { it.mapLayers }.firstOrNull { it.id == sourceId }
     }
 

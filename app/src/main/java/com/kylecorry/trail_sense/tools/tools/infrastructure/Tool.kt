@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.tools.infrastructure
 
 import android.content.Context
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.text.RawText
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.ToolDiagnostic
@@ -33,6 +33,6 @@ data class Tool(
     val actions: List<ToolAction> = emptyList(),
     val initialize: (context: Context) -> Unit = {},
     val singletons: List<(Context) -> Any> = emptyList(),
-    val mapLayers: List<MapLayerDefinition> = emptyList()
+    val mapLayers: List<AndroidMapLayerDefinition> = emptyList()
 ) : ToolDescriptor
 

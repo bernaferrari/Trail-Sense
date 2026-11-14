@@ -63,7 +63,7 @@ internal class MapFeatureClickHandler(
         }
         val open = layer?.openFeature?.let { openFeature ->
             ActionItem(context.getString(R.string.open), TrailIcons.Open) {
-                openFeature(feature, context, navigator)
+                openFeature(feature, navigator)
             }
         }
 

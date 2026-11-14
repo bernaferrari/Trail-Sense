@@ -6,7 +6,7 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.extensions.findNavigator
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerAttribution
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
@@ -77,7 +77,7 @@ object OfflineMapsToolRegistration : ToolRegistration {
                 ToolBroadcast(BROADCAST_OFFLINE_MAP_DELETED, "Offline map deleted"),
             ),
             mapLayers = listOf(
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     PhotoMapTileSource.SOURCE_ID,
                     context.getString(R.string.photo_maps),
                     layerType = MapLayerType.Tile,
@@ -98,7 +98,7 @@ object OfflineMapsToolRegistration : ToolRegistration {
                         PhotoMapTileSource.LOAD_PDFS
                     )
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     TrailMapsTileSource.SOURCE_ID,
                     context.getString(R.string.trail_maps),
                     layerType = MapLayerType.Tile,

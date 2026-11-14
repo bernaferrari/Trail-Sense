@@ -4,7 +4,7 @@ import android.content.Context
 import com.kylecorry.andromeda.notify.Notify
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
@@ -204,7 +204,7 @@ object AstronomyToolRegistration : ToolRegistration {
                 )
             ),
             mapLayers = listOf(
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     SolarEclipseTileSource.SOURCE_ID,
                     context.getString(R.string.solar_eclipse),
                     layerType = MapLayerType.Tile,
@@ -227,7 +227,7 @@ object AstronomyToolRegistration : ToolRegistration {
                     isTimeDependent = true,
                     refreshInterval = 2.minutes
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     LunarEclipseTileSource.SOURCE_ID,
                     context.getString(R.string.lunar_eclipse),
                     layerType = MapLayerType.Tile,
@@ -244,7 +244,7 @@ object AstronomyToolRegistration : ToolRegistration {
                     isTimeDependent = true,
                     refreshInterval = 2.minutes
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     NightTileSource.SOURCE_ID,
                     context.getString(R.string.night),
                     layerType = MapLayerType.Tile,

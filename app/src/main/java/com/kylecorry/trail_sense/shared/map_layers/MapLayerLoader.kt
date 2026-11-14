@@ -6,7 +6,7 @@ import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.ILayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.LayerFactory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
@@ -18,8 +18,8 @@ class MapLayerLoader(context: Context) {
 
     private val plugins = getAppService<PluginSubsystem>()
 
-    suspend fun getDefinitions(): Map<String, MapLayerDefinition> {
-        val pluginDefinitions: Map<String, MapLayerDefinition> = if (plugins.arePluginsEnabled()) {
+    suspend fun getDefinitions(): Map<String, AndroidMapLayerDefinition> {
+        val pluginDefinitions: Map<String, AndroidMapLayerDefinition> = if (plugins.arePluginsEnabled()) {
             plugins.getPluginResourceServiceDetails().flatMap { it.features.mapLayers }.associateBy { it.id }
         } else {
             emptyMap()
@@ -27,7 +27,7 @@ class MapLayerLoader(context: Context) {
         return toolLayers.toMap() + pluginDefinitions
     }
 
-    fun getLayer(layerId: String, definitions: Map<String, MapLayerDefinition>): ILayer? {
+    fun getLayer(layerId: String, definitions: Map<String, AndroidMapLayerDefinition>): ILayer? {
         return definitions[layerId]?.let { factory.createLayer(it) }
     }
 
@@ -40,7 +40,7 @@ suspend fun MapLayerLoader.getAttribution(context: Context, layerIds: List<Strin
     val attributions = layerIds.flatMap { layerId ->
         listOfNotNull(
             definitions[layerId]?.attribution,
-            definitions[layerId]?.attributionLoader?.invoke(context)
+            definitions[layerId]?.attributionLoader?.invoke()
         )
     }.filter { it.alwaysShow }
         .map { it.attribution }

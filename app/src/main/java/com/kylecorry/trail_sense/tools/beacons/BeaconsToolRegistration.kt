@@ -9,7 +9,7 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.extensions.findNavigator
 import com.kylecorry.trail_sense.shared.extensions.getLongProperty
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.toRouteLocation
 import com.kylecorry.trail_sense.shared.text.RawTexts
@@ -101,11 +101,11 @@ object BeaconsToolRegistration : ToolRegistration {
                 )
             ),
             mapLayers = listOf(
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     MAP_LAYER_BEACONS,
                     context.getString(R.string.beacons),
                     description = context.getString(R.string.map_layer_beacons_description),
-                    openFeature = { feature, _, appNavigator ->
+                    openFeature = { feature, appNavigator ->
                         val beaconId =
                             feature.getLongProperty(BeaconGeoJsonSource.PROPERTY_BEACON_ID)
                         beaconId?.let { appNavigator.navigate(Route.BeaconDetails(it)) }

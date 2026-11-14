@@ -227,7 +227,7 @@ object TrailSenseServiceRegister {
 
         // Map layers
         DependencyRegistry.addSingleton(MapLayerLoader(appContext))
-        DependencyRegistry.addSingleton(MapLayerPreferenceRepo())
+        DependencyRegistry.addSingleton(MapLayerPreferenceRepo(getAppService()))
         val cacheFiles = CacheFileSystem(appContext)
         val cachedTiles = CachedTileRepo(
             AndroidAppDatabase.getInstance(appContext).cachedTileDao(),

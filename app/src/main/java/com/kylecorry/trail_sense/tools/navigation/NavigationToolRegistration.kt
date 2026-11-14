@@ -4,7 +4,7 @@ import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -38,7 +38,7 @@ object NavigationToolRegistration : ToolRegistration {
             ).distinctBy { it.id },
             singletons = listOf(Navigator::getInstance),
             mapLayers = listOf(
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     NavigationGeoJsonSource.SOURCE_ID,
                     context.getString(R.string.navigation),
                     description = context.getString(R.string.map_layer_navigation_description),

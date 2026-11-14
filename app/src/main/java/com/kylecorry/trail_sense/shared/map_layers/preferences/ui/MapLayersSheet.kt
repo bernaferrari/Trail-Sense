@@ -54,7 +54,7 @@ import com.kylecorry.trail_sense.settings.ui.SettingsSwitchRow
 import com.kylecorry.trail_sense.shared.map_layers.MapLayerLoader
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerAttribution
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceRepo
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
@@ -119,7 +119,7 @@ class MapLayersSheetState(
         val loader = remember { DependencyRegistry.get<MapLayerLoader>() }
         val listState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
-        var layers by remember { mutableStateOf<List<MapLayerDefinition>?>(null) }
+        var layers by remember { mutableStateOf<List<AndroidMapLayerDefinition>?>(null) }
         var selectedLayerIds by remember { mutableStateOf(repo.getActiveLayerIds(mapId)) }
         var expandedLayerIds by remember { mutableStateOf(emptySet<String>()) }
         var refreshKey by remember { mutableIntStateOf(0) }
@@ -213,7 +213,7 @@ class MapLayersSheetState(
     }
 
     private fun moveLayer(
-        layer: MapLayerDefinition,
+        layer: AndroidMapLayerDefinition,
         moveTowardTop: Boolean,
         selectedLayerIds: List<String>
     ) {
@@ -230,7 +230,7 @@ class MapLayersSheetState(
         repo.setActiveLayerIds(mapId, newLayerIds)
     }
 
-    private fun pickDestinationMaps(context: Context, layer: MapLayerDefinition) {
+    private fun pickDestinationMaps(context: Context, layer: AndroidMapLayerDefinition) {
         val otherMaps = getOtherMapIds()
         Pickers.items(
             context,
@@ -250,7 +250,7 @@ class MapLayersSheetState(
 
     private fun removeLayer(
         context: Context,
-        layer: MapLayerDefinition,
+        layer: AndroidMapLayerDefinition,
         selectedLayerIds: List<String>,
         onRemoved: () -> Unit
     ) {
@@ -271,7 +271,7 @@ class MapLayersSheetState(
 
     private fun pickAdditionalLayers(
         context: Context,
-        layers: List<MapLayerDefinition>,
+        layers: List<AndroidMapLayerDefinition>,
         selectedLayerIds: List<String>,
         onAdded: () -> Unit
     ) {
@@ -320,19 +320,19 @@ class MapLayersSheetState(
 @Composable
 private fun MapLayersContent(
     mapId: String,
-    layers: List<MapLayerDefinition>?,
+    layers: List<AndroidMapLayerDefinition>?,
     selectedLayerIds: List<String>,
     expandedLayerIds: Set<String>,
     alwaysEnabledLayerIds: List<String>,
     refreshKey: Int,
     listState: LazyListState,
-    onToggleLayerExpansion: (MapLayerDefinition) -> Unit,
-    onMoveLayerUp: (MapLayerDefinition) -> Unit,
-    onMoveLayerDown: (MapLayerDefinition) -> Unit,
+    onToggleLayerExpansion: (AndroidMapLayerDefinition) -> Unit,
+    onMoveLayerUp: (AndroidMapLayerDefinition) -> Unit,
+    onMoveLayerDown: (AndroidMapLayerDefinition) -> Unit,
     onPreferenceChanged: () -> Unit,
     onNavigate: (Route) -> Unit,
-    onCopySettings: (MapLayerDefinition) -> Unit,
-    onRemoveLayer: (MapLayerDefinition) -> Unit,
+    onCopySettings: (AndroidMapLayerDefinition) -> Unit,
+    onRemoveLayer: (AndroidMapLayerDefinition) -> Unit,
     onAddLayers: () -> Unit,
     markdown: MarkdownService,
     modifier: Modifier = Modifier
@@ -480,7 +480,7 @@ private fun MapLayersContent(
 
 @Composable
 private fun MapLayerHeader(
-    layer: MapLayerDefinition,
+    layer: AndroidMapLayerDefinition,
     isExpanded: Boolean,
     isLayerEnabled: Boolean,
     canMoveUp: Boolean,
@@ -528,9 +528,9 @@ private fun MapLayerHeader(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            if (layer.description != null) {
+            layer.description?.let { description ->
                 Text(
-                    text = layer.description,
+                    text = description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -821,7 +821,7 @@ private fun MapLayersContentPreview() {
         MapLayersContent(
             mapId = "map",
             layers = listOf(
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     id = "terrain",
                     name = "Terrain",
                     description = "Contour and hillshade overlays",

@@ -4,7 +4,7 @@ import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerAttribution
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.signal_finder.map_layers.CellTowerGeoJsonSource
@@ -28,7 +28,7 @@ object SignalFinderToolRegistration : ToolRegistration {
             ),
             guideId = RawTexts.guide_tool_signal_finder,
             mapLayers = listOf(
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     CellTowerGeoJsonSource.SOURCE_ID,
                     context.getString(R.string.cell_towers),
                     description = context.getString(R.string.map_layer_cell_towers_description),

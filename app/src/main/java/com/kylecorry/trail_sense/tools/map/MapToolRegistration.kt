@@ -12,7 +12,7 @@ import com.kylecorry.trail_sense.shared.dem.map_layers.RuggednessMapTileSource
 import com.kylecorry.trail_sense.shared.dem.map_layers.SlopeMapTileSource
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.DefaultMapLayerDefinitions
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
@@ -77,14 +77,14 @@ object MapToolRegistration : ToolRegistration {
                 )
             ),
             mapLayers = listOf(
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     BaseMapTileSource.SOURCE_ID,
                     context.getString(R.string.basemap),
                     layerType = MapLayerType.Tile,
                     description = context.getString(R.string.map_layer_base_map_description),
                     tileSource = { BaseMapTileSource(context.applicationContext) }
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     ElevationMapTileSource.SOURCE_ID,
                     context.getString(R.string.elevation),
                     layerType = MapLayerType.Tile,
@@ -107,7 +107,7 @@ object MapToolRegistration : ToolRegistration {
                     tileSource = ::ElevationMapTileSource,
                     minZoomLevel = 10
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     HillshadeMapTileSource.SOURCE_ID,
                     context.getString(R.string.hillshade),
                     layerType = MapLayerType.Tile,
@@ -137,7 +137,7 @@ object MapToolRegistration : ToolRegistration {
                     shouldMultiply = true,
                     isTimeDependent = true
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     RuggednessMapTileSource.SOURCE_ID,
                     context.getString(R.string.ruggedness),
                     layerType = MapLayerType.Tile,
@@ -153,7 +153,7 @@ object MapToolRegistration : ToolRegistration {
                     tileSource = ::RuggednessMapTileSource,
                     minZoomLevel = 10
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     SlopeMapTileSource.SOURCE_ID,
                     context.getString(R.string.path_slope),
                     layerType = MapLayerType.Tile,
@@ -192,7 +192,7 @@ object MapToolRegistration : ToolRegistration {
                     tileSource = ::SlopeMapTileSource,
                     minZoomLevel = 10
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     AspectMapTileSource.SOURCE_ID,
                     context.getString(R.string.aspect),
                     layerType = MapLayerType.Tile,
@@ -208,7 +208,7 @@ object MapToolRegistration : ToolRegistration {
                     tileSource = ::AspectMapTileSource,
                     minZoomLevel = 10
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     ContourGeoJsonSource.SOURCE_ID,
                     context.getString(R.string.contours),
                     description = context.getString(R.string.map_layer_contours_description),
@@ -236,7 +236,7 @@ object MapToolRegistration : ToolRegistration {
                     geoJsonSource = ::ContourGeoJsonSource,
                     minZoomLevel = 13
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     MyLocationGeoJsonSource.SOURCE_ID,
                     context.getString(R.string.location),
                     description = context.getString(R.string.map_layer_my_location_description),
@@ -258,21 +258,21 @@ object MapToolRegistration : ToolRegistration {
                     refreshInterval = MyLocationGeoJsonSource.STALE_CHECK_INTERVAL,
                     refreshBroadcasts = listOf(SensorsToolRegistration.BROADCAST_LOCATION_CHANGED)
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     ScaleBarLayer.LAYER_ID,
                     context.getString(R.string.map_scale_title),
                     isConfigurable = false,
                     layerType = MapLayerType.Overlay,
                     layer = { ScaleBarLayer(UserPreferences(context).baseDistanceUnits, FormatService.getInstance()) }
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     CompassOverlayLayer.LAYER_ID,
                     context.getString(R.string.pref_compass_sensor_title),
                     isConfigurable = false,
                     layerType = MapLayerType.Overlay,
                     layer = ::CompassOverlayLayer
                 ),
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     MyElevationLayer.LAYER_ID,
                     context.getString(R.string.my_elevation),
                     isConfigurable = false,

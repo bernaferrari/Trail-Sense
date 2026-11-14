@@ -4,16 +4,13 @@ import com.kylecorry.andromeda.preferences.putAll
 
 import com.kylecorry.andromeda.preferences.getAll
 
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.preferences.Preference
 import com.kylecorry.andromeda.preferences.PreferenceType
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.shared.text.LevenshteinDistance
 
-class MapLayerPreferenceRepo {
-
-    private val prefs = DependencyRegistry.get<Preferences>()
+class MapLayerPreferenceRepo(private val prefs: Preferences) {
     private val distanceMetric = LevenshteinDistance()
 
     fun getActiveLayerIds(mapId: String): List<String> {

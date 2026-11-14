@@ -4,7 +4,7 @@ import android.content.Context
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.extensions.getLongProperty
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
+import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreference
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -42,7 +42,7 @@ object FieldGuideToolRegistration : ToolRegistration {
             ),
             guideId = RawTexts.guide_tool_field_guide,
             mapLayers = listOf(
-                MapLayerDefinition(
+                AndroidMapLayerDefinition(
                     FieldGuideSightingGeoJsonSource.SOURCE_ID,
                     context.getString(R.string.sightings),
                     description = context.getString(R.string.map_layer_field_guide_sightings_description),
@@ -54,7 +54,7 @@ object FieldGuideToolRegistration : ToolRegistration {
                             defaultValue = false
                         )
                     ),
-                    openFeature = { feature, _, appNavigator ->
+                    openFeature = { feature, appNavigator ->
                         val fieldGuidePageId =
                             feature.getLongProperty(FieldGuideSightingGeoJsonSource.PROPERTY_PAGE_ID)
                         appNavigator.navigate(Route.FieldGuidePage(pageId = fieldGuidePageId ?: 0L))
