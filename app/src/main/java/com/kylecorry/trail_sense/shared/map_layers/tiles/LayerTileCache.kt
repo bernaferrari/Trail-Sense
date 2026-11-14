@@ -11,7 +11,7 @@ import kotlin.concurrent.write
 class LayerTileCache(
     val source: String,
     maxSize: Int
-) {
+) : TileLayerCache<ImageTile> {
 
     // This lock coordinates normal cache operations with whole-layer lifecycle operations. A read lock does not mean
     // the cache is immutable: it allows thread-safe LRU mutations to run concurrently while preventing clear or
@@ -34,7 +34,7 @@ class LayerTileCache(
         return layerCache.peek(key) ?: sharedCache.peek(key)
     }
 
-    fun getOrPut(
+    override fun getOrPut(
         tiles: List<Tile>,
         provider: (tile: Tile, key: String) -> ImageTile
     ): List<ImageTile> {
@@ -66,14 +66,14 @@ class LayerTileCache(
         }
     }
 
-    fun resize(maxSize: Int) {
+    override fun resize(maxSize: Int) {
         // Resizing mutates the thread-safe LRU, but only needs to be excluded from whole-layer lifecycle operations.
         lifecycleLock.read {
             layerCache.resize(maxSize)
         }
     }
 
-    fun maxSize(): Int {
+    override fun maxSize(): Int {
         return layerCache.maxSize()
     }
 

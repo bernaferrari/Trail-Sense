@@ -18,7 +18,6 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance.PersistentTileCache
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerParams
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import kotlin.time.Instant
@@ -37,6 +36,14 @@ class TileLoader(
     private val prefs = getAppService<UserPreferences>()
 
     val tileCache = LayerTileCache(owner, 1)
+    private val coordinator = TileLoadCoordinator(
+        tileCache,
+        tileQueue,
+        createTile = { tile, key, fade, load ->
+            ImageTile(key, tile, shouldFadeIn = fade, owner = owner, loadFunction = load)
+        },
+        loadTile = { tile, params -> loadTile(source, tile, params) }
+    )
 
     private val persistentCache =
         if (key != null) getAppService<PersistentTileCache>() else null
@@ -92,42 +99,9 @@ class TileLoader(
         isWidget: Boolean = false,
         isHighDetailMode: Boolean = false
     ) {
-        val screenCacheSize = (tiles.size * 2).coerceAtLeast(1)
-        val cacheSize = if (prefs.useLargeTileCache) {
-            maxOf(LARGE_LAYER_CACHE_SIZE, screenCacheSize)
-        } else {
-            screenCacheSize
-        }
-        if (tileCache.maxSize() != cacheSize) {
-            tileCache.resize(cacheSize)
-        }
-
-        val params = MapLayerValues.of(
-            MapLayerParams.PARAM_TIME to time.toEpochMilliseconds(),
-            MapLayerParams.PARAM_IS_WIDGET to isWidget,
-            MapLayerParams.PARAM_HIGH_DETAIL_MODE to isHighDetailMode,
-            MapLayerParams.PARAM_PREFERENCES to preferences,
-            MapLayerParams.PARAM_FEATURE_ID to featureId
+        coordinator.loadTiles(
+            tiles, time, preferences, featureId, isWidget, isHighDetailMode, prefs.useLargeTileCache
         )
-        val imageTiles = tileCache.getOrPut(tiles) { tile, key ->
-            ImageTile(
-                key = key,
-                tile = tile,
-                shouldFadeIn = !isWidget,
-                owner = owner,
-                loadFunction = {
-                    loadTile(source, tile, params)
-                }
-            )
-        }
-        imageTiles.forEach { imageTile ->
-            // Replace the load function every cycle to ensure it uses the latest parameters
-            imageTile.setLoader {
-                loadTile(source, imageTile.tile, params)
-            }
-        }
-
-        imageTiles.forEach { tileQueue.enqueue(it) }
     }
 
     private suspend fun loadTile(
@@ -369,7 +343,6 @@ class TileLoader(
     }
 
     companion object {
-        private const val LARGE_LAYER_CACHE_SIZE = 256
 
     }
 
