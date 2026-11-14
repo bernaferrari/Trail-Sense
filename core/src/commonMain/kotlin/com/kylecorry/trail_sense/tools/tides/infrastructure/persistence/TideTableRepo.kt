@@ -1,17 +1,13 @@
 package com.kylecorry.trail_sense.tools.tides.infrastructure.persistence
 
-import android.annotation.SuppressLint
-import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.oceanography.Tide
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
 
-class TideTableRepo private constructor(
+class TideTableRepo(
     private val dao: TideTableDao,
-    private val context: Context
+    private val nearbyName: () -> String
 ) : ITideTableRepo {
 
     override suspend fun getTideTables(): List<TideTable> = onIO {
@@ -28,7 +24,7 @@ class TideTableRepo private constructor(
             TideTable(
                 -1,
                 emptyList(),
-                context.getString(R.string.navigation_nearby_category),
+                nearbyName(),
                 estimator = TideEstimator.TideModel,
                 isEditable = false
             )
@@ -66,22 +62,6 @@ class TideTableRepo private constructor(
 
     override suspend fun deleteTides(tableId: Long) {
         dao.deleteRowsForTable(tableId)
-    }
-
-    companion object {
-        @SuppressLint("StaticFieldLeak")
-        private var instance: TideTableRepo? = null
-
-        @Synchronized
-        fun getInstance(context: Context): TideTableRepo {
-            if (instance == null) {
-                instance = TideTableRepo(
-                    AndroidAppDatabase.getInstance(context).tideTableDao(),
-                    context.applicationContext
-                )
-            }
-            return instance!!
-        }
     }
 
 }

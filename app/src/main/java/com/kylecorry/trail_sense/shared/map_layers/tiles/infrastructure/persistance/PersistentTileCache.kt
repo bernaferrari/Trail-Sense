@@ -19,10 +19,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class PersistentTileCache(context: Context) {
+class PersistentTileCache(context: Context, private val repo: CachedTileRepo) {
 
     private val appContext = context.applicationContext
-    private val repo = CachedTileRepo.getInstance(appContext)
     private val files = CacheFileSystem(appContext)
     private val imageSaver = ImageSaver()
     private val scope = CoroutineScope(Dispatchers.IO)

@@ -9,7 +9,6 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPref
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceType
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.text.RawTexts
-import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import com.kylecorry.trail_sense.tools.field_guide.map_layers.FieldGuideSightingGeoJsonSource
 import com.kylecorry.trail_sense.tools.field_guide.quickactions.QuickActionRecordSighting
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tool
@@ -42,9 +41,6 @@ object FieldGuideToolRegistration : ToolRegistration {
                 )
             ),
             guideId = RawTexts.guide_tool_field_guide,
-            singletons = listOf(
-                FieldGuideRepo::getInstance
-            ),
             mapLayers = listOf(
                 MapLayerDefinition(
                     FieldGuideSightingGeoJsonSource.SOURCE_ID,

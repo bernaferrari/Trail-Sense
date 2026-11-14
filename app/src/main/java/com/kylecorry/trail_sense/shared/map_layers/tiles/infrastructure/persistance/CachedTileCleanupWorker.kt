@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance
 
+import com.kylecorry.trail_sense.main.getAppService
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -12,7 +13,7 @@ class CachedTileCleanupWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            CachedTileRepo.getInstance(context).clean()
+            getAppService<CachedTileRepo>().clean()
             Result.success()
         } catch (e: Exception) {
             Result.failure()

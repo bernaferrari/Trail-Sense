@@ -43,7 +43,7 @@ class RepoCleanupWorker(
             "LightningRepo" to LightningRepo.getInstance(context),
             "DEMRepo" to DEMRepo.getInstance(),
             "NavigationBearingService" to NavigationBearingService.getInstance(context),
-            "CachedTileRepo" to CachedTileRepo.getInstance(context),
+            "CachedTileRepo" to getAppService<CachedTileRepo>(),
             "StepTrackerService" to getAppService<StepTrackerService>()
         )
 

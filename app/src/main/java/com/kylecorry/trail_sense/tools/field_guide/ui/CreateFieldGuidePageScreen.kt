@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.Flow
@@ -94,7 +95,6 @@ import com.kylecorry.trail_sense.shared.withId
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTagType
-import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -116,7 +116,7 @@ fun CreateFieldGuidePageToolScreen(route: Route.CreateFieldGuidePage) {
     val viewModel = viewModel {
         CreateFieldGuidePageViewModel(
             route = route,
-            repo = FieldGuideRepo.getInstance(appContext),
+            repo = getAppService<IFieldGuideRepo>(),
             importPhoto = { importFieldGuidePhoto(files, it.toUri()) },
             deletePhoto = { files.delete(it) }
         )

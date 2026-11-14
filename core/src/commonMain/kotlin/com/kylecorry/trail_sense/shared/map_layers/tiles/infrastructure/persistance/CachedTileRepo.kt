@@ -3,20 +3,17 @@ package com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persist
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
-import android.annotation.SuppressLint
-import android.content.Context
-import com.kylecorry.andromeda.files.CacheFileSystem
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.main.persistence.ICleanable
 import com.kylecorry.trail_sense.shared.getUpsertedId
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
 import kotlin.time.Instant
 
-class CachedTileRepo private constructor(context: Context) : ICleanable {
-
-    private val dao = AndroidAppDatabase.getInstance(context).cachedTileDao()
-    private val files = CacheFileSystem(context)
+class CachedTileRepo(
+    private val dao: CachedTileDao,
+    private val listFiles: () -> List<String>,
+    private val deleteFile: (String) -> Unit
+) : ICleanable {
 
     suspend fun get(key: String, tile: Tile): CachedTile? = onIO {
         dao.get(key, tile.x, tile.y, tile.z)?.toCachedTile()
@@ -64,7 +61,7 @@ class CachedTileRepo private constructor(context: Context) : ICleanable {
 
         // Get all filenames from the cache and files on disk
         val cachedFilenames = dao.getAllFilenames().toSet()
-        val diskFilenames = files.list(TILES_FOLDER).map { it.name }.toSet()
+        val diskFilenames = listFiles().toSet()
 
         // Delete cache entries for missing files
         val missingFiles = cachedFilenames - diskFilenames
@@ -75,7 +72,7 @@ class CachedTileRepo private constructor(context: Context) : ICleanable {
         // Delete files that aren't in the cache
         val orphanedFiles = diskFilenames - cachedFilenames
         for (filename in orphanedFiles) {
-            files.delete("$TILES_FOLDER/$filename")
+            deleteFile(filename)
         }
     }
 
@@ -83,15 +80,5 @@ class CachedTileRepo private constructor(context: Context) : ICleanable {
         const val TILES_FOLDER = "tiles"
         private val MAX_AGE = 7.days
 
-        @SuppressLint("StaticFieldLeak")
-        private var instance: CachedTileRepo? = null
-
-        @Synchronized
-        fun getInstance(context: Context): CachedTileRepo {
-            if (instance == null) {
-                instance = CachedTileRepo(context.applicationContext)
-            }
-            return instance!!
-        }
     }
 }

@@ -39,7 +39,7 @@ import com.kylecorry.trail_sense.tools.field_guide.ui.FieldGuideFormatService
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
-import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideRepo
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import com.kylecorry.trail_sense.shared.views.compose.from
@@ -51,7 +51,7 @@ import com.kylecorry.trail_sense.shared.views.compose.from
 class QuickActionRecordSighting(btn: QuickActionButtonView, host: AndroidDestinationHost) :
     QuickActionButton(btn, host) {
 
-    private val repo by lazy { FieldGuideRepo.getInstance(host.context) }
+    private val repo by lazy { getAppService<IFieldGuideRepo>() }
 
     override fun onCreate() {
         super.onCreate()

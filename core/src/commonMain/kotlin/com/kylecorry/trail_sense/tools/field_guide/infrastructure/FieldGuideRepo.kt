@@ -1,26 +1,23 @@
 package com.kylecorry.trail_sense.tools.field_guide.infrastructure
 
-import android.annotation.SuppressLint
-import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.shared.getUpsertedId
-import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
-import com.kylecorry.trail_sense.shared.UserPreferences
 
-class FieldGuideRepo private constructor(private val context: Context) : IFieldGuideRepo {
-
-    private val pageDao = AndroidAppDatabase.getInstance(context).fieldGuidePageDao()
-    private val sightingDao = AndroidAppDatabase.getInstance(context).fieldGuideSightingDao()
-    private val preferences = UserPreferences(context).fieldGuide
-    private val files = FileSubsystem.getInstance(context)
+class FieldGuideRepo(
+    private val pageDao: FieldGuidePageDao,
+    private val sightingDao: FieldGuideSightingDao,
+    private val preferences: FieldGuidePreferences,
+    private val builtInPages: suspend () -> List<FieldGuidePage>,
+    private val builtInPage: suspend (Long) -> FieldGuidePage?,
+    private val deleteFile: (String) -> Unit
+) : IFieldGuideRepo {
 
     override suspend fun getAllPages(): List<FieldGuidePage> = onIO {
         val saved = pageDao.getAllPages().map { it.toFieldGuidePage() }
         val sightings = sightingDao.getAllSightings().map { it.toSighting() }
-        val all = BuiltInFieldGuide.getFieldGuide() + saved
+        val all = builtInPages() + saved
         val hidden = preferences.hiddenPageIds.toSet()
         all.map {
             it.copy(
@@ -32,7 +29,7 @@ class FieldGuideRepo private constructor(private val context: Context) : IFieldG
 
     override suspend fun getPage(id: Long): FieldGuidePage? = onIO {
         val page = if (id < 0) {
-            BuiltInFieldGuide.getFieldGuidePage(id)
+            builtInPage(id)
         } else {
             pageDao.getPage(id)?.toFieldGuidePage()
         }
@@ -45,7 +42,7 @@ class FieldGuideRepo private constructor(private val context: Context) : IFieldG
         if (page.isReadOnly) {
             return@onIO
         }
-        page.images.forEach { files.delete(it) }
+        page.images.forEach { deleteFile(it) }
         sightingDao.deleteAllSightingsForPage(page.id)
         pageDao.delete(FieldGuidePageEntity.fromFieldGuidePage(page))
     }
@@ -57,7 +54,7 @@ class FieldGuideRepo private constructor(private val context: Context) : IFieldG
         // Delete photos if they've changed
         if (page.id != 0L) {
             val existing = pageDao.getPage(page.id)?.toFieldGuidePage()
-            existing?.images?.filter { it !in page.images }?.forEach { files.delete(it) }
+            existing?.images?.filter { it !in page.images }?.forEach { deleteFile(it) }
         }
 
         val entity = FieldGuidePageEntity.fromFieldGuidePage(page)
@@ -93,16 +90,4 @@ class FieldGuideRepo private constructor(private val context: Context) : IFieldG
         true
     }
 
-    companion object {
-        @SuppressLint("StaticFieldLeak")
-        private var instance: FieldGuideRepo? = null
-
-        @Synchronized
-        fun getInstance(context: Context): FieldGuideRepo {
-            if (instance == null) {
-                instance = FieldGuideRepo(context.applicationContext)
-            }
-            return instance!!
-        }
-    }
 }

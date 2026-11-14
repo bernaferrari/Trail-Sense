@@ -4,6 +4,7 @@ import com.kylecorry.trail_sense.tools.beacons.BeaconsToolRegistration
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
+import com.kylecorry.trail_sense.tools.field_guide.infrastructure.BuiltInFieldGuide
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
@@ -69,6 +70,8 @@ import com.kylecorry.trail_sense.shared.logging.AndroidLogger
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.map_layers.MapLayerLoader
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerPreferenceRepo
+import com.kylecorry.andromeda.files.CacheFileSystem
+import com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance.CachedTileRepo
 import com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance.PersistentTileCache
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.shared.preferences.SessionStateSubsystem
@@ -183,7 +186,9 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(BatteryRestrictionPrompt::class) {
             BatteryRestrictionPrompt { alerter -> RequestRemoveBatteryRestrictionCommand(appContext, alerter).execute() }
         }
-        DependencyRegistry.addSingleton(ITideTableRepo::class) { TideTableRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(ITideTableRepo::class) { TideTableRepo(AndroidAppDatabase.getInstance(appContext).tideTableDao()) {
+            appContext.getString(com.kylecorry.trail_sense.R.string.navigation_nearby_category)
+        } }
         DependencyRegistry.addSingleton(INoteRepo::class) { NoteRepo(AndroidAppDatabase.getInstance(appContext).noteDao()) }
         DependencyRegistry.addSingleton(ILightningRepo::class) { LightningRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(IBatteryRepo::class) { BatteryRepo(AndroidAppDatabase.getInstance(appContext).batteryDao(), PreferencesSubsystem.getInstance(appContext).preferences) }
@@ -191,7 +196,14 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(IWaypointRepo::class) { WaypointRepo(AndroidAppDatabase.getInstance(appContext).waypointDao()) }
         DependencyRegistry.addSingleton(IFlashlightSubsystem::class) { FlashlightSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IPedometerSubsystem::class) { PedometerSubsystem.getInstance(appContext) }
-        DependencyRegistry.addSingleton(IFieldGuideRepo::class) { FieldGuideRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IFieldGuideRepo::class) { AndroidAppDatabase.getInstance(appContext).let { database ->
+            FieldGuideRepo(
+                database.fieldGuidePageDao(), database.fieldGuideSightingDao(),
+                UserPreferences(appContext).fieldGuide,
+                { BuiltInFieldGuide.getFieldGuide() }, { BuiltInFieldGuide.getFieldGuidePage(it) },
+                { FileSubsystem.getInstance(appContext).delete(it) }
+            )
+        } }
         DependencyRegistry.addSingleton(FieldGuideImageCleanup::class) {
             FieldGuideImageCleanup { FieldGuideCleanupCommand(appContext).execute() }
         }
@@ -204,7 +216,14 @@ object TrailSenseServiceRegister {
         // Map layers
         DependencyRegistry.addSingleton(MapLayerLoader(appContext))
         DependencyRegistry.addSingleton(MapLayerPreferenceRepo())
-        DependencyRegistry.addSingleton(PersistentTileCache(appContext))
+        val cacheFiles = CacheFileSystem(appContext)
+        val cachedTiles = CachedTileRepo(
+            AndroidAppDatabase.getInstance(appContext).cachedTileDao(),
+            { cacheFiles.list(CachedTileRepo.TILES_FOLDER).map { it.name } },
+            { cacheFiles.delete("${CachedTileRepo.TILES_FOLDER}/$it") }
+        )
+        DependencyRegistry.addSingleton(cachedTiles)
+        DependencyRegistry.addSingleton(PersistentTileCache(appContext, cachedTiles))
 
         // Tool registrations on this branch still publish services through Tool.singletons.
         // addSingleton<Any> would register them as Any, so the runtime class is supplied explicitly.
