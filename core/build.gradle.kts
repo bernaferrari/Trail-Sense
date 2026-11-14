@@ -9,7 +9,7 @@ group = "com.kylecorry.trail_sense"
 version = "1.0.0"
 
 // Platform-independent Trail Sense logic (domain models, calculations, formatting-free services).
-// Anything that needs Android, Room, Compose, or files lives in :app (or this module's androidMain).
+// Platform-independent Room models and DAOs are shared; database creation and platform services stay in platform code.
 kotlin {
     android {
         namespace = "com.kylecorry.trail_sense.core"

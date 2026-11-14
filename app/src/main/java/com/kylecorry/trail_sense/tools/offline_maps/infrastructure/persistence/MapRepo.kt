@@ -160,13 +160,15 @@ class MapRepo private constructor(context: Context) : IMapRepo {
         val size = files.imageSize(newMap.filename)
         val fileSize = files.size(newMap.filename) + files.size(newMap.pdfFileName)
 
+        val pdfWidth = map.pdfWidth
+        val pdfHeight = map.pdfHeight
         val pdfSize =
-            if (map.pdfHeight != null && map.pdfWidth != null && files.get(newMap.pdfFileName)
+            if (pdfHeight != null && pdfWidth != null && files.get(newMap.pdfFileName)
                     .exists()
             ) {
 
                 val scaledSize = MathUtils.scaleToBounds(
-                    Size(map.pdfWidth, map.pdfHeight),
+                    Size(pdfWidth, pdfHeight),
                     Size(PhotoMap.DESIRED_PDF_SIZE, PhotoMap.DESIRED_PDF_SIZE)
                 )
 

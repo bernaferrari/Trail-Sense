@@ -7,8 +7,10 @@ import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 class PackMapper {
 
     fun mapToPackItem(item: PackItemEntity): PackItem {
-        val weight = if (item.weight != null && item.weightUnits != null) {
-            Weight.from(item.weight, item.weightUnits)
+        val value = item.weight
+        val units = item.weightUnits
+        val weight = if (value != null && units != null) {
+            Weight.from(value, units)
         } else {
             null
         }
