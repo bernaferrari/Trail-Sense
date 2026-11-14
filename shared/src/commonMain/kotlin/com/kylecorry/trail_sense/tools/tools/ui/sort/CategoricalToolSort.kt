@@ -1,12 +1,11 @@
 package com.kylecorry.trail_sense.tools.tools.ui.sort
 
-import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCategory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolDescriptor
 
-class CategoricalToolSort(strings: AppStrings = getAppService()) : ToolSort {
+class CategoricalToolSort(strings: AppStrings) : ToolSort {
 
     private val groupNameMap = mapOf(
         ToolCategory.Signaling to strings.get(Res.string.tool_category_signaling),

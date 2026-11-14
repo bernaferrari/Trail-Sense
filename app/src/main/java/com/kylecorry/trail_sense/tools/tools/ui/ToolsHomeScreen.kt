@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.tools.tools.ui
 
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
+import com.kylecorry.trail_sense.shared.dialogs.oneTimeSnackbar
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 import com.kylecorry.trail_sense.shared.views.compose.AndroidDestinationHost
@@ -63,6 +67,13 @@ fun ToolsHomeScreen(
     val tools = remember { Tools.getTools(context) }
     ToolsScreen(
         tools = tools,
+        keywordReader = getAppService(),
+        onShowLongPressHint = {
+            Alerts.oneTimeSnackbar(
+                AppHost.from(context), context.getString(R.string.tool_long_press_hint_toast),
+                "tools_long_press_notice_shown", short = false
+            )
+        },
         pinnedToolIds = viewModel.pinnedToolIds,
         quickActions = quickActionButtons,
         onToolClick = { tool ->

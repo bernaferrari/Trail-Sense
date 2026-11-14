@@ -132,7 +132,7 @@ private fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val toolGroups = remember {
-        val categories = com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort()
+        val categories = com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort(getAppService())
             .sort(Tools.getTools(context).filter { it.settingsRoute != null })
             .filter { it.tools.isNotEmpty() }
         groupSettingsTools(categories.map { SettingsToolGroup(it.categoryName, it.tools) }, context.getString(R.string.other))

@@ -1,12 +1,11 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure
 
-import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.text.RawTextReader
 import com.kylecorry.trail_sense.shared.text.RawTexts
 
 object ToolKeywordLoader {
 
-    suspend fun load(reader: RawTextReader = getAppService()): Map<Long, Set<String>> {
+    suspend fun load(reader: RawTextReader): Map<Long, Set<String>> {
         return parse(reader.read(RawTexts.tool_keywords))
     }
 

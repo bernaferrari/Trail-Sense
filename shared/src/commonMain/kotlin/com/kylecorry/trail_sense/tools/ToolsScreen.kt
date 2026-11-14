@@ -2,13 +2,10 @@
 
 package com.kylecorry.trail_sense.tools.tools.ui
 
-import com.kylecorry.trail_sense.shared.views.compose.AppHost
-import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.dialogs.oneTimeSnackbar
 
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
+import com.kylecorry.trail_sense.shared.text.RawTextReader
 import com.kylecorry.trail_sense.shared.text.appString
-import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.shared.generated.resources.*
 
 import com.kylecorry.trail_sense.shared.quickactions.ComposeQuickActionButtonView
@@ -63,6 +60,8 @@ import com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort
 @Composable
 fun <T : ToolDescriptor> ToolsScreen(
     tools: List<T>,
+    keywordReader: RawTextReader,
+    onShowLongPressHint: () -> Unit,
     pinnedToolIds: List<Long>,
     quickActions: List<ComposeQuickActionButtonView> = emptyList(),
     onToolClick: (T) -> Unit,
@@ -71,22 +70,17 @@ fun <T : ToolDescriptor> ToolsScreen(
     onSearchFocusRequestChanged: (((() -> Boolean)?) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val strings = LocalAppStrings.current
     val allTools = tools
     var keywords by remember { mutableStateOf<Map<Long, Set<String>>>(emptyMap()) }
-    LaunchedEffect(Unit) { keywords = ToolKeywordLoader.load() }
+    LaunchedEffect(keywordReader) { keywords = ToolKeywordLoader.load(keywordReader) }
     val toolSearch = remember(allTools, keywords) { ToolSearch(allTools, keywords) }
-    val sorter = remember { CategoricalToolSort() }
+    val sorter = remember(strings) { CategoricalToolSort(strings) }
     val searchFocusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     var filter by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        Alerts.oneTimeSnackbar(AppHost.current(),
-            getAppService<AppStrings>().get(Res.string.tool_long_press_hint_toast),
-            "tools_long_press_notice_shown",
-            short = false
-        )
-    }
+    LaunchedEffect(Unit) { onShowLongPressHint() }
 
     DisposableEffect(onSearchFocusRequestChanged, keyboard) {
         onSearchFocusRequestChanged?.invoke {
