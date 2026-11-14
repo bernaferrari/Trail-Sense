@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
 import com.kylecorry.trail_sense.shared.text.SystemString
 import com.kylecorry.trail_sense.shared.text.systemString
 
@@ -23,7 +24,8 @@ fun CloudImageDialog(
     cloud: CloudGenus,
     onDismiss: () -> Unit
 ) {
-    val details = remember { CloudDetailsText() }
+    val strings = LocalAppStrings.current
+    val details = remember(strings) { CloudDetailsText(strings) }
     val title = details.getCloudName(cloud)
     val bitmap = rememberAppImage(details.getCloudImagePath(cloud))
 

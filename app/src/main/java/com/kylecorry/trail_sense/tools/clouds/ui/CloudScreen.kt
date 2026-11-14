@@ -4,6 +4,7 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.from
@@ -124,7 +125,8 @@ fun CloudToolScreen(route: Route.Clouds) {
     val scope = rememberCoroutineScope()
     val viewModel = viewModel { CloudViewModel(getAppService<CloudRepo>()) }
     val formatter = remember(appContext) { FormatService.getInstance(appContext) }
-    val cloudDetailsService = remember { CloudDetailsText() }
+    val strings = LocalAppStrings.current
+    val cloudDetailsService = remember(strings) { CloudDetailsText(strings) }
     val files = remember(appContext) { FileSubsystem.getInstance(appContext) }
     val clouds by viewModel.clouds.collectAsStateWithLifecycle()
     val subtitle = stringResource(
@@ -179,7 +181,7 @@ fun CloudToolScreen(route: Route.Clouds) {
             }
         },
         onManualClick = { navigator.navigate(Route.CloudResults()) },
-        onCloudClick = { CloudDetailsModal(AppHost.from(context)).show(it.value.genus) },
+        onCloudClick = { CloudDetailsModal(AppHost.from(context), strings).show(it.value.genus) },
         onCloudImageClick = { viewModel.selectedCloudImage = it.value.genus },
         onDeleteCloud = { reading ->
             scope.launch {

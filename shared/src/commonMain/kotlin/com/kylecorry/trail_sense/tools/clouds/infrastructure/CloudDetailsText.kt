@@ -7,7 +7,7 @@ import com.kylecorry.trail_sense.shared.images.AppImages
 import com.kylecorry.trail_sense.shared.text.AppStrings
 
 /** A cloud genus's name, description, forecast and picture. */
-class CloudDetailsText(private val strings: AppStrings = getAppService()) {
+class CloudDetailsText(private val strings: AppStrings) {
 
     fun getCloudDescription(type: CloudGenus?): String {
         return when (type) {

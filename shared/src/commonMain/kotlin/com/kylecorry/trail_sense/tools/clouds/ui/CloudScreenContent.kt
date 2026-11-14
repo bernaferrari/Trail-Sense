@@ -4,6 +4,7 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.appString
 
@@ -139,7 +140,8 @@ fun CloudScreen(
     loaded: Boolean = true
 ) {
     var isCreateMenuOpen by remember { mutableStateOf(false) }
-    val details = remember { CloudDetailsText() }
+    val strings = LocalAppStrings.current
+    val details = remember(strings) { CloudDetailsText(strings) }
     val formatter = remember { FormatService.getInstance() }
 
     selectedCloudImage?.let { cloud ->
@@ -285,7 +287,8 @@ private fun CloudReadingRow(
     onCloudImageClick: (Reading<CloudObservation>) -> Unit,
     onDeleteCloud: (Reading<CloudObservation>) -> Unit
 ) {
-    val details = remember { CloudDetailsText() }
+    val strings = LocalAppStrings.current
+    val details = remember(strings) { CloudDetailsText(strings) }
     val formatter = remember { FormatService.getInstance() }
     val cloud = reading.value.genus
     val name = details.getCloudName(cloud)
@@ -390,7 +393,8 @@ private fun CloudSkyHero(
     onClick: () -> Unit,
     onImageClick: () -> Unit
 ) {
-    val details = remember { CloudDetailsText() }
+    val strings = LocalAppStrings.current
+    val details = remember(strings) { CloudDetailsText(strings) }
     val formatter = remember { FormatService.getInstance() }
     val cloud = reading.value.genus
     val name = details.getCloudName(cloud)
@@ -443,7 +447,8 @@ private fun CloudThumbnail(
     shape: androidx.compose.ui.graphics.Shape = MaterialShapes.Cookie9Sided.toShape()
 ) {
     // A clear sky is drawn as the sky's colour; a cloud's photo once decoded.
-    val bitmap = rememberAppImage(cloud?.let { CloudDetailsText().getCloudImagePath(it) }, 240)
+    val strings = LocalAppStrings.current
+    val bitmap = rememberAppImage(cloud?.let { CloudDetailsText(strings).getCloudImagePath(it) }, 240)
     val modifier = Modifier
         .size(size)
         .clip(shape)

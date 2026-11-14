@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.images.rememberAppImage
 import com.kylecorry.trail_sense.shared.text.AppStrings
@@ -45,11 +44,10 @@ import com.kylecorry.trail_sense.tools.clouds.domain.CloudService
  * A cloud's field-guide card: its picture, what it looks like, then what it means for the weather as grouped facts
  * (forecast, chance of precipitation, what may fall), so the answer to "should I worry?" is one glance away.
  */
-class CloudDetailsModal(private val host: AppHost = AppHost.current()) {
+class CloudDetailsModal(private val host: AppHost, private val strings: AppStrings) {
 
     private val cloudService = CloudService()
-    private val details = CloudDetailsText()
-    private val strings = getAppService<AppStrings>()
+    private val details = CloudDetailsText(strings)
     private val formatter = FormatService.getInstance()
 
     fun show(cloud: CloudGenus?) {

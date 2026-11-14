@@ -120,6 +120,7 @@ import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeather
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHighLowTemperatureDialogCommand
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHistoricTemperatureDisclaimerCommand
 import com.kylecorry.trail_sense.tools.weather.ui.fields.AlertWeatherField
+import com.kylecorry.trail_sense.tools.clouds.ui.CloudDetailsModal
 import com.kylecorry.trail_sense.tools.weather.ui.fields.CloudWeatherField
 import com.kylecorry.trail_sense.tools.weather.ui.fields.FrontWeatherField
 import com.kylecorry.trail_sense.tools.weather.ui.fields.HistoricTemperatureRangeWeatherField
@@ -282,7 +283,7 @@ fun WeatherToolScreen(
 
             // Humidity
             HumidityWeatherField(weather.observation?.humidity) { showHumidityChart() },
-            CloudWeatherField(weather.clouds),
+            CloudWeatherField(weather.clouds, strings) { CloudDetailsModal(host, strings).show(it) },
 
             // System
             PressureSystemWeatherField(weather.observation?.pressure),

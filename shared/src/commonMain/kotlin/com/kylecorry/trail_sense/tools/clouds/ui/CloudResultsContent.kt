@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import com.kylecorry.trail_sense.shared.text.LocalAppStrings
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.CloudDetailsText
 import com.kylecorry.trail_sense.shared.images.rememberAppImage
 import androidx.compose.ui.graphics.Color
@@ -98,8 +99,9 @@ fun CloudResultsScreen(
     onSelectionChanged: (CloudGenus?, Boolean) -> Unit
 ) {
     val host = AppHost.current()
-    val details = remember { CloudDetailsText() }
-    val detailsModal = remember(host) { CloudDetailsModal(host) }
+    val strings = LocalAppStrings.current
+    val details = remember(strings) { CloudDetailsText(strings) }
+    val detailsModal = remember(host, strings) { CloudDetailsModal(host, strings) }
     var selectedCloudImage by remember { mutableStateOf<CloudGenus?>(null) }
 
     selectedCloudImage?.let { cloud ->
@@ -228,7 +230,8 @@ private fun CloudSelectionRow(
     onCloudImageClick: (CloudGenus?) -> Unit,
     onDetailsClick: (CloudGenus?) -> Unit
 ) {
-    val details = remember { CloudDetailsText() }
+    val strings = LocalAppStrings.current
+    val details = remember(strings) { CloudDetailsText(strings) }
     val formatter = remember { FormatService.getInstance() }
     val name = details.getCloudName(selection.genus)
     val experimental = appString(Res.string.experimental)
@@ -379,7 +382,8 @@ private fun CloudIconChip(
 ) {
     val px = with(LocalDensity.current) { size.toPx().toInt() }
     // A clear sky is drawn as the sky's colour; a cloud's photo once decoded.
-    val bitmap = rememberAppImage(cloud?.let { CloudDetailsText().getCloudImagePath(it) }, px)
+    val strings = LocalAppStrings.current
+    val bitmap = rememberAppImage(cloud?.let { CloudDetailsText(strings).getCloudImagePath(it) }, px)
     val checkAlpha by animateFloatAsState(
         targetValue = if (isSelected) 1f else 0f,
         animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
