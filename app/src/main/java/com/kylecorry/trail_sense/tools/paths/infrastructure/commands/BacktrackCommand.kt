@@ -17,7 +17,7 @@ import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.age
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
-import com.kylecorry.trail_sense.tools.paths.domain.ShouldRecordBacktrackPoint
+import com.kylecorry.trail_sense.tools.paths.domain.BacktrackRecorder
 import com.kylecorry.trail_sense.tools.paths.infrastructure.alerts.BacktrackAlerter
 import kotlin.time.Clock
 
@@ -90,20 +90,14 @@ class BacktrackCommand(private val context: Context) : CoroutineCommand {
                 cellSignalSensor?.networkQuality()
             )
 
-            // Backtrack may have been stopped while waiting for a GPS fix
-            if (!prefs.paths.backtrackEnabled || !isFarEnoughFromPreviousPoint(waypoint)) {
-                return@onIO null
-            }
-            pathService.addBacktrackPoint(waypoint)
-            waypoint
+            // Backtrack may have been stopped while waiting for a GPS fix.
+            val recorded = BacktrackRecorder(pathService).record(
+                waypoint,
+                prefs.paths.backtrackEnabled,
+                prefs.paths.backtrackMinimumDistance
+            )
+            if (recorded) waypoint else null
         }
-    }
-
-    private suspend fun isFarEnoughFromPreviousPoint(waypoint: PathPoint): Boolean {
-        val minimum = prefs.paths.backtrackMinimumDistance
-        val backtrackPathId = pathService.getBacktrackPathId() ?: return true
-        val previous = pathService.getLastWaypoint(backtrackPathId)
-        return ShouldRecordBacktrackPoint(minimum).isSatisfiedBy(previous, waypoint)
     }
 
     companion object {
