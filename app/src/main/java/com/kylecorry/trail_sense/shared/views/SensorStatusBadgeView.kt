@@ -1,35 +1,12 @@
 package com.kylecorry.trail_sense.shared.views
 
 import android.content.Context
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -37,12 +14,10 @@ import com.kylecorry.andromeda.core.sensors.Sensor
 import com.kylecorry.luna.time.CoroutineTimer
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sensors.gps.ISatelliteGPS
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseStatusColors
 import com.kylecorry.trail_sense.tools.diagnostics.status.GpsStatusBadgeProvider
 import com.kylecorry.trail_sense.tools.diagnostics.status.SensorStatusBadgeProvider
 import com.kylecorry.trail_sense.tools.diagnostics.status.StatusBadge
@@ -108,109 +83,15 @@ class SensorStatusBadgeView(
         if (!badgeVisible) {
             return
         }
-        if (quiet) {
-            QuietContent(modifier)
-            return
-        }
-        Column(
-            modifier = modifier
-                .alpha(alphaState)
-                .clickable(enabled = clickListener != null) { clickListener?.invoke() },
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            val gps = gpsBadge
-            val compass = compassBadge
-            if (showGpsBadge && gps != null && !gps.isGood()) {
-                SensorBadgeContent(
-                    badge = gps,
-                    label = context.getString(R.string.gps),
-                    icon = TrailSenseIcons.Filled.LocationOn
-                )
-            }
-            if (showCompassBadge && compass != null && !compass.isGood()) {
-                SensorBadgeContent(
-                    badge = compass,
-                    label = context.getString(R.string.pref_compass_sensor_title),
-                    icon = TrailSenseIcons.Filled.Explore
-                )
-            }
-        }
-    }
-
-    /**
-     * Sensor status, collapsed: one small icon (the sensor in the worst state) with a dot when a sensor needs
-     * attention. Tapping it opens a popover that names each sensor and its state; choosing one shows the accuracy tips.
-     */
-    @Composable
-    private fun QuietContent(modifier: Modifier) {
         val items = listOfNotNull(
-            gpsBadge?.takeIf { showGpsBadge }?.let { Triple(it, context.getString(R.string.gps), TrailSenseIcons.Filled.LocationOn) },
-            compassBadge?.takeIf { showCompassBadge }?.let { Triple(it, context.getString(R.string.pref_compass_sensor_title), TrailSenseIcons.Filled.Explore) }
+            gpsBadge?.takeIf { showGpsBadge }?.let {
+                SensorStatusItem(it, context.getString(R.string.gps), TrailSenseIcons.Filled.LocationOn)
+            },
+            compassBadge?.takeIf { showCompassBadge }?.let {
+                SensorStatusItem(it, context.getString(R.string.pref_compass_sensor_title), TrailSenseIcons.Filled.Explore)
+            }
         )
-        if (items.isEmpty()) return
-        fun StatusBadge.caution() = color == AppColor.Yellow.color || color == AppColor.Orange.color
-        val trouble = items.filter { !it.first.isGood() }
-        val worst = trouble.firstOrNull { !it.first.caution() } ?: trouble.firstOrNull() ?: items.first()
-        val scheme = MaterialTheme.colorScheme
-        val dot = when {
-            trouble.isEmpty() -> null
-            worst.first.caution() -> scheme.tertiary
-            else -> scheme.error
-        }
-        var open by remember { mutableStateOf(false) }
-        Box(modifier) {
-            Surface(
-                onClick = { open = true },
-                shape = CircleShape,
-                color = androidx.compose.ui.graphics.Color.Transparent,
-                contentColor = if (dot == null) scheme.onSurfaceVariant else scheme.onSurface,
-                modifier = Modifier
-                    .size(52.dp)
-                    .testTag("sensor_status")
-                    .semantics { contentDescription = items.joinToString { "${it.second} ${it.first.name}" } }
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(worst.third, contentDescription = null, modifier = Modifier.size(22.dp))
-                    if (dot != null) {
-                        Box(
-                            Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(top = 12.dp, end = 12.dp)
-                                .size(11.dp)
-                                .background(scheme.background, CircleShape)
-                                .padding(1.5.dp)
-                                .background(dot, CircleShape)
-                        )
-                    }
-                }
-            }
-            DropdownMenu(
-                expanded = open,
-                onDismissRequest = { open = false }
-            ) {
-                items.forEach { (badge, label, icon) ->
-                    val color = when {
-                        badge.isGood() -> scheme.primary
-                        badge.caution() -> scheme.tertiary
-                        else -> scheme.error
-                    }
-                    DropdownMenuItem(
-                        text = {
-                            Column {
-                                Text(label, style = MaterialTheme.typography.titleMedium)
-                                Text(badge.name, style = MaterialTheme.typography.bodyMedium, color = color)
-                            }
-                        },
-                        leadingIcon = { Icon(icon, contentDescription = null, tint = color) },
-                        onClick = {
-                            open = false
-                            clickListener?.invoke()
-                        }
-                    )
-                }
-            }
-        }
+        SensorStatusContent(items, quiet, alphaState, clickListener, modifier)
     }
 
     fun setSensors(gps: ISatelliteGPS?, compass: Sensor) {
@@ -244,41 +125,3 @@ class SensorStatusBadgeView(
         compassBadge = compassStatusBadgeProvider?.getBadge()
     }
 }
-
-@Composable
-private fun SensorBadgeContent(
-    badge: StatusBadge,
-    label: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier
-) {
-    // The badge only appears when something needs attention: amber while searching or for a fair signal, the
-    // error tone when it's poor or unavailable.
-    val status = trailSenseStatusColors()
-    val caution = badge.color == AppColor.Yellow.color || badge.color == AppColor.Orange.color
-    Surface(
-        modifier = modifier,
-        color = if (caution) status.cautionContainer else MaterialTheme.colorScheme.errorContainer,
-        contentColor = if (caution) status.onCautionContainer else MaterialTheme.colorScheme.onErrorContainer,
-        shape = CircleShape
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp)
-            )
-            Text(
-                text = "$label · ${badge.name}",
-                style = MaterialTheme.typography.labelMedium
-            )
-        }
-    }
-}
-
-/** A good reading needs no badge: healthy, or reported in the quality scale's green. */
-private fun StatusBadge.isGood(): Boolean = isHealthy || color == AppColor.Green.color
