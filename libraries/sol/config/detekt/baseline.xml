@@ -1,0 +1,82 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>LongMethod:Geography.kt:Geography$public fun trilaterate: TrilaterationResult</ID>
+    <ID>LongMethod:Geography.kt:Geography$public fun vincenty: FloatArray</ID>
+    <ID>LongMethod:LongitudinalNutation.kt:LongitudinalNutation$fun table3: Array&lt;DoubleArray&gt;</ID>
+    <ID>LoopWithTooManyJumpStatements:LoessFilter.kt:LoessFilter$for</ID>
+    <ID>LoopWithTooManyJumpStatements:LoessFilter2D.kt:LoessFilter2D$for</ID>
+    <ID>LoopWithTooManyJumpStatements:TimeSeriesEnsemble.kt:TimeSeriesEnsemble$for</ID>
+    <ID>ReturnCount:Algebra.kt:Algebra$public fun solve: Float?</ID>
+    <ID>ReturnCount:Algebra.kt:Algebra$public fun solve: Pair&lt;Float, Float&gt;?</ID>
+    <ID>ReturnCount:Arithmetic.kt:Arithmetic$public fun power: Int</ID>
+    <ID>ReturnCount:Arithmetic.kt:Arithmetic$public fun wrap: Double</ID>
+    <ID>ReturnCount:ArrivalTimeCalculator.kt:ArrivalTimeCalculator$fun getArrivalTime: Instant?</ID>
+    <ID>ReturnCount:AstroSearch.kt:AstroSearch$fun findEvent: Instant?</ID>
+    <ID>ReturnCount:ClearPredictor.kt:ClearPredictor$override fun isLikely: Boolean</ID>
+    <ID>ReturnCount:CloudPrecipitationCalculator.kt:CloudPrecipitationCalculator$fun getMatch: List&lt;Reading&lt;CloudGenus?&gt;&gt;?</ID>
+    <ID>ReturnCount:CoordinateBounds.kt:CoordinateBounds.Companion$public fun from: CoordinateBounds</ID>
+    <ID>ReturnCount:DecimalDegreesCoordinateFormat.kt:DecimalDegreesCoordinateFormat$override fun parse: Coordinate?</ID>
+    <ID>ReturnCount:DegreesDecimalMinutesCoordinateFormat.kt:DegreesDecimalMinutesCoordinateFormat$override fun parse: Coordinate?</ID>
+    <ID>ReturnCount:DegreesMinutesSecondsCoordinateFormat.kt:DegreesMinutesSecondsCoordinateFormat$override fun parse: Coordinate?</ID>
+    <ID>ReturnCount:ForecastHelper.kt:ForecastHelper$private fun getPrecipitationType: WeatherCondition?</ID>
+    <ID>ReturnCount:Geography.kt:Geography$private fun trilaterate2: List&lt;Coordinate&gt;</ID>
+    <ID>ReturnCount:Geography.kt:Geography$public fun getAlongTrackDistance: Distance</ID>
+    <ID>ReturnCount:Geography.kt:Geography$public fun getNearestPoint: Coordinate</ID>
+    <ID>ReturnCount:Geography.kt:Geography$public fun triangulateSelf: Coordinate?</ID>
+    <ID>ReturnCount:Geography.kt:Geography$public fun trilaterate: TrilaterationResult</ID>
+    <ID>ReturnCount:Geology.kt:Geology$public fun getSlopeGrade: Float</ID>
+    <ID>ReturnCount:Geometry.kt:Geometry$public fun getIntersection: Line?</ID>
+    <ID>ReturnCount:Geometry.kt:Geometry$public fun getIntersectionArea: Float</ID>
+    <ID>ReturnCount:HorizonCoordinate.kt:HorizonCoordinate$private fun getRefraction: Double</ID>
+    <ID>ReturnCount:IntersectionMath.kt:IntersectionMath$fun getIntersection: List&lt;Vector2&gt;</ID>
+    <ID>ReturnCount:IntersectionMath.kt:IntersectionMath$fun getIntersection: Vector2?</ID>
+    <ID>ReturnCount:KalmanFilter.kt:KalmanFilter.Companion$public fun filter: List&lt;Double&gt;</ID>
+    <ID>ReturnCount:KalmanFilter.kt:KalmanFilter.Companion$public fun filterWithError: List&lt;Pair&lt;Double, Double&gt;&gt;</ID>
+    <ID>ReturnCount:LocalNewtonInterpolator.kt:LocalNewtonInterpolator$override fun interpolate: Float</ID>
+    <ID>ReturnCount:OSGBCoordinateFormat.kt:OSGBCoordinateFormat$override fun toString: String</ID>
+    <ID>ReturnCount:Oceanography.kt:Oceanography$public fun getTidalRange: TidalRange</ID>
+    <ID>ReturnCount:Polygon.kt:Polygon$public fun isConvex: Boolean</ID>
+    <ID>ReturnCount:Range.kt:Range$public fun clamp: T</ID>
+    <ID>ReturnCount:Range.kt:Range.Companion$public fun &lt;T : Comparable&lt;T&gt;&gt; intersection: Range&lt;T&gt;?</ID>
+    <ID>ReturnCount:SolForecaster.kt:SolForecaster$private fun forecast: List&lt;WeatherForecast&gt;</ID>
+    <ID>ReturnCount:SolarRadiationCalculator.kt:SolarRadiationCalculator$fun getRadiation: Double</ID>
+    <ID>ReturnCount:StarLocationCalculator.kt:StarLocationCalculator$fun getLocationFromStars: Coordinate?</ID>
+    <ID>ReturnCount:Statistics.kt:Statistics$public fun quantile: Float</ID>
+    <ID>ReturnCount:StormPredictor.kt:StormPredictor$override fun isLikely: Boolean</ID>
+    <ID>ReturnCount:TextExtensions.kt:internal fun String.toDoubleCompat: Double?</ID>
+    <ID>ReturnCount:TextExtensions.kt:internal fun String.toFloatCompat: Float?</ID>
+    <ID>ReturnCount:Time.kt:Time$public fun List&lt;Reading&lt;*&gt;&gt;.duration: Duration</ID>
+    <ID>SwallowedException:MGRSCoordinateFormat.kt:MGRSCoordinateFormat$e: Exception</ID>
+    <ID>SwallowedException:OSGBCoordinateFormat.kt:OSGBCoordinateFormat$e: Exception</ID>
+    <ID>SwallowedException:TextExtensions.kt:e: Exception</ID>
+    <ID>SwallowedException:USNGCoordinateFormat.kt:USNGCoordinateFormat$e: Exception</ID>
+    <ID>SwallowedException:UTMCoordinateFormat.kt:UTMCoordinateFormat$e: Exception</ID>
+    <ID>ThrowsCount:NationalGrid.kt:NationalGrid$internal fun fromNationalGrid: DoubleArray</ID>
+    <ID>TooGenericExceptionCaught:MGRSCoordinateFormat.kt:MGRSCoordinateFormat$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:OSGBCoordinateFormat.kt:OSGBCoordinateFormat$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:TextExtensions.kt:e: Exception</ID>
+    <ID>TooGenericExceptionCaught:USNGCoordinateFormat.kt:USNGCoordinateFormat$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:UTMCoordinateFormat.kt:UTMCoordinateFormat$e: Exception</ID>
+    <ID>TooManyFunctions:Arithmetic.kt:Arithmetic</ID>
+    <ID>TooManyFunctions:Astronomy.kt:Astronomy</ID>
+    <ID>TooManyFunctions:Extensions.kt:com.kylecorry.sol.math.Extensions.kt</ID>
+    <ID>TooManyFunctions:FrequencyAnalysis.kt:FrequencyAnalysis</ID>
+    <ID>TooManyFunctions:Geography.kt:Geography</ID>
+    <ID>TooManyFunctions:Geometry.kt:Geometry</ID>
+    <ID>TooManyFunctions:Interpolation.kt:Interpolation</ID>
+    <ID>TooManyFunctions:KoppenGeigerClimateClassifier.kt:KoppenGeigerClimateClassifier</ID>
+    <ID>TooManyFunctions:LinearAlgebra.kt:LinearAlgebra</ID>
+    <ID>TooManyFunctions:MathExtensions.kt:MathExtensions</ID>
+    <ID>TooManyFunctions:Matrix.kt:Matrix</ID>
+    <ID>TooManyFunctions:Matrix.kt:com.kylecorry.sol.math.algebra.Matrix.kt</ID>
+    <ID>TooManyFunctions:Meteorology.kt:Meteorology</ID>
+    <ID>TooManyFunctions:Quaternion.kt:Quaternion</ID>
+    <ID>TooManyFunctions:Quaternion.kt:QuaternionMath</ID>
+    <ID>TooManyFunctions:Statistics.kt:Statistics</ID>
+    <ID>TooManyFunctions:Time.kt:Time</ID>
+    <ID>TooManyFunctions:Trigonometry.kt:Trigonometry</ID>
+    <ID>TooManyFunctions:Vector2.kt:Vector2</ID>
+  </CurrentIssues>
+</SmellBaseline>

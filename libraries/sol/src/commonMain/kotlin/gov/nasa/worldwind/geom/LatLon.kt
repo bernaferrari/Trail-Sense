@@ -1,0 +1,83 @@
+package gov.nasa.worldwind.geom
+
+import com.kylecorry.sol.shared.DecimalFormatter
+import com.kylecorry.sol.shared.NumberLocale
+
+/**
+ * Represents a point on the two-dimensional surface of a globe. Latitude is the degrees North and ranges between [-90,
+ * 90], while longitude refers to degrees East, and ranges between (-180, 180].
+ *
+ *
+ * Instances of `LatLon` are immutable.
+ *
+ * @author Tom Gaskins
+ * @version $Id$
+ */
+internal open class LatLon {
+    /**
+     * Obtains the latitude of this `LatLon`.
+     *
+     * @return this `LatLon`'s latitude
+     */
+    internal val latitude: Angle
+
+    /**
+     * Obtains the longitude of this `LatLon`.
+     *
+     * @return this `LatLon`'s longitude
+     */
+    internal val longitude: Angle
+
+    /**
+     * Constructs a new  `LatLon` from two angles. Neither angle may be null.
+     *
+     * @param latitude  latitude
+     * @param longitude longitude
+     * @throws IllegalArgumentException if `latitude` or `longitude` is null
+     */
+    internal constructor(latitude: Angle, longitude: Angle) {
+        this.latitude = latitude
+        this.longitude = longitude
+    }
+
+    internal fun add(that: LatLon): LatLon {
+
+        val lat = Angle.normalizedLatitude(this.latitude.add(that.latitude))
+        val lon = Angle.normalizedLongitude(this.longitude.add(that.longitude))
+
+        return LatLon(lat, lon)
+    }
+
+    internal fun subtract(that: LatLon): LatLon {
+
+        val lat = Angle.normalizedLatitude(this.latitude.subtract(that.latitude))
+        val lon = Angle.normalizedLongitude(this.longitude.subtract(that.longitude))
+
+        return LatLon(lat, lon)
+    }
+
+    override fun toString(): String {
+        val las = "Lat ${DecimalFormatter.format(latitude.degrees, 4, locale = NumberLocale.Invariant).padStart(7)}\u00B0"
+        val los = "Lon ${DecimalFormatter.format(longitude.degrees, 4, locale = NumberLocale.Invariant).padStart(7)}\u00B0"
+        return "($las, $los)"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is LatLon) return false
+        if (latitude != other.latitude) return false
+        if (longitude != other.longitude) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result: Int = latitude.hashCode()
+        result = 29 * result + longitude.hashCode()
+        return result
+    }
+
+    internal companion object {
+        internal val ZERO: LatLon = LatLon(Angle.ZERO, Angle.ZERO)
+    }
+}

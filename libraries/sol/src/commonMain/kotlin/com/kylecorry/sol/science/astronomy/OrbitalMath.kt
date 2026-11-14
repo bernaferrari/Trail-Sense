@@ -1,0 +1,97 @@
+package com.kylecorry.sol.science.astronomy
+
+import com.kylecorry.sol.math.MathExtensions.toDegrees
+import com.kylecorry.sol.math.MathExtensions.toRadians
+import com.kylecorry.sol.math.arithmetic.Arithmetic.square
+import com.kylecorry.sol.math.optimization.Optimization
+import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
+import com.kylecorry.sol.math.trigonometry.Trigonometry.normalizeAngle
+import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
+import com.kylecorry.sol.math.trigonometry.Trigonometry.tanDegrees
+import com.kylecorry.sol.science.astronomy.units.EclipticCoordinate
+import kotlin.math.asin
+import kotlin.math.atan
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
+
+internal object OrbitalMath {
+
+    const val EARTH_ORBITAL_PERIOD_DAYS = 365.242191
+
+    fun getEclipticCoordinate(
+        trueAnomaly: Double,
+        perihelionEclipticLongitude: Double,
+        ascendingNodeEclipticLongitude: Double,
+        inclination: Double
+    ): EclipticCoordinate {
+        val heliocentricEclipticLongitude = normalizeAngle(trueAnomaly + perihelionEclipticLongitude)
+        val heliocentricEclipticLatitude = asin(
+            sinDegrees(heliocentricEclipticLongitude - ascendingNodeEclipticLongitude) * sinDegrees(
+                inclination
+            )
+        ).toDegrees()
+        return EclipticCoordinate(heliocentricEclipticLatitude, heliocentricEclipticLongitude)
+    }
+
+    fun getRadius(
+        trueAnomaly: Double,
+        semimajorAxis: Double,
+        eccentricity: Double
+    ): Double {
+        return semimajorAxis * (1 - square(eccentricity)) /
+                (1 + eccentricity * cosDegrees(trueAnomaly))
+    }
+
+    fun getTrueAnomaly(meanAnomaly: Double, equationOfCenter: Double): Double {
+        return normalizeAngle(meanAnomaly + equationOfCenter)
+    }
+
+    fun getMeanAnomaly(
+        daysSinceEpoch: Double,
+        orbitalPeriodEarthDays: Double,
+        epochEclipticLongitude: Double,
+        perihelionEclipticLongitude: Double
+    ): Double {
+        val orbitPercent = daysSinceEpoch / orbitalPeriodEarthDays
+        return normalizeAngle(
+            360.0 * orbitPercent + epochEclipticLongitude - perihelionEclipticLongitude
+        )
+    }
+
+    fun estimateTrueAnomaly(
+        eccentricity: Double,
+        meanAnomaly: Double,
+        useEccentricAnomaly: Boolean = true
+    ): Double {
+        return if (useEccentricAnomaly) {
+            val eccentricAnomaly = estimateEccentricAnomaly(eccentricity, meanAnomaly)
+            val ratio = sqrt((1 + eccentricity) / (1 - eccentricity))
+            normalizeAngle(2 * atan(ratio * tanDegrees(eccentricAnomaly / 2)).toDegrees())
+        } else {
+            getTrueAnomaly(
+                meanAnomaly,
+                estimateEquationOfCenter(eccentricity, meanAnomaly)
+            )
+        }
+    }
+
+    fun estimateEquationOfCenter(eccentricity: Double, meanAnomaly: Double): Double {
+        // This is an angular correction, therefore it is not normalized
+        return (2 * eccentricity * sinDegrees(meanAnomaly)).toDegrees()
+    }
+
+    fun estimateEccentricAnomaly(
+        eccentricity: Double,
+        meanAnomaly: Double,
+        toleranceDegrees: Double = 1e-8
+    ): Double {
+        val toleranceRadians = toleranceDegrees.toRadians()
+        val meanAnomalyRadians = meanAnomaly.toRadians()
+
+        return Optimization.newtonRaphsonIteration(meanAnomalyRadians, tolerance = toleranceRadians) {
+            it - (it - eccentricity * sin(it) - meanAnomalyRadians) / (1 - eccentricity * cos(it))
+        }.toDegrees()
+    }
+
+}

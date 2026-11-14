@@ -1,0 +1,163 @@
+package com.kylecorry.sol.science.physics
+
+import com.kylecorry.sol.math.Quaternion
+import com.kylecorry.sol.math.Range
+import com.kylecorry.sol.math.Vector
+import com.kylecorry.sol.math.Vector2
+import com.kylecorry.sol.math.Vector3
+import com.kylecorry.sol.math.calculus.RungeKutta4thOrderSolver
+import com.kylecorry.sol.math.interpolation.Interpolator
+import com.kylecorry.sol.math.interpolation.LinearInterpolator
+import com.kylecorry.sol.math.optimization.HillClimbingOptimizer
+import com.kylecorry.sol.math.optimization.IOptimizer
+import com.kylecorry.sol.math.trigonometry.Trigonometry
+import com.kylecorry.sol.science.geophysics.Geophysics
+import com.kylecorry.sol.units.Bearing
+import com.kylecorry.sol.units.Distance
+import com.kylecorry.sol.units.DistanceUnits
+import com.kylecorry.sol.units.Energy
+import com.kylecorry.sol.units.EnergyUnits
+import com.kylecorry.sol.units.Speed
+import com.kylecorry.sol.units.TimeUnits
+import com.kylecorry.sol.units.Weight
+import com.kylecorry.sol.units.WeightUnits
+import kotlin.time.Duration
+import kotlin.math.absoluteValue
+
+public object Physics {
+
+    private val solver = RungeKutta4thOrderSolver()
+
+    public fun fallHeight(time: Duration, gravity: Float = Geophysics.GRAVITY): Distance {
+        val seconds = time.inWholeMilliseconds / 1000f
+        return Distance.from(0.5f * gravity * seconds * seconds, DistanceUnits.Meters)
+    }
+
+    public fun isMetal(magneticField: Vector3, threshold: Float = 65f): Boolean {
+        return isMetal(magneticField.magnitude(), threshold)
+    }
+
+    public fun isMetal(fieldStrength: Float, threshold: Float = 65f): Boolean {
+        return fieldStrength >= threshold
+    }
+
+    /**
+     * Removes the geomagnetic field from a raw magnetometer reading.
+     * The orientation changes is the changes in phone orientation from the point the geomagnetic field was taken.
+     */
+    public fun removeGeomagneticField(
+        rawMagneticField: Vector3,
+        geomagneticField: Vector3,
+        orientationChange: Quaternion? = null
+    ): Vector3 {
+        val updatedGeo = orientationChange?.rotate(geomagneticField)
+            ?: (rawMagneticField.normalize() * geomagneticField.magnitude())
+        return rawMagneticField - updatedGeo
+    }
+
+    /**
+     * Calculates the direction to a piece of metal
+     * @return The poles pointing to and away from the metal (unable to determine which)
+     */
+    public fun getMetalDirection(
+        magneticField: Vector3,
+        gravity: Vector3
+    ): Pair<Bearing, Bearing> {
+        val azimuth = Geophysics.getAzimuth(gravity, magneticField)
+        return azimuth to azimuth.inverse()
+    }
+
+    /**
+     * Calculates the trajectory of a projectile in 2D space.
+     */
+    public fun getTrajectory2D(
+        initialPosition: Vector2 = Vector2.zero,
+        initialVelocity: Vector2 = Vector2.zero,
+        dragModel: DragModel = NoDragModel(),
+        timeStep: Float = 0.01f,
+        maxTime: Float = 10f,
+    ): List<TrajectoryPoint2D> {
+        val trajectory = mutableListOf<TrajectoryPoint2D>()
+
+        val results = solver.solve(
+            Range(0f, maxTime),
+            timeStep,
+            Vector.from(
+                initialPosition.x,
+                initialPosition.y,
+                initialVelocity.x,
+                initialVelocity.y
+            ),
+        ) { _, v ->
+            val velocity = Vector2(v[2], v[3])
+            val drag = dragModel.getDragAcceleration(velocity)
+            Vector.from(velocity.x, velocity.y, drag.x, drag.y - Geophysics.GRAVITY)
+        }
+
+        for (result in results) {
+            val time = result.first
+            val position = Vector2(result.second[0], result.second[1])
+            val velocity = Vector2(result.second[2], result.second[3])
+            trajectory.add(TrajectoryPoint2D(time, position, velocity))
+        }
+
+        return trajectory
+    }
+
+    /**
+     * Calculates the required velocity vector for an impact at a target position with the given velocity.
+     */
+    public fun getVelocityVectorForImpact(
+        targetPosition: Vector2,
+        velocity: Float,
+        initialPosition: Vector2 = Vector2.zero,
+        dragModel: DragModel = NoDragModel(),
+        timeStep: Float = 0.01f,
+        maxTime: Float = 10f,
+        minAngle: Float = 0f,
+        maxAngle: Float = 90f,
+        optimizer: IOptimizer = HillClimbingOptimizer(0.001, initialValue = 0.0 to 0.0),
+        getInterpolator: (points: List<Vector2>) -> Interpolator = { points ->
+            LinearInterpolator(points)
+        }
+    ): Vector2 {
+        val bestAngle = optimizer.optimize(
+            Range(minAngle.toDouble(), maxAngle.toDouble()),
+            maximize = false
+        ) { angle, _ ->
+            val initialVelocity =
+                Vector2(
+                    velocity * Trigonometry.cosDegrees(angle.toFloat()),
+                    velocity * Trigonometry.sinDegrees(angle.toFloat())
+                )
+            val trajectory =
+                getTrajectory2D(
+                    initialPosition,
+                    initialVelocity,
+                    dragModel,
+                    timeStep,
+                    maxTime
+                )
+            val interpolated =
+                getInterpolator(trajectory.map { it.position }).interpolate(
+                    targetPosition.x
+                )
+            (interpolated - targetPosition.y).absoluteValue.toDouble()
+        }
+        return Vector2(
+            velocity * Trigonometry.cosDegrees(bestAngle.first.toFloat()),
+            velocity * Trigonometry.sinDegrees(bestAngle.first.toFloat())
+        )
+    }
+
+    /**
+     * Calculates the kinetic energy of an object moving at a given speed.
+     */
+    public fun getKineticEnergy(mass: Weight, speed: Speed): Energy {
+        val massKg = mass.convertTo(WeightUnits.Kilograms).value
+        val speedMps = speed.convertTo(DistanceUnits.Meters, TimeUnits.Seconds).value
+        val joules = 0.5f * massKg * speedMps * speedMps
+        return Energy.from(joules, EnergyUnits.Joules)
+    }
+
+}

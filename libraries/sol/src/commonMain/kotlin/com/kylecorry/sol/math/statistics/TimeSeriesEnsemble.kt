@@ -1,0 +1,32 @@
+package com.kylecorry.sol.math.statistics
+
+import com.kylecorry.sol.math.Vector2
+import com.kylecorry.sol.math.ensemble.Ensemble
+import com.kylecorry.sol.math.regression.ITimeSeriesPredictor
+
+public class TimeSeriesEnsemble(
+    private val predictors: List<ITimeSeriesPredictor>,
+    private val confidenceIntervalSize: Float = 0.95f
+) {
+    public fun predictNext(samples: List<Vector2>, n: Int, step: Float? = null): List<ConfidenceInterval<Vector2>> {
+        val predictions = predictors.map { it.predictNext(samples, n, step) }
+        val result = mutableListOf<ConfidenceInterval<Vector2>>()
+        for (i in 0..<n) {
+            val x = predictions.firstOrNull()?.getOrNull(i)?.x ?: continue
+            val values = predictions.mapNotNull { it.getOrNull(i)?.y }
+            if (values.isEmpty()) {
+                continue
+            }
+            val interval = Ensemble.continuous(values, confidenceIntervalSize)
+            result.add(
+                ConfidenceInterval(
+                    Vector2(x, interval.value),
+                    Vector2(x, interval.lower),
+                    Vector2(x, interval.upper),
+                    interval.confidence
+                )
+            )
+        }
+        return result
+    }
+}

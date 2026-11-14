@@ -1,0 +1,45 @@
+package com.kylecorry.sol.science.astronomy.corrections
+
+import com.kylecorry.sol.math.algebra.Algebra.polynomial
+import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
+
+internal object EclipticObliquity {
+    fun getTrueObliquityOfEcliptic(julianCenturiesSinceJ2000: Double): Double {
+        return getMeanObliquityOfEcliptic(julianCenturiesSinceJ2000) + getNutationInObliquity(julianCenturiesSinceJ2000)
+    }
+
+    fun getMeanObliquityOfEcliptic(julianCenturiesSinceJ2000: Double): Double {
+        val u = julianCenturiesSinceJ2000 / 100.0
+        return polynomial(
+            u,
+            84381.448,
+            -4680.93,
+            -1.55,
+            1999.25,
+            -51.38,
+            -249.67,
+            -39.05,
+            7.12,
+            27.87,
+            5.79,
+            2.45
+        ) / 3600.0
+    }
+
+    private fun getNutationInObliquity(julianCenturiesSinceJ2000: Double): Double {
+        val X0 = polynomial(julianCenturiesSinceJ2000, 297.85036, 445267.111480, -0.0019142, 1 / 189474.0)
+        val X1 = polynomial(julianCenturiesSinceJ2000, 357.52772, 35999.050340, -0.0001603, -1 / 300000.0)
+        val X2 = polynomial(julianCenturiesSinceJ2000, 134.96298, 477198.867398, 0.0086972, 1 / 56250.0)
+        val X3 = polynomial(julianCenturiesSinceJ2000, 93.27191, 483202.017538, -0.0036825, 1 / 327270.0)
+        val X4 = polynomial(julianCenturiesSinceJ2000, 125.04452, -1934.136261, 0.0020708, 1 / 450000.0)
+
+        var nutation = 0.0
+        val table = LongitudinalNutation.table3()
+        for (row in table) {
+            val angle = row[0] * X0 + row[1] * X1 + row[2] * X2 + row[3] * X3 + row[4] * X4
+            nutation += (row[7] + row[8] * julianCenturiesSinceJ2000) * cosDegrees(angle)
+        }
+        return nutation / 36000000.0
+    }
+
+}

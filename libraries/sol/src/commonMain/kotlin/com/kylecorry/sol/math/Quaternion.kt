@@ -1,0 +1,297 @@
+package com.kylecorry.sol.math
+
+import com.kylecorry.sol.math.MathExtensions.toDegrees
+import com.kylecorry.sol.math.trigonometry.Trigonometry.cosDegrees
+import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
+import kotlin.math.absoluteValue
+import kotlin.math.acos
+import kotlin.math.asin
+import kotlin.math.atan2
+import kotlin.math.sin
+import kotlin.math.sqrt
+import kotlin.math.withSign
+
+public data class Quaternion(val x: Float, val y: Float, val z: Float, val w: Float) {
+
+    private val arr = floatArrayOf(x, y, z, w)
+
+    public fun toFloatArray(): FloatArray {
+        return arr.copyOf()
+    }
+
+    public operator fun times(other: Quaternion): Quaternion {
+        val out = FloatArray(4)
+        QuaternionMath.multiply(arr, other.arr, out)
+        return from(out)
+    }
+
+    public fun subtractRotation(other: Quaternion): Quaternion {
+        val out = FloatArray(4)
+        QuaternionMath.subtractRotation(arr, other.arr, out)
+        return from(out)
+    }
+
+    public operator fun plus(other: Quaternion): Quaternion {
+        val out = FloatArray(4)
+        QuaternionMath.add(arr, other.arr, out)
+        return from(out)
+    }
+
+    public operator fun minus(other: Quaternion): Quaternion {
+        val out = FloatArray(4)
+        QuaternionMath.subtract(arr, other.arr, out)
+        return from(out)
+    }
+
+    public fun magnitude(): Float {
+        return QuaternionMath.magnitude(arr)
+    }
+
+    public fun normalize(): Quaternion {
+        val out = FloatArray(4)
+        QuaternionMath.normalize(arr, out)
+        return from(out)
+    }
+
+    public fun conjugate(): Quaternion {
+        val out = FloatArray(4)
+        QuaternionMath.conjugate(arr, out)
+        return from(out)
+    }
+
+    public fun inverse(): Quaternion {
+        val out = FloatArray(4)
+        QuaternionMath.inverse(arr, out)
+        return from(out)
+    }
+
+    public fun rotate(vector: Vector3): Vector3 {
+        val out = FloatArray(3)
+        QuaternionMath.rotate(vector.toFloatArray(), arr, out)
+        return Vector3.from(out)
+    }
+
+    public fun toEuler(): Euler {
+        val out = FloatArray(3)
+        QuaternionMath.toEuler(arr, out)
+        return Euler.from(out)
+    }
+
+    public fun slerp(other: Quaternion, t: Float, useShortestPath: Boolean = true): Quaternion {
+        val out = FloatArray(4)
+        QuaternionMath.slerp(arr, other.arr, t, out, useShortestPath)
+        return from(out)
+    }
+
+    public fun lerp(other: Quaternion, t: Float, useShortestPath: Boolean = true): Quaternion {
+        val out = FloatArray(4)
+        QuaternionMath.lerp(arr, other.arr, t, out, useShortestPath)
+        return from(out)
+    }
+
+    public fun dot(other: Quaternion): Float {
+        return QuaternionMath.dot(arr, other.arr)
+    }
+
+    public companion object {
+        public val zero: Quaternion = Quaternion(0f, 0f, 0f, 1f)
+
+        public fun from(arr: FloatArray): Quaternion {
+            return Quaternion(arr[0], arr[1], arr[2], arr[3])
+        }
+
+        public fun from(euler: Euler): Quaternion {
+            val out = FloatArray(4)
+            QuaternionMath.fromEuler(euler.toFloatArray(), out)
+            return from(out)
+        }
+    }
+
+}
+
+
+public object QuaternionMath {
+    public const val X: Int = 0
+    public const val Y: Int = 1
+    public const val Z: Int = 2
+    public const val W: Int = 3
+
+    public fun fromEuler(euler: FloatArray, out: FloatArray) {
+        val cosY = cosDegrees(euler[2] / 2.0)
+        val sinY = sinDegrees(euler[2] / 2.0)
+        val cosP = cosDegrees(euler[1] / 2.0)
+        val sinP = sinDegrees(euler[1] / 2.0)
+        val cosR = cosDegrees(euler[0] / 2.0)
+        val sinR = sinDegrees(euler[0] / 2.0)
+
+        val w = cosR * cosP * cosY + sinR * sinP * sinY
+        val x = sinR * cosP * cosY - cosR * sinP * sinY
+        val y = cosR * sinP * cosY + sinR * cosP * sinY
+        val z = cosR * cosP * sinY - sinR * sinP * cosY
+
+        out[X] = x.toFloat()
+        out[Y] = y.toFloat()
+        out[Z] = z.toFloat()
+        out[W] = w.toFloat()
+    }
+
+    public fun rotate(point: FloatArray, quat: FloatArray, out: FloatArray) {
+        val u = floatArrayOf(quat[X], quat[Y], quat[Z])
+        val s = quat[W]
+        val first = Vector3Utils.times(u, Vector3Utils.dot(u, point) * 2f)
+        val second = Vector3Utils.times(point, s * s - Vector3Utils.dot(u, u))
+        val third = Vector3Utils.times(Vector3Utils.cross(u, point), 2f * s)
+
+        val sum = Vector3Utils.plus(first, Vector3Utils.plus(second, third))
+        out[0] = sum[0]
+        out[1] = sum[1]
+        out[2] = sum[2]
+    }
+
+    public fun toEuler(quat: FloatArray, out: FloatArray) {
+        val yaw = atan2(
+            2 * (quat[W] * quat[Z] + quat[X] * quat[Y]),
+            1 - 2 * (quat[Y] * quat[Y] + quat[Z] * quat[Z])
+        )
+        val sinP = 2 * (quat[W] * quat[Y] - quat[Z] * quat[X])
+        val pitch = if (sinP.absoluteValue >= 1) {
+            (kotlin.math.PI / 2).withSign(sinP.toDouble()).toFloat()
+        } else {
+            asin(sinP)
+        }
+        val roll = atan2(
+            2 * (quat[W] * quat[X] + quat[Y] * quat[Z]),
+            1 - 2 * (quat[X] * quat[X] + quat[Y] * quat[Y])
+        )
+
+        out[0] = roll.toDegrees()
+        out[1] = pitch.toDegrees()
+        out[2] = yaw.toDegrees()
+    }
+
+    public fun multiply(a: FloatArray, b: FloatArray, out: FloatArray) {
+        val x = a[W] * b[X] + a[X] * b[W] + a[Y] * b[Z] - a[Z] * b[Y]
+        val y = a[W] * b[Y] - a[X] * b[Z] + a[Y] * b[W] + a[Z] * b[X]
+        val z = a[W] * b[Z] + a[X] * b[Y] - a[Y] * b[X] + a[Z] * b[W]
+        val w = a[W] * b[W] - a[X] * b[X] - a[Y] * b[Y] - a[Z] * b[Z]
+        out[X] = x
+        out[Y] = y
+        out[Z] = z
+        out[W] = w
+    }
+
+    public fun add(a: FloatArray, b: FloatArray, out: FloatArray) {
+        out[X] = a[X] + b[X]
+        out[Y] = a[Y] + b[Y]
+        out[Z] = a[Z] + b[Z]
+        out[W] = a[W] + b[W]
+    }
+
+    public fun subtractRotation(a: FloatArray, b: FloatArray, out: FloatArray) {
+        val inverse = FloatArray(4)
+        inverse(b, inverse)
+        multiply(inverse, a, out)
+        normalize(out, out)
+    }
+
+    public fun subtract(a: FloatArray, b: FloatArray, out: FloatArray) {
+        out[X] = a[X] - b[X]
+        out[Y] = a[Y] - b[Y]
+        out[Z] = a[Z] - b[Z]
+        out[W] = a[W] - b[W]
+    }
+
+    public fun magnitude(quat: FloatArray): Float {
+        return sqrt(quat[X] * quat[X] + quat[Y] * quat[Y] + quat[Z] * quat[Z] + quat[W] * quat[W])
+    }
+
+    public fun normalize(quat: FloatArray, out: FloatArray) {
+        val mag = magnitude(quat)
+        divide(quat, mag, out)
+    }
+
+    public fun divide(quat: FloatArray, divisor: Float, out: FloatArray) {
+        out[X] = quat[X] / divisor
+        out[Y] = quat[Y] / divisor
+        out[Z] = quat[Z] / divisor
+        out[W] = quat[W] / divisor
+    }
+
+    public fun multiply(quat: FloatArray, scale: Float, out: FloatArray) {
+        out[X] = quat[X] * scale
+        out[Y] = quat[Y] * scale
+        out[Z] = quat[Z] * scale
+        out[W] = quat[W] * scale
+    }
+
+    public fun conjugate(quat: FloatArray, out: FloatArray) {
+        out[X] = -quat[X]
+        out[Y] = -quat[Y]
+        out[Z] = -quat[Z]
+        out[W] = quat[W]
+    }
+
+    public fun inverse(quat: FloatArray, out: FloatArray) {
+        val mag = magnitude(quat)
+        conjugate(quat, out)
+        divide(out, mag * mag, out)
+    }
+
+    public fun slerp(quat1: FloatArray, quat2: FloatArray, t: Float, out: FloatArray, useShortestPath: Boolean = true) {
+        var endQuaternion = quat2
+        var cosHalfTheta = dot(quat1, endQuaternion)
+        if (useShortestPath && cosHalfTheta < 0) {
+            val adjustedQuaternion = FloatArray(4)
+            multiply(quat2, -1f, adjustedQuaternion)
+            endQuaternion = adjustedQuaternion
+            cosHalfTheta = dot(quat1, endQuaternion)
+        }
+
+        if (cosHalfTheta.absoluteValue >= 1) {
+            out[X] = quat1[X]
+            out[Y] = quat1[Y]
+            out[Z] = quat1[Z]
+            out[W] = quat1[W]
+            return
+        }
+
+        val halfTheta = acos(cosHalfTheta)
+        val sinHalfTheta = sqrt(1 - cosHalfTheta * cosHalfTheta)
+
+        if (sinHalfTheta.absoluteValue < 0.001) {
+            val ratioA = 1 - t
+            out[X] = quat1[X] * ratioA + endQuaternion[X] * t
+            out[Y] = quat1[Y] * ratioA + endQuaternion[Y] * t
+            out[Z] = quat1[Z] * ratioA + endQuaternion[Z] * t
+            out[W] = quat1[W] * ratioA + endQuaternion[W] * t
+            return
+        }
+
+        val ratioA = sin((1 - t) * halfTheta) / sinHalfTheta
+        val ratioB = sin(t * halfTheta) / sinHalfTheta
+
+        out[X] = quat1[X] * ratioA + endQuaternion[X] * ratioB
+        out[Y] = quat1[Y] * ratioA + endQuaternion[Y] * ratioB
+        out[Z] = quat1[Z] * ratioA + endQuaternion[Z] * ratioB
+        out[W] = quat1[W] * ratioA + endQuaternion[W] * ratioB
+    }
+
+    public fun lerp(quat1: FloatArray, quat2: FloatArray, t: Float, out: FloatArray, useShortestPath: Boolean = true) {
+        val multiplier = if (useShortestPath && dot(quat1, quat2) < 0) -1f else 1f
+
+        val x = quat1[X] + t * (multiplier * quat2[X] - quat1[X])
+        val y = quat1[Y] + t * (multiplier * quat2[Y] - quat1[Y])
+        val z = quat1[Z] + t * (multiplier * quat2[Z] - quat1[Z])
+        val w = quat1[W] + t * (multiplier * quat2[W] - quat1[W])
+        out[X] = x
+        out[Y] = y
+        out[Z] = z
+        out[W] = w
+
+        normalize(out, out)
+    }
+
+    public fun dot(quat1: FloatArray, quat2: FloatArray): Float {
+        return quat1[X] * quat2[X] + quat1[Y] * quat2[Y] + quat1[Z] * quat2[Z] + quat1[W] * quat2[W]
+    }
+}

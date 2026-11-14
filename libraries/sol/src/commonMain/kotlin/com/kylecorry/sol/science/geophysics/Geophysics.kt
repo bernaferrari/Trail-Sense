@@ -1,0 +1,105 @@
+package com.kylecorry.sol.science.geophysics
+
+import com.kylecorry.sol.math.MathExtensions.toDegrees
+import com.kylecorry.sol.math.Vector3
+import com.kylecorry.sol.math.arithmetic.Arithmetic.square
+import com.kylecorry.sol.math.trigonometry.Trigonometry.sinDegrees
+import com.kylecorry.sol.science.geology.ReferenceEllipsoid
+import com.kylecorry.sol.units.Bearing
+import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.sol.units.Distance
+import kotlin.time.Instant
+import kotlin.time.Clock
+import kotlin.math.atan2
+import kotlin.math.hypot
+import kotlin.math.sqrt
+
+public object Geophysics {
+
+    public const val GRAVITY: Float = 9.81f
+
+    private val worldMagneticModel = SphericalHarmonics(
+        WorldMagneticModel2025.G_COEFFICIENTS,
+        WorldMagneticModel2025.H_COEFFICIENTS,
+        baseTime = WorldMagneticModel2025.BASE_TIME,
+        deltaGCoefficients = WorldMagneticModel2025.DELTA_G,
+        deltaHCoefficients = WorldMagneticModel2025.DELTA_H
+    )
+
+    public fun getGeomagneticDeclination(
+        coordinate: Coordinate,
+        altitude: Float? = null,
+        time: Instant = Clock.System.now()
+    ): Float {
+        val geoField = worldMagneticModel.getVector(
+            coordinate,
+            Distance.meters(altitude ?: 0f),
+            time
+        )
+        return atan2(geoField.y, geoField.x).toDegrees()
+    }
+
+    public fun getGeomagneticInclination(
+        coordinate: Coordinate,
+        altitude: Float? = null,
+        time: Instant = Clock.System.now()
+    ): Float {
+        val geoField = worldMagneticModel.getVector(
+            coordinate,
+            Distance.meters(altitude ?: 0f),
+            time
+        )
+        return atan2(geoField.z, hypot(geoField.x, geoField.y)).toDegrees()
+    }
+
+    public fun getGeomagneticField(
+        coordinate: Coordinate,
+        altitude: Float? = null,
+        time: Instant = Clock.System.now()
+    ): Vector3 {
+        val geoField = worldMagneticModel.getVector(
+            coordinate,
+            Distance.meters(altitude ?: 0f),
+            time
+        )
+        return Vector3(geoField.x * 0.001f, geoField.y * 0.001f, geoField.z * 0.001f)
+    }
+
+    public fun getGravity(coordinate: Coordinate): Float {
+        // Somigliana equation (IGF80)
+        val ellipsoid = ReferenceEllipsoid.wgs84
+        val ge = 9.78032677153489
+        val k = 0.001931851353260676
+        val e2 = ellipsoid.squaredEccentricity
+        val sinLat2 = square(sinDegrees(coordinate.latitude))
+        return (ge * (1 + k * sinLat2) / sqrt(1 - e2 * sinLat2)).toFloat()
+    }
+
+    public fun getAzimuth(gravity: Vector3, magneticField: Vector3): Bearing {
+        return AzimuthCalculator.calculate(gravity, magneticField) ?: Bearing.from(0f)
+    }
+
+    /**
+     * Converts an astronomic location (from gravity and the stars) to a geodetic location
+     */
+    public fun getGeodeticLocation(astronomic: Coordinate, deflection: VerticalDeflection): Coordinate {
+        return VerticalDeflectionCalculator.toGeodetic(astronomic, deflection)
+    }
+
+    /**
+     * Converts a geodetic location to the astronomic location that gravity would indicate
+     */
+    public fun getAstronomicLocation(geodetic: Coordinate, deflection: VerticalDeflection): Coordinate {
+        return VerticalDeflectionCalculator.toAstronomic(geodetic, deflection)
+    }
+
+    /**
+     * Estimates the vertical deflection from the slope of a geoid model. This only captures what the geoid
+     * model resolves, so a coarse geoid misses the effect of nearby terrain.
+     * @param stepDegrees the spacing used for the central difference
+     * @param geoid the geoid height in meters at a location
+     */
+    public fun getVerticalDeflectionModel(stepDegrees: Double, geoid: (Coordinate) -> Double): VerticalDeflectionModel {
+        return VerticalDeflectionCalculator.fromGeoid(stepDegrees, geoid)
+    }
+}

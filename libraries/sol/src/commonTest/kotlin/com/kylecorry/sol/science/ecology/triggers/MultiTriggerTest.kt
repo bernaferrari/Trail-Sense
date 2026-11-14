@@ -1,0 +1,79 @@
+package com.kylecorry.sol.science.ecology.triggers
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+import com.kylecorry.sol.math.Range
+import com.kylecorry.sol.science.ecology.LifecycleEventFactors
+import com.kylecorry.sol.units.Temperature
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlinx.datetime.LocalDate
+
+class MultiTriggerTest {
+
+    @Test
+    fun triggersWithAnyFalse() {
+        triggersWithAnyFalse(true, true, true)
+        triggersWithAnyFalse(true, false, false)
+        triggersWithAnyFalse(false, true, false)
+        triggersWithAnyFalse(false, false, false)
+    }
+
+    private fun triggersWithAnyFalse(trigger1: Boolean, trigger2: Boolean, expected: Boolean) {
+        val trigger = MultiTrigger(createTrigger(trigger1), createTrigger(trigger2))
+        assertEquals(expected, trigger.isTriggered(factors()))
+    }
+
+    @Test
+    fun triggersWithAnyTrue() {
+        triggersWithAnyTrue(true, true, true)
+        triggersWithAnyTrue(true, false, true)
+        triggersWithAnyTrue(false, true, true)
+        triggersWithAnyTrue(false, false, false)
+    }
+
+    private fun triggersWithAnyTrue(trigger1: Boolean, trigger2: Boolean, expected: Boolean) {
+        val trigger = MultiTrigger(createTrigger(trigger1), createTrigger(trigger2), any = true)
+        assertEquals(expected, trigger.isTriggered(factors()))
+    }
+
+    @Test
+    fun resetCallsResetOnAllTriggers() {
+        val trigger1 = ResetTrackingTrigger()
+        val trigger2 = ResetTrackingTrigger()
+        val trigger3 = ResetTrackingTrigger()
+        val trigger = MultiTrigger(trigger1, trigger2, trigger3)
+
+        trigger.reset()
+
+        assertEquals(1, trigger1.resetCount)
+        assertEquals(1, trigger2.resetCount)
+        assertEquals(1, trigger3.resetCount)
+    }
+
+    private fun createTrigger(value: Boolean): LifecycleEventTrigger {
+        return object : LifecycleEventTrigger {
+            override fun isTriggered(factors: LifecycleEventFactors): Boolean = value
+        }
+    }
+
+    private class ResetTrackingTrigger : LifecycleEventTrigger {
+        var resetCount = 0
+            private set
+
+        override fun isTriggered(factors: LifecycleEventFactors): Boolean = false
+
+        override fun reset() {
+            resetCount++
+        }
+    }
+
+    private fun factors(): LifecycleEventFactors {
+        return LifecycleEventFactors(
+            lengthOfDay = 12.hours,
+            temperature = Range(Temperature.celsius(0f), Temperature.celsius(0f)),
+            date = LocalDate(2025, 1, 1)
+        )
+    }
+}

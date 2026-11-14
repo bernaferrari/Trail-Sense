@@ -1,0 +1,96 @@
+package com.kylecorry.sol.math.algebra
+
+import com.kylecorry.sol.math.Vector2
+import com.kylecorry.sol.math.arithmetic.Arithmetic
+import kotlin.math.sqrt
+
+public object Algebra {
+    /**
+     * Solves an equation of form mx + b = 0
+     */
+    public fun solve(equation: LinearEquation): Float? {
+        require(equation.m.isFinite()) { "m must be finite" }
+        require(equation.b.isFinite()) { "b must be finite" }
+        if (Arithmetic.isZero(equation.m)) {
+            if (Arithmetic.isZero(equation.b)) {
+                return 0f
+            }
+            return null
+        }
+        val solution = -equation.b / equation.m
+        check(solution.isFinite())
+        return solution
+    }
+
+    public fun solve(equation: QuadraticEquation): Pair<Float, Float>? {
+        require(equation.a.isFinite()) { "a must be finite" }
+        require(equation.b.isFinite()) { "b must be finite" }
+        require(equation.c.isFinite()) { "c must be finite" }
+        if (Arithmetic.isZero(equation.a)) {
+            val linear = solve(LinearEquation(equation.b, equation.c)) ?: return null
+            check(linear.isFinite())
+            return linear to linear
+        }
+        check(!Arithmetic.isZero(equation.a))
+
+        val discriminant = equation.b * equation.b - 4 * equation.a * equation.c
+        check(discriminant.isFinite())
+        if (discriminant < 0) {
+            return null
+        }
+        val sqrtDiscriminant = sqrt(discriminant)
+        val x1 = (-equation.b + sqrtDiscriminant) / (2 * equation.a)
+        val x2 = (-equation.b - sqrtDiscriminant) / (2 * equation.a)
+        check(x1.isFinite())
+        check(x2.isFinite())
+        return x1 to x2
+    }
+
+    public fun inverse(equation: LinearEquation): LinearEquation {
+        require(equation.m.isFinite()) { "m must be finite" }
+        require(!Arithmetic.isZero(equation.m)) { "m must not be zero" }
+        require(equation.b.isFinite()) { "b must be finite" }
+        val inverse = LinearEquation(1 / equation.m, -equation.b / equation.m)
+        check(inverse.m.isFinite())
+        check(inverse.b.isFinite())
+        return inverse
+    }
+
+    /**
+     * Computes a polynomial
+     * Ex. 1 + 2x + 5x^2 + x^4
+     * polynomial(x, 1, 2, 5, 0, 1)
+     */
+    public fun polynomial(x: Double, vararg coefficients: Double): Double {
+        require(x.isFinite()) { "x must be finite" }
+        var runningTotal = 0.0
+        var xPower = 1.0
+        for (i in coefficients.indices) {
+            require(coefficients[i].isFinite()) { "coefficients must be finite, index: $i was ${coefficients[i]}" }
+            runningTotal += xPower * coefficients[i]
+            xPower *= x
+        }
+
+        check(runningTotal.isFinite())
+        return runningTotal
+    }
+
+    public fun getIntersection(equation1: LinearEquation, equation2: LinearEquation): Vector2? {
+        require(equation1.m.isFinite()) { "equation1.m must be finite" }
+        require(equation1.b.isFinite()) { "equation1.b must be finite" }
+        require(equation2.m.isFinite()) { "equation2.m must be finite" }
+        require(equation2.b.isFinite()) { "equation2.b must be finite" }
+        val denominator = equation1.m - equation2.m
+        if (Arithmetic.isZero(denominator)) {
+            return null
+        }
+
+        val x = (equation2.b - equation1.b) / denominator
+        val y = equation1.evaluate(x)
+        check(x.isFinite())
+        check(y.isFinite())
+
+        return Vector2(x, y)
+    }
+
+}

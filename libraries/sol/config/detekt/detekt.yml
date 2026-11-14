@@ -1,0 +1,10 @@
+config:
+  validation: true
+
+style:
+  MagicNumber:
+    active: false
+
+orion:
+  NoRecursion:
+    active: true

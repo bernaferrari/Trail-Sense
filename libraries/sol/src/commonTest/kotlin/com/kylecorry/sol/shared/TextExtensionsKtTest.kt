@@ -1,0 +1,27 @@
+package com.kylecorry.sol.shared
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+class TextExtensionsKtTest {
+
+    @Test
+    fun toDoubleCompat() {
+        assertEquals(1.0, "1".toDoubleCompat())
+        assertEquals(1.0, "1.0".toDoubleCompat())
+        assertEquals(1.0, "1,0".toDoubleCompat())
+        assertEquals(null, "ab".toDoubleCompat())
+        assertEquals(null, "NaN".toDoubleCompat())
+        assertEquals(null, "Infinity".toDoubleCompat())
+    }
+
+    @Test
+    fun toFloatCompat() {
+        assertEquals(1.0f, "1".toFloatCompat())
+        assertEquals(1.0f, "1.0".toFloatCompat())
+        assertEquals(1.0f, "1,0".toFloatCompat())
+        assertEquals(null, "ab".toFloatCompat())
+        assertEquals(null, "NaN".toFloatCompat())
+        assertEquals(null, "Infinity".toFloatCompat())
+    }
+}

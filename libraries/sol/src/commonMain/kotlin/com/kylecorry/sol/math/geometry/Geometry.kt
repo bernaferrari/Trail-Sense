@@ -1,0 +1,424 @@
+package com.kylecorry.sol.math.geometry
+
+import com.kylecorry.sol.math.MathExtensions.toDegrees
+import com.kylecorry.sol.math.Vector2
+import com.kylecorry.sol.math.Vector3
+import com.kylecorry.sol.math.arithmetic.Arithmetic
+import com.kylecorry.sol.math.arithmetic.Arithmetic.square
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.absoluteValue
+import kotlin.math.acos
+import kotlin.math.hypot
+import kotlin.math.min
+import kotlin.math.sqrt
+
+public object Geometry {
+    // INTERSECTIONS
+
+    public fun getIntersection(line: Line, circle: Circle): Line? {
+
+        if (contains(circle, line.start) && contains(circle, line.end)) {
+            return line
+        }
+
+        // Vertical line
+        if (line.isVertical) {
+            return if (circle.contains(Vector2(line.start.x, circle.center.y))) {
+                val top = Vector2(
+                    line.start.x,
+                    sqrt(square(circle.radius) - square(line.start.x - circle.center.x)) + circle.center.y
+                )
+                val bottom = top.copy(y = 2 * circle.center.y - top.y)
+                val lineTop = line.top()
+                val lineBottom = line.bottom()
+
+                val start = if (contains(circle, lineTop)) {
+                    lineTop
+                } else {
+                    top
+                }
+
+                val end = if (contains(circle, lineBottom)) {
+                    lineBottom
+                } else {
+                    bottom
+                }
+
+                if (!contains(line, start) || !contains(line, end)) {
+                    return null
+                }
+
+                Line(start, end)
+            } else {
+                null
+            }
+        }
+
+        val intersection = IntersectionMath.getIntersection(line, circle) ?: return null
+        val intersectionLine = Line(intersection.first, intersection.second)
+
+        val left = intersectionLine.left()
+        val right = intersectionLine.right()
+
+        val lineLeft = line.left()
+        val lineRight = line.right()
+
+        val start = if (contains(circle, lineLeft)) {
+            lineLeft
+        } else {
+            left
+        }
+
+        val end = if (contains(circle, lineRight)) {
+            lineRight
+        } else {
+            right
+        }
+
+        if (!contains(line, start) || !contains(line, end)) {
+            return null
+        }
+
+        return Line(start, end)
+    }
+
+    public fun getIntersection(line1: Line, line2: Line): Vector2? {
+        return IntersectionMath.getIntersection(line1, line2)
+    }
+
+    public fun getIntersection(line: Line, rectangle: Rectangle): List<Vector2> {
+        return IntersectionMath.getIntersection(line, rectangle)
+    }
+
+    public fun getIntersection(a: Vector2, b: Vector2, rectangle: Rectangle): List<Vector2> {
+        return IntersectionMath.getIntersection(a, b, rectangle)
+    }
+
+    public fun intersects(line: Line, circle: Circle): Boolean {
+        return getIntersection(line, circle) != null
+    }
+
+    public fun intersects(line1: Line, line2: Line): Boolean {
+        return getIntersection(line1, line2) != null
+    }
+
+    // CONTAINS
+
+    public fun contains(line: Line, point: Vector2): Boolean {
+        // Vertical line
+        if (line.isVertical) {
+            return point.x == line.start.x && point.y >= line.bottom().y && point.y <= line.top().y
+        }
+
+        val eval = line.equation().evaluate(point.x)
+
+        return (eval - point.y).absoluteValue < 0.00001f && point.x >= line.left().x && point.x <= line.right().x
+    }
+
+    public fun contains(circle: Circle, point: Vector2): Boolean {
+        return circle.center.distanceTo(point) <= circle.radius
+    }
+
+    public fun contains(polygon: Polygon, point: Vector2): Boolean {
+        var isContained = false
+        val x0 = point.x
+        val y0 = point.y
+        for (edge in polygon.edges) {
+            val x1 = edge.start.x
+            val x2 = edge.end.x
+            val y1 = edge.start.y
+            val y2 = edge.end.y
+
+            if (contains(edge, point)) {
+                return true
+            }
+
+            if (y0 < y1 != y0 < y2 && x0 < (x1 + ((y0 - y1) / (y2 - y1)) * (x2 - x1))) {
+                isContained = !isContained
+            }
+        }
+
+        return isContained
+    }
+
+    public fun pointLineDistance(point: Vector2, line: Line): Float {
+        if (line.start == line.end) {
+            return point.distanceTo(line.start)
+        }
+
+        val dx = line.end.x - line.start.x
+        val dy = line.end.y - line.start.y
+        val numerator = abs(dx * (line.start.y - point.y) - (line.start.x - point.x) * dy)
+        val denominator = line.length()
+
+        return numerator / denominator
+    }
+
+    public fun manhattanDistance(p1: List<Float>, p2: List<Float>): Float {
+        var sum = 0.0
+        for (i in 0 until min(p1.size, p2.size)) {
+            sum += abs(p1[i] - p2[i])
+        }
+        return sum.toFloat()
+    }
+
+    public fun euclideanDistance(p1: List<Float>, p2: List<Float>): Float {
+        var sum = 0.0
+        for (i in 0 until min(p1.size, p2.size)) {
+            sum += square(p1[i] - p2[i])
+        }
+        return sqrt(sum.toFloat())
+    }
+
+    // Area
+
+    public fun getIntersectionArea(circle1: Circle, circle2: Circle): Float {
+        // No intersection
+        val d = circle1.center.distanceTo(circle2.center)
+        if (d >= circle1.radius + circle2.radius) {
+            return 0f
+        }
+
+        // One circle is inside the other
+        if (d <= abs(circle1.radius - circle2.radius)) {
+            val r = minOf(circle1.radius, circle2.radius)
+            return PI.toFloat() * square(r)
+        }
+
+        val r1 = circle1.radius
+        val r2 = circle2.radius
+
+        // First sector area
+        val a1 = square(r1) * acos((square(d) + square(r1) - square(r2)) / (2 * d * r1))
+        // Second sector area
+        val a2 = square(r2) * acos((square(d) + square(r2) - square(r1)) / (2 * d * r2))
+
+        // Triangle area
+        val a3 = 0.5f * sqrt((-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2))
+
+        // Sectors - triangle
+        return a1 + a2 - a3
+    }
+
+    // Snapping
+
+    /**
+     * Snap a 2D point onto the nearest part of a line
+     * @param point the point
+     * @param line the line
+     * @return the point snapped onto the line
+     */
+    public fun snapToLine(point: Vector2, line: Line): Vector2 {
+        return snapToLine(point.x, point.y, line.start.x, line.start.y, line.end.x, line.end.y)
+    }
+
+    /**
+     * Snap a 2D point onto the nearest part of a line
+     * @param x the x coordinate of the point
+     * @param y the y coordinate of the point
+     * @param x1 the x coordinate of the start of the line
+     * @param y1 the y coordinate of the start of the line
+     * @param x2 the x coordinate of the end of the line
+     * @param y2 the y coordinate of the end of the line
+     * @return the point snapped onto the line
+     */
+    public fun snapToLine(x: Float, y: Float, x1: Float, y1: Float, x2: Float, y2: Float): Vector2 {
+        val dx = (x2 - x1).toDouble()
+        val dy = (y2 - y1).toDouble()
+        val lengthSquared = dx * dx + dy * dy
+        if (lengthSquared == 0.0) {
+            return Vector2(x1, y1)
+        }
+        val t = (((x - x1) * dx + (y - y1) * dy) / lengthSquared).coerceIn(0.0, 1.0)
+        return Vector2((x1 + t * dx).toFloat(), (y1 + t * dy).toFloat())
+    }
+
+    /**
+     * Snap a 2D point onto the nearest part of a 3D line
+     * @param point the point
+     * @param x1 the x coordinate of the start of the line
+     * @param y1 the y coordinate of the start of the line
+     * @param z1 the z coordinate of the start of the line
+     * @param x2 the x coordinate of the end of the line
+     * @param y2 the y coordinate of the end of the line
+     * @param z2 the z coordinate of the end of the line
+     * @return the 3D point snapped onto the line
+     */
+    public fun snapToLine(point: Vector2, x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float): Vector3 {
+        return snapToLine(point.x, point.y, x1, y1, z1, x2, y2, z2)
+    }
+
+    /**
+     * Snap a 2D point onto the nearest part of a 3D line
+     * @param x the x coordinate of the point
+     * @param y the y coordinate of the point
+     * @param x1 the x coordinate of the start of the line
+     * @param y1 the y coordinate of the start of the line
+     * @param z1 the z coordinate of the start of the line
+     * @param x2 the x coordinate of the end of the line
+     * @param y2 the y coordinate of the end of the line
+     * @param z2 the z coordinate of the end of the line
+     * @return the 3D point snapped onto the line
+     */
+    public fun snapToLine(
+        x: Float,
+        y: Float,
+        x1: Float,
+        y1: Float,
+        z1: Float,
+        x2: Float,
+        y2: Float,
+        z2: Float
+    ): Vector3 {
+        val dx = (x2 - x1).toDouble()
+        val dy = (y2 - y1).toDouble()
+        val dz = (z2 - z1).toDouble()
+        val lengthSquared = dx * dx + dy * dy
+        if (lengthSquared == 0.0) {
+            return Vector3(x1, y1, z1)
+        }
+        val t = (((x - x1) * dx + (y - y1) * dy) / lengthSquared).coerceIn(0.0, 1.0)
+        return Vector3((x1 + t * dx).toFloat(), (y1 + t * dy).toFloat(), (z1 + t * dz).toFloat())
+    }
+
+    /**
+     * Snap a 3D point onto the nearest part of a 3D line
+     * @param point the point
+     * @param x1 the x coordinate of the start of the line
+     * @param y1 the y coordinate of the start of the line
+     * @param z1 the z coordinate of the start of the line
+     * @param x2 the x coordinate of the end of the line
+     * @param y2 the y coordinate of the end of the line
+     * @param z2 the z coordinate of the end of the line
+     * @return the 3D point snapped onto the line
+     */
+    public fun snapToLine(point: Vector3, x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float): Vector3 {
+        return snapToLine(point.x, point.y, point.z, x1, y1, z1, x2, y2, z2)
+    }
+
+    /**
+     * Snap a 3D point onto the nearest part of a 3D line
+     * @param x the x coordinate of the point
+     * @param y the y coordinate of the point
+     * @param z the z coordinate of the point
+     * @param x1 the x coordinate of the start of the line
+     * @param y1 the y coordinate of the start of the line
+     * @param z1 the z coordinate of the start of the line
+     * @param x2 the x coordinate of the end of the line
+     * @param y2 the y coordinate of the end of the line
+     * @param z2 the z coordinate of the end of the line
+     * @return the 3D point snapped onto the line
+     */
+    public fun snapToLine(
+        x: Float,
+        y: Float,
+        z: Float,
+        x1: Float,
+        y1: Float,
+        z1: Float,
+        x2: Float,
+        y2: Float,
+        z2: Float
+    ): Vector3 {
+        val dx = (x2 - x1).toDouble()
+        val dy = (y2 - y1).toDouble()
+        val dz = (z2 - z1).toDouble()
+        val lengthSquared = dx * dx + dy * dy + dz * dz
+        if (lengthSquared == 0.0) {
+            return Vector3(x1, y1, z1)
+        }
+        val t = (((x - x1) * dx + (y - y1) * dy + (z - z1) * dz) / lengthSquared).coerceIn(0.0, 1.0)
+        return Vector3((x1 + t * dx).toFloat(), (y1 + t * dy).toFloat(), (z1 + t * dz).toFloat())
+    }
+
+    public fun <T> getConnectedLines(segments: List<Pair<T, T>>): List<List<T>> {
+        val startMap = mutableMapOf<T, MutableList<Int>>()
+        val endMap = mutableMapOf<T, MutableList<Int>>()
+
+        segments.forEachIndexed { idx, s ->
+            startMap.getOrPut(s.first) { mutableListOf() }.add(idx)
+            endMap.getOrPut(s.second) { mutableListOf() }.add(idx)
+        }
+
+        val visited = BooleanArray(segments.size)
+        val lines = mutableListOf<List<T>>()
+
+        for (i in segments.indices) {
+            if (visited[i]) continue
+
+            val seg = segments[i]
+            val line = mutableListOf<T>()
+            line.add(seg.first)
+            line.add(seg.second)
+            visited[i] = true
+
+            var head = seg.first
+            var tail = seg.second
+
+            // Grow the line forward
+            repeat(segments.size) {
+                var nextIdx = startMap[tail]?.firstOrNull { index -> !visited[index] }
+                val nextSeg = if (nextIdx != null) {
+                    visited[nextIdx] = true
+                    segments[nextIdx]
+                } else {
+                    nextIdx = endMap[tail]?.firstOrNull { index -> !visited[index] } ?: return@repeat
+                    visited[nextIdx] = true
+                    segments[nextIdx].second to segments[nextIdx].first // Reverse the segment
+                }
+
+                line.add(nextSeg.second)
+                tail = nextSeg.second
+            }
+
+            // Grow the line backward
+            repeat(segments.size) {
+                var prevIdx = endMap[head]?.firstOrNull { index -> !visited[index] }
+                val prevSeg = if (prevIdx != null) {
+                    visited[prevIdx] = true
+                    segments[prevIdx]
+                } else {
+                    prevIdx = startMap[head]?.firstOrNull { index -> !visited[index] } ?: return@repeat
+                    visited[prevIdx] = true
+                    segments[prevIdx].second to segments[prevIdx].first // Reverse the segment
+                }
+                line.add(0, prevSeg.first)
+                head = prevSeg.first
+            }
+
+            lines.add(line)
+        }
+
+        return lines
+    }
+
+    public fun scaleToFit(
+        width: Float,
+        height: Float,
+        maxWidth: Float,
+        maxHeight: Float
+    ): Float {
+        return min(maxWidth / width, maxHeight / height)
+    }
+
+    public fun getInteriorAngle(
+        previous: Vector2,
+        current: Vector2,
+        next: Vector2
+    ): Float {
+        val ax = previous.x - current.x
+        val ay = previous.y - current.y
+        val bx = next.x - current.x
+        val by = next.y - current.y
+        val magnitudeA = hypot(ax, ay)
+        val magnitudeB = hypot(bx, by)
+
+        if (Arithmetic.isZero(magnitudeA) || Arithmetic.isZero(magnitudeB)) {
+            return 0f
+        }
+
+        val cosine = ((ax * bx + ay * by) / (magnitudeA * magnitudeB)).coerceIn(-1f, 1f)
+        return acos(cosine).toDegrees()
+    }
+}

@@ -1,0 +1,118 @@
+package com.kylecorry.sol.math
+
+import kotlin.math.sqrt
+
+public data class Vector3(val x: Float, val y: Float, val z: Float) {
+
+    private val array = floatArrayOf(x, y, z)
+
+    public fun cross(other: Vector3): Vector3 {
+        val arr = Vector3Utils.cross(toFloatArray(), other.toFloatArray())
+        return Vector3(arr[0], arr[1], arr[2])
+    }
+
+    public operator fun minus(other: Vector3): Vector3 {
+        val arr = Vector3Utils.minus(toFloatArray(), other.toFloatArray())
+        return Vector3(arr[0], arr[1], arr[2])
+    }
+
+    public operator fun plus(other: Vector3): Vector3 {
+        val arr = Vector3Utils.plus(toFloatArray(), other.toFloatArray())
+        return Vector3(arr[0], arr[1], arr[2])
+    }
+
+    public operator fun times(factor: Float): Vector3 {
+        val arr = Vector3Utils.times(toFloatArray(), factor)
+        return Vector3(arr[0], arr[1], arr[2])
+    }
+
+    public fun toFloatArray(): FloatArray {
+        return array
+    }
+
+    public fun dot(other: Vector3): Float {
+        return Vector3Utils.dot(toFloatArray(), other.toFloatArray())
+    }
+
+    public fun magnitude(): Float {
+        return Vector3Utils.magnitude(toFloatArray())
+    }
+
+    public fun normalize(): Vector3 {
+        val arr = Vector3Utils.normalize(toFloatArray())
+        return Vector3(arr[0], arr[1], arr[2])
+    }
+
+    public companion object {
+        public val zero: Vector3 = Vector3(0f, 0f, 0f)
+
+        public fun from(arr: FloatArray): Vector3 {
+            return Vector3(arr[0], arr[1], arr[2])
+        }
+
+    }
+
+}
+
+
+public object Vector3Utils {
+    public fun cross(first: FloatArray, second: FloatArray): FloatArray {
+        return floatArrayOf(
+            first[1] * second[2] - first[2] * second[1],
+            first[2] * second[0] - first[0] * second[2],
+            first[0] * second[1] - first[1] * second[0]
+        )
+    }
+
+    public fun minus(first: FloatArray, second: FloatArray): FloatArray {
+        return floatArrayOf(
+            first[0] - second[0],
+            first[1] - second[1],
+            first[2] - second[2]
+        )
+    }
+
+    public fun project(first: FloatArray, second: FloatArray): FloatArray {
+        val mag = magnitude(second)
+        return times(second, dot(first, second) / (mag * mag))
+    }
+
+    public fun projectOnPlane(first: FloatArray, planeNormal: FloatArray): FloatArray {
+        return minus(first, project(first, planeNormal))
+    }
+
+    public fun plus(first: FloatArray, second: FloatArray): FloatArray {
+        return floatArrayOf(
+            first[0] + second[0],
+            first[1] + second[1],
+            first[2] + second[2]
+        )
+    }
+
+    public fun times(arr: FloatArray, factor: Float): FloatArray {
+        return floatArrayOf(
+            arr[0] * factor,
+            arr[1] * factor,
+            arr[2] * factor
+        )
+    }
+
+    public fun dot(first: FloatArray, second: FloatArray): Float {
+        return first[0] * second[0] + first[1] * second[1] + first[2] * second[2]
+    }
+
+    public fun magnitude(arr: FloatArray): Float {
+        return sqrt(arr[0] * arr[0] + arr[1] * arr[1] + arr[2] * arr[2])
+    }
+
+    public fun normalize(arr: FloatArray, inPlace: Boolean = false): FloatArray {
+        val mag = magnitude(arr)
+
+        val newArr = if (inPlace) arr else FloatArray(3)
+        newArr[0] = arr[0] / mag
+        newArr[1] = arr[1] / mag
+        newArr[2] = arr[2] / mag
+
+        return newArr
+    }
+}
