@@ -167,7 +167,7 @@ object TrailSenseServiceRegister {
             BatteryRestrictionPrompt { alerter -> RequestRemoveBatteryRestrictionCommand(appContext, alerter).execute() }
         }
         DependencyRegistry.addSingleton(ITideTableRepo::class) { TideTableRepo.getInstance(appContext) }
-        DependencyRegistry.addSingleton(INoteRepo::class) { NoteRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(INoteRepo::class) { NoteRepo(AppDatabase.getInstance(appContext).noteDao()) }
         DependencyRegistry.addSingleton(ILightningRepo::class) { LightningRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(IBatteryRepo::class) { BatteryRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(IPackRepo::class) { PackRepo.getInstance(appContext) }

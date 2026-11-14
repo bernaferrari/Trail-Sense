@@ -71,6 +71,7 @@ import com.kylecorry.andromeda.core.system.from
 import com.kylecorry.luna.result.getOrNull
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.MainActivity
+import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.alerts.AlertLoadingIndicator
 import com.kylecorry.trail_sense.shared.copy
@@ -106,7 +107,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShapeBadge
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
-import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -125,7 +125,7 @@ fun ScanQRToolScreen() {
         val app = context.applicationContext
         ScanQRViewModel(
             HapticSubsystem.getInstance(app),
-            NoteRepo.getInstance(app),
+            getAppService<INoteRepo>(),
             getAppService<IBeaconService>()
         )
     }

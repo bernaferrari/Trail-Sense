@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.kylecorry.andromeda.qr.QR
 import com.kylecorry.trail_sense.shared.haptics.HapticSubsystem
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
-import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteRepo
+import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
 import com.kylecorry.trail_sense.tools.qr.infrastructure.BeaconQREncoder
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
 import kotlinx.coroutines.Dispatchers
@@ -30,7 +30,7 @@ internal sealed interface ScanQREvent {
 /** The scanner's history (newest first, ten at most) and what to do with a scanned code. */
 internal class ScanQRViewModel(
     private val haptics: HapticSubsystem,
-    private val noteRepo: NoteRepo,
+    private val noteRepo: INoteRepo,
     private val beaconService: IBeaconService
 ) : ViewModel() {
 
