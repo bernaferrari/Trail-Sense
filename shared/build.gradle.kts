@@ -41,6 +41,7 @@ kotlin {
             api(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.atomicfu)
+            implementation(libs.androidx.collection)
             implementation(libs.andromeda.markdown)
 
             // Compose Multiplatform artifacts
