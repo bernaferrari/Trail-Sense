@@ -8,13 +8,13 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.AndroidMapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.ILayer
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.LayerFactory
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.androidLayerFactory
 import com.kylecorry.trail_sense.tools.tools.infrastructure.Tools
 
 class MapLayerLoader(context: Context) {
 
     private val toolLayers = Tools.getTools(context).flatMap { it.mapLayers }.associateBy { it.id }
-    private val factory = LayerFactory()
+    private val factory = androidLayerFactory()
 
     private val plugins = getAppService<PluginSubsystem>()
 

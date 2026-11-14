@@ -55,7 +55,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.LayerFactory
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.androidLayerFactory
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
@@ -152,7 +152,7 @@ private fun configureMap(context: Context, view: MapView, map: VectorMap?) {
         return
     }
 
-    val factory = LayerFactory()
+    val factory = androidLayerFactory()
     val layer = Tools.getMapLayerDefinition(context, TrailMapsTileSource.SOURCE_ID)!!
     val tileLayer = factory.createLayer(layer)
     tileLayer.setFeatureFilter(map.id.toString())
