@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.plugins
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.trail_sense.main.errors.SafeMode
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.plugins.domain.Plugin
 import com.kylecorry.trail_sense.plugins.domain.PluginResourceServiceDetails
 import com.kylecorry.trail_sense.plugins.infrastructure.PluginLoader
@@ -15,9 +16,10 @@ import com.kylecorry.trail_sense.shared.debugging.isDebug
 @Suppress("TooManyFunctions")
 class PluginSubsystem private constructor(private val context: Context) {
 
-    private val pluginLoader = PluginLoader(context)
-    private val pluginRepo = PluginRepo.getInstance(context)
-    private val pluginRegistrationRepo = PluginRegistrationRepo.getInstance(context)
+    private val database = AndroidAppDatabase.getInstance(context)
+    private val pluginRepo = PluginRepo(database.pluginDao())
+    private val pluginRegistrationRepo = PluginRegistrationRepo(database.pluginRegistrationDao())
+    private val pluginLoader = PluginLoader(context, pluginRegistrationRepo)
 
     fun arePluginsEnabled(): Boolean {
         return isDebug() && !SafeMode.isEnabled()

@@ -24,9 +24,10 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerAttr
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerDefinition
 import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
 
-class PluginLoader(private val context: Context) {
-
-    private val registrationRepo = PluginRegistrationRepo.getInstance(context)
+class PluginLoader(
+    private val context: Context,
+    private val registrationRepo: PluginRegistrationRepo
+) {
 
     fun getResourceServicePlugins(): List<Plugin> {
         val filter = Intent(PLUGIN_RESOURCE_SERVICE_ACTION)
