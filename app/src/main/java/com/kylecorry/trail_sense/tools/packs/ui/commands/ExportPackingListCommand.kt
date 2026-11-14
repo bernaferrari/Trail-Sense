@@ -10,7 +10,8 @@ import com.kylecorry.trail_sense.shared.views.compose.ScreenEffects
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.LighterPackIOService
-import com.kylecorry.trail_sense.tools.packs.infrastructure.PackRepo
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.tools.packs.infrastructure.IPackRepo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.kylecorry.trail_sense.shared.dialogs.withLoading
@@ -25,7 +26,7 @@ class ExportPackingListCommand(
 
     private val exportService = LighterPackIOService.create(context, resultRetriever)
 
-    private val repo = PackRepo.getInstance(context)
+    private val repo = getAppService<IPackRepo>()
 
     override fun execute(value: Pack) {
         scope.launch {

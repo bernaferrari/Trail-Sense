@@ -1,17 +1,15 @@
 package com.kylecorry.trail_sense.tools.packs.infrastructure
 
-import android.content.Context
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
 import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 
-class PackRepo private constructor(context: Context) : IPackRepo {
-
-    private val inventoryItemDao = AndroidAppDatabase.getInstance(context).packItemDao()
-    private val packDao = AndroidAppDatabase.getInstance(context).packDao()
+class PackRepo(
+    private val inventoryItemDao: PackItemDao,
+    private val packDao: PackDao
+) : IPackRepo {
     private val mapper = PackMapper()
 
     override suspend fun getItemsFromPackAsync(packId: Long) = onIO {
@@ -76,18 +74,6 @@ class PackRepo private constructor(context: Context) : IPackRepo {
             item.id
         } else {
             inventoryItemDao.insert(mapper.mapToItemEntity(item))
-        }
-    }
-
-    companion object {
-        private var instance: PackRepo? = null
-
-        @Synchronized
-        fun getInstance(context: Context): PackRepo {
-            if (instance == null) {
-                instance = PackRepo(context.applicationContext)
-            }
-            return instance!!
         }
     }
 

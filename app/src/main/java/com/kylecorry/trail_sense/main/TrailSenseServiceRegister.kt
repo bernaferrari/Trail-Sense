@@ -170,7 +170,7 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(INoteRepo::class) { NoteRepo(AndroidAppDatabase.getInstance(appContext).noteDao()) }
         DependencyRegistry.addSingleton(ILightningRepo::class) { LightningRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(IBatteryRepo::class) { BatteryRepo.getInstance(appContext) }
-        DependencyRegistry.addSingleton(IPackRepo::class) { PackRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IPackRepo::class) { AndroidAppDatabase.getInstance(appContext).let { PackRepo(it.packItemDao(), it.packDao()) } }
         DependencyRegistry.addSingleton(IWaypointRepo::class) { WaypointRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(IFlashlightSubsystem::class) { FlashlightSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IPedometerSubsystem::class) { PedometerSubsystem.getInstance(appContext) }
