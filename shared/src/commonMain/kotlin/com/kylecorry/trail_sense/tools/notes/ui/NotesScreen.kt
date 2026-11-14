@@ -4,7 +4,6 @@
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
-import com.kylecorry.trail_sense.shared.FormatService
 
 import com.kylecorry.trail_sense.shared.text.systemString
 import com.kylecorry.trail_sense.shared.text.SystemString
@@ -91,7 +90,7 @@ fun NotesScreen(
     onEdit: (Note) -> Unit,
     onDelete: (Note) -> Unit,
     onShowQR: ((Note) -> Unit)?,
-    formatNoteTimestamp: (Long) -> String? = ::formatTimestamp,
+    formatNoteTimestamp: (Long) -> String?,
     showBack: Boolean = true,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null
@@ -296,10 +295,4 @@ private fun NoteRow(
             }
         }
     }
-}
-
-
-private fun formatTimestamp(epochMillis: Long): String? {
-    if (epochMillis <= 0L) return null
-    return FormatService.getInstance().formatDateTime(Instant.fromEpochMilliseconds(epochMillis), abbreviateMonth = true)
 }

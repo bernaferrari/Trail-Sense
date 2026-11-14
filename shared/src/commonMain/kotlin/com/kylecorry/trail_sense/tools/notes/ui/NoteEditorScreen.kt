@@ -3,7 +3,6 @@
 package com.kylecorry.trail_sense.tools.notes.ui
 
 import kotlinx.coroutines.IO
-import com.kylecorry.trail_sense.main.getAppService
 
 import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
 
@@ -136,9 +135,9 @@ fun NoteEditorScreen(
 
 /** The note editor for [Route.NoteEditor]; back asks before dropping unsaved changes. */
 @Composable
-fun NoteEditorToolScreen(route: Route.NoteEditor) {
+fun NoteEditorToolScreen(route: Route.NoteEditor, repo: INoteRepo) {
     val navigator = LocalNavigator.current
-    val viewModel = viewModel { NoteEditorViewModel(getAppService<INoteRepo>()) }
+    val viewModel = viewModel { NoteEditorViewModel(repo) }
     UnsavedChangesBackHandler(hasChanges = viewModel.hasChanges)
     LaunchedEffect(viewModel) {
         viewModel.saved.collect { navigator.navigateUp() }

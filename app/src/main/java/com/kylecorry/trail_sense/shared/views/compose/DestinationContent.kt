@@ -210,8 +210,12 @@ fun DestinationContent(
             // --- Tools with their own state holder ---
             Route.Tools -> ToolsHomeScreen(quickActionHost = this, onController = { screenController = it })
             Route.ScreenFlashlight -> ScreenFlashlightAndroidToolScreen(offerController = { ScreenControllerEffect(this, it) })
-            Route.Notes -> NotesToolScreen()
-            is Route.NoteEditor -> NoteEditorToolScreen(route)
+            Route.Notes -> NotesToolScreen(
+                com.kylecorry.trail_sense.main.getAppService(),
+                com.kylecorry.trail_sense.main.getAppService(),
+                com.kylecorry.trail_sense.main.getAppService()
+            )
+            is Route.NoteEditor -> NoteEditorToolScreen(route, com.kylecorry.trail_sense.main.getAppService())
             is Route.SurvivalGuideReader -> SurvivalGuideReaderToolScreen(route)
             is Route.SurvivalGuideList -> SurvivalGuideListToolScreen(route)
             Route.Pedometer -> PedometerToolScreen()

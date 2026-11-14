@@ -6,7 +6,7 @@ import kotlinx.coroutines.IO
 import com.kylecorry.trail_sense.shared.text.SystemString
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
-import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.tools.qr.ui.showQR
@@ -27,22 +27,24 @@ import kotlinx.coroutines.launch
 
 /** The Notes tool: every note, newest first, each with edit, delete and QR share. */
 @Composable
-fun NotesToolScreen() {
+fun NotesToolScreen(repo: INoteRepo, strings: AppStrings, formatter: FormatService) {
     val host = AppHost.current()
     val navigator = LocalNavigator.current
     val scope = rememberCoroutineScope()
-    val repo = remember { getAppService<INoteRepo>() }
     val notes = remember(repo) { repo.getNotes() }
     NotesScreen(
         notes = notes,
         lifecycleOwner = LocalLifecycleOwner.current,
+        formatNoteTimestamp = { millis ->
+            if (millis <= 0L) null else formatter.formatDateTime(kotlin.time.Instant.fromEpochMilliseconds(millis), abbreviateMonth = true)
+        },
         onAdd = { navigator.navigate(Route.NoteEditor()) },
         onEdit = { note -> navigator.navigate(Route.NoteEditor(editNoteId = note.id)) },
         onDelete = { note ->
             Alerts.dialog(host,
-                getAppService<AppStrings>().get(Res.string.delete_note_title),
+                strings.get(Res.string.delete_note_title),
                 if (note.title?.trim().isNullOrEmpty()) {
-                    getAppService<AppStrings>().system(SystemString.Untitled)
+                    strings.system(SystemString.Untitled)
                 } else {
                     note.title
                 }
@@ -58,7 +60,7 @@ fun NotesToolScreen() {
             showQR(
                 host,
                 navigator,
-                note.title ?: getAppService<AppStrings>().system(SystemString.Untitled),
+                note.title ?: strings.system(SystemString.Untitled),
                 NoteQREncoder().encode(note)
             )
         }
