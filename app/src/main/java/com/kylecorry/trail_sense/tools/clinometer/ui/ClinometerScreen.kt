@@ -902,7 +902,8 @@ private fun createClinometerViews(context: Context): ClinometerViews {
         icon = TrailIcons.Ruler
     )
 
-    val clinometer = ClinometerView()
+    val formatter = FormatService.getInstance(context)
+    val clinometer = ClinometerView { formatter.formatDegrees(it) }
     val cameraViewHolder = ClinometerVisibilityState(initialVisible = false)
     val camera = CameraState(context)
     val arView = AugmentedRealityView(context)

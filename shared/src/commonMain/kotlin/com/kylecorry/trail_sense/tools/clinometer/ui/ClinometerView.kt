@@ -2,8 +2,6 @@
 
 package com.kylecorry.trail_sense.tools.clinometer.ui
 
-import android.graphics.Paint
-import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -29,21 +27,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import com.kylecorry.sol.math.trigonometry.Trigonometry.deltaAngle
-import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.getInstance
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
-class ClinometerView : IClinometerView {
+class ClinometerView(private val formatDegrees: (Float) -> String) : IClinometerView {
 
     private var displayAngle by mutableStateOf(90f)
     private var displayStartAngle by mutableStateOf<Float?>(null)
@@ -73,6 +71,7 @@ class ClinometerView : IClinometerView {
         ClinometerContent(
             angle = displayAngle,
             startAngle = null,
+            formatDegrees = formatDegrees,
             modifier = modifier.fillMaxSize()
         )
     }
@@ -85,6 +84,7 @@ class ClinometerView : IClinometerView {
         ClinometerContent(
             angle = displayAngle,
             startAngle = displayStartAngle,
+            formatDegrees = formatDegrees,
             modifier = modifier.fillMaxSize()
         )
     }
@@ -100,10 +100,10 @@ class ClinometerView : IClinometerView {
 private fun ClinometerContent(
     angle: Float,
     startAngle: Float?,
+    formatDegrees: (Float) -> String,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-    val formatter = FormatService.getInstance(context)
+    val textMeasurer = rememberTextMeasurer()
     val scheme = MaterialTheme.colorScheme
     val ink = scheme.onSurface
     val needleColor = scheme.primary
@@ -112,6 +112,7 @@ private fun ClinometerContent(
     val caution = scheme.tertiary
     val danger = scheme.error
     val labelSize = with(LocalDensity.current) { 13.sp.toPx() }
+    val labelStyle = TextStyle(color = ink, fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = "tnum")
     // A springy needle that always takes the short way round: the target is unwrapped against the current value.
     val needle = remember { Animatable(angle) }
     LaunchedEffect(angle) {
@@ -188,7 +189,7 @@ private fun ClinometerContent(
                 // Ticks every 10°, longer every 30°.
                 val tickOuter = radius - bandWidth - 8.dp.toPx()
                 for (i in 0 until 360 step 10) {
-                    val radians = Math.toRadians((i - 90).toDouble())
+                    val radians = (i - 90) * PI / 180.0
                     val major = i % 30 == 0
                     val length = if (major) 12.dp.toPx() else 6.dp.toPx()
                     val c = cos(radians).toFloat()
@@ -202,24 +203,18 @@ private fun ClinometerContent(
                     )
                 }
 
-                val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = ink.toArgb()
-                    textAlign = Paint.Align.CENTER
-                    textSize = labelSize
-                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                    fontFeatureSettings = "tnum"
-                }
-                // Upright labels down the right half only (90° top, 0° at the side, 90° bottom): the left would repeat them.
-                // Clear of the long ticks, so no label touches one.
+                // Upright labels down the right half only; the left would repeat them.
                 val labelRadius = tickOuter - 12.dp.toPx() - 8.dp.toPx() - labelSize * 0.6f
                 for (i in 0..180 step 30) {
-                    val radians = Math.toRadians((i - 90).toDouble())
+                    val radians = (i - 90) * PI / 180.0
                     val fromHorizontal = abs(((i % 180) - 90).toFloat())
-                    drawContext.canvas.nativeCanvas.drawText(
-                        formatter.formatDegrees(fromHorizontal),
-                        center.x + cos(radians).toFloat() * labelRadius,
-                        center.y + sin(radians).toFloat() * labelRadius + labelSize / 3f,
-                        paint
+                    val label = textMeasurer.measure(formatDegrees(fromHorizontal), labelStyle)
+                    drawText(
+                        label,
+                        topLeft = Offset(
+                            center.x + cos(radians).toFloat() * labelRadius - label.size.width / 2f,
+                            center.y + sin(radians).toFloat() * labelRadius - label.size.height / 2f
+                        )
                     )
                 }
 
