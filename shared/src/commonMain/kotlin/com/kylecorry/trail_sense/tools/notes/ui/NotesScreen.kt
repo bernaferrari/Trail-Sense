@@ -90,7 +90,9 @@ fun NotesScreen(
     onAdd: () -> Unit,
     onEdit: (Note) -> Unit,
     onDelete: (Note) -> Unit,
-    onShowQR: (Note) -> Unit,
+    onShowQR: ((Note) -> Unit)?,
+    formatNoteTimestamp: (Long) -> String? = ::formatTimestamp,
+    showBack: Boolean = true,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null
 ) {
@@ -102,7 +104,7 @@ fun NotesScreen(
 
     TrailSensePage(
         title = appString(Res.string.tool_notes_title),
-        onBack = back,
+        onBack = if (showBack) back else null,
         backLabel = appString(Res.string.back),
         modifier = modifier,
         floatingActionButton = {
@@ -148,7 +150,8 @@ fun NotesScreen(
                     modifier = if (position.isFirst) rowModifier.testTag("note_list") else rowModifier,
                     onEdit = onEdit,
                     onDelete = onDelete,
-                    onShowQR = onShowQR
+                    onShowQR = onShowQR,
+                    formatNoteTimestamp = formatNoteTimestamp
                 )
             }
         }
@@ -163,7 +166,8 @@ private fun NoteRow(
     modifier: Modifier = Modifier,
     onEdit: (Note) -> Unit,
     onDelete: (Note) -> Unit,
-    onShowQR: (Note) -> Unit
+    onShowQR: ((Note) -> Unit)?,
+    formatNoteTimestamp: (Long) -> String?
 ) {
     var isMenuOpen by remember { mutableStateOf(false) }
     val title = if (note.title?.trim().isNullOrEmpty()) {
@@ -171,7 +175,7 @@ private fun NoteRow(
     } else {
         note.title.orEmpty().trim()
     }
-    val timestamp = remember(note.createdOn) { formatTimestamp(note.createdOn) }
+    val timestamp = remember(note.createdOn, formatNoteTimestamp) { formatNoteTimestamp(note.createdOn) }
     val preview = remember(note.contents) {
         note.contents.orEmpty().trim().replace(Regex("\\s+"), " ")
     }
@@ -268,7 +272,7 @@ private fun NoteRow(
                     expanded = isMenuOpen,
                     onDismissRequest = { isMenuOpen = false }
                 ) {
-                    DropdownMenuItem(
+                    if (onShowQR != null) DropdownMenuItem(
                         text = { Text(appString(Res.string.qr_code)) },
                         leadingIcon = {
                             Icon(rememberVectorPainter(TrailIcons.QrCode), contentDescription = null)

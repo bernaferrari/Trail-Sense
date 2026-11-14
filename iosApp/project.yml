@@ -1,0 +1,29 @@
+name: TrailSense
+options:
+  bundleIdPrefix: com.kylecorry
+  deploymentTarget:
+    iOS: '16.0'
+targets:
+  TrailSense:
+    type: application
+    platform: iOS
+    sources:
+      - iosApp
+    info:
+      path: iosApp/Info.plist
+      properties:
+        CFBundleDisplayName: Trail Sense
+        CADisableMinimumFrameDurationOnPhone: true
+        UILaunchScreen: {}
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kylecorry.trailsense.ios
+        PRODUCT_NAME: Trail Sense
+        SWIFT_VERSION: '5.0'
+        FRAMEWORK_SEARCH_PATHS: '$(inherited) $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)'
+    preBuildScripts:
+      - name: Build shared Kotlin framework
+        script: |
+          cd "$SRCROOT/.."
+          ./gradlew :shared:embedAndSignAppleFrameworkForXcode
+        basedOnDependencyAnalysis: false
