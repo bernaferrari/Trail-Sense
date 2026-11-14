@@ -21,7 +21,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-class TrailMapsTileSource : TileSource {
+class TrailMapsTileSource(private val context: Context) : TileSource<Bitmap> {
 
     @Volatile
     private var rendererHolder: MapsforgeRendererHolder? = null
@@ -34,7 +34,6 @@ class TrailMapsTileSource : TileSource {
     })
 
     override suspend fun loadTile(
-        context: Context,
         tile: Tile,
         params: MapLayerValues
     ): Bitmap? = onDefault {

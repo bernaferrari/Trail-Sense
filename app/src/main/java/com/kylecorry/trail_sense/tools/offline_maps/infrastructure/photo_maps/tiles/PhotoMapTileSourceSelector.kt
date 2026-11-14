@@ -29,7 +29,7 @@ class PhotoMapTileSourceSelector(
     private val isPixelPerfect: Boolean = false,
     private val backgroundColor: Int = ColorInts.White,
     private val operations: List<BitmapOperation> = emptyList()
-) : TileSource {
+) : TileSource<Bitmap> {
 
     private val sortedMaps = maps
         .filter { it.isCalibrated }
@@ -37,7 +37,7 @@ class PhotoMapTileSourceSelector(
 
     private val recentMaps: MutableSet<PhotoMap> = ConcurrentHashMap.newKeySet()
 
-    override suspend fun loadTile(context: Context, tile: Tile, params: MapLayerValues): Bitmap? {
+    override suspend fun loadTile(tile: Tile, params: MapLayerValues): Bitmap? {
         val loaders = getRegionLoaders(tile.getBounds())
 
         val maps = loaders.map { it.map }.distinct()

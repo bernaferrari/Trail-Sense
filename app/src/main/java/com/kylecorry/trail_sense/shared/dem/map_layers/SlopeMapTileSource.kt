@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.shared.dem.map_layers
 
 import com.kylecorry.trail_sense.shared.dem.DEMZoomLevels
 
-import android.content.Context
 import android.graphics.Bitmap
 import com.kylecorry.andromeda.bitmaps.operations.Conditional
 import com.kylecorry.andromeda.bitmaps.operations.Dither
@@ -25,9 +24,9 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.shared.withId
 import kotlin.math.absoluteValue
 
-class SlopeMapTileSource : TileSource {
+class SlopeMapTileSource : TileSource<Bitmap> {
 
-    override suspend fun loadTile(context: Context, tile: Tile, params: MapLayerValues): Bitmap? {
+    override suspend fun loadTile(tile: Tile, params: MapLayerValues): Bitmap? {
         val preferences = params.getPreferences()
         val strategyId = preferences.getString(COLOR)?.toLongOrNull()
         val colorMap = SlopeColorMapFactory().getSlopeColorMap(

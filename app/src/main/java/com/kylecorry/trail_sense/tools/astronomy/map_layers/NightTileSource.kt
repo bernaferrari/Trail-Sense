@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.astronomy.map_layers
 
-import android.content.Context
 import android.graphics.Bitmap
 import androidx.core.graphics.alpha
 import com.kylecorry.andromeda.bitmaps.LookupTable
@@ -23,14 +22,14 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import kotlin.time.Instant
 
-class NightTileSource : TileSource {
+class NightTileSource : TileSource<Bitmap> {
 
     private val colorMap = AlphaColorMap(maxAlpha = 200)
     private val astronomy = AstronomyService()
 
     private val lookupTable by lazy { constructLookupTable() }
 
-    override suspend fun loadTile(context: Context, tile: Tile, params: MapLayerValues): Bitmap? {
+    override suspend fun loadTile(tile: Tile, params: MapLayerValues): Bitmap? {
         val preferences = params.getPreferences()
         val smooth = preferences.getBoolean(SMOOTH, DEFAULT_SMOOTH)
 

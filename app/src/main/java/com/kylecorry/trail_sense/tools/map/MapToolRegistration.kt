@@ -82,7 +82,7 @@ object MapToolRegistration : ToolRegistration {
                     context.getString(R.string.basemap),
                     layerType = MapLayerType.Tile,
                     description = context.getString(R.string.map_layer_base_map_description),
-                    tileSource = ::BaseMapTileSource
+                    tileSource = { BaseMapTileSource(context.applicationContext) }
                 ),
                 MapLayerDefinition(
                     ElevationMapTileSource.SOURCE_ID,

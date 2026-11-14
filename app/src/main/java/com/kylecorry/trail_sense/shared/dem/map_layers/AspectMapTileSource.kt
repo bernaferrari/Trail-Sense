@@ -4,7 +4,6 @@ import com.kylecorry.trail_sense.shared.dem.DEMZoomLevels
 
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import com.kylecorry.trail_sense.shared.map_layers.tiles.toSize
-import android.content.Context
 
 import android.graphics.Bitmap
 import com.kylecorry.andromeda.bitmaps.operations.Dither
@@ -25,7 +24,7 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.getPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileSource
 import kotlin.math.absoluteValue
 
-class AspectMapTileSource : TileSource {
+class AspectMapTileSource : TileSource<Bitmap> {
     private val colorMap = RgbInterpolationColorMap(
         arrayOf(
             AppColor.Green.color,
@@ -40,7 +39,7 @@ class AspectMapTileSource : TileSource {
         )
     )
 
-    override suspend fun loadTile(context: Context, tile: Tile, params: MapLayerValues): Bitmap? {
+    override suspend fun loadTile(tile: Tile, params: MapLayerValues): Bitmap? {
         val preferences = params.getPreferences()
         val highResolution =
             preferences.getBoolean(

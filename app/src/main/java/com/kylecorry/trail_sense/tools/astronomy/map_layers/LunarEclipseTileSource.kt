@@ -7,7 +7,6 @@ import com.kylecorry.trail_sense.shared.time.plusDays
 
 import kotlin.time.Duration.Companion.hours
 
-import android.content.Context
 
 import android.graphics.Bitmap
 import com.kylecorry.andromeda.core.ui.colormaps.AlphaColorMap
@@ -23,12 +22,12 @@ import com.kylecorry.trail_sense.tools.astronomy.domain.AstronomyService
 import kotlin.time.Duration
 import kotlin.time.Instant
 
-class LunarEclipseTileSource : TileSource {
+class LunarEclipseTileSource : TileSource<Bitmap> {
 
     private val colorMap = AlphaColorMap(AppColor.Orange.color, 200)
     private val astronomy = AstronomyService()
 
-    override suspend fun loadTile(context: Context, tile: Tile, params: MapLayerValues): Bitmap? {
+    override suspend fun loadTile(tile: Tile, params: MapLayerValues): Bitmap? {
         val preferences = params.getPreferences()
         val showPath = preferences.getBoolean(SHOW_PATH, DEFAULT_SHOW_PATH)
 

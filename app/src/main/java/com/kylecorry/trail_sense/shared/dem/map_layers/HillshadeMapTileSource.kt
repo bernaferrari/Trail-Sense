@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.shared.dem.map_layers
 
 import com.kylecorry.trail_sense.shared.dem.DEMZoomLevels
 
-import android.content.Context
 import android.graphics.Bitmap
 import com.kylecorry.andromeda.bitmaps.operations.Dither
 import com.kylecorry.andromeda.bitmaps.operations.applyOperations
@@ -28,10 +27,10 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.time.Instant
 
-class HillshadeMapTileSource : TileSource {
+class HillshadeMapTileSource : TileSource<Bitmap> {
     private val astronomy = AstronomyService()
 
-    override suspend fun loadTile(context: Context, tile: Tile, params: MapLayerValues): Bitmap? {
+    override suspend fun loadTile(tile: Tile, params: MapLayerValues): Bitmap? {
         val preferences = params.getPreferences()
         val drawAccurateShadows =
             preferences.getBoolean(

@@ -8,7 +8,7 @@ data class MapLayerPreference(
     val type: MapLayerPreferenceType,
     val summary: CharSequence? = null,
     val defaultValue: Any? = null,
-    val dependency: String? = DefaultMapLayerDefinitions.ENABLED,
+    val dependency: String? = MapLayerPreferenceKeys.ENABLED,
     val min: Number? = null,
     val max: Number? = null,
     val values: List<Pair<String, String>>? = null,

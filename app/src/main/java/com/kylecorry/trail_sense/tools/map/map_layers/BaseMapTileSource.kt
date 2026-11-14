@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import androidx.core.graphics.toColorInt
 import com.kylecorry.andromeda.bitmaps.operations.Conditional
 import com.kylecorry.andromeda.bitmaps.operations.ReplaceColor
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.shared.colors.ColorInts
@@ -20,9 +19,8 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMapGe
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.tiles.PhotoMapDecoderCache
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.tiles.PhotoMapTileSourceSelector
 
-class BaseMapTileSource : TileSource {
+class BaseMapTileSource(private val context: Context) : TileSource<Bitmap> {
 
-    private val context = DependencyRegistry.get<Context>()
     private val decoderCache = PhotoMapDecoderCache()
     private val internalSelector = PhotoMapTileSourceSelector(
         context,
@@ -74,11 +72,10 @@ class BaseMapTileSource : TileSource {
     )
 
     override suspend fun loadTile(
-        context: Context,
         tile: Tile,
         params: MapLayerValues
     ): Bitmap? {
-        return internalSelector.loadTile(context, tile, params)
+        return internalSelector.loadTile(tile, params)
     }
 
     override suspend fun cleanup() {

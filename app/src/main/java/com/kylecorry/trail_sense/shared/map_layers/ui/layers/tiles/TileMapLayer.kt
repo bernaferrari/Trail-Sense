@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles
 
-import android.content.Context
 import android.os.Build
+import android.graphics.Bitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.units.PixelCoordinate
@@ -35,7 +35,7 @@ import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Instant
 
-open class TileMapLayer<T : TileSource>(
+open class TileMapLayer<T : TileSource<Bitmap>>(
     protected val source: T,
     override val layerId: String,
     private val taskRunner: MapLayerBackgroundTask = MapLayerBackgroundTask(),
@@ -47,8 +47,6 @@ open class TileMapLayer<T : TileSource>(
     private val cacheKeys: List<String>? = null
 ) : IAsyncLayer {
 
-    private val context: Context
-        get() = getAppService()
     private val runtimeId = UUID.randomUUID().toString()
     private var _timeOverride: Instant? = null
     private var _renderTime: Instant = Clock.System.now()
@@ -182,8 +180,7 @@ open class TileMapLayer<T : TileSource>(
                 layerPreferences,
                 featureId,
                 map.isWidget,
-                isHighDetailMode = map.isHighDetailMode,
-                context = context
+                isHighDetailMode = map.isHighDetailMode
             )
         }
 

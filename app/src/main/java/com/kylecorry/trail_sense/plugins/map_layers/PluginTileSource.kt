@@ -4,7 +4,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import kotlin.time.Clock
 
 import android.Manifest
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import com.kylecorry.trail_sense.main.getAppService
@@ -19,14 +18,13 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.ByteArrayInputStream
 
-class PluginTileSource(private val packageId: String, private val endpoint: String) : TileSource {
+class PluginTileSource(private val packageId: String, private val endpoint: String) : TileSource<Bitmap> {
 
     private val plugins = getAppService<PluginSubsystem>()
     private var connection: PluginResourceServiceConnection? = null
     private val connectionLock = Mutex()
 
     override suspend fun loadTile(
-        context: Context,
         tile: Tile,
         params: MapLayerValues
     ): Bitmap? {

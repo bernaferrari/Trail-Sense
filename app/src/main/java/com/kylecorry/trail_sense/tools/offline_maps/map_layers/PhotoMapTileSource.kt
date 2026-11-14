@@ -2,7 +2,6 @@ package com.kylecorry.trail_sense.tools.offline_maps.map_layers
 
 import android.content.Context
 import android.graphics.Bitmap
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.cache.InvalidatableCachedValue
 import com.kylecorry.trail_sense.shared.colors.ColorInts
@@ -15,10 +14,10 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.tiles.PhotoMapDecoderCache
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.tiles.PhotoMapTileSourceSelector
 
-class PhotoMapTileSource : TileSource {
+class PhotoMapTileSource(private val context: Context) : TileSource<Bitmap> {
 
     private val backgroundColor: Int = ColorInts.Transparent
-    private val selectorCache = InvalidatableCachedValue<SelectorKey, TileSource>()
+    private val selectorCache = InvalidatableCachedValue<SelectorKey, TileSource<Bitmap>>()
     private val decoderCache = PhotoMapDecoderCache()
     private val service = getAppService<MapService>()
 
@@ -32,7 +31,6 @@ class PhotoMapTileSource : TileSource {
     }
 
     override suspend fun loadTile(
-        context: Context,
         tile: Tile,
         params: MapLayerValues
     ): Bitmap? {
@@ -45,7 +43,7 @@ class PhotoMapTileSource : TileSource {
 
         val selector = selectorCache.getOrLoad(SelectorKey(featureId, loadPdfs, backgroundColor)) {
             PhotoMapTileSourceSelector(
-                DependencyRegistry.get(),
+                context,
                 renderablePhotoMaps(featureId),
                 decoderCache,
                 8,
@@ -53,7 +51,7 @@ class PhotoMapTileSource : TileSource {
                 backgroundColor = backgroundColor
             )
         }
-        return selector.loadTile(context, tile, params)
+        return selector.loadTile(tile, params)
     }
 
     private suspend fun renderablePhotoMaps(featureId: Long?) = (if (featureId == null) {

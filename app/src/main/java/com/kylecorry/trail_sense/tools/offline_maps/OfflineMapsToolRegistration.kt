@@ -91,7 +91,7 @@ object OfflineMapsToolRegistration : ToolRegistration {
                             summary = context.getString(R.string.load_pdf_tiles_summary)
                         )
                     ),
-                    tileSource = ::PhotoMapTileSource,
+                    tileSource = { PhotoMapTileSource(context.applicationContext) },
                     minZoomLevel = 4,
                     refreshBroadcasts = mapRefreshBroadcasts,
                     cacheKeys = listOf(
@@ -111,7 +111,7 @@ object OfflineMapsToolRegistration : ToolRegistration {
                             routeOnClick = Route.OfflineMapList()
                         )
                     ),
-                    tileSource = ::TrailMapsTileSource,
+                    tileSource = { TrailMapsTileSource(context.applicationContext) },
                     refreshBroadcasts = mapRefreshBroadcasts,
                     attributionLoader = {
                         val attributions = getAppService<MapService>()
