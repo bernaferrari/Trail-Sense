@@ -1,10 +1,7 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.os.Build
-import androidx.compose.ui.graphics.Matrix
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import com.kylecorry.andromeda.core.tryOrLog
 import com.kylecorry.andromeda.core.units.PixelCoordinate
@@ -16,7 +13,6 @@ import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.main.errors.SafeMode
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.canvas.MapDrawer
-import com.kylecorry.trail_sense.shared.canvas.setPolyToPoly
 import com.kylecorry.trail_sense.shared.concurrency.CustomDispatchers
 import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
@@ -34,8 +30,6 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
 import java.util.UUID
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.time.Clock
 import kotlin.time.Duration
@@ -70,18 +64,12 @@ open class TileMapLayer<T : TileSource>(
     var multiplyAlpha: Int = 255
     private var updateListener: (() -> Unit)? = null
     private var zoomOffset: Int = 0
-    private val renderMatrix = Matrix()
-    private val srcPoints = FloatArray(8)
-    private val dstPoints = FloatArray(8)
-    private val clipPath = Path()
+    private val tileRenderer = TileRenderer(TILE_BORDER_PIXELS, MAX_TILES)
     protected var layerPreferences: MapLayerValues = MapLayerValues.Empty
     private var featureId: String? = null
     private var wasOverTileLimit = false
     private val visibleTiles = VisibleTileCache(MAX_TILES)
     private var lastDesiredTiles: List<Tile>? = null
-    private var renderedProjection: IMapViewProjection? = null
-    private val projectedTiles = mutableMapOf<Tile, Array<PixelCoordinate>>()
-    private var hasFadingTiles = false
 
     private val loadTimer = CoroutineTimer {
         queue.load(maxOf(4, Runtime.getRuntime().availableProcessors()))
@@ -180,11 +168,7 @@ open class TileMapLayer<T : TileSource>(
         val bounds = map.mapBounds
         val projection = map.mapProjection
         val desiredTiles = visibleTiles.get(bounds, projection.zoom.roundToInt(), zoomOffset)
-        if (projection !== renderedProjection || projectedTiles.size > MAX_TILES * 2) {
-            projectedTiles.clear()
-            renderedProjection = projection
-        }
-        hasFadingTiles = false
+        tileRenderer.prepare(projection)
         if (desiredTiles !== lastDesiredTiles) {
             queue.setDesiredTiles(desiredTiles)
             lastDesiredTiles = desiredTiles
@@ -224,188 +208,17 @@ open class TileMapLayer<T : TileSource>(
             renderTile.imageTile.withImage { bitmap ->
                 bitmap ?: return@withImage
                 tryOrLog {
-                    val clipTile = renderTile.clipTo
-                    if (clipTile != null) {
-                        renderTileClipped(
-                            renderTile.imageTile,
-                            drawer,
-                            projection,
-                            bitmap,
-                            clipTile
-                        )
-                    } else {
-                        renderTile(renderTile.imageTile, drawer, projection, bitmap)
-                    }
+                    tileRenderer.render(
+                        renderTile.imageTile, bitmap.asImageBitmap(), drawer, projection, renderTile.clipTo
+                    )
                 }
             }
         }
         drawer.opacity(255)
         drawer.smooth()
-        if (hasFadingTiles) {
+        if (tileRenderer.hasFadingTiles) {
             notifyListeners()
         }
-    }
-
-    private fun isTooSmall(
-        topLeft: PixelCoordinate,
-        topRight: PixelCoordinate,
-        bottomLeft: PixelCoordinate,
-        bottomRight: PixelCoordinate
-    ): Boolean {
-        val minSize = 10f
-        val width = max(topRight.x, bottomRight.x) - min(topLeft.x, bottomLeft.x)
-        val height = max(bottomLeft.y, bottomRight.y) - min(topLeft.y, topRight.y)
-        return width < minSize || height < minSize
-    }
-
-    private fun isFarOffScreen(
-        topLeft: PixelCoordinate,
-        topRight: PixelCoordinate,
-        bottomLeft: PixelCoordinate,
-        bottomRight: PixelCoordinate,
-        canvasWidth: Float,
-        canvasHeight: Float
-    ): Boolean {
-        val buffer = canvasHeight.coerceAtLeast(canvasWidth) * 2
-        val minX = minOf(topLeft.x, bottomLeft.x)
-        val maxX = maxOf(topRight.x, bottomRight.x)
-        val minY = minOf(topLeft.y, topRight.y)
-        val maxY = maxOf(bottomLeft.y, bottomRight.y)
-
-        return maxX < -buffer ||
-                minX > canvasWidth + buffer ||
-                maxY < -buffer ||
-                minY > canvasHeight + buffer
-    }
-
-    private fun renderTile(
-        imageTile: ImageTile,
-        drawer: MapDrawer,
-        projection: IMapViewProjection,
-        bitmap: Bitmap
-    ) {
-        val tile = imageTile.tile
-        val corners = getProjectedCorners(tile, projection)
-        val topLeftPixel = corners[0]
-        val topRightPixel = corners[1]
-        val bottomRightPixel = corners[2]
-        val bottomLeftPixel = corners[3]
-
-        if (isTooSmall(topLeftPixel, topRightPixel, bottomLeftPixel, bottomRightPixel)) {
-            return
-        }
-
-        if (isFarOffScreen(
-                topLeftPixel,
-                topRightPixel,
-                bottomLeftPixel,
-                bottomRightPixel,
-                drawer.width,
-                drawer.height
-            )
-        ) {
-            return
-        }
-
-        val borderPixels = TILE_BORDER_PIXELS
-        val actualWidth = bitmap.width - 2 * borderPixels
-        val actualHeight = bitmap.height - 2 * borderPixels
-
-        // Bitmap pixels, exclude the border pixels - this is the bitmap with the borders cropped off (since we only render a region of the bitmap)
-        // Top left
-        srcPoints[0] = 0f
-        srcPoints[1] = 0f
-        // Top right
-        srcPoints[2] = actualWidth.toFloat()
-        srcPoints[3] = 0f
-        // Bottom left
-        srcPoints[4] = 0f
-        srcPoints[5] = actualHeight.toFloat()
-        // Bottom right
-        srcPoints[6] = actualWidth.toFloat()
-        srcPoints[7] = actualHeight.toFloat()
-
-        // Canvas pixels
-        // Top left
-        dstPoints[0] = topLeftPixel.x
-        dstPoints[1] = topLeftPixel.y
-        // Top right
-        dstPoints[2] = topRightPixel.x
-        dstPoints[3] = topRightPixel.y
-        // Bottom left
-        dstPoints[4] = bottomLeftPixel.x
-        dstPoints[5] = bottomLeftPixel.y
-        // Bottom right
-        dstPoints[6] = bottomRightPixel.x
-        dstPoints[7] = bottomRightPixel.y
-
-        if (!renderMatrix.setPolyToPoly(srcPoints, dstPoints)) {
-            return
-        }
-
-        // Fade the tile in
-        val alpha = imageTile.getAlpha()
-        // There are still tiles being faded in, so keep re-rendering the map
-        if (alpha != 255) {
-            hasFadingTiles = true
-        }
-        drawer.opacity(alpha)
-
-        drawer.withTransform(renderMatrix) {
-            // Only the region of the bitmap inside its border, drawn at its own size
-            drawer.image(
-                bitmap.asImageBitmap(),
-                borderPixels,
-                borderPixels,
-                actualWidth,
-                actualHeight,
-                0f,
-                0f,
-                actualWidth.toFloat(),
-                actualHeight.toFloat()
-            )
-        }
-    }
-
-    private fun renderTileClipped(
-        imageTile: ImageTile,
-        drawer: MapDrawer,
-        projection: IMapViewProjection,
-        bitmap: Bitmap,
-        clipTile: Tile
-    ) {
-        val corners = getProjectedCorners(clipTile, projection)
-        val clipTopLeft = corners[0]
-        val clipTopRight = corners[1]
-        val clipBottomRight = corners[2]
-        val clipBottomLeft = corners[3]
-
-        drawer.push()
-        try {
-            clipPath.rewind()
-            clipPath.moveTo(clipTopLeft.x, clipTopLeft.y)
-            clipPath.lineTo(clipTopRight.x, clipTopRight.y)
-            clipPath.lineTo(clipBottomRight.x, clipBottomRight.y)
-            clipPath.lineTo(clipBottomLeft.x, clipBottomLeft.y)
-            clipPath.close()
-            drawer.clip(clipPath)
-            renderTile(imageTile, drawer, projection, bitmap)
-        } finally {
-            drawer.pop()
-        }
-    }
-
-    private fun getProjectedCorners(
-        tile: Tile,
-        projection: IMapViewProjection
-    ): Array<PixelCoordinate> = projectedTiles.getOrPut(tile) {
-        val bounds = tile.getBounds()
-        arrayOf(
-            projection.toPixels(bounds.northWest),
-            projection.toPixels(bounds.northEast),
-            projection.toPixels(bounds.southEast),
-            projection.toPixels(bounds.southWest)
-        )
     }
 
     override fun setHasUpdateListener(listener: (() -> Unit)?) {
@@ -439,8 +252,7 @@ open class TileMapLayer<T : TileSource>(
         taskRunner.stop()
         loader?.clearCache()
         loader = null
-        projectedTiles.clear()
-        renderedProjection = null
+        tileRenderer.clear()
         queue.clear()
         // TODO: This isn't the ideal place to do cleanup since garbage can build up. Likely need some sort of LRU cache for all intermediates.
         sourceCleanupTask.start()
