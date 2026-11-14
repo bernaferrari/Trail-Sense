@@ -10,7 +10,11 @@ import kotlin.time.Clock
 interface TileImageStore<T> {
     fun hasImage(): Boolean
     fun replace(image: T?)
+
+    /** Invoke [block] with null if a safe read cannot be acquired immediately. */
     fun withImage(block: (T?) -> Unit)
+
+    /** Clear the image and invoke [afterClear] before releasing exclusive access. */
     fun clear(afterClear: () -> Unit)
 }
 

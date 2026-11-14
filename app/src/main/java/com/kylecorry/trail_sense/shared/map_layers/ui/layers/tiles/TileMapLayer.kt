@@ -29,7 +29,6 @@ import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
 import com.kylecorry.trail_sense.shared.map_layers.tiles.TileLoader
 import com.kylecorry.trail_sense.shared.map_layers.tiles.TileMath
 import com.kylecorry.trail_sense.shared.map_layers.tiles.TileQueue
-import com.kylecorry.trail_sense.shared.map_layers.tiles.TileState
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IAsyncLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapViewProjection
@@ -217,7 +216,11 @@ open class TileMapLayer<T : TileSource>(
         // Tiles are drawn hard-edged so neighbors meet without seams, untinted, each with its own fade
         drawer.noTint()
         drawer.noSmooth()
-        getTilesToRender(desiredTiles).forEach { renderTile ->
+        selectTilesForRendering(
+            desiredTiles,
+            get = { loader?.tileCache?.get(it) },
+            peek = { loader?.tileCache?.peek(it) }
+        ).forEach { renderTile ->
             renderTile.imageTile.withImage { bitmap ->
                 bitmap ?: return@withImage
                 tryOrLog {
@@ -241,71 +244,6 @@ open class TileMapLayer<T : TileSource>(
         if (hasFadingTiles) {
             notifyListeners()
         }
-    }
-
-    private fun getTilesToRender(desiredTiles: List<Tile>): List<RenderTile> {
-        val toRender = mutableSetOf<RenderTile>()
-        desiredTiles.forEach { desired ->
-            getTilesToRender(desired).forEach { imageTile ->
-                if (imageTile.tile.z < desired.z) {
-                    toRender.add(RenderTile(imageTile, desired))
-                } else {
-                    toRender.add(RenderTile(imageTile))
-                }
-            }
-        }
-        return toRender.sortedBy { it.imageTile.tile.z }
-    }
-
-    private fun getTilesToRender(desiredTile: Tile): List<ImageTile> {
-        val tiles = mutableListOf<ImageTile>()
-        val self = loader?.tileCache?.get(desiredTile)
-        if (isTileAvailable(self)) {
-            tiles.add(self!!)
-            if (!self.isFadingIn()) {
-                return tiles
-            }
-        }
-
-        // Try to replace with the direct children tiles
-        val children = findChildren(desiredTile)
-        tiles.addAll(children)
-        if (children.size >= 4) {
-            return tiles
-        }
-
-        // Try to find the parent tile(s)
-        val parent = findParent(desiredTile)
-        if (parent != null) {
-            tiles.add(parent)
-        }
-
-        return tiles
-    }
-
-    private fun findChildren(tile: Tile): List<ImageTile> {
-        return tile.getChildren()
-            .mapNotNull { loader?.tileCache?.peek(it) }
-            .filter { isTileAvailable(it) }
-    }
-
-    private fun findParent(tile: Tile): ImageTile? {
-        var parent = tile.getParent()
-        while (parent != null) {
-            val parentImageTile = loader?.tileCache?.peek(parent)
-            if (isTileAvailable(parentImageTile)) {
-                return parentImageTile
-            }
-            parent = parent.getParent()
-        }
-        return null
-    }
-
-    private fun isTileAvailable(tile: ImageTile?): Boolean {
-        return tile?.state == TileState.Loaded ||
-                tile?.state == TileState.Empty ||
-                tile?.state == TileState.Stale ||
-                (tile?.state == TileState.Loading && tile.hasImage())
     }
 
     private fun isTooSmall(
@@ -563,11 +501,6 @@ open class TileMapLayer<T : TileSource>(
     }
 
     override var percentOpacity: Float = 1f
-
-    private data class RenderTile(
-        val imageTile: ImageTile,
-        val clipTo: Tile? = null
-    )
 
     companion object {
         const val MAX_TILES = 150
