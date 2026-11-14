@@ -2,6 +2,8 @@
 
 package com.kylecorry.trail_sense.tools.offline_maps.ui.vector_maps
 
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
 import com.kylecorry.trail_sense.main.MainActivity
 import androidx.activity.compose.LocalActivity
 import com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps.PhotoMapExportService
@@ -117,7 +119,7 @@ fun ViewVectorMapToolScreen(route: Route.VectorMapView) {
         onRename = {
             viewModel.map?.let {
                 scope.launch {
-                    RenameMapCommand(getAppService()).execute(it)
+                    RenameMapCommand(getAppService(), AppHost.from(context), getAppService()).execute(it)
                     viewModel.load()
                 }
             }
@@ -134,7 +136,7 @@ fun ViewVectorMapToolScreen(route: Route.VectorMapView) {
         onDelete = {
             viewModel.map?.let {
                 scope.launch {
-                    DeleteMapCommand(getAppService()).execute(it)
+                    DeleteMapCommand(getAppService(), AppHost.from(context), getAppService()).execute(it)
                     viewModel.onDeleteAttempted(it)
                 }
             }

@@ -245,8 +245,8 @@ fun OfflineMapListToolScreen(
         }
     }
 
-    fun delete(map: IMap) = runAndRefresh { DeleteMapCommand(viewModel.mapService).execute(map) }
-    fun rename(map: IMap) = runAndRefresh { RenameMapCommand(viewModel.mapService).execute(map) }
+    fun delete(map: IMap) = runAndRefresh { DeleteMapCommand(viewModel.mapService, AppHost.from(context), getAppService()).execute(map) }
+    fun rename(map: IMap) = runAndRefresh { RenameMapCommand(viewModel.mapService, AppHost.from(context), getAppService()).execute(map) }
     fun move(map: IMap) = runAndRefresh { MoveMapCommand(AppHost.from(context), viewModel.mapService).execute(map) }
 
     fun view(map: IMap) {

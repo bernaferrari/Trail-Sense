@@ -34,7 +34,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.sol.math.trigonometry.Trigonometry
-import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.dialogs.Pickers
@@ -67,19 +66,20 @@ import kotlinx.coroutines.launch
 @Composable
 fun PhotoMapsToolScreen(
     route: Route.PhotoMaps,
+    mapService: MapService,
+    formatter: FormatService,
+    host: AppHost,
     exportMap: ((PhotoMap) -> Unit)?,
     printMap: (suspend (PhotoMap) -> Unit)?,
     child: @Composable (PhotoMapChildHost) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val host = AppHost.current()
     val strings = LocalAppStrings.current
     val navigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
-    val formatter = remember { getAppService<FormatService>() }
     val viewModel = viewModel {
-        PhotoMapsViewModel(getAppService(), route.mapId, route.autoLockLocation)
+        PhotoMapsViewModel(mapService, route.mapId, route.autoLockLocation)
     }
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
@@ -97,7 +97,7 @@ fun PhotoMapsToolScreen(
             MapContextualAction.Rename -> map?.let {
                 scope.launch {
                     viewModel.getLatest(it)?.let { latest ->
-                        RenameMapCommand(getAppService()).execute(latest)
+                        RenameMapCommand(mapService, host, strings).execute(latest)
                         viewModel.reloadName(latest.id)
                     }
                 }
@@ -106,6 +106,7 @@ fun PhotoMapsToolScreen(
             MapContextualAction.ChangeProjection -> changeProjection(
                 host,
                 formatter,
+                strings,
                 current = map?.georeference?.projectionType,
                 showConfirmation = viewModel.childSpec is PhotoMapChildSpec.Calibration,
                 onChange = viewModel::setProjection
@@ -124,8 +125,9 @@ fun PhotoMapsToolScreen(
 
             MapContextualAction.Delete -> map?.let {
                 scope.launch {
-                    DeleteMapCommand(getAppService()).execute(it)
-                    navigator.popBackStack()
+                    if (DeleteMapCommand(mapService, host, strings).execute(it)) {
+                        navigator.popBackStack()
+                    }
                 }
             }
 
@@ -157,6 +159,7 @@ fun PhotoMapsToolScreen(
 private fun changeProjection(
     host: AppHost,
     formatter: FormatService,
+    strings: AppStrings,
     current: MapProjectionType?,
     showConfirmation: Boolean,
     onChange: (MapProjectionType) -> Unit
@@ -165,7 +168,7 @@ private fun changeProjection(
     val projectionNames = projections.map { formatter.formatMapProjection(it) }
     Pickers.item(
         host,
-        getAppService<AppStrings>().get(Res.string.change_map_projection),
+        strings.get(Res.string.change_map_projection),
         projectionNames,
         projections.indexOf(current)
     ) {
@@ -174,8 +177,8 @@ private fun changeProjection(
         if (showConfirmation) {
             Alerts.dialog(
                 host,
-                getAppService<AppStrings>().get(Res.string.change_map_projection),
-                getAppService<AppStrings>().get(Res.string.map_calibration_clear_message)
+                strings.get(Res.string.change_map_projection),
+                strings.get(Res.string.map_calibration_clear_message)
             ) { cancelled ->
                 if (!cancelled) {
                     onChange(newProjection)

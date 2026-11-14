@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.commands
 
-import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.commands.generic.CoroutineCommand
 import com.kylecorry.trail_sense.shared.dialogs.CoroutinePickers
 import com.kylecorry.trail_sense.shared.generated.resources.*
@@ -12,11 +11,15 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 
-class RenameMapCommand(private val service: MapService) : CoroutineCommand<IMap> {
+class RenameMapCommand(
+    private val service: MapService,
+    private val host: AppHost,
+    private val strings: AppStrings
+) : CoroutineCommand<IMap> {
     override suspend fun execute(value: IMap) {
         val newName = CoroutinePickers.text(
-            AppHost.current(),
-            getAppService<AppStrings>().get(Res.string.name),
+            host,
+            strings.get(Res.string.name),
             default = value.name
         ) ?: return
         when (value) {

@@ -1,5 +1,8 @@
 package com.kylecorry.trail_sense.tools.offline_maps.ui.photo_maps
 
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.from
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +36,9 @@ fun PhotoMapsAndroidToolScreen(
     val canPrint = remember { Printer.canPrint() }
     PhotoMapsToolScreen(
         route = route,
+        mapService = getAppService(),
+        formatter = getAppService(),
+        host = AppHost.from(context),
         exportMap = exportService::export,
         printMap = if (canPrint) {
             { PrintMapCommand(context).execute(it) }
