@@ -1,0 +1,168 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:sound>
+final enum class com.kylecorry.andromeda.sound/AudioDeviceKind : kotlin/Enum<com.kylecorry.andromeda.sound/AudioDeviceKind> { // com.kylecorry.andromeda.sound/AudioDeviceKind|null[0]
+    enum entry Bluetooth // com.kylecorry.andromeda.sound/AudioDeviceKind.Bluetooth|null[0]
+    enum entry BuiltIn // com.kylecorry.andromeda.sound/AudioDeviceKind.BuiltIn|null[0]
+    enum entry Other // com.kylecorry.andromeda.sound/AudioDeviceKind.Other|null[0]
+    enum entry Usb // com.kylecorry.andromeda.sound/AudioDeviceKind.Usb|null[0]
+    enum entry Wired // com.kylecorry.andromeda.sound/AudioDeviceKind.Wired|null[0]
+
+    final val entries // com.kylecorry.andromeda.sound/AudioDeviceKind.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.sound/AudioDeviceKind> // com.kylecorry.andromeda.sound/AudioDeviceKind.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.sound/AudioDeviceKind // com.kylecorry.andromeda.sound/AudioDeviceKind.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.sound/AudioDeviceKind> // com.kylecorry.andromeda.sound/AudioDeviceKind.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.sound/DefaultSystemSound : kotlin/Enum<com.kylecorry.andromeda.sound/DefaultSystemSound> { // com.kylecorry.andromeda.sound/DefaultSystemSound|null[0]
+    enum entry Alarm // com.kylecorry.andromeda.sound/DefaultSystemSound.Alarm|null[0]
+    enum entry Notification // com.kylecorry.andromeda.sound/DefaultSystemSound.Notification|null[0]
+    enum entry Ringtone // com.kylecorry.andromeda.sound/DefaultSystemSound.Ringtone|null[0]
+
+    final val entries // com.kylecorry.andromeda.sound/DefaultSystemSound.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.sound/DefaultSystemSound> // com.kylecorry.andromeda.sound/DefaultSystemSound.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.sound/DefaultSystemSound // com.kylecorry.andromeda.sound/DefaultSystemSound.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.sound/DefaultSystemSound> // com.kylecorry.andromeda.sound/DefaultSystemSound.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.sound/SoundChannel : kotlin/Enum<com.kylecorry.andromeda.sound/SoundChannel> { // com.kylecorry.andromeda.sound/SoundChannel|null[0]
+    enum entry Alarm // com.kylecorry.andromeda.sound/SoundChannel.Alarm|null[0]
+    enum entry Event // com.kylecorry.andromeda.sound/SoundChannel.Event|null[0]
+    enum entry Media // com.kylecorry.andromeda.sound/SoundChannel.Media|null[0]
+    enum entry Notification // com.kylecorry.andromeda.sound/SoundChannel.Notification|null[0]
+
+    final val entries // com.kylecorry.andromeda.sound/SoundChannel.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.sound/SoundChannel> // com.kylecorry.andromeda.sound/SoundChannel.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.sound/SoundChannel // com.kylecorry.andromeda.sound/SoundChannel.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.sound/SoundChannel> // com.kylecorry.andromeda.sound/SoundChannel.values|values#static(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.sound/SystemSound { // com.kylecorry.andromeda.sound/SystemSound|null[0]
+    abstract val isPlaying // com.kylecorry.andromeda.sound/SystemSound.isPlaying|{}isPlaying[0]
+        abstract fun <get-isPlaying>(): kotlin/Boolean // com.kylecorry.andromeda.sound/SystemSound.isPlaying.<get-isPlaying>|<get-isPlaying>(){}[0]
+
+    abstract fun play() // com.kylecorry.andromeda.sound/SystemSound.play|play(){}[0]
+    abstract fun stop() // com.kylecorry.andromeda.sound/SystemSound.stop|stop(){}[0]
+}
+
+final class com.kylecorry.andromeda.sound/AudioDevice { // com.kylecorry.andromeda.sound/AudioDevice|null[0]
+    constructor <init>(kotlin/String, kotlin/String, com.kylecorry.andromeda.sound/AudioDeviceKind, kotlin/Boolean, kotlin/Boolean) // com.kylecorry.andromeda.sound/AudioDevice.<init>|<init>(kotlin.String;kotlin.String;com.kylecorry.andromeda.sound.AudioDeviceKind;kotlin.Boolean;kotlin.Boolean){}[0]
+
+    final val id // com.kylecorry.andromeda.sound/AudioDevice.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.kylecorry.andromeda.sound/AudioDevice.id.<get-id>|<get-id>(){}[0]
+    final val input // com.kylecorry.andromeda.sound/AudioDevice.input|{}input[0]
+        final fun <get-input>(): kotlin/Boolean // com.kylecorry.andromeda.sound/AudioDevice.input.<get-input>|<get-input>(){}[0]
+    final val kind // com.kylecorry.andromeda.sound/AudioDevice.kind|{}kind[0]
+        final fun <get-kind>(): com.kylecorry.andromeda.sound/AudioDeviceKind // com.kylecorry.andromeda.sound/AudioDevice.kind.<get-kind>|<get-kind>(){}[0]
+    final val name // com.kylecorry.andromeda.sound/AudioDevice.name|{}name[0]
+        final fun <get-name>(): kotlin/String // com.kylecorry.andromeda.sound/AudioDevice.name.<get-name>|<get-name>(){}[0]
+    final val output // com.kylecorry.andromeda.sound/AudioDevice.output|{}output[0]
+        final fun <get-output>(): kotlin/Boolean // com.kylecorry.andromeda.sound/AudioDevice.output.<get-output>|<get-output>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.sound/AudioDevice.component1|component1(){}[0]
+    final fun component2(): kotlin/String // com.kylecorry.andromeda.sound/AudioDevice.component2|component2(){}[0]
+    final fun component3(): com.kylecorry.andromeda.sound/AudioDeviceKind // com.kylecorry.andromeda.sound/AudioDevice.component3|component3(){}[0]
+    final fun component4(): kotlin/Boolean // com.kylecorry.andromeda.sound/AudioDevice.component4|component4(){}[0]
+    final fun component5(): kotlin/Boolean // com.kylecorry.andromeda.sound/AudioDevice.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., com.kylecorry.andromeda.sound/AudioDeviceKind = ..., kotlin/Boolean = ..., kotlin/Boolean = ...): com.kylecorry.andromeda.sound/AudioDevice // com.kylecorry.andromeda.sound/AudioDevice.copy|copy(kotlin.String;kotlin.String;com.kylecorry.andromeda.sound.AudioDeviceKind;kotlin.Boolean;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.sound/AudioDevice.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.sound/AudioDevice.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.sound/AudioDevice.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.sound/GeneratedSoundPlayer : com.kylecorry.andromeda.sound/SoundPlayer { // com.kylecorry.andromeda.sound/GeneratedSoundPlayer|null[0]
+    constructor <init>(kotlinx.coroutines/CoroutineScope, kotlin/Int = ..., kotlin/Function1<kotlin/Long, kotlin/Double>) // com.kylecorry.andromeda.sound/GeneratedSoundPlayer.<init>|<init>(kotlinx.coroutines.CoroutineScope;kotlin.Int;kotlin.Function1<kotlin.Long,kotlin.Double>){}[0]
+
+    final fun fadeOff(kotlin/Boolean) // com.kylecorry.andromeda.sound/GeneratedSoundPlayer.fadeOff|fadeOff(kotlin.Boolean){}[0]
+    final fun fadeOn() // com.kylecorry.andromeda.sound/GeneratedSoundPlayer.fadeOn|fadeOn(){}[0]
+    final fun isOn(): kotlin/Boolean // com.kylecorry.andromeda.sound/GeneratedSoundPlayer.isOn|isOn(){}[0]
+    final fun off() // com.kylecorry.andromeda.sound/GeneratedSoundPlayer.off|off(){}[0]
+    final fun on() // com.kylecorry.andromeda.sound/GeneratedSoundPlayer.on|on(){}[0]
+    final fun release() // com.kylecorry.andromeda.sound/GeneratedSoundPlayer.release|release(){}[0]
+    final fun setVolume(kotlin/Float) // com.kylecorry.andromeda.sound/GeneratedSoundPlayer.setVolume|setVolume(kotlin.Float){}[0]
+}
+
+final class com.kylecorry.andromeda.sound/MicrophoneCalibration { // com.kylecorry.andromeda.sound/MicrophoneCalibration|null[0]
+    constructor <init>(kotlin/Float?, kotlin/Float?, kotlin/Float?) // com.kylecorry.andromeda.sound/MicrophoneCalibration.<init>|<init>(kotlin.Float?;kotlin.Float?;kotlin.Float?){}[0]
+
+    final val maximumSpl // com.kylecorry.andromeda.sound/MicrophoneCalibration.maximumSpl|{}maximumSpl[0]
+        final fun <get-maximumSpl>(): kotlin/Float? // com.kylecorry.andromeda.sound/MicrophoneCalibration.maximumSpl.<get-maximumSpl>|<get-maximumSpl>(){}[0]
+    final val minimumSpl // com.kylecorry.andromeda.sound/MicrophoneCalibration.minimumSpl|{}minimumSpl[0]
+        final fun <get-minimumSpl>(): kotlin/Float? // com.kylecorry.andromeda.sound/MicrophoneCalibration.minimumSpl.<get-minimumSpl>|<get-minimumSpl>(){}[0]
+    final val sensitivity // com.kylecorry.andromeda.sound/MicrophoneCalibration.sensitivity|{}sensitivity[0]
+        final fun <get-sensitivity>(): kotlin/Float? // com.kylecorry.andromeda.sound/MicrophoneCalibration.sensitivity.<get-sensitivity>|<get-sensitivity>(){}[0]
+
+    final fun component1(): kotlin/Float? // com.kylecorry.andromeda.sound/MicrophoneCalibration.component1|component1(){}[0]
+    final fun component2(): kotlin/Float? // com.kylecorry.andromeda.sound/MicrophoneCalibration.component2|component2(){}[0]
+    final fun component3(): kotlin/Float? // com.kylecorry.andromeda.sound/MicrophoneCalibration.component3|component3(){}[0]
+    final fun copy(kotlin/Float? = ..., kotlin/Float? = ..., kotlin/Float? = ...): com.kylecorry.andromeda.sound/MicrophoneCalibration // com.kylecorry.andromeda.sound/MicrophoneCalibration.copy|copy(kotlin.Float?;kotlin.Float?;kotlin.Float?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.sound/MicrophoneCalibration.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.sound/MicrophoneCalibration.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.sound/MicrophoneCalibration.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.sound/MicrophoneFrame { // com.kylecorry.andromeda.sound/MicrophoneFrame|null[0]
+    constructor <init>(kotlin/FloatArray, com.kylecorry.andromeda.sound/MicrophoneCalibration?) // com.kylecorry.andromeda.sound/MicrophoneFrame.<init>|<init>(kotlin.FloatArray;com.kylecorry.andromeda.sound.MicrophoneCalibration?){}[0]
+
+    final val calibration // com.kylecorry.andromeda.sound/MicrophoneFrame.calibration|{}calibration[0]
+        final fun <get-calibration>(): com.kylecorry.andromeda.sound/MicrophoneCalibration? // com.kylecorry.andromeda.sound/MicrophoneFrame.calibration.<get-calibration>|<get-calibration>(){}[0]
+    final val samples // com.kylecorry.andromeda.sound/MicrophoneFrame.samples|{}samples[0]
+        final fun <get-samples>(): kotlin/FloatArray // com.kylecorry.andromeda.sound/MicrophoneFrame.samples.<get-samples>|<get-samples>(){}[0]
+
+    final fun component1(): kotlin/FloatArray // com.kylecorry.andromeda.sound/MicrophoneFrame.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.sound/MicrophoneCalibration? // com.kylecorry.andromeda.sound/MicrophoneFrame.component2|component2(){}[0]
+    final fun copy(kotlin/FloatArray = ..., com.kylecorry.andromeda.sound/MicrophoneCalibration? = ...): com.kylecorry.andromeda.sound/MicrophoneFrame // com.kylecorry.andromeda.sound/MicrophoneFrame.copy|copy(kotlin.FloatArray;com.kylecorry.andromeda.sound.MicrophoneCalibration?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.sound/MicrophoneFrame.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.sound/MicrophoneFrame.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.sound/MicrophoneFrame.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.sound/MicrophoneProcessing { // com.kylecorry.andromeda.sound/MicrophoneProcessing|null[0]
+    constructor <init>(kotlin/Boolean? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ...) // com.kylecorry.andromeda.sound/MicrophoneProcessing.<init>|<init>(kotlin.Boolean?;kotlin.Boolean?;kotlin.Boolean?){}[0]
+
+    final val automaticGainControl // com.kylecorry.andromeda.sound/MicrophoneProcessing.automaticGainControl|{}automaticGainControl[0]
+        final fun <get-automaticGainControl>(): kotlin/Boolean? // com.kylecorry.andromeda.sound/MicrophoneProcessing.automaticGainControl.<get-automaticGainControl>|<get-automaticGainControl>(){}[0]
+    final val echoCancellation // com.kylecorry.andromeda.sound/MicrophoneProcessing.echoCancellation|{}echoCancellation[0]
+        final fun <get-echoCancellation>(): kotlin/Boolean? // com.kylecorry.andromeda.sound/MicrophoneProcessing.echoCancellation.<get-echoCancellation>|<get-echoCancellation>(){}[0]
+    final val noiseSuppression // com.kylecorry.andromeda.sound/MicrophoneProcessing.noiseSuppression|{}noiseSuppression[0]
+        final fun <get-noiseSuppression>(): kotlin/Boolean? // com.kylecorry.andromeda.sound/MicrophoneProcessing.noiseSuppression.<get-noiseSuppression>|<get-noiseSuppression>(){}[0]
+
+    final fun component1(): kotlin/Boolean? // com.kylecorry.andromeda.sound/MicrophoneProcessing.component1|component1(){}[0]
+    final fun component2(): kotlin/Boolean? // com.kylecorry.andromeda.sound/MicrophoneProcessing.component2|component2(){}[0]
+    final fun component3(): kotlin/Boolean? // com.kylecorry.andromeda.sound/MicrophoneProcessing.component3|component3(){}[0]
+    final fun copy(kotlin/Boolean? = ..., kotlin/Boolean? = ..., kotlin/Boolean? = ...): com.kylecorry.andromeda.sound/MicrophoneProcessing // com.kylecorry.andromeda.sound/MicrophoneProcessing.copy|copy(kotlin.Boolean?;kotlin.Boolean?;kotlin.Boolean?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.sound/MicrophoneProcessing.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.sound/MicrophoneProcessing.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.sound/MicrophoneProcessing.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.sound/PcmSpeaker : kotlin/AutoCloseable { // com.kylecorry.andromeda.sound/PcmSpeaker|null[0]
+    constructor <init>(kotlin/Int) // com.kylecorry.andromeda.sound/PcmSpeaker.<init>|<init>(kotlin.Int){}[0]
+
+    final fun close() // com.kylecorry.andromeda.sound/PcmSpeaker.close|close(){}[0]
+    final suspend fun drain() // com.kylecorry.andromeda.sound/PcmSpeaker.drain|drain(){}[0]
+    final suspend fun write(kotlin/ShortArray) // com.kylecorry.andromeda.sound/PcmSpeaker.write|write(kotlin.ShortArray){}[0]
+}
+
+final fun com.kylecorry.andromeda.sound/amplitudeToDecibels(kotlin/Float, kotlin.ranges/ClosedFloatingPointRange<kotlin/Float>, kotlin/Float = ..., kotlin/Float = ...): kotlin/Float // com.kylecorry.andromeda.sound/amplitudeToDecibels|amplitudeToDecibels(kotlin.Float;kotlin.ranges.ClosedFloatingPointRange<kotlin.Float>;kotlin.Float;kotlin.Float){}[0]
+final fun com.kylecorry.andromeda.sound/audioDevices(): kotlin.collections/List<com.kylecorry.andromeda.sound/AudioDevice> // com.kylecorry.andromeda.sound/audioDevices|audioDevices(){}[0]
+final fun com.kylecorry.andromeda.sound/defaultSystemSoundUri(com.kylecorry.andromeda.sound/DefaultSystemSound): kotlin/String? // com.kylecorry.andromeda.sound/defaultSystemSoundUri|defaultSystemSoundUri(com.kylecorry.andromeda.sound.DefaultSystemSound){}[0]
+final fun com.kylecorry.andromeda.sound/generatePcm16(kotlin/Int, kotlin/Float, kotlin/Function1<kotlin/Int, kotlin/Double>): kotlin/ByteArray // com.kylecorry.andromeda.sound/generatePcm16|generatePcm16(kotlin.Int;kotlin.Float;kotlin.Function1<kotlin.Int,kotlin.Double>){}[0]
+final fun com.kylecorry.andromeda.sound/generateTone(kotlin/Float, kotlin/Int = ..., kotlin/Float = ...): kotlin/ByteArray // com.kylecorry.andromeda.sound/generateTone|generateTone(kotlin.Float;kotlin.Int;kotlin.Float){}[0]
+final fun com.kylecorry.andromeda.sound/microphoneFrames(kotlin/Int = ..., com.kylecorry.andromeda.sound/MicrophoneProcessing = ...): kotlinx.coroutines.flow/Flow<com.kylecorry.andromeda.sound/MicrophoneFrame> // com.kylecorry.andromeda.sound/microphoneFrames|microphoneFrames(kotlin.Int;com.kylecorry.andromeda.sound.MicrophoneProcessing){}[0]
+final fun com.kylecorry.andromeda.sound/microphoneSamples(kotlin/Int = ..., com.kylecorry.andromeda.sound/MicrophoneProcessing = ...): kotlinx.coroutines.flow/Flow<kotlin/FloatArray> // com.kylecorry.andromeda.sound/microphoneSamples|microphoneSamples(kotlin.Int;com.kylecorry.andromeda.sound.MicrophoneProcessing){}[0]
+final fun com.kylecorry.andromeda.sound/openSystemSound(kotlin/String, com.kylecorry.andromeda.sound/SoundChannel = ...): com.kylecorry.andromeda.sound/SystemSound? // com.kylecorry.andromeda.sound/openSystemSound|openSystemSound(kotlin.String;com.kylecorry.andromeda.sound.SoundChannel){}[0]
+final fun com.kylecorry.andromeda.sound/pcm16ToFloat(kotlin/ByteArray): kotlin/FloatArray // com.kylecorry.andromeda.sound/pcm16ToFloat|pcm16ToFloat(kotlin.ByteArray){}[0]
+final fun com.kylecorry.andromeda.sound/pcm16Wav(kotlin/ByteArray, kotlin/Int, kotlin/Int = ...): kotlin/ByteArray // com.kylecorry.andromeda.sound/pcm16Wav|pcm16Wav(kotlin.ByteArray;kotlin.Int;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.sound/streamPlayer(kotlinx.coroutines/CoroutineScope, com.kylecorry.andromeda.sound.stream/AudioStream, kotlin/Int = ...): com.kylecorry.andromeda.sound/GeneratedSoundPlayer // com.kylecorry.andromeda.sound/streamPlayer|streamPlayer(kotlinx.coroutines.CoroutineScope;com.kylecorry.andromeda.sound.stream.AudioStream;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.sound/tonePlayer(kotlinx.coroutines/CoroutineScope, kotlin/Double, kotlin/Int = ...): com.kylecorry.andromeda.sound/GeneratedSoundPlayer // com.kylecorry.andromeda.sound/tonePlayer|tonePlayer(kotlinx.coroutines.CoroutineScope;kotlin.Double;kotlin.Int){}[0]
+final suspend fun com.kylecorry.andromeda.sound/playGeneratedSound(kotlin/Int = ..., kotlin.time/Duration = ..., kotlin/Function1<kotlin/Long, kotlin/Double>) // com.kylecorry.andromeda.sound/playGeneratedSound|playGeneratedSound(kotlin.Int;kotlin.time.Duration;kotlin.Function1<kotlin.Long,kotlin.Double>){}[0]
+final suspend fun com.kylecorry.andromeda.sound/playTone(kotlin/Double, kotlin/Int = ..., kotlin.time/Duration = ..., kotlin/Float = ...) // com.kylecorry.andromeda.sound/playTone|playTone(kotlin.Double;kotlin.Int;kotlin.time.Duration;kotlin.Float){}[0]

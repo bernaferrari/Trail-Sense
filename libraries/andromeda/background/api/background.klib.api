@@ -1,0 +1,66 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:background>
+abstract interface com.kylecorry.andromeda.background/BackgroundScheduler : com.kylecorry.andromeda.background/OneTimeTaskScheduler { // com.kylecorry.andromeda.background/BackgroundScheduler|null[0]
+    abstract fun schedule(kotlin.time/Instant) // com.kylecorry.andromeda.background/BackgroundScheduler.schedule|schedule(kotlin.time.Instant){}[0]
+    open fun once(kotlin.time/Duration) // com.kylecorry.andromeda.background/BackgroundScheduler.once|once(kotlin.time.Duration){}[0]
+    open fun once(kotlin.time/Instant) // com.kylecorry.andromeda.background/BackgroundScheduler.once|once(kotlin.time.Instant){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.background/OneTimeTaskScheduler : com.kylecorry.andromeda.background/TaskScheduler { // com.kylecorry.andromeda.background/OneTimeTaskScheduler|null[0]
+    abstract fun once(kotlin.time/Duration = ...) // com.kylecorry.andromeda.background/OneTimeTaskScheduler.once|once(kotlin.time.Duration){}[0]
+    open fun once(kotlin.time/Instant) // com.kylecorry.andromeda.background/OneTimeTaskScheduler.once|once(kotlin.time.Instant){}[0]
+    open fun start() // com.kylecorry.andromeda.background/OneTimeTaskScheduler.start|start(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.background/PeriodicBackgroundScheduler : com.kylecorry.andromeda.background/PeriodicTaskScheduler { // com.kylecorry.andromeda.background/PeriodicBackgroundScheduler|null[0]
+    abstract fun onTaskStarted() // com.kylecorry.andromeda.background/PeriodicBackgroundScheduler.onTaskStarted|onTaskStarted(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.background/PeriodicTaskScheduler : com.kylecorry.andromeda.background/TaskScheduler { // com.kylecorry.andromeda.background/PeriodicTaskScheduler|null[0]
+    abstract fun interval(kotlin.time/Duration, kotlin.time/Duration = ...) // com.kylecorry.andromeda.background/PeriodicTaskScheduler.interval|interval(kotlin.time.Duration;kotlin.time.Duration){}[0]
+    open fun interval(kotlin.time/Duration, kotlin.time/Instant) // com.kylecorry.andromeda.background/PeriodicTaskScheduler.interval|interval(kotlin.time.Duration;kotlin.time.Instant){}[0]
+}
+
+final class com.kylecorry.andromeda.background/AdaptivePeriodicScheduler : com.kylecorry.andromeda.background/PeriodicTaskScheduler { // com.kylecorry.andromeda.background/AdaptivePeriodicScheduler|null[0]
+    constructor <init>(kotlinx.coroutines/CoroutineScope, com.kylecorry.andromeda.background/PeriodicBackgroundScheduler, kotlin.coroutines/SuspendFunction0<kotlin/Unit>, kotlin.time/Duration = ...) // com.kylecorry.andromeda.background/AdaptivePeriodicScheduler.<init>|<init>(kotlinx.coroutines.CoroutineScope;com.kylecorry.andromeda.background.PeriodicBackgroundScheduler;kotlin.coroutines.SuspendFunction0<kotlin.Unit>;kotlin.time.Duration){}[0]
+
+    final fun cancel() // com.kylecorry.andromeda.background/AdaptivePeriodicScheduler.cancel|cancel(){}[0]
+    final fun interval(kotlin.time/Duration, kotlin.time/Duration) // com.kylecorry.andromeda.background/AdaptivePeriodicScheduler.interval|interval(kotlin.time.Duration;kotlin.time.Duration){}[0]
+}
+
+final class com.kylecorry.andromeda.background/CoroutineTaskScheduler : com.kylecorry.andromeda.background/OneTimeTaskScheduler, com.kylecorry.andromeda.background/PeriodicTaskScheduler { // com.kylecorry.andromeda.background/CoroutineTaskScheduler|null[0]
+    constructor <init>(kotlinx.coroutines/CoroutineScope, kotlin.coroutines/SuspendFunction0<kotlin/Unit>) // com.kylecorry.andromeda.background/CoroutineTaskScheduler.<init>|<init>(kotlinx.coroutines.CoroutineScope;kotlin.coroutines.SuspendFunction0<kotlin.Unit>){}[0]
+
+    final fun cancel() // com.kylecorry.andromeda.background/CoroutineTaskScheduler.cancel|cancel(){}[0]
+    final fun interval(kotlin.time/Duration, kotlin.time/Duration) // com.kylecorry.andromeda.background/CoroutineTaskScheduler.interval|interval(kotlin.time.Duration;kotlin.time.Duration){}[0]
+    final fun once(kotlin.time/Duration) // com.kylecorry.andromeda.background/CoroutineTaskScheduler.once|once(kotlin.time.Duration){}[0]
+}
+
+final class com.kylecorry.andromeda.background/DailyScheduleDecision { // com.kylecorry.andromeda.background/DailyScheduleDecision|null[0]
+    constructor <init>(kotlin/Boolean, kotlinx.datetime/LocalDate, kotlin.time/Instant) // com.kylecorry.andromeda.background/DailyScheduleDecision.<init>|<init>(kotlin.Boolean;kotlinx.datetime.LocalDate;kotlin.time.Instant){}[0]
+
+    final val localDate // com.kylecorry.andromeda.background/DailyScheduleDecision.localDate|{}localDate[0]
+        final fun <get-localDate>(): kotlinx.datetime/LocalDate // com.kylecorry.andromeda.background/DailyScheduleDecision.localDate.<get-localDate>|<get-localDate>(){}[0]
+    final val nextRun // com.kylecorry.andromeda.background/DailyScheduleDecision.nextRun|{}nextRun[0]
+        final fun <get-nextRun>(): kotlin.time/Instant // com.kylecorry.andromeda.background/DailyScheduleDecision.nextRun.<get-nextRun>|<get-nextRun>(){}[0]
+    final val shouldRun // com.kylecorry.andromeda.background/DailyScheduleDecision.shouldRun|{}shouldRun[0]
+        final fun <get-shouldRun>(): kotlin/Boolean // com.kylecorry.andromeda.background/DailyScheduleDecision.shouldRun.<get-shouldRun>|<get-shouldRun>(){}[0]
+
+    final fun component1(): kotlin/Boolean // com.kylecorry.andromeda.background/DailyScheduleDecision.component1|component1(){}[0]
+    final fun component2(): kotlinx.datetime/LocalDate // com.kylecorry.andromeda.background/DailyScheduleDecision.component2|component2(){}[0]
+    final fun component3(): kotlin.time/Instant // com.kylecorry.andromeda.background/DailyScheduleDecision.component3|component3(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlinx.datetime/LocalDate = ..., kotlin.time/Instant = ...): com.kylecorry.andromeda.background/DailyScheduleDecision // com.kylecorry.andromeda.background/DailyScheduleDecision.copy|copy(kotlin.Boolean;kotlinx.datetime.LocalDate;kotlin.time.Instant){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.background/DailyScheduleDecision.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.background/DailyScheduleDecision.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.background/DailyScheduleDecision.toString|toString(){}[0]
+}
+
+final fun com.kylecorry.andromeda.background/backgroundScheduler(kotlin/String): com.kylecorry.andromeda.background/BackgroundScheduler // com.kylecorry.andromeda.background/backgroundScheduler|backgroundScheduler(kotlin.String){}[0]
+final fun com.kylecorry.andromeda.background/periodicBackgroundScheduler(kotlin/String): com.kylecorry.andromeda.background/PeriodicBackgroundScheduler // com.kylecorry.andromeda.background/periodicBackgroundScheduler|periodicBackgroundScheduler(kotlin.String){}[0]
+final fun com.kylecorry.andromeda.background/planDailyTask(kotlin.time/Instant, kotlinx.datetime/LocalTime, kotlinx.datetime/TimeZone, kotlinx.datetime/LocalDate? = ..., kotlin/Boolean = ..., kotlin.time/Duration = ...): com.kylecorry.andromeda.background/DailyScheduleDecision // com.kylecorry.andromeda.background/planDailyTask|planDailyTask(kotlin.time.Instant;kotlinx.datetime.LocalTime;kotlinx.datetime.TimeZone;kotlinx.datetime.LocalDate?;kotlin.Boolean;kotlin.time.Duration){}[0]

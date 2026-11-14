@@ -1,0 +1,5 @@
+public final class com/kylecorry/andromeda/print/compose/PdfPrinterKt {
+	public static final fun rememberImagePrinter (Landroidx/compose/runtime/Composer;I)Lcom/kylecorry/andromeda/print/ImagePrinter;
+	public static final fun rememberPdfPrinter (Landroidx/compose/runtime/Composer;I)Lcom/kylecorry/andromeda/print/PdfPrinter;
+}
+

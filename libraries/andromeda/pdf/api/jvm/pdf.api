@@ -1,0 +1,217 @@
+public final class com/kylecorry/andromeda/pdf/GeospatialPDFKt {
+	public static final fun parseGeospatialPDF ([B)Lcom/kylecorry/andromeda/pdf/GeospatialPDFMetadata;
+}
+
+public final class com/kylecorry/andromeda/pdf/GeospatialPDFParser {
+	public fun <init> ()V
+	public final fun parse (Ljava/io/InputStream;)Lcom/kylecorry/andromeda/pdf/GeospatialPDFMetadata;
+}
+
+public final class com/kylecorry/andromeda/pdf/JvmPDFKt {
+	public static final fun parsePDF ([BZ)Ljava/util/List;
+	public static synthetic fun parsePDF$default ([BZILjava/lang/Object;)Ljava/util/List;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFGeneratorKt {
+	public static final fun array ([Lcom/kylecorry/andromeda/pdf/PDFValue;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFArray;
+	public static final fun catalog (II)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun dict ([Lkotlin/Pair;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;
+	public static final fun gcs (ILcom/kylecorry/andromeda/pdf/ProjectedCoordinateSystem;Lcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static synthetic fun gcs$default (ILcom/kylecorry/andromeda/pdf/ProjectedCoordinateSystem;Lcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun geo (ILjava/util/List;Ljava/util/List;Ljava/lang/Integer;Ljava/util/List;Lcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static synthetic fun geo$default (ILjava/util/List;Ljava/util/List;Ljava/lang/Integer;Ljava/util/List;Lcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun image (ILcom/kylecorry/andromeda/bitmaps/PixelImage;IIIIILcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static synthetic fun image$default (ILcom/kylecorry/andromeda/bitmaps/PixelImage;IIIIILcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun jpg (I[BIIIIIILcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static synthetic fun jpg$default (I[BIIIIIILcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun name (Ljava/lang/String;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFName;
+	public static final fun number (Ljava/lang/Number;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFNumber;
+	public static final fun obj (I[Lcom/kylecorry/andromeda/pdf/PDFValue;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun page (IIIILjava/util/List;Ljava/util/List;Lcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static synthetic fun page$default (IIIILjava/util/List;Ljava/util/List;Lcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun pages (ILjava/util/List;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun ref (I)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFIndirectObject;
+	public static final fun stream (ILjava/lang/String;Lcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun stream (I[BLcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun stream (Ljava/lang/String;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFStream;
+	public static final fun stream ([B)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFStream;
+	public static synthetic fun stream$default (ILjava/lang/String;Lcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static synthetic fun stream$default (I[BLcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun string (Ljava/lang/String;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFString;
+	public static final fun text (ILjava/lang/String;IIILcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static synthetic fun text$default (ILjava/lang/String;IIILcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun viewport (II[DLcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static synthetic fun viewport$default (II[DLcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;ILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFInputStream : com/kylecorry/andromeda/pdf/PDFValue {
+	public fun <init> (Ljava/io/InputStream;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStream ()Ljava/io/InputStream;
+	public fun hashCode ()I
+	public fun toByteArray ()[B
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFObjectExtensionsKt {
+	public static final fun getById (Ljava/util/List;I)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;
+	public static final fun getByProperty (Ljava/util/List;Ljava/lang/String;Lcom/kylecorry/andromeda/pdf/PDFValue;)Ljava/util/List;
+	public static final fun getProperties (Lcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;Ljava/lang/String;Ljava/util/List;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;
+	public static final fun getProperties (Lcom/kylecorry/andromeda/pdf/PDFValue$PDFObject;)Lcom/kylecorry/andromeda/pdf/PDFValue$PDFDictionary;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFSerializer : com/kylecorry/luna/serialization/ISerializer {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun deserialize (Ljava/io/InputStream;)Ljava/lang/Object;
+	public fun deserialize (Ljava/io/InputStream;)Ljava/util/List;
+	public synthetic fun serialize (Ljava/lang/Object;Ljava/io/OutputStream;)V
+	public fun serialize (Ljava/util/List;Ljava/io/OutputStream;)V
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFStreamsKt {
+	public static final fun write (Lcom/kylecorry/andromeda/pdf/PDFValue;Ljava/io/OutputStream;)J
+}
+
+public abstract interface class com/kylecorry/andromeda/pdf/PDFValue {
+	public fun toByteArray ()[B
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFValue$DefaultImpls {
+	public static fun toByteArray (Lcom/kylecorry/andromeda/pdf/PDFValue;)[B
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFValue$PDFArray : com/kylecorry/andromeda/pdf/PDFValue {
+	public fun <init> (Ljava/util/List;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValues ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toByteArray ()[B
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFValue$PDFBoolean : com/kylecorry/andromeda/pdf/PDFValue {
+	public fun <init> (Z)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Z
+	public fun hashCode ()I
+	public fun toByteArray ()[B
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFValue$PDFDictionary : com/kylecorry/andromeda/pdf/PDFValue {
+	public fun <init> (Ljava/util/Map;)V
+	public final fun contains (Lcom/kylecorry/andromeda/pdf/PDFValue$PDFName;)Z
+	public final fun contains (Ljava/lang/String;)Z
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun get (Lcom/kylecorry/andromeda/pdf/PDFValue$PDFName;)Lcom/kylecorry/andromeda/pdf/PDFValue;
+	public final fun get (Ljava/lang/String;)Lcom/kylecorry/andromeda/pdf/PDFValue;
+	public final fun getAs (Lcom/kylecorry/andromeda/pdf/PDFValue$PDFName;)Lcom/kylecorry/andromeda/pdf/PDFValue;
+	public final fun getAs (Ljava/lang/String;)Lcom/kylecorry/andromeda/pdf/PDFValue;
+	public final fun getProperties ()Ljava/util/Map;
+	public final fun hasValue (Lcom/kylecorry/andromeda/pdf/PDFValue$PDFName;Lcom/kylecorry/andromeda/pdf/PDFValue;)Z
+	public final fun hasValue (Ljava/lang/String;Lcom/kylecorry/andromeda/pdf/PDFValue;)Z
+	public fun hashCode ()I
+	public fun toByteArray ()[B
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFValue$PDFIndirectObject : com/kylecorry/andromeda/pdf/PDFValue {
+	public fun <init> (II)V
+	public synthetic fun <init> (IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGeneration ()I
+	public final fun getId ()I
+	public fun hashCode ()I
+	public fun toByteArray ()[B
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFValue$PDFName : com/kylecorry/andromeda/pdf/PDFValue {
+	public fun <init> (Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toByteArray ()[B
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFValue$PDFNull : com/kylecorry/andromeda/pdf/PDFValue {
+	public fun <init> ()V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toByteArray ()[B
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFValue$PDFNumber : com/kylecorry/andromeda/pdf/PDFValue {
+	public fun <init> (Ljava/lang/Number;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/Number;
+	public fun hashCode ()I
+	public fun toByteArray ()[B
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFValue$PDFObject : com/kylecorry/andromeda/pdf/PDFValue {
+	public fun <init> (IILjava/util/List;)V
+	public synthetic fun <init> (IILjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Ljava/util/List;
+	public final fun getGeneration ()I
+	public final fun getId ()I
+	public final fun getProperty (Lcom/kylecorry/andromeda/pdf/PDFValue$PDFName;)Lcom/kylecorry/andromeda/pdf/PDFValue;
+	public final fun getProperty (Ljava/lang/String;)Lcom/kylecorry/andromeda/pdf/PDFValue;
+	public final fun getReference ()Lcom/kylecorry/andromeda/pdf/PDFValue$PDFIndirectObject;
+	public final fun hasProperty (Lcom/kylecorry/andromeda/pdf/PDFValue$PDFName;)Z
+	public final fun hasProperty (Ljava/lang/String;)Z
+	public fun hashCode ()I
+	public fun toByteArray ()[B
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFValue$PDFStream : com/kylecorry/andromeda/pdf/PDFValue {
+	public fun <init> ([B)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()[B
+	public fun hashCode ()I
+	public fun toByteArray ()[B
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/PDFValue$PDFString : com/kylecorry/andromeda/pdf/PDFValue {
+	public fun <init> (Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toByteArray ()[B
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/PdfPageSize {
+	public fun <init> (FF)V
+	public final fun component1 ()F
+	public final fun component2 ()F
+	public final fun copy (FF)Lcom/kylecorry/andromeda/pdf/PdfPageSize;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/pdf/PdfPageSize;FFILjava/lang/Object;)Lcom/kylecorry/andromeda/pdf/PdfPageSize;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeightPoints ()F
+	public final fun getWidthPoints ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/pdf/PdfPages : java/lang/AutoCloseable {
+	public fun <init> ([B)V
+	public fun close ()V
+	public final fun getPageCount ()I
+	public final fun pageSize (I)Lcom/kylecorry/andromeda/pdf/PdfPageSize;
+	public final fun render (IIII)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun render$default (Lcom/kylecorry/andromeda/pdf/PdfPages;IIIIILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+}
+
+public final class com/kylecorry/andromeda/pdf/PortablePDFKt {
+	public static final fun createPDF (Ljava/util/List;)[B
+}
+

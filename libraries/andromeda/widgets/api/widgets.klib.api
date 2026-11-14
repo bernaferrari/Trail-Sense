@@ -1,0 +1,51 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:widgets>
+final class com.kylecorry.andromeda.widgets/Shortcut { // com.kylecorry.andromeda.widgets/Shortcut|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...) // com.kylecorry.andromeda.widgets/Shortcut.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+
+    final val attributes // com.kylecorry.andromeda.widgets/Shortcut.attributes|{}attributes[0]
+        final fun <get-attributes>(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.kylecorry.andromeda.widgets/Shortcut.attributes.<get-attributes>|<get-attributes>(){}[0]
+    final val id // com.kylecorry.andromeda.widgets/Shortcut.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.kylecorry.andromeda.widgets/Shortcut.id.<get-id>|<get-id>(){}[0]
+    final val label // com.kylecorry.andromeda.widgets/Shortcut.label|{}label[0]
+        final fun <get-label>(): kotlin/String // com.kylecorry.andromeda.widgets/Shortcut.label.<get-label>|<get-label>(){}[0]
+    final val longLabel // com.kylecorry.andromeda.widgets/Shortcut.longLabel|{}longLabel[0]
+        final fun <get-longLabel>(): kotlin/String? // com.kylecorry.andromeda.widgets/Shortcut.longLabel.<get-longLabel>|<get-longLabel>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.widgets/Shortcut.component1|component1(){}[0]
+    final fun component2(): kotlin/String // com.kylecorry.andromeda.widgets/Shortcut.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // com.kylecorry.andromeda.widgets/Shortcut.component3|component3(){}[0]
+    final fun component4(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.kylecorry.andromeda.widgets/Shortcut.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): com.kylecorry.andromeda.widgets/Shortcut // com.kylecorry.andromeda.widgets/Shortcut.copy|copy(kotlin.String;kotlin.String;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.widgets/Shortcut.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.widgets/Shortcut.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.widgets/Shortcut.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.widgets/ShortcutPinning { // com.kylecorry.andromeda.widgets/ShortcutPinning|null[0]
+    constructor <init>(kotlin/Function0<kotlin/Boolean>, kotlin/Function1<com.kylecorry.andromeda.widgets/Shortcut, kotlin/Boolean>) // com.kylecorry.andromeda.widgets/ShortcutPinning.<init>|<init>(kotlin.Function0<kotlin.Boolean>;kotlin.Function1<com.kylecorry.andromeda.widgets.Shortcut,kotlin.Boolean>){}[0]
+
+    final fun isSupported(): kotlin/Boolean // com.kylecorry.andromeda.widgets/ShortcutPinning.isSupported|isSupported(){}[0]
+    final fun request(com.kylecorry.andromeda.widgets/Shortcut): kotlin/Boolean // com.kylecorry.andromeda.widgets/ShortcutPinning.request|request(com.kylecorry.andromeda.widgets.Shortcut){}[0]
+}
+
+final class com.kylecorry.andromeda.widgets/WidgetManager { // com.kylecorry.andromeda.widgets/WidgetManager|null[0]
+    constructor <init>(kotlin.coroutines/SuspendFunction0<kotlin/Unit>, kotlin.coroutines/SuspendFunction0<kotlin/Boolean?> = ...) // com.kylecorry.andromeda.widgets/WidgetManager.<init>|<init>(kotlin.coroutines.SuspendFunction0<kotlin.Unit>;kotlin.coroutines.SuspendFunction0<kotlin.Boolean?>){}[0]
+
+    final suspend fun isInstalled(): kotlin/Boolean? // com.kylecorry.andromeda.widgets/WidgetManager.isInstalled|isInstalled(){}[0]
+    final suspend fun update() // com.kylecorry.andromeda.widgets/WidgetManager.update|update(){}[0]
+}
+
+final val com.kylecorry.andromeda.widgets/com_kylecorry_andromeda_widgets_Shortcut$stableprop // com.kylecorry.andromeda.widgets/com_kylecorry_andromeda_widgets_Shortcut$stableprop|#static{}com_kylecorry_andromeda_widgets_Shortcut$stableprop[0]
+final val com.kylecorry.andromeda.widgets/com_kylecorry_andromeda_widgets_ShortcutPinning$stableprop // com.kylecorry.andromeda.widgets/com_kylecorry_andromeda_widgets_ShortcutPinning$stableprop|#static{}com_kylecorry_andromeda_widgets_ShortcutPinning$stableprop[0]
+final val com.kylecorry.andromeda.widgets/com_kylecorry_andromeda_widgets_WidgetManager$stableprop // com.kylecorry.andromeda.widgets/com_kylecorry_andromeda_widgets_WidgetManager$stableprop|#static{}com_kylecorry_andromeda_widgets_WidgetManager$stableprop[0]
+
+final fun com.kylecorry.andromeda.widgets/com_kylecorry_andromeda_widgets_Shortcut$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.widgets/com_kylecorry_andromeda_widgets_Shortcut$stableprop_getter|com_kylecorry_andromeda_widgets_Shortcut$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.widgets/com_kylecorry_andromeda_widgets_ShortcutPinning$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.widgets/com_kylecorry_andromeda_widgets_ShortcutPinning$stableprop_getter|com_kylecorry_andromeda_widgets_ShortcutPinning$stableprop_getter(){}[0]
+final fun com.kylecorry.andromeda.widgets/com_kylecorry_andromeda_widgets_WidgetManager$stableprop_getter(): kotlin/Int // com.kylecorry.andromeda.widgets/com_kylecorry_andromeda_widgets_WidgetManager$stableprop_getter|com_kylecorry_andromeda_widgets_WidgetManager$stableprop_getter(){}[0]

@@ -1,0 +1,27 @@
+public final class com/kylecorry/andromeda/signal/CellSignalOptions {
+	public fun <init> ()V
+	public fun <init> (ZZF)V
+	public synthetic fun <init> (ZZFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun component3 ()F
+	public final fun copy (ZZF)Lcom/kylecorry/andromeda/signal/CellSignalOptions;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/signal/CellSignalOptions;ZZFILjava/lang/Object;)Lcom/kylecorry/andromeda/signal/CellSignalOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getIncludeUnregistered ()Z
+	public final fun getPathLossFactor ()F
+	public final fun getUpdateCellCache ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/signal/CellSignalSensor : com/kylecorry/andromeda/core/sensors/Sensor {
+	public abstract fun getSignals ()Ljava/util/List;
+}
+
+public final class com/kylecorry/andromeda/signal/CellSignalsJvmKt {
+	public static final fun cellSignals (Lcom/kylecorry/andromeda/signal/CellSignalOptions;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun cellSignals$default (Lcom/kylecorry/andromeda/signal/CellSignalOptions;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun getCellularSignalSupported ()Z
+}
+

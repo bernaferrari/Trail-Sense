@@ -1,0 +1,33 @@
+public final class com/kylecorry/andromeda/torch/DeviceTorchKt {
+	public static final fun deviceTorch ()Lcom/kylecorry/andromeda/torch/Torch;
+	public static final fun screenBrightness ()Lcom/kylecorry/andromeda/torch/ScreenBrightness;
+}
+
+public abstract interface class com/kylecorry/andromeda/torch/ScreenBrightness {
+	public abstract fun getBrightness ()F
+	public abstract fun setBrightness (F)V
+}
+
+public final class com/kylecorry/andromeda/torch/ScreenTorch : com/kylecorry/andromeda/torch/Torch {
+	public fun <init> (Lcom/kylecorry/andromeda/torch/ScreenBrightness;)V
+	public fun getBrightnessLevels ()I
+	public fun isAvailable ()Z
+	public fun isDimmable ()Z
+	public fun off ()V
+	public fun on ()V
+	public fun on (F)V
+}
+
+public final class com/kylecorry/andromeda/torch/TorchState : java/lang/Enum {
+	public static final field Off Lcom/kylecorry/andromeda/torch/TorchState;
+	public static final field On Lcom/kylecorry/andromeda/torch/TorchState;
+	public static final field Unavailable Lcom/kylecorry/andromeda/torch/TorchState;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/torch/TorchState;
+	public static fun values ()[Lcom/kylecorry/andromeda/torch/TorchState;
+}
+
+public final class com/kylecorry/andromeda/torch/TorchStatesKt {
+	public static final fun torchStates ()Lkotlinx/coroutines/flow/Flow;
+}
+

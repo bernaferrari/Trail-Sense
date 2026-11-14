@@ -1,0 +1,45 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:net>
+final enum class com.kylecorry.andromeda.net/HttpMethod : kotlin/Enum<com.kylecorry.andromeda.net/HttpMethod> { // com.kylecorry.andromeda.net/HttpMethod|null[0]
+    enum entry DELETE // com.kylecorry.andromeda.net/HttpMethod.DELETE|null[0]
+    enum entry GET // com.kylecorry.andromeda.net/HttpMethod.GET|null[0]
+    enum entry HEAD // com.kylecorry.andromeda.net/HttpMethod.HEAD|null[0]
+    enum entry OPTIONS // com.kylecorry.andromeda.net/HttpMethod.OPTIONS|null[0]
+    enum entry PATCH // com.kylecorry.andromeda.net/HttpMethod.PATCH|null[0]
+    enum entry POST // com.kylecorry.andromeda.net/HttpMethod.POST|null[0]
+    enum entry PUT // com.kylecorry.andromeda.net/HttpMethod.PUT|null[0]
+    enum entry TRACE // com.kylecorry.andromeda.net/HttpMethod.TRACE|null[0]
+
+    final val entries // com.kylecorry.andromeda.net/HttpMethod.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.net/HttpMethod> // com.kylecorry.andromeda.net/HttpMethod.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.net/HttpMethod // com.kylecorry.andromeda.net/HttpMethod.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.net/HttpMethod> // com.kylecorry.andromeda.net/HttpMethod.values|values#static(){}[0]
+}
+
+final class com.kylecorry.andromeda.net/HttpClient : kotlin/AutoCloseable { // com.kylecorry.andromeda.net/HttpClient|null[0]
+    constructor <init>() // com.kylecorry.andromeda.net/HttpClient.<init>|<init>(){}[0]
+
+    final fun close() // com.kylecorry.andromeda.net/HttpClient.close|close(){}[0]
+    final suspend fun send(kotlin/String, com.kylecorry.andromeda.net/HttpMethod = ..., kotlin/ByteArray? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.time/Duration? = ..., kotlin.time/Duration? = ..., kotlin/Boolean = ...): com.kylecorry.andromeda.net/HttpResponse // com.kylecorry.andromeda.net/HttpClient.send|send(kotlin.String;com.kylecorry.andromeda.net.HttpMethod;kotlin.ByteArray?;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.time.Duration?;kotlin.time.Duration?;kotlin.Boolean){}[0]
+}
+
+final class com.kylecorry.andromeda.net/HttpResponse { // com.kylecorry.andromeda.net/HttpResponse|null[0]
+    constructor <init>(kotlin/Int, kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>>, kotlin/ByteArray?) // com.kylecorry.andromeda.net/HttpResponse.<init>|<init>(kotlin.Int;kotlin.collections.Map<kotlin.String,kotlin.collections.List<kotlin.String>>;kotlin.ByteArray?){}[0]
+
+    final val code // com.kylecorry.andromeda.net/HttpResponse.code|{}code[0]
+        final fun <get-code>(): kotlin/Int // com.kylecorry.andromeda.net/HttpResponse.code.<get-code>|<get-code>(){}[0]
+    final val content // com.kylecorry.andromeda.net/HttpResponse.content|{}content[0]
+        final fun <get-content>(): kotlin/ByteArray? // com.kylecorry.andromeda.net/HttpResponse.content.<get-content>|<get-content>(){}[0]
+    final val headers // com.kylecorry.andromeda.net/HttpResponse.headers|{}headers[0]
+        final fun <get-headers>(): kotlin.collections/Map<kotlin/String, kotlin.collections/List<kotlin/String>> // com.kylecorry.andromeda.net/HttpResponse.headers.<get-headers>|<get-headers>(){}[0]
+
+    final fun contentAsString(): kotlin/String? // com.kylecorry.andromeda.net/HttpResponse.contentAsString|contentAsString(){}[0]
+    final fun isSuccessful(): kotlin/Boolean // com.kylecorry.andromeda.net/HttpResponse.isSuccessful|isSuccessful(){}[0]
+}

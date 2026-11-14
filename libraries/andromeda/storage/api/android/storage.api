@@ -1,0 +1,217 @@
+public final class com/kylecorry/andromeda/files/FileStorage {
+	public fun <init> (Lokio/Path;Lokio/FileSystem;)V
+	public synthetic fun <init> (Lokio/Path;Lokio/FileSystem;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun createDirectory (Ljava/lang/String;)V
+	public final fun createFile (Ljava/lang/String;)V
+	public final fun delete (Ljava/lang/String;Z)V
+	public static synthetic fun delete$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;ZILjava/lang/Object;)V
+	public final fun exists (Ljava/lang/String;)Z
+	public final fun getFileSystem ()Lokio/FileSystem;
+	public final fun getRoot ()Lokio/Path;
+	public final fun list (Ljava/lang/String;)Ljava/util/List;
+	public static synthetic fun list$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;ILjava/lang/Object;)Ljava/util/List;
+	public final fun metadata (Ljava/lang/String;)Lokio/FileMetadata;
+	public final fun move (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun read (Ljava/lang/String;)[B
+	public final fun readText (Ljava/lang/String;)Ljava/lang/String;
+	public final fun sink (Ljava/lang/String;Z)Lokio/Sink;
+	public static synthetic fun sink$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;ZILjava/lang/Object;)Lokio/Sink;
+	public final fun source (Ljava/lang/String;)Lokio/Source;
+	public final fun write (Ljava/lang/String;[BZ)V
+	public static synthetic fun write$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;[BZILjava/lang/Object;)V
+	public final fun writeText (Ljava/lang/String;Ljava/lang/String;Z)V
+	public static synthetic fun writeText$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/preferences/BooleanPreference {
+	public fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;ZZ)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Z
+	public final fun setValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;Z)V
+}
+
+public final class com/kylecorry/andromeda/preferences/DurationPreference {
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;JZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;JZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getValue-3nIYWDw (Ljava/lang/Object;Lkotlin/reflect/KProperty;)J
+	public final fun setValue-SxA4cEA (Ljava/lang/Object;Lkotlin/reflect/KProperty;J)V
+}
+
+public final class com/kylecorry/andromeda/preferences/FloatPreference {
+	public fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;FZ)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;FZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)F
+	public final fun setValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;F)V
+}
+
+public final class com/kylecorry/andromeda/preferences/IntEnumPreference {
+	public fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Object;Z)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Object;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
+	public final fun setValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/preferences/IntPreference {
+	public fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;IZ)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;IZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)I
+	public final fun setValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;I)V
+}
+
+public final class com/kylecorry/andromeda/preferences/MapExtensionsKt {
+	public static final fun changes (Ljava/util/Map;Ljava/util/Map;)Ljava/util/Collection;
+}
+
+public final class com/kylecorry/andromeda/preferences/Preference {
+	public fun <init> (Ljava/lang/String;Lcom/kylecorry/andromeda/preferences/PreferenceType;Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/kylecorry/andromeda/preferences/PreferenceType;
+	public final fun component3 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/String;Lcom/kylecorry/andromeda/preferences/PreferenceType;Ljava/lang/Object;)Lcom/kylecorry/andromeda/preferences/Preference;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/preferences/Preference;Ljava/lang/String;Lcom/kylecorry/andromeda/preferences/PreferenceType;Ljava/lang/Object;ILjava/lang/Object;)Lcom/kylecorry/andromeda/preferences/Preference;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getKey ()Ljava/lang/String;
+	public final fun getType ()Lcom/kylecorry/andromeda/preferences/PreferenceType;
+	public final fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/preferences/PreferenceDelegatesKt {
+	public static final fun boolean (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;ZZ)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun boolean$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;ZZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+	public static final fun coordinate-ocEFx18 (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;JZ)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun coordinate-ocEFx18$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;JZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+	public static final fun double (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;DZ)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun double$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;DZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+	public static final fun duration-exY8QGI (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;JZ)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun duration-exY8QGI$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;JZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+	public static final fun float (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;FZ)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun float$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;FZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+	public static final fun instant (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Lkotlin/time/Instant;Z)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun instant$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Lkotlin/time/Instant;ZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+	public static final fun int (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;IZ)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun int$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;IZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+	public static final fun intMapping (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/lang/Object;Ljava/util/Map;Z)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun intMapping$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/lang/Object;Ljava/util/Map;ZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+	public static final fun localDate (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Lkotlinx/datetime/LocalDate;Z)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun localDate$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Lkotlinx/datetime/LocalDate;ZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+	public static final fun long (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;JZ)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun long$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;JZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+	public static final fun string (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/lang/String;Z)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun string$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+	public static final fun stringMapping (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/lang/Object;Ljava/util/Map;Z)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun stringMapping$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/lang/Object;Ljava/util/Map;ZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+	public static final fun value (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/lang/Object;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Z)Lkotlin/properties/ReadWriteProperty;
+	public static synthetic fun value$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/lang/Object;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;ZILjava/lang/Object;)Lkotlin/properties/ReadWriteProperty;
+}
+
+public final class com/kylecorry/andromeda/preferences/PreferenceObservationsKt {
+	public static final fun observeBoolean (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun observeDouble (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun observeFloat (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun observeInt (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun observeLong (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun observeString (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/kylecorry/andromeda/preferences/PreferenceSnapshotKt {
+	public static final fun getAll (Lcom/kylecorry/andromeda/preferences/Preferences;)Ljava/util/Collection;
+	public static final fun putAll (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/util/Collection;Z)V
+	public static synthetic fun putAll$default (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/util/Collection;ZILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/preferences/PreferenceType : java/lang/Enum {
+	public static final field Boolean Lcom/kylecorry/andromeda/preferences/PreferenceType;
+	public static final field Float Lcom/kylecorry/andromeda/preferences/PreferenceType;
+	public static final field Int Lcom/kylecorry/andromeda/preferences/PreferenceType;
+	public static final field Long Lcom/kylecorry/andromeda/preferences/PreferenceType;
+	public static final field String Lcom/kylecorry/andromeda/preferences/PreferenceType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/preferences/PreferenceType;
+	public static fun values ()[Lcom/kylecorry/andromeda/preferences/PreferenceType;
+}
+
+public final class com/kylecorry/andromeda/preferences/PreferenceTypeKt {
+	public static final fun getPreferenceType (Ljava/lang/Object;)Lcom/kylecorry/andromeda/preferences/PreferenceType;
+}
+
+public final class com/kylecorry/andromeda/preferences/Preferences {
+	public fun <init> ()V
+	public fun <init> (Lcom/russhwolf/settings/Settings;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lcom/russhwolf/settings/Settings;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun clear ()V
+	public final fun contains (Ljava/lang/String;)Z
+	public final fun getBoolean (Ljava/lang/String;)Ljava/lang/Boolean;
+	public final fun getCoordinate-UUspS8c (Ljava/lang/String;)Lcom/kylecorry/sol/units/Coordinate;
+	public final fun getDouble (Ljava/lang/String;)Ljava/lang/Double;
+	public final fun getDuration-LV8wdWc (Ljava/lang/String;)Lkotlin/time/Duration;
+	public final fun getFloat (Ljava/lang/String;)Ljava/lang/Float;
+	public final fun getInstant (Ljava/lang/String;)Lkotlin/time/Instant;
+	public final fun getInt (Ljava/lang/String;)Ljava/lang/Integer;
+	public final fun getKeys ()Ljava/util/Set;
+	public final fun getLocalDate (Ljava/lang/String;)Lkotlinx/datetime/LocalDate;
+	public final fun getLong (Ljava/lang/String;)Ljava/lang/Long;
+	public final fun getSettings ()Lcom/russhwolf/settings/Settings;
+	public final fun getString (Ljava/lang/String;)Ljava/lang/String;
+	public final fun observeChanges ()Lkotlinx/coroutines/flow/Flow;
+	public final fun putBoolean (Ljava/lang/String;Z)V
+	public final fun putCoordinate-m4sTgqk (Ljava/lang/String;J)V
+	public final fun putDouble (Ljava/lang/String;D)V
+	public final fun putDuration-HG0u8IE (Ljava/lang/String;J)V
+	public final fun putFloat (Ljava/lang/String;F)V
+	public final fun putInstant (Ljava/lang/String;Lkotlin/time/Instant;)V
+	public final fun putInt (Ljava/lang/String;I)V
+	public final fun putLocalDate (Ljava/lang/String;Lkotlinx/datetime/LocalDate;)V
+	public final fun putLong (Ljava/lang/String;J)V
+	public final fun putString (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun remove (Ljava/lang/String;)V
+}
+
+public final class com/kylecorry/andromeda/preferences/PreferencesAndroidKt {
+	public static final fun preferences (Landroid/content/Context;Ljava/lang/String;Z)Lcom/kylecorry/andromeda/preferences/Preferences;
+	public static synthetic fun preferences$default (Landroid/content/Context;Ljava/lang/String;ZILjava/lang/Object;)Lcom/kylecorry/andromeda/preferences/Preferences;
+}
+
+public final class com/kylecorry/andromeda/preferences/PreferencesKt {
+	public static final fun getIntArray (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;)Ljava/util/List;
+	public static final fun getLongArray (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;)Ljava/util/List;
+	public static final fun putIntArray (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/util/List;)V
+	public static final fun putLongArray (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/util/List;)V
+	public static final fun putOrRemoveCoordinate-JMYnXtQ (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Lcom/kylecorry/sol/units/Coordinate;)V
+	public static final fun putOrRemoveFloat (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/lang/Float;)V
+}
+
+public final class com/kylecorry/andromeda/preferences/SettingsMigration {
+	public fun <init> (ILkotlin/jvm/functions/Function2;)V
+	public final fun component1 ()I
+	public final fun component2 ()Lkotlin/jvm/functions/Function2;
+	public final fun copy (ILkotlin/jvm/functions/Function2;)Lcom/kylecorry/andromeda/preferences/SettingsMigration;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/preferences/SettingsMigration;ILkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lcom/kylecorry/andromeda/preferences/SettingsMigration;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAction ()Lkotlin/jvm/functions/Function2;
+	public final fun getFromVersion ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/preferences/SettingsMigrator {
+	public fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;)V
+	public final fun migrate (ILjava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/preferences/StringEnumPreference {
+	public fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Object;Z)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Object;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Ljava/lang/Object;
+	public final fun setValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;Ljava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/preferences/StringPreference {
+	public fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/lang/String;Z)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/preferences/Preferences;Ljava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Ljava/lang/String;
+	public final fun setValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;Ljava/lang/String;)V
+}
+

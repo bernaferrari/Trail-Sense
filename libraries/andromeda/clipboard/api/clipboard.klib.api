@@ -1,0 +1,13 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:clipboard>
+abstract fun interface com.kylecorry.andromeda.clipboard/ClipboardWriter { // com.kylecorry.andromeda.clipboard/ClipboardWriter|null[0]
+    abstract fun copy(kotlin/String) // com.kylecorry.andromeda.clipboard/ClipboardWriter.copy|copy(kotlin.String){}[0]
+}
+
+final fun com.kylecorry.andromeda.clipboard/clipboardWriter(): com.kylecorry.andromeda.clipboard/ClipboardWriter // com.kylecorry.andromeda.clipboard/clipboardWriter|clipboardWriter(){}[0]

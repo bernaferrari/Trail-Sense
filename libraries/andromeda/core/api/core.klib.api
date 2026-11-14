@@ -1,0 +1,148 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:core>
+abstract interface com.kylecorry.andromeda.core.ui/ProgressReporter { // com.kylecorry.andromeda.core.ui/ProgressReporter|null[0]
+    abstract val progress // com.kylecorry.andromeda.core.ui/ProgressReporter.progress|{}progress[0]
+        abstract fun <get-progress>(): kotlinx.coroutines.flow/Flow<com.kylecorry.andromeda.core.ui/Progress> // com.kylecorry.andromeda.core.ui/ProgressReporter.progress.<get-progress>|<get-progress>(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.system/AppInfo { // com.kylecorry.andromeda.core.system/AppInfo|null[0]
+    constructor <init>(kotlin/String?, kotlin/String?, kotlin/String?, kotlin/String?) // com.kylecorry.andromeda.core.system/AppInfo.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+
+    final val build // com.kylecorry.andromeda.core.system/AppInfo.build|{}build[0]
+        final fun <get-build>(): kotlin/String? // com.kylecorry.andromeda.core.system/AppInfo.build.<get-build>|<get-build>(){}[0]
+    final val id // com.kylecorry.andromeda.core.system/AppInfo.id|{}id[0]
+        final fun <get-id>(): kotlin/String? // com.kylecorry.andromeda.core.system/AppInfo.id.<get-id>|<get-id>(){}[0]
+    final val name // com.kylecorry.andromeda.core.system/AppInfo.name|{}name[0]
+        final fun <get-name>(): kotlin/String? // com.kylecorry.andromeda.core.system/AppInfo.name.<get-name>|<get-name>(){}[0]
+    final val version // com.kylecorry.andromeda.core.system/AppInfo.version|{}version[0]
+        final fun <get-version>(): kotlin/String? // com.kylecorry.andromeda.core.system/AppInfo.version.<get-version>|<get-version>(){}[0]
+
+    final fun component1(): kotlin/String? // com.kylecorry.andromeda.core.system/AppInfo.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // com.kylecorry.andromeda.core.system/AppInfo.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // com.kylecorry.andromeda.core.system/AppInfo.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // com.kylecorry.andromeda.core.system/AppInfo.component4|component4(){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...): com.kylecorry.andromeda.core.system/AppInfo // com.kylecorry.andromeda.core.system/AppInfo.copy|copy(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.core.system/AppInfo.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.core.system/AppInfo.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.core.system/AppInfo.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.system/DeviceInfo { // com.kylecorry.andromeda.core.system/DeviceInfo|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String?, kotlin/String?, kotlin/Int? = ...) // com.kylecorry.andromeda.core.system/DeviceInfo.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
+
+    final val apiLevel // com.kylecorry.andromeda.core.system/DeviceInfo.apiLevel|{}apiLevel[0]
+        final fun <get-apiLevel>(): kotlin/Int? // com.kylecorry.andromeda.core.system/DeviceInfo.apiLevel.<get-apiLevel>|<get-apiLevel>(){}[0]
+    final val manufacturer // com.kylecorry.andromeda.core.system/DeviceInfo.manufacturer|{}manufacturer[0]
+        final fun <get-manufacturer>(): kotlin/String? // com.kylecorry.andromeda.core.system/DeviceInfo.manufacturer.<get-manufacturer>|<get-manufacturer>(){}[0]
+    final val model // com.kylecorry.andromeda.core.system/DeviceInfo.model|{}model[0]
+        final fun <get-model>(): kotlin/String? // com.kylecorry.andromeda.core.system/DeviceInfo.model.<get-model>|<get-model>(){}[0]
+    final val operatingSystemVersion // com.kylecorry.andromeda.core.system/DeviceInfo.operatingSystemVersion|{}operatingSystemVersion[0]
+        final fun <get-operatingSystemVersion>(): kotlin/String // com.kylecorry.andromeda.core.system/DeviceInfo.operatingSystemVersion.<get-operatingSystemVersion>|<get-operatingSystemVersion>(){}[0]
+    final val platform // com.kylecorry.andromeda.core.system/DeviceInfo.platform|{}platform[0]
+        final fun <get-platform>(): kotlin/String // com.kylecorry.andromeda.core.system/DeviceInfo.platform.<get-platform>|<get-platform>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.core.system/DeviceInfo.component1|component1(){}[0]
+    final fun component2(): kotlin/String // com.kylecorry.andromeda.core.system/DeviceInfo.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // com.kylecorry.andromeda.core.system/DeviceInfo.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // com.kylecorry.andromeda.core.system/DeviceInfo.component4|component4(){}[0]
+    final fun component5(): kotlin/Int? // com.kylecorry.andromeda.core.system/DeviceInfo.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/Int? = ...): com.kylecorry.andromeda.core.system/DeviceInfo // com.kylecorry.andromeda.core.system/DeviceInfo.copy|copy(kotlin.String;kotlin.String;kotlin.String?;kotlin.String?;kotlin.Int?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.core.system/DeviceInfo.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.core.system/DeviceInfo.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.core.system/DeviceInfo.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.system/DeviceMemory { // com.kylecorry.andromeda.core.system/DeviceMemory|null[0]
+    constructor <init>(kotlin/Long?, kotlin/Long?, kotlin/Boolean?) // com.kylecorry.andromeda.core.system/DeviceMemory.<init>|<init>(kotlin.Long?;kotlin.Long?;kotlin.Boolean?){}[0]
+
+    final val availableBytes // com.kylecorry.andromeda.core.system/DeviceMemory.availableBytes|{}availableBytes[0]
+        final fun <get-availableBytes>(): kotlin/Long? // com.kylecorry.andromeda.core.system/DeviceMemory.availableBytes.<get-availableBytes>|<get-availableBytes>(){}[0]
+    final val lowMemory // com.kylecorry.andromeda.core.system/DeviceMemory.lowMemory|{}lowMemory[0]
+        final fun <get-lowMemory>(): kotlin/Boolean? // com.kylecorry.andromeda.core.system/DeviceMemory.lowMemory.<get-lowMemory>|<get-lowMemory>(){}[0]
+    final val totalBytes // com.kylecorry.andromeda.core.system/DeviceMemory.totalBytes|{}totalBytes[0]
+        final fun <get-totalBytes>(): kotlin/Long? // com.kylecorry.andromeda.core.system/DeviceMemory.totalBytes.<get-totalBytes>|<get-totalBytes>(){}[0]
+
+    final fun component1(): kotlin/Long? // com.kylecorry.andromeda.core.system/DeviceMemory.component1|component1(){}[0]
+    final fun component2(): kotlin/Long? // com.kylecorry.andromeda.core.system/DeviceMemory.component2|component2(){}[0]
+    final fun component3(): kotlin/Boolean? // com.kylecorry.andromeda.core.system/DeviceMemory.component3|component3(){}[0]
+    final fun copy(kotlin/Long? = ..., kotlin/Long? = ..., kotlin/Boolean? = ...): com.kylecorry.andromeda.core.system/DeviceMemory // com.kylecorry.andromeda.core.system/DeviceMemory.copy|copy(kotlin.Long?;kotlin.Long?;kotlin.Boolean?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.core.system/DeviceMemory.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.core.system/DeviceMemory.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.core.system/DeviceMemory.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.system/GeoUri { // com.kylecorry.andromeda.core.system/GeoUri|null[0]
+    constructor <init>(com.kylecorry.sol.units/Coordinate, kotlin/Float? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...) // com.kylecorry.andromeda.core.system/GeoUri.<init>|<init>(com.kylecorry.sol.units.Coordinate;kotlin.Float?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+
+    final val altitude // com.kylecorry.andromeda.core.system/GeoUri.altitude|{}altitude[0]
+        final fun <get-altitude>(): kotlin/Float? // com.kylecorry.andromeda.core.system/GeoUri.altitude.<get-altitude>|<get-altitude>(){}[0]
+    final val coordinate // com.kylecorry.andromeda.core.system/GeoUri.coordinate|{}coordinate[0]
+        final fun <get-coordinate>(): com.kylecorry.sol.units/Coordinate // com.kylecorry.andromeda.core.system/GeoUri.coordinate.<get-coordinate>|<get-coordinate>(){}[0]
+    final val queryParameters // com.kylecorry.andromeda.core.system/GeoUri.queryParameters|{}queryParameters[0]
+        final fun <get-queryParameters>(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.kylecorry.andromeda.core.system/GeoUri.queryParameters.<get-queryParameters>|<get-queryParameters>(){}[0]
+
+    final fun component1(): com.kylecorry.sol.units/Coordinate // com.kylecorry.andromeda.core.system/GeoUri.component1|component1(){}[0]
+    final fun component2(): kotlin/Float? // com.kylecorry.andromeda.core.system/GeoUri.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.kylecorry.andromeda.core.system/GeoUri.component3|component3(){}[0]
+    final fun copy(com.kylecorry.sol.units/Coordinate = ..., kotlin/Float? = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...): com.kylecorry.andromeda.core.system/GeoUri // com.kylecorry.andromeda.core.system/GeoUri.copy|copy(com.kylecorry.sol.units.Coordinate;kotlin.Float?;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.core.system/GeoUri.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.core.system/GeoUri.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.core.system/GeoUri.toString|toString(){}[0]
+
+    final object Companion { // com.kylecorry.andromeda.core.system/GeoUri.Companion|null[0]
+        final fun parse(kotlin/String): com.kylecorry.andromeda.core.system/GeoUri? // com.kylecorry.andromeda.core.system/GeoUri.Companion.parse|parse(kotlin.String){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.core.time/TimeoutTracker { // com.kylecorry.andromeda.core.time/TimeoutTracker|null[0]
+    constructor <init>(com.kylecorry.andromeda.core.time/TimeProvider = ...) // com.kylecorry.andromeda.core.time/TimeoutTracker.<init>|<init>(com.kylecorry.andromeda.core.time.TimeProvider){}[0]
+
+    final val isStarted // com.kylecorry.andromeda.core.time/TimeoutTracker.isStarted|{}isStarted[0]
+        final fun <get-isStarted>(): kotlin/Boolean // com.kylecorry.andromeda.core.time/TimeoutTracker.isStarted.<get-isStarted>|<get-isStarted>(){}[0]
+
+    final fun elapsed(): kotlin.time/Duration // com.kylecorry.andromeda.core.time/TimeoutTracker.elapsed|elapsed(){}[0]
+    final fun isTimedOut(kotlin.time/Duration, kotlin/Boolean = ...): kotlin/Boolean // com.kylecorry.andromeda.core.time/TimeoutTracker.isTimedOut|isTimedOut(kotlin.time.Duration;kotlin.Boolean){}[0]
+    final fun reset() // com.kylecorry.andromeda.core.time/TimeoutTracker.reset|reset(){}[0]
+    final fun start() // com.kylecorry.andromeda.core.time/TimeoutTracker.start|start(){}[0]
+}
+
+final class com.kylecorry.andromeda.core.ui/Progress { // com.kylecorry.andromeda.core.ui/Progress|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/String? = ...) // com.kylecorry.andromeda.core.ui/Progress.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.String?){}[0]
+
+    final val message // com.kylecorry.andromeda.core.ui/Progress.message|{}message[0]
+        final fun <get-message>(): kotlin/String? // com.kylecorry.andromeda.core.ui/Progress.message.<get-message>|<get-message>(){}[0]
+    final val percent // com.kylecorry.andromeda.core.ui/Progress.percent|{}percent[0]
+        final fun <get-percent>(): kotlin/Float // com.kylecorry.andromeda.core.ui/Progress.percent.<get-percent>|<get-percent>(){}[0]
+    final val processed // com.kylecorry.andromeda.core.ui/Progress.processed|{}processed[0]
+        final fun <get-processed>(): kotlin/Int // com.kylecorry.andromeda.core.ui/Progress.processed.<get-processed>|<get-processed>(){}[0]
+    final val total // com.kylecorry.andromeda.core.ui/Progress.total|{}total[0]
+        final fun <get-total>(): kotlin/Int // com.kylecorry.andromeda.core.ui/Progress.total.<get-total>|<get-total>(){}[0]
+
+    final fun component1(): kotlin/Int // com.kylecorry.andromeda.core.ui/Progress.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // com.kylecorry.andromeda.core.ui/Progress.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // com.kylecorry.andromeda.core.ui/Progress.component3|component3(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/String? = ...): com.kylecorry.andromeda.core.ui/Progress // com.kylecorry.andromeda.core.ui/Progress.copy|copy(kotlin.Int;kotlin.Int;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.core.ui/Progress.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.core.ui/Progress.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.core.ui/Progress.toString|toString(){}[0]
+}
+
+final object com.kylecorry.andromeda.core.ui/Colors { // com.kylecorry.andromeda.core.ui/Colors|null[0]
+    final fun (kotlin/Int).withAlpha(kotlin/Int): kotlin/Int // com.kylecorry.andromeda.core.ui/Colors.withAlpha|withAlpha@kotlin.Int(kotlin.Int){}[0]
+    final fun fromColorTemperature(kotlin/Float): kotlin/Int // com.kylecorry.andromeda.core.ui/Colors.fromColorTemperature|fromColorTemperature(kotlin.Float){}[0]
+    final fun interpolate(kotlin/Int, kotlin/Int, kotlin/Float): kotlin/Int // com.kylecorry.andromeda.core.ui/Colors.interpolate|interpolate(kotlin.Int;kotlin.Int;kotlin.Float){}[0]
+    final fun mostContrastingColor(kotlin/Int, kotlin/Int, kotlin/Int): kotlin/Int // com.kylecorry.andromeda.core.ui/Colors.mostContrastingColor|mostContrastingColor(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun toHex(kotlin/Int): kotlin/String // com.kylecorry.andromeda.core.ui/Colors.toHex|toHex(kotlin.Int){}[0]
+}
+
+final fun (com.kylecorry.sol.math.geometry/Size).com.kylecorry.andromeda.core.math/scaleToFit(com.kylecorry.sol.math.geometry/Size): com.kylecorry.sol.math.geometry/Size // com.kylecorry.andromeda.core.math/scaleToFit|scaleToFit@com.kylecorry.sol.math.geometry.Size(com.kylecorry.sol.math.geometry.Size){}[0]
+final fun <#A: kotlin/Comparable<#A>> (kotlin.collections/Iterable<#A>).com.kylecorry.andromeda.core/rangeOrNull(): kotlin.ranges/ClosedRange<#A>? // com.kylecorry.andromeda.core/rangeOrNull|rangeOrNull@kotlin.collections.Iterable<0:0>(){0§<kotlin.Comparable<0:0>>}[0]
+final fun com.kylecorry.andromeda.core.system/appInfo(): com.kylecorry.andromeda.core.system/AppInfo // com.kylecorry.andromeda.core.system/appInfo|appInfo(){}[0]
+final fun com.kylecorry.andromeda.core.system/deviceInfo(): com.kylecorry.andromeda.core.system/DeviceInfo // com.kylecorry.andromeda.core.system/deviceInfo|deviceInfo(){}[0]
+final fun com.kylecorry.andromeda.core.system/deviceMemory(): com.kylecorry.andromeda.core.system/DeviceMemory // com.kylecorry.andromeda.core.system/deviceMemory|deviceMemory(){}[0]

@@ -1,0 +1,51 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:permissions>
+final enum class com.kylecorry.andromeda.permissions/AppPermission : kotlin/Enum<com.kylecorry.andromeda.permissions/AppPermission> { // com.kylecorry.andromeda.permissions/AppPermission|null[0]
+    enum entry BackgroundLocation // com.kylecorry.andromeda.permissions/AppPermission.BackgroundLocation|null[0]
+    enum entry Bluetooth // com.kylecorry.andromeda.permissions/AppPermission.Bluetooth|null[0]
+    enum entry Camera // com.kylecorry.andromeda.permissions/AppPermission.Camera|null[0]
+    enum entry CoarseLocation // com.kylecorry.andromeda.permissions/AppPermission.CoarseLocation|null[0]
+    enum entry Gallery // com.kylecorry.andromeda.permissions/AppPermission.Gallery|null[0]
+    enum entry Location // com.kylecorry.andromeda.permissions/AppPermission.Location|null[0]
+    enum entry Microphone // com.kylecorry.andromeda.permissions/AppPermission.Microphone|null[0]
+    enum entry Motion // com.kylecorry.andromeda.permissions/AppPermission.Motion|null[0]
+    enum entry Notifications // com.kylecorry.andromeda.permissions/AppPermission.Notifications|null[0]
+    enum entry ReadContacts // com.kylecorry.andromeda.permissions/AppPermission.ReadContacts|null[0]
+    enum entry ReadStorage // com.kylecorry.andromeda.permissions/AppPermission.ReadStorage|null[0]
+    enum entry WriteStorage // com.kylecorry.andromeda.permissions/AppPermission.WriteStorage|null[0]
+
+    final val entries // com.kylecorry.andromeda.permissions/AppPermission.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.permissions/AppPermission> // com.kylecorry.andromeda.permissions/AppPermission.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.permissions/AppPermission // com.kylecorry.andromeda.permissions/AppPermission.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.permissions/AppPermission> // com.kylecorry.andromeda.permissions/AppPermission.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.permissions/PermissionStatus : kotlin/Enum<com.kylecorry.andromeda.permissions/PermissionStatus> { // com.kylecorry.andromeda.permissions/PermissionStatus|null[0]
+    enum entry Denied // com.kylecorry.andromeda.permissions/PermissionStatus.Denied|null[0]
+    enum entry DeniedAlways // com.kylecorry.andromeda.permissions/PermissionStatus.DeniedAlways|null[0]
+    enum entry Granted // com.kylecorry.andromeda.permissions/PermissionStatus.Granted|null[0]
+    enum entry NotDetermined // com.kylecorry.andromeda.permissions/PermissionStatus.NotDetermined|null[0]
+    enum entry NotGranted // com.kylecorry.andromeda.permissions/PermissionStatus.NotGranted|null[0]
+
+    final val entries // com.kylecorry.andromeda.permissions/PermissionStatus.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.permissions/PermissionStatus> // com.kylecorry.andromeda.permissions/PermissionStatus.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.permissions/PermissionStatus // com.kylecorry.andromeda.permissions/PermissionStatus.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.permissions/PermissionStatus> // com.kylecorry.andromeda.permissions/PermissionStatus.values|values#static(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.permissions/PermissionAccess { // com.kylecorry.andromeda.permissions/PermissionAccess|null[0]
+    abstract fun openSettings() // com.kylecorry.andromeda.permissions/PermissionAccess.openSettings|openSettings(){}[0]
+    abstract suspend fun request(com.kylecorry.andromeda.permissions/AppPermission): com.kylecorry.andromeda.permissions/PermissionStatus // com.kylecorry.andromeda.permissions/PermissionAccess.request|request(com.kylecorry.andromeda.permissions.AppPermission){}[0]
+    abstract suspend fun status(com.kylecorry.andromeda.permissions/AppPermission): com.kylecorry.andromeda.permissions/PermissionStatus // com.kylecorry.andromeda.permissions/PermissionAccess.status|status(com.kylecorry.andromeda.permissions.AppPermission){}[0]
+}
+
+final fun com.kylecorry.andromeda.permissions/permissionAccess(): com.kylecorry.andromeda.permissions/PermissionAccess // com.kylecorry.andromeda.permissions/permissionAccess|permissionAccess(){}[0]
+final fun com.kylecorry.andromeda.permissions/permissionAccess(dev.icerock.moko.permissions.ios/PermissionsControllerProtocol): com.kylecorry.andromeda.permissions/PermissionAccess // com.kylecorry.andromeda.permissions/permissionAccess|permissionAccess(dev.icerock.moko.permissions.ios.PermissionsControllerProtocol){}[0]

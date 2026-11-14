@@ -1,0 +1,42 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:haptics>
+final enum class com.kylecorry.andromeda.haptics/HapticFeedbackType : kotlin/Enum<com.kylecorry.andromeda.haptics/HapticFeedbackType> { // com.kylecorry.andromeda.haptics/HapticFeedbackType|null[0]
+    enum entry Click // com.kylecorry.andromeda.haptics/HapticFeedbackType.Click|null[0]
+    enum entry DoubleClick // com.kylecorry.andromeda.haptics/HapticFeedbackType.DoubleClick|null[0]
+    enum entry HeavyClick // com.kylecorry.andromeda.haptics/HapticFeedbackType.HeavyClick|null[0]
+    enum entry Tick // com.kylecorry.andromeda.haptics/HapticFeedbackType.Tick|null[0]
+
+    final val entries // com.kylecorry.andromeda.haptics/HapticFeedbackType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.haptics/HapticFeedbackType> // com.kylecorry.andromeda.haptics/HapticFeedbackType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.haptics/HapticFeedbackType // com.kylecorry.andromeda.haptics/HapticFeedbackType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.haptics/HapticFeedbackType> // com.kylecorry.andromeda.haptics/HapticFeedbackType.values|values#static(){}[0]
+}
+
+abstract interface com.kylecorry.andromeda.haptics/HapticMotor { // com.kylecorry.andromeda.haptics/HapticMotor|null[0]
+    abstract fun feedback(com.kylecorry.andromeda.haptics/HapticFeedbackType) // com.kylecorry.andromeda.haptics/HapticMotor.feedback|feedback(com.kylecorry.andromeda.haptics.HapticFeedbackType){}[0]
+    abstract fun interval(kotlin.time/Duration, kotlin.time/Duration, kotlin/Int = ...) // com.kylecorry.andromeda.haptics/HapticMotor.interval|interval(kotlin.time.Duration;kotlin.time.Duration;kotlin.Int){}[0]
+    abstract fun isAvailable(): kotlin/Boolean // com.kylecorry.andromeda.haptics/HapticMotor.isAvailable|isAvailable(){}[0]
+    abstract fun off() // com.kylecorry.andromeda.haptics/HapticMotor.off|off(){}[0]
+    abstract fun on(kotlin/Int = ...) // com.kylecorry.andromeda.haptics/HapticMotor.on|on(kotlin.Int){}[0]
+    abstract fun once(kotlin.time/Duration, kotlin/Int = ...) // com.kylecorry.andromeda.haptics/HapticMotor.once|once(kotlin.time.Duration;kotlin.Int){}[0]
+    abstract fun pattern(kotlin.collections/List<kotlin.time/Duration>, kotlin.collections/List<kotlin/Int>? = ..., kotlin/Boolean = ...) // com.kylecorry.andromeda.haptics/HapticMotor.pattern|pattern(kotlin.collections.List<kotlin.time.Duration>;kotlin.collections.List<kotlin.Int>?;kotlin.Boolean){}[0]
+}
+
+final class com.kylecorry.andromeda.haptics/DialHapticFeedback { // com.kylecorry.andromeda.haptics/DialHapticFeedback|null[0]
+    constructor <init>(com.kylecorry.andromeda.haptics/HapticMotor, kotlin/Int = ..., kotlin/Float = ...) // com.kylecorry.andromeda.haptics/DialHapticFeedback.<init>|<init>(com.kylecorry.andromeda.haptics.HapticMotor;kotlin.Int;kotlin.Float){}[0]
+
+    final var angle // com.kylecorry.andromeda.haptics/DialHapticFeedback.angle|{}angle[0]
+        final fun <get-angle>(): kotlin/Float // com.kylecorry.andromeda.haptics/DialHapticFeedback.angle.<get-angle>|<get-angle>(){}[0]
+        final fun <set-angle>(kotlin/Float) // com.kylecorry.andromeda.haptics/DialHapticFeedback.angle.<set-angle>|<set-angle>(kotlin.Float){}[0]
+
+    final fun stop() // com.kylecorry.andromeda.haptics/DialHapticFeedback.stop|stop(){}[0]
+}
+
+final fun com.kylecorry.andromeda.haptics/deviceHaptics(): com.kylecorry.andromeda.haptics/HapticMotor // com.kylecorry.andromeda.haptics/deviceHaptics|deviceHaptics(){}[0]

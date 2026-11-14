@@ -1,0 +1,35 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:navigation>
+final enum class com.kylecorry.andromeda.navigation/ColorTheme : kotlin/Enum<com.kylecorry.andromeda.navigation/ColorTheme> { // com.kylecorry.andromeda.navigation/ColorTheme|null[0]
+    enum entry Dark // com.kylecorry.andromeda.navigation/ColorTheme.Dark|null[0]
+    enum entry Light // com.kylecorry.andromeda.navigation/ColorTheme.Light|null[0]
+    enum entry System // com.kylecorry.andromeda.navigation/ColorTheme.System|null[0]
+
+    final val entries // com.kylecorry.andromeda.navigation/ColorTheme.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.navigation/ColorTheme> // com.kylecorry.andromeda.navigation/ColorTheme.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.navigation/ColorTheme // com.kylecorry.andromeda.navigation/ColorTheme.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.navigation/ColorTheme> // com.kylecorry.andromeda.navigation/ColorTheme.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.navigation/VolumeButton : kotlin/Enum<com.kylecorry.andromeda.navigation/VolumeButton> { // com.kylecorry.andromeda.navigation/VolumeButton|null[0]
+    enum entry Down // com.kylecorry.andromeda.navigation/VolumeButton.Down|null[0]
+    enum entry Up // com.kylecorry.andromeda.navigation/VolumeButton.Up|null[0]
+
+    final val entries // com.kylecorry.andromeda.navigation/VolumeButton.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.navigation/VolumeButton> // com.kylecorry.andromeda.navigation/VolumeButton.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.navigation/VolumeButton // com.kylecorry.andromeda.navigation/VolumeButton.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.navigation/VolumeButton> // com.kylecorry.andromeda.navigation/VolumeButton.values|values#static(){}[0]
+}
+
+final fun com.kylecorry.andromeda.navigation/OnResumeAfter(kotlin.time/Duration, kotlin.coroutines/SuspendFunction0<kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.navigation/OnResumeAfter|OnResumeAfter(kotlin.time.Duration;kotlin.coroutines.SuspendFunction0<kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.navigation/OnResumeAfter(kotlin.time/Duration?, kotlin.coroutines/SuspendFunction0<kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.navigation/OnResumeAfter|OnResumeAfter(kotlin.time.Duration?;kotlin.coroutines.SuspendFunction0<kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.navigation/ResumeInterval(kotlin.time/Duration, kotlin.time/Duration, kotlin.coroutines/SuspendFunction0<kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.navigation/ResumeInterval|ResumeInterval(kotlin.time.Duration;kotlin.time.Duration;kotlin.coroutines.SuspendFunction0<kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.navigation/ResumeInterval(kotlin.time/Duration, kotlin.time/Duration?, kotlin.coroutines/SuspendFunction0<kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.kylecorry.andromeda.navigation/ResumeInterval|ResumeInterval(kotlin.time.Duration;kotlin.time.Duration?;kotlin.coroutines.SuspendFunction0<kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]

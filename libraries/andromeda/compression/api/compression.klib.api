@@ -1,0 +1,23 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:compression>
+final object com.kylecorry.andromeda.compression/CompressionUtils { // com.kylecorry.andromeda.compression/CompressionUtils|null[0]
+    final fun getByte(kotlin/ByteArray, kotlin/Int, kotlin/Int = ...): kotlin/Byte? // com.kylecorry.andromeda.compression/CompressionUtils.getByte|getByte(kotlin.ByteArray;kotlin.Int;kotlin.Int){}[0]
+    final fun getBytes(kotlin/ByteArray, kotlin/Int, kotlin/Int, kotlin/Int = ...): kotlin/ByteArray? // com.kylecorry.andromeda.compression/CompressionUtils.getBytes|getBytes(kotlin.ByteArray;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun getInt(kotlin/ByteArray, kotlin/Int): kotlin/Int? // com.kylecorry.andromeda.compression/CompressionUtils.getInt|getInt(kotlin.ByteArray;kotlin.Int){}[0]
+    final fun getShort(kotlin/ByteArray, kotlin/Int): kotlin/Short? // com.kylecorry.andromeda.compression/CompressionUtils.getShort|getShort(kotlin.ByteArray;kotlin.Int){}[0]
+}
+
+final object com.kylecorry.andromeda.compression/Zlib { // com.kylecorry.andromeda.compression/Zlib|null[0]
+    final fun decompress(kotlin/ByteArray): kotlin/ByteArray // com.kylecorry.andromeda.compression/Zlib.decompress|decompress(kotlin.ByteArray){}[0]
+}
+
+final fun (kotlin/ByteArray).com.kylecorry.andromeda.compression/bitsToByte(kotlin/Int, kotlin/Int = ...): kotlin/Byte? // com.kylecorry.andromeda.compression/bitsToByte|bitsToByte@kotlin.ByteArray(kotlin.Int;kotlin.Int){}[0]
+final fun (kotlin/ByteArray).com.kylecorry.andromeda.compression/bitsToInt(kotlin/Int, kotlin/Int = ...): kotlin/Int? // com.kylecorry.andromeda.compression/bitsToInt|bitsToInt@kotlin.ByteArray(kotlin.Int;kotlin.Int){}[0]
+final fun (kotlin/ByteArray).com.kylecorry.andromeda.compression/toInt(): kotlin/Int // com.kylecorry.andromeda.compression/toInt|toInt@kotlin.ByteArray(){}[0]
+final fun (kotlin/ByteArray).com.kylecorry.andromeda.compression/toShort(): kotlin/Short // com.kylecorry.andromeda.compression/toShort|toShort@kotlin.ByteArray(){}[0]

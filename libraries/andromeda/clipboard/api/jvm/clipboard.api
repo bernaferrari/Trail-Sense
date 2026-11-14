@@ -1,0 +1,8 @@
+public abstract interface class com/kylecorry/andromeda/clipboard/ClipboardWriter {
+	public abstract fun copy (Ljava/lang/String;)V
+}
+
+public final class com/kylecorry/andromeda/clipboard/ClipboardWriterKt {
+	public static final fun clipboardWriter ()Lcom/kylecorry/andromeda/clipboard/ClipboardWriter;
+}
+

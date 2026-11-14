@@ -1,0 +1,25 @@
+public abstract interface class com/kylecorry/andromeda/alerts/AlertPresenter {
+	public abstract fun confirm (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/alerts/AlertState : com/kylecorry/andromeda/alerts/AlertPresenter {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun confirm (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/alerts/ComposeAlertsKt {
+	public static final fun AlertHost (Lcom/kylecorry/andromeda/alerts/AlertState;Landroidx/compose/runtime/Composer;I)V
+	public static final fun LoadingIndicator (Lcom/kylecorry/andromeda/alerts/LoadingState;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
+	public static final fun rememberAlertState (Landroidx/compose/runtime/Composer;I)Lcom/kylecorry/andromeda/alerts/AlertState;
+	public static final fun rememberLoadingState (Landroidx/compose/runtime/Composer;I)Lcom/kylecorry/andromeda/alerts/LoadingState;
+}
+
+public final class com/kylecorry/andromeda/alerts/LoadingState : com/kylecorry/andromeda/alerts/loading/LoadingIndicator {
+	public static final field $stable I
+	public fun <init> ()V
+	public final fun getVisible ()Z
+	public fun hide ()V
+	public fun show ()V
+}
+

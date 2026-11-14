@@ -1,0 +1,330 @@
+public final class com/kylecorry/andromeda/device/BatteryReading {
+	public fun <init> (Ljava/lang/Integer;Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;Lcom/kylecorry/andromeda/battery/BatteryHealth;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;Lcom/kylecorry/andromeda/battery/BatteryHealth;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Integer;
+	public final fun component2 ()Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;
+	public final fun component3 ()Lcom/kylecorry/andromeda/battery/BatteryHealth;
+	public final fun component4 ()Ljava/lang/Float;
+	public final fun component5 ()Ljava/lang/Float;
+	public final fun component6 ()Ljava/lang/Float;
+	public final fun component7 ()Ljava/lang/Float;
+	public final fun component8 ()Ljava/lang/Float;
+	public final fun component9 ()Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;
+	public final fun copy (Ljava/lang/Integer;Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;Lcom/kylecorry/andromeda/battery/BatteryHealth;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;)Lcom/kylecorry/andromeda/device/BatteryReading;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/device/BatteryReading;Ljava/lang/Integer;Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;Lcom/kylecorry/andromeda/battery/BatteryHealth;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/BatteryReading;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChargeMilliampHours ()Ljava/lang/Float;
+	public final fun getChargingMethod ()Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;
+	public final fun getChargingStatus ()Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;
+	public final fun getCurrentMilliamps ()Ljava/lang/Float;
+	public final fun getFullChargeMilliampHours ()Ljava/lang/Float;
+	public final fun getHealth ()Lcom/kylecorry/andromeda/battery/BatteryHealth;
+	public final fun getPercent ()Ljava/lang/Integer;
+	public final fun getTemperatureCelsius ()Ljava/lang/Float;
+	public final fun getVoltageVolts ()Ljava/lang/Float;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/device/DeviceAttitude {
+	public fun <init> (Lcom/kylecorry/sol/math/Quaternion;Ljava/lang/Float;)V
+	public synthetic fun <init> (Lcom/kylecorry/sol/math/Quaternion;Ljava/lang/Float;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/kylecorry/sol/math/Quaternion;
+	public final fun component2 ()Ljava/lang/Float;
+	public final fun copy (Lcom/kylecorry/sol/math/Quaternion;Ljava/lang/Float;)Lcom/kylecorry/andromeda/device/DeviceAttitude;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/device/DeviceAttitude;Lcom/kylecorry/sol/math/Quaternion;Ljava/lang/Float;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/DeviceAttitude;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHeadingAccuracyDegrees ()Ljava/lang/Float;
+	public final fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/device/DeviceOrientation : java/lang/Enum {
+	public static final field Flat Lcom/kylecorry/andromeda/device/DeviceOrientation;
+	public static final field FlatInverse Lcom/kylecorry/andromeda/device/DeviceOrientation;
+	public static final field Landscape Lcom/kylecorry/andromeda/device/DeviceOrientation;
+	public static final field LandscapeInverse Lcom/kylecorry/andromeda/device/DeviceOrientation;
+	public static final field Portrait Lcom/kylecorry/andromeda/device/DeviceOrientation;
+	public static final field PortraitInverse Lcom/kylecorry/andromeda/device/DeviceOrientation;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/device/DeviceOrientation;
+	public static fun values ()[Lcom/kylecorry/andromeda/device/DeviceOrientation;
+}
+
+public final class com/kylecorry/andromeda/device/DeviceOrientationKt {
+	public static final fun deviceOrientation (Lcom/kylecorry/sol/math/Vector3;)Lcom/kylecorry/andromeda/device/DeviceOrientation;
+	public static final fun orientation-8Mi8wO0 (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun orientation-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/kylecorry/andromeda/device/DeviceSensors {
+	public fun <init> ()V
+	public final fun acceleration-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun acceleration-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun accelerometer-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowAccelerometer;
+	public static synthetic fun accelerometer-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowAccelerometer;
+	public final fun ambientTemperature-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun ambientTemperature-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun angularVelocity-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun angularVelocity-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun attitude-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun attitude-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun barometer-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowBarometer;
+	public static synthetic fun barometer-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowBarometer;
+	public final fun battery ()Lkotlinx/coroutines/flow/Flow;
+	public final fun compass-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowCompass;
+	public static synthetic fun compass-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowCompass;
+	public final fun geofenceTransitions-8Mi8wO0 (Ljava/util/List;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun geofenceTransitions-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Ljava/util/List;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun gps-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowGPS;
+	public static synthetic fun gps-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowGPS;
+	public final fun gravity-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun gravity-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun gravitySensor-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowAccelerometer;
+	public static synthetic fun gravitySensor-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowAccelerometer;
+	public final fun gyroscope-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowGyroscope;
+	public static synthetic fun gyroscope-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowGyroscope;
+	public final fun hygrometer-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowHygrometer;
+	public static synthetic fun hygrometer-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowHygrometer;
+	public final fun illuminance-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun illuminance-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun lightSensor-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowLightSensor;
+	public static synthetic fun lightSensor-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowLightSensor;
+	public final fun linearAcceleration-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun linearAcceleration-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun linearAccelerometer-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowAccelerometer;
+	public static synthetic fun linearAccelerometer-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowAccelerometer;
+	public final fun location-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun location-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun magneticField-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun magneticField-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun magneticHeading-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun magneticHeading-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun magnetometer-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowMagnetometer;
+	public static synthetic fun magnetometer-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowMagnetometer;
+	public final fun mslAltimeter-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowAltimeter;
+	public static synthetic fun mslAltimeter-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowAltimeter;
+	public final fun mslAltitude-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun mslAltitude-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun orientationSensor-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowOrientationSensor;
+	public static synthetic fun orientationSensor-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowOrientationSensor;
+	public final fun pedometer-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowPedometer;
+	public static synthetic fun pedometer-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowPedometer;
+	public final fun pressure-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun pressure-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun proximity-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun proximity-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun relativeHumidity-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun relativeHumidity-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun satelliteStatus ()Lkotlinx/coroutines/flow/Flow;
+	public final fun satelliteStatusSensor (Lkotlinx/coroutines/CoroutineScope;)Lcom/kylecorry/andromeda/device/FlowSatelliteStatus;
+	public final fun steps-VtjQ1oo (JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun steps-VtjQ1oo$default (Lcom/kylecorry/andromeda/device/DeviceSensors;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun thermometer-8Mi8wO0 (Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;)Lcom/kylecorry/andromeda/device/FlowThermometer;
+	public static synthetic fun thermometer-8Mi8wO0$default (Lcom/kylecorry/andromeda/device/DeviceSensors;Lkotlinx/coroutines/CoroutineScope;JLcom/kylecorry/andromeda/device/SensorAccuracy;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/FlowThermometer;
+}
+
+public final class com/kylecorry/andromeda/device/FlowAccelerometer : com/kylecorry/andromeda/device/FlowMeasurement, com/kylecorry/andromeda/sense/accelerometer/Accelerometer {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;)V
+	public fun getAcceleration ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getRawAcceleration ()[F
+}
+
+public final class com/kylecorry/andromeda/device/FlowAltimeter : com/kylecorry/andromeda/device/FlowMeasurement, com/kylecorry/andromeda/core/sensors/Altimeter {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;)V
+	public fun getAltitude ()F
+}
+
+public final class com/kylecorry/andromeda/device/FlowBarometer : com/kylecorry/andromeda/device/FlowMeasurement, com/kylecorry/andromeda/sense/barometer/Barometer {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;)V
+	public fun getPressure ()F
+}
+
+public final class com/kylecorry/andromeda/device/FlowCompass : com/kylecorry/andromeda/device/FlowMeasurement, com/kylecorry/andromeda/sense/compass/CompassSensor {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;ZF)V
+	public synthetic fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;ZFILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getBearing-xhh9egc ()F
+	public fun getDeclination ()F
+	public final fun getOffset ()F
+	public fun getRawBearing ()F
+	public final fun getUseTrueNorth ()Z
+	public fun setDeclination (F)V
+	public final fun setOffset (F)V
+	public final fun setUseTrueNorth (Z)V
+}
+
+public final class com/kylecorry/andromeda/device/FlowGPS : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/location/GpsSensor {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;)V
+	public fun getAltitude ()F
+	public fun getBearing-nRD8NRo ()Lcom/kylecorry/sol/units/Bearing;
+	public fun getBearingAccuracy ()Ljava/lang/Float;
+	public fun getHasValidReading ()Z
+	public fun getHorizontalAccuracy ()Ljava/lang/Float;
+	public fun getLocation-VMd8-xo ()J
+	public fun getMslAltitude ()Ljava/lang/Float;
+	public fun getQuality ()Lcom/kylecorry/andromeda/core/sensors/Quality;
+	public fun getRawBearing ()Ljava/lang/Float;
+	public fun getSpeed-1elyFk4 ()J
+	public fun getSpeedAccuracy ()Ljava/lang/Float;
+	public fun getVerticalAccuracy ()Ljava/lang/Float;
+}
+
+public final class com/kylecorry/andromeda/device/FlowGyroscope : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/sense/orientation/Gyroscope {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;Z)V
+	public synthetic fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAngularRate ()Lcom/kylecorry/sol/math/Euler;
+	public fun getHasValidReading ()Z
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getRawAngularRate ()[F
+	public fun getRawOrientation ()[F
+}
+
+public final class com/kylecorry/andromeda/device/FlowHygrometer : com/kylecorry/andromeda/device/FlowMeasurement, com/kylecorry/andromeda/sense/hygrometer/Hygrometer {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;)V
+	public fun getHumidity ()F
+}
+
+public final class com/kylecorry/andromeda/device/FlowLightSensor : com/kylecorry/andromeda/device/FlowMeasurement, com/kylecorry/andromeda/sense/light/LightSensor {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;)V
+	public fun getIlluminance ()F
+}
+
+public final class com/kylecorry/andromeda/device/FlowMagnetometer : com/kylecorry/andromeda/device/FlowMeasurement, com/kylecorry/andromeda/sense/magnetometer/Magnetometer {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;)V
+	public fun getMagneticField ()Lcom/kylecorry/sol/math/Vector3;
+	public fun getRawMagneticField ()[F
+}
+
+public abstract class com/kylecorry/andromeda/device/FlowMeasurement : com/kylecorry/andromeda/core/sensors/SharedSensor {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;Ljava/lang/Object;)V
+	public final fun getHasValidReading ()Z
+	protected final fun getValue ()Ljava/lang/Object;
+	protected fun startImpl ()V
+	protected fun stopImpl ()V
+}
+
+public final class com/kylecorry/andromeda/device/FlowOrientationSensor : com/kylecorry/andromeda/device/FlowMeasurement, com/kylecorry/andromeda/sense/orientation/OrientationSensor {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;)V
+	public fun getHeadingAccuracy ()Ljava/lang/Float;
+	public fun getOrientation ()Lcom/kylecorry/sol/math/Quaternion;
+	public fun getRawOrientation ()[F
+}
+
+public final class com/kylecorry/andromeda/device/FlowPedometer : com/kylecorry/andromeda/device/FlowMeasurement, com/kylecorry/andromeda/sense/pedometer/Pedometer {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;)V
+	public fun getSteps ()I
+}
+
+public final class com/kylecorry/andromeda/device/FlowSatelliteStatus : com/kylecorry/andromeda/device/FlowMeasurement, com/kylecorry/andromeda/sense/location/SatelliteStatusSensor {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;)V
+	public fun getSatelliteDetails ()Ljava/util/List;
+	public fun getSatellites ()Ljava/lang/Integer;
+}
+
+public final class com/kylecorry/andromeda/device/FlowThermometer : com/kylecorry/andromeda/device/FlowMeasurement, com/kylecorry/andromeda/core/sensors/Thermometer {
+	public fun <init> (Lkotlinx/coroutines/flow/Flow;Lkotlinx/coroutines/CoroutineScope;)V
+	public fun getTemperature ()F
+}
+
+public final class com/kylecorry/andromeda/device/Geofence {
+	public synthetic fun <init> (Ljava/lang/String;JFLkotlin/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;JFLkotlin/time/Instant;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2-VMd8-xo ()J
+	public final fun component3 ()F
+	public final fun component4 ()Lkotlin/time/Instant;
+	public final fun copy-nOvyPWg (Ljava/lang/String;JFLkotlin/time/Instant;)Lcom/kylecorry/andromeda/device/Geofence;
+	public static synthetic fun copy-nOvyPWg$default (Lcom/kylecorry/andromeda/device/Geofence;Ljava/lang/String;JFLkotlin/time/Instant;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/Geofence;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCenter-VMd8-xo ()J
+	public final fun getExpiresAt ()Lkotlin/time/Instant;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getRadiusMeters ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/device/GeofenceTransition {
+	public fun <init> (Lcom/kylecorry/andromeda/device/Geofence;Lcom/kylecorry/andromeda/device/GeofenceTransitionType;Lcom/kylecorry/andromeda/device/LocationReading;Lkotlin/time/Instant;)V
+	public final fun component1 ()Lcom/kylecorry/andromeda/device/Geofence;
+	public final fun component2 ()Lcom/kylecorry/andromeda/device/GeofenceTransitionType;
+	public final fun component3 ()Lcom/kylecorry/andromeda/device/LocationReading;
+	public final fun component4 ()Lkotlin/time/Instant;
+	public final fun copy (Lcom/kylecorry/andromeda/device/Geofence;Lcom/kylecorry/andromeda/device/GeofenceTransitionType;Lcom/kylecorry/andromeda/device/LocationReading;Lkotlin/time/Instant;)Lcom/kylecorry/andromeda/device/GeofenceTransition;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/device/GeofenceTransition;Lcom/kylecorry/andromeda/device/Geofence;Lcom/kylecorry/andromeda/device/GeofenceTransitionType;Lcom/kylecorry/andromeda/device/LocationReading;Lkotlin/time/Instant;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/GeofenceTransition;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFence ()Lcom/kylecorry/andromeda/device/Geofence;
+	public final fun getLocation ()Lcom/kylecorry/andromeda/device/LocationReading;
+	public final fun getTime ()Lkotlin/time/Instant;
+	public final fun getType ()Lcom/kylecorry/andromeda/device/GeofenceTransitionType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/device/GeofenceTransitionType : java/lang/Enum {
+	public static final field Enter Lcom/kylecorry/andromeda/device/GeofenceTransitionType;
+	public static final field Exit Lcom/kylecorry/andromeda/device/GeofenceTransitionType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/device/GeofenceTransitionType;
+	public static fun values ()[Lcom/kylecorry/andromeda/device/GeofenceTransitionType;
+}
+
+public final class com/kylecorry/andromeda/device/GeofencesKt {
+	public static final fun geofenceTransitions (Lkotlinx/coroutines/flow/Flow;Ljava/util/List;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/kylecorry/andromeda/device/LocationReading {
+	public synthetic fun <init> (JLjava/lang/Double;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Double;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JLjava/lang/Double;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Double;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-VMd8-xo ()J
+	public final fun component2 ()Ljava/lang/Double;
+	public final fun component3 ()Ljava/lang/Float;
+	public final fun component4 ()Ljava/lang/Float;
+	public final fun component5 ()Ljava/lang/Float;
+	public final fun component6 ()Ljava/lang/Float;
+	public final fun component7 ()Ljava/lang/Float;
+	public final fun component8 ()Ljava/lang/Float;
+	public final fun component9 ()Ljava/lang/Double;
+	public final fun copy-u2rZkCE (JLjava/lang/Double;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Double;)Lcom/kylecorry/andromeda/device/LocationReading;
+	public static synthetic fun copy-u2rZkCE$default (Lcom/kylecorry/andromeda/device/LocationReading;JLjava/lang/Double;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Float;Ljava/lang/Double;ILjava/lang/Object;)Lcom/kylecorry/andromeda/device/LocationReading;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAltitudeMeters ()Ljava/lang/Double;
+	public final fun getBearingAccuracyDegrees ()Ljava/lang/Float;
+	public final fun getBearingDegrees ()Ljava/lang/Float;
+	public final fun getCoordinate-VMd8-xo ()J
+	public final fun getHorizontalAccuracyMeters ()Ljava/lang/Float;
+	public final fun getMslAltitudeMeters ()Ljava/lang/Double;
+	public final fun getSpeedAccuracyMetersPerSecond ()Ljava/lang/Float;
+	public final fun getSpeedMetersPerSecond ()Ljava/lang/Float;
+	public final fun getVerticalAccuracyMeters ()Ljava/lang/Float;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/device/MobileDeviceSensorsKt {
+	public static final fun getEnvironment (Lcom/kylecorry/andromeda/device/DeviceSensors;)Lcom/ksensor/plugins/sensors/environment/EnvironmentPlugin;
+	public static final fun getMotion (Lcom/kylecorry/andromeda/device/DeviceSensors;)Lcom/ksensor/plugins/sensors/motion/MotionPlugin;
+	public static final fun getPositioning (Lcom/kylecorry/andromeda/device/DeviceSensors;)Lcom/ksensor/plugins/sensors/positioning/PositioningPlugin;
+	public static final fun getSystem (Lcom/kylecorry/andromeda/device/DeviceSensors;)Lcom/ksensor/plugins/states/system/SystemPlugin;
+}
+
+public final class com/kylecorry/andromeda/device/ReadingFiltersKt {
+	public static final fun lowPass (Lkotlinx/coroutines/flow/Flow;F)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/kylecorry/andromeda/device/SensorAccuracy : java/lang/Enum {
+	public static final field Balanced Lcom/kylecorry/andromeda/device/SensorAccuracy;
+	public static final field HighPrecision Lcom/kylecorry/andromeda/device/SensorAccuracy;
+	public static final field PowerSave Lcom/kylecorry/andromeda/device/SensorAccuracy;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/device/SensorAccuracy;
+	public static fun values ()[Lcom/kylecorry/andromeda/device/SensorAccuracy;
+}
+
+public final class com/kylecorry/andromeda/sense/location/SatelliteKt {
+	public static final fun fromStatus (Lcom/kylecorry/andromeda/sense/location/Satellite$Companion;Landroidx/core/location/GnssStatusCompat;)Ljava/util/List;
+	public static final fun fromStatus (Lcom/kylecorry/andromeda/sense/location/Satellite$Companion;Landroidx/core/location/GnssStatusCompat;I)Lcom/kylecorry/andromeda/sense/location/Satellite;
+}
+

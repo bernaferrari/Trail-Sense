@@ -1,0 +1,86 @@
+pluginManagement {
+    includeBuild("build-logic")
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "Andromeda"
+include(":haptics")
+include(":notify")
+include(":sense")
+include(":torch")
+include(":qr")
+include(":core")
+include(":sms")
+include(":sms-compose")
+include(":canvas")
+include(":xml")
+include(":sound")
+include(":gpx")
+include(":files")
+include(":clipboard")
+include(":permissions")
+include(":permissions-compose")
+include(":background")
+include(":camera")
+include(":connection")
+include(":speech")
+include(":speech-compose")
+include(":battery")
+include(":compression")
+include(":json")
+include(":markdown")
+include(":signal")
+include(":list")
+include(":alerts")
+include(":pickers")
+include(":forms")
+include(":csv")
+include(":pdf")
+include(":wkt")
+include(":exceptions")
+include(":print")
+include(":print-compose")
+include(":views")
+include(":widgets")
+include(":bitmaps")
+include(":ipc")
+include(":net")
+include(":geojson")
+
+include(":navigation")
+include(":shared")
+include(":device")
+include(":storage")
+
+// Prefer the adjacent multiplatform Sol checkout when developing both libraries together.
+if (file("../sol/settings.gradle.kts").exists()) {
+    includeBuild("../sol") {
+        dependencySubstitution {
+            substitute(module("com.kylecorry:sol")).using(project(":"))
+        }
+    }
+}
+
+// Luna 3 (multiplatform) is likewise developed alongside as the adjacent checkout until it is published.
+if (file("../luna/settings.gradle.kts").exists()) {
+    includeBuild("../luna") {
+        dependencySubstitution {
+            substitute(module("com.kylecorry:luna")).using(project(":"))
+        }
+    }
+}

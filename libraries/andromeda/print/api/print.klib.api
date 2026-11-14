@@ -1,0 +1,72 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:print>
+final enum class com.kylecorry.andromeda.print/PrintColorMode : kotlin/Enum<com.kylecorry.andromeda.print/PrintColorMode> { // com.kylecorry.andromeda.print/PrintColorMode|null[0]
+    enum entry Color // com.kylecorry.andromeda.print/PrintColorMode.Color|null[0]
+    enum entry Monochrome // com.kylecorry.andromeda.print/PrintColorMode.Monochrome|null[0]
+
+    final val entries // com.kylecorry.andromeda.print/PrintColorMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.print/PrintColorMode> // com.kylecorry.andromeda.print/PrintColorMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.print/PrintColorMode // com.kylecorry.andromeda.print/PrintColorMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.print/PrintColorMode> // com.kylecorry.andromeda.print/PrintColorMode.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.print/PrintOrientation : kotlin/Enum<com.kylecorry.andromeda.print/PrintOrientation> { // com.kylecorry.andromeda.print/PrintOrientation|null[0]
+    enum entry Auto // com.kylecorry.andromeda.print/PrintOrientation.Auto|null[0]
+    enum entry Landscape // com.kylecorry.andromeda.print/PrintOrientation.Landscape|null[0]
+    enum entry Portrait // com.kylecorry.andromeda.print/PrintOrientation.Portrait|null[0]
+
+    final val entries // com.kylecorry.andromeda.print/PrintOrientation.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.print/PrintOrientation> // com.kylecorry.andromeda.print/PrintOrientation.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.print/PrintOrientation // com.kylecorry.andromeda.print/PrintOrientation.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.print/PrintOrientation> // com.kylecorry.andromeda.print/PrintOrientation.values|values#static(){}[0]
+}
+
+final enum class com.kylecorry.andromeda.print/PrintScaleMode : kotlin/Enum<com.kylecorry.andromeda.print/PrintScaleMode> { // com.kylecorry.andromeda.print/PrintScaleMode|null[0]
+    enum entry Fill // com.kylecorry.andromeda.print/PrintScaleMode.Fill|null[0]
+    enum entry Fit // com.kylecorry.andromeda.print/PrintScaleMode.Fit|null[0]
+
+    final val entries // com.kylecorry.andromeda.print/PrintScaleMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.kylecorry.andromeda.print/PrintScaleMode> // com.kylecorry.andromeda.print/PrintScaleMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.kylecorry.andromeda.print/PrintScaleMode // com.kylecorry.andromeda.print/PrintScaleMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.kylecorry.andromeda.print/PrintScaleMode> // com.kylecorry.andromeda.print/PrintScaleMode.values|values#static(){}[0]
+}
+
+abstract fun interface com.kylecorry.andromeda.print/ImagePrinter { // com.kylecorry.andromeda.print/ImagePrinter|null[0]
+    abstract fun print(com.kylecorry.andromeda.bitmaps/PixelImage, kotlin/String, com.kylecorry.andromeda.print/ImagePrintOptions) // com.kylecorry.andromeda.print/ImagePrinter.print|print(com.kylecorry.andromeda.bitmaps.PixelImage;kotlin.String;com.kylecorry.andromeda.print.ImagePrintOptions){}[0]
+    open fun print(com.kylecorry.andromeda.bitmaps/PixelImage, kotlin/String) // com.kylecorry.andromeda.print/ImagePrinter.print|print(com.kylecorry.andromeda.bitmaps.PixelImage;kotlin.String){}[0]
+}
+
+abstract fun interface com.kylecorry.andromeda.print/PdfPrinter { // com.kylecorry.andromeda.print/PdfPrinter|null[0]
+    abstract fun print(kotlin/ByteArray, kotlin/String) // com.kylecorry.andromeda.print/PdfPrinter.print|print(kotlin.ByteArray;kotlin.String){}[0]
+}
+
+final class com.kylecorry.andromeda.print/ImagePrintOptions { // com.kylecorry.andromeda.print/ImagePrintOptions|null[0]
+    constructor <init>(com.kylecorry.andromeda.print/PrintScaleMode = ..., com.kylecorry.andromeda.print/PrintColorMode = ..., com.kylecorry.andromeda.print/PrintOrientation = ...) // com.kylecorry.andromeda.print/ImagePrintOptions.<init>|<init>(com.kylecorry.andromeda.print.PrintScaleMode;com.kylecorry.andromeda.print.PrintColorMode;com.kylecorry.andromeda.print.PrintOrientation){}[0]
+
+    final val color // com.kylecorry.andromeda.print/ImagePrintOptions.color|{}color[0]
+        final fun <get-color>(): com.kylecorry.andromeda.print/PrintColorMode // com.kylecorry.andromeda.print/ImagePrintOptions.color.<get-color>|<get-color>(){}[0]
+    final val orientation // com.kylecorry.andromeda.print/ImagePrintOptions.orientation|{}orientation[0]
+        final fun <get-orientation>(): com.kylecorry.andromeda.print/PrintOrientation // com.kylecorry.andromeda.print/ImagePrintOptions.orientation.<get-orientation>|<get-orientation>(){}[0]
+    final val scale // com.kylecorry.andromeda.print/ImagePrintOptions.scale|{}scale[0]
+        final fun <get-scale>(): com.kylecorry.andromeda.print/PrintScaleMode // com.kylecorry.andromeda.print/ImagePrintOptions.scale.<get-scale>|<get-scale>(){}[0]
+
+    final fun component1(): com.kylecorry.andromeda.print/PrintScaleMode // com.kylecorry.andromeda.print/ImagePrintOptions.component1|component1(){}[0]
+    final fun component2(): com.kylecorry.andromeda.print/PrintColorMode // com.kylecorry.andromeda.print/ImagePrintOptions.component2|component2(){}[0]
+    final fun component3(): com.kylecorry.andromeda.print/PrintOrientation // com.kylecorry.andromeda.print/ImagePrintOptions.component3|component3(){}[0]
+    final fun copy(com.kylecorry.andromeda.print/PrintScaleMode = ..., com.kylecorry.andromeda.print/PrintColorMode = ..., com.kylecorry.andromeda.print/PrintOrientation = ...): com.kylecorry.andromeda.print/ImagePrintOptions // com.kylecorry.andromeda.print/ImagePrintOptions.copy|copy(com.kylecorry.andromeda.print.PrintScaleMode;com.kylecorry.andromeda.print.PrintColorMode;com.kylecorry.andromeda.print.PrintOrientation){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.print/ImagePrintOptions.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.print/ImagePrintOptions.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.print/ImagePrintOptions.toString|toString(){}[0]
+}
+
+final fun com.kylecorry.andromeda.print/imagePrinter(): com.kylecorry.andromeda.print/ImagePrinter // com.kylecorry.andromeda.print/imagePrinter|imagePrinter(){}[0]
+final fun com.kylecorry.andromeda.print/pdfPrinter(): com.kylecorry.andromeda.print/PdfPrinter // com.kylecorry.andromeda.print/pdfPrinter|pdfPrinter(){}[0]

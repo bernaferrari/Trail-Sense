@@ -1,0 +1,25 @@
+package com.kylecorry.andromeda.pdf
+
+import com.kylecorry.luna.serialization.DeserializationException
+import com.kylecorry.luna.serialization.ISerializer
+import com.kylecorry.luna.serialization.SerializationException
+import java.io.InputStream
+import java.io.OutputStream
+
+public class PDFSerializer(private val ignoreStreams: Boolean = false) : ISerializer<List<PDFValue.PDFObject>> {
+    override fun serialize(obj: List<PDFValue.PDFObject>, stream: OutputStream) {
+        try {
+            PDFGenerator().toPDF(obj, stream)
+        } catch (e: Exception) {
+            throw SerializationException(e.message ?: "Unknown error", e)
+        }
+    }
+
+    override fun deserialize(stream: InputStream): List<PDFValue.PDFObject> {
+        return try {
+            PDFParser().parse(stream, ignoreStreams)
+        } catch (e: Exception) {
+            throw DeserializationException(e.message ?: "Unknown error", e)
+        }
+    }
+}

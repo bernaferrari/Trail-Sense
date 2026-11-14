@@ -1,0 +1,15 @@
+public abstract interface class com/kylecorry/andromeda/battery/Battery : com/kylecorry/andromeda/core/sensors/Sensor, com/kylecorry/andromeda/core/sensors/Thermometer {
+	public abstract fun getCapacity ()F
+	public abstract fun getChargingMethod ()Lcom/kylecorry/andromeda/battery/BatteryChargingMethod;
+	public abstract fun getChargingStatus ()Lcom/kylecorry/andromeda/battery/BatteryChargingStatus;
+	public abstract fun getCurrent ()F
+	public abstract fun getHealth ()Lcom/kylecorry/andromeda/battery/BatteryHealth;
+	public abstract fun getMaxCapacity ()F
+	public abstract fun getPercent ()F
+	public abstract fun getVoltage ()F
+}
+
+public final class com/kylecorry/andromeda/battery/BatteryReadingsKt {
+	public static final fun batteryReadings ()Lkotlinx/coroutines/flow/Flow;
+}
+

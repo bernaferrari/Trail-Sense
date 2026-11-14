@@ -1,0 +1,9 @@
+# Local notifications
+
+The `notify` module exports [KMPNotifier Local](https://github.com/mirzemehdi/KMPNotifier), allowing shared Kotlin code to show notifications with payloads, images and action buttons, or schedule a notification. The local-only module does not require Firebase or CocoaPods.
+
+Initialize KMPNotifier with the platform configuration and `LocalNotifications` at application startup, then use `LocalNotifications.notifier` from common code. The application must configure platform notification permissions and event handling as described in the library's platform setup documentation. An initialized notifier can be adapted to the simple `NotificationSender` interface with `notifier.asNotificationSender()`.
+
+Use the notifier's `notify { ... }` builder for scheduled notifications; its `scheduleSimple` default implementation shows immediately. Android and iOS support scheduling, images and actions. Desktop does not support images or actions, and its notifier displays scheduled notifications immediately rather than scheduling them; don't use it as a desktop scheduler. Android channel settings and iOS notification delegate setup remain platform responsibilities. On Android, use `foregroundNotification` to build a notification for a foreground service. Manage channels with the Android notification APIs.
+
+For simple notifications without KMPNotifier, Android callers can create a `NotificationSender` using a context, channel and small icon; iOS callers can use `notificationSender()` after obtaining permission. The JVM implementation uses the system tray and accepts an optional AWT icon. Its notifications are transient: the tray icon is removed after 30 seconds or on cancellation, and whether cancellation dismisses a displayed notification depends on the desktop environment.

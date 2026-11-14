@@ -1,0 +1,151 @@
+public final class com/kylecorry/andromeda/connection/BleNearbyDevice : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/connection/NearbyDevice {
+	public fun <init> (Lcom/juul/kable/Advertisement;Lcom/juul/kable/Characteristic;Lcom/juul/kable/Characteristic;Lkotlinx/coroutines/CoroutineScope;Lcom/juul/kable/WriteType;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lcom/juul/kable/Advertisement;Lcom/juul/kable/Characteristic;Lcom/juul/kable/Characteristic;Lkotlinx/coroutines/CoroutineScope;Lcom/juul/kable/WriteType;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getAddress ()Ljava/lang/String;
+	public final fun getFailure ()Lkotlinx/coroutines/flow/StateFlow;
+	public fun getHasValidReading ()Z
+	public fun getMessageHistorySize ()I
+	public fun getMessages ()Ljava/util/List;
+	public fun getName ()Ljava/lang/String;
+	public fun isConnected ()Z
+	public fun isConnecting ()Z
+	public fun send ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun setMessageHistorySize (I)V
+}
+
+public final class com/kylecorry/andromeda/connection/BleNearbyDeviceScanner : com/kylecorry/andromeda/core/sensors/SharedSensor, com/kylecorry/andromeda/connection/NearbyDeviceScanner {
+	public fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/juul/kable/Characteristic;Lcom/juul/kable/Characteristic;Lcom/juul/kable/WriteType;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/juul/kable/Characteristic;Lcom/juul/kable/Characteristic;Lcom/juul/kable/WriteType;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getDevices ()Ljava/util/List;
+	public final fun getFailure ()Lkotlinx/coroutines/flow/StateFlow;
+	public fun getHasValidReading ()Z
+	public final fun isScanning ()Z
+}
+
+public final class com/kylecorry/andromeda/connection/BluetoothKt {
+	public static final fun connectBluetooth (Lcom/juul/kable/Advertisement;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun scanBluetooth ()Lkotlinx/coroutines/flow/Flow;
+	public static final fun withBluetoothConnection (Lcom/juul/kable/Advertisement;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/kylecorry/andromeda/connection/ByteConnection : java/lang/AutoCloseable {
+	public abstract fun read (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun read$default (Lcom/kylecorry/andromeda/connection/ByteConnection;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun write ([BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/connection/ByteConnection$DefaultImpls {
+	public static synthetic fun read$default (Lcom/kylecorry/andromeda/connection/ByteConnection;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/connection/ByteConnectionKt {
+	public static final fun lines (Lcom/kylecorry/andromeda/connection/ByteConnection;I)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun lines$default (Lcom/kylecorry/andromeda/connection/ByteConnection;IILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public static final fun writeLine (Lcom/kylecorry/andromeda/connection/ByteConnection;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/connection/DiscoveredBluetoothDevice {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Z)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/Integer;
+	public final fun component4 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Z)Lcom/kylecorry/andromeda/connection/DiscoveredBluetoothDevice;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/connection/DiscoveredBluetoothDevice;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;ZILjava/lang/Object;)Lcom/kylecorry/andromeda/connection/DiscoveredBluetoothDevice;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAddress ()Ljava/lang/String;
+	public final fun getBonded ()Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getRssi ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/connection/PairedBluetoothDevice {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/kylecorry/andromeda/connection/PairedBluetoothDevice;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/connection/PairedBluetoothDevice;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/connection/PairedBluetoothDevice;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAddress ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/connection/RfcommAndroidKt {
+	public static final fun acceptRfcomm (Ljava/lang/String;Lkotlin/uuid/Uuid;Lcom/kylecorry/andromeda/connection/RfcommSecurity;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun acceptRfcomm$default (Ljava/lang/String;Lkotlin/uuid/Uuid;Lcom/kylecorry/andromeda/connection/RfcommSecurity;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun connectRfcomm (Ljava/lang/String;Lkotlin/uuid/Uuid;Lcom/kylecorry/andromeda/connection/RfcommSecurity;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun connectRfcomm$default (Ljava/lang/String;Lkotlin/uuid/Uuid;Lcom/kylecorry/andromeda/connection/RfcommSecurity;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun getRfcommAvailable ()Z
+	public static final fun pairedBluetoothDevices ()Ljava/util/List;
+	public static final fun scanClassicBluetooth ()Lkotlinx/coroutines/flow/Flow;
+}
+
+public abstract interface class com/kylecorry/andromeda/connection/RfcommConnection : com/kylecorry/andromeda/connection/ByteConnection {
+}
+
+public final class com/kylecorry/andromeda/connection/RfcommKt {
+	public static final fun getSerialPortService ()Lkotlin/uuid/Uuid;
+}
+
+public final class com/kylecorry/andromeda/connection/RfcommPeer {
+	public fun <init> (Lcom/kylecorry/andromeda/connection/PairedBluetoothDevice;Lcom/kylecorry/andromeda/connection/RfcommConnection;)V
+	public final fun component1 ()Lcom/kylecorry/andromeda/connection/PairedBluetoothDevice;
+	public final fun component2 ()Lcom/kylecorry/andromeda/connection/RfcommConnection;
+	public final fun copy (Lcom/kylecorry/andromeda/connection/PairedBluetoothDevice;Lcom/kylecorry/andromeda/connection/RfcommConnection;)Lcom/kylecorry/andromeda/connection/RfcommPeer;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/connection/RfcommPeer;Lcom/kylecorry/andromeda/connection/PairedBluetoothDevice;Lcom/kylecorry/andromeda/connection/RfcommConnection;ILjava/lang/Object;)Lcom/kylecorry/andromeda/connection/RfcommPeer;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConnection ()Lcom/kylecorry/andromeda/connection/RfcommConnection;
+	public final fun getDevice ()Lcom/kylecorry/andromeda/connection/PairedBluetoothDevice;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/connection/RfcommSecurity : java/lang/Enum {
+	public static final field Insecure Lcom/kylecorry/andromeda/connection/RfcommSecurity;
+	public static final field Secure Lcom/kylecorry/andromeda/connection/RfcommSecurity;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/kylecorry/andromeda/connection/RfcommSecurity;
+	public static fun values ()[Lcom/kylecorry/andromeda/connection/RfcommSecurity;
+}
+
+public final class com/kylecorry/andromeda/connection/WifiDirectAndroidKt {
+	public static final fun getWifiDirectAvailable ()Z
+	public static final fun scanWifiDirect ()Lkotlinx/coroutines/flow/Flow;
+}
+
+public abstract interface class com/kylecorry/andromeda/connection/WifiDirectConnection : com/kylecorry/andromeda/connection/ByteConnection {
+}
+
+public abstract interface class com/kylecorry/andromeda/connection/WifiDirectGroup : java/lang/AutoCloseable {
+	public abstract fun getOwnerAddress ()Ljava/lang/String;
+	public abstract fun isOwner ()Z
+	public abstract fun openConnection (ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun openConnection$default (Lcom/kylecorry/andromeda/connection/WifiDirectGroup;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/connection/WifiDirectGroup$DefaultImpls {
+	public static synthetic fun openConnection$default (Lcom/kylecorry/andromeda/connection/WifiDirectGroup;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/connection/WifiDirectGroupAndroidKt {
+	public static final fun awaitWifiDirectGroup (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun connectWifiDirect (Lcom/kylecorry/andromeda/connection/WifiDirectPeer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/connection/WifiDirectPeer {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/kylecorry/andromeda/connection/WifiDirectPeer;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/connection/WifiDirectPeer;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/connection/WifiDirectPeer;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAddress ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

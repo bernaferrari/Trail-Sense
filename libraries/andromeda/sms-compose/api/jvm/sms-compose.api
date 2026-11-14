@@ -1,0 +1,4 @@
+public final class com/kylecorry/andromeda/sms/compose/SmsComposerKt {
+	public static final fun rememberSmsComposer (Landroidx/compose/runtime/Composer;I)Lcom/kylecorry/andromeda/sms/SmsComposer;
+}
+

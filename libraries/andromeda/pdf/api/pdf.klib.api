@@ -1,0 +1,195 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:pdf>
+abstract interface com.kylecorry.andromeda.pdf/PDFValue { // com.kylecorry.andromeda.pdf/PDFValue|null[0]
+    open fun toByteArray(): kotlin/ByteArray // com.kylecorry.andromeda.pdf/PDFValue.toByteArray|toByteArray(){}[0]
+
+    final class PDFArray : com.kylecorry.andromeda.pdf/PDFValue { // com.kylecorry.andromeda.pdf/PDFValue.PDFArray|null[0]
+        constructor <init>(kotlin.collections/List<com.kylecorry.andromeda.pdf/PDFValue>) // com.kylecorry.andromeda.pdf/PDFValue.PDFArray.<init>|<init>(kotlin.collections.List<com.kylecorry.andromeda.pdf.PDFValue>){}[0]
+
+        final val values // com.kylecorry.andromeda.pdf/PDFValue.PDFArray.values|{}values[0]
+            final fun <get-values>(): kotlin.collections/List<com.kylecorry.andromeda.pdf/PDFValue> // com.kylecorry.andromeda.pdf/PDFValue.PDFArray.values.<get-values>|<get-values>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFArray.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFArray.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/PDFValue.PDFArray.toString|toString(){}[0]
+    }
+
+    final class PDFBoolean : com.kylecorry.andromeda.pdf/PDFValue { // com.kylecorry.andromeda.pdf/PDFValue.PDFBoolean|null[0]
+        constructor <init>(kotlin/Boolean) // com.kylecorry.andromeda.pdf/PDFValue.PDFBoolean.<init>|<init>(kotlin.Boolean){}[0]
+
+        final val value // com.kylecorry.andromeda.pdf/PDFValue.PDFBoolean.value|{}value[0]
+            final fun <get-value>(): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFBoolean.value.<get-value>|<get-value>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFBoolean.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFBoolean.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/PDFValue.PDFBoolean.toString|toString(){}[0]
+    }
+
+    final class PDFDictionary : com.kylecorry.andromeda.pdf/PDFValue { // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary|null[0]
+        constructor <init>(kotlin.collections/Map<com.kylecorry.andromeda.pdf/PDFValue.PDFName, com.kylecorry.andromeda.pdf/PDFValue>) // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.<init>|<init>(kotlin.collections.Map<com.kylecorry.andromeda.pdf.PDFValue.PDFName,com.kylecorry.andromeda.pdf.PDFValue>){}[0]
+
+        final val properties // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.properties|{}properties[0]
+            final fun <get-properties>(): kotlin.collections/Map<com.kylecorry.andromeda.pdf/PDFValue.PDFName, com.kylecorry.andromeda.pdf/PDFValue> // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.properties.<get-properties>|<get-properties>(){}[0]
+
+        final fun <#A2: com.kylecorry.andromeda.pdf/PDFValue> getAs(com.kylecorry.andromeda.pdf/PDFValue.PDFName): #A2? // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.getAs|getAs(com.kylecorry.andromeda.pdf.PDFValue.PDFName){0§<com.kylecorry.andromeda.pdf.PDFValue>}[0]
+        final fun <#A2: com.kylecorry.andromeda.pdf/PDFValue> getAs(kotlin/String): #A2? // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.getAs|getAs(kotlin.String){0§<com.kylecorry.andromeda.pdf.PDFValue>}[0]
+        final fun contains(com.kylecorry.andromeda.pdf/PDFValue.PDFName): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.contains|contains(com.kylecorry.andromeda.pdf.PDFValue.PDFName){}[0]
+        final fun contains(kotlin/String): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.contains|contains(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.equals|equals(kotlin.Any?){}[0]
+        final fun get(com.kylecorry.andromeda.pdf/PDFValue.PDFName): com.kylecorry.andromeda.pdf/PDFValue? // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.get|get(com.kylecorry.andromeda.pdf.PDFValue.PDFName){}[0]
+        final fun get(kotlin/String): com.kylecorry.andromeda.pdf/PDFValue? // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.get|get(kotlin.String){}[0]
+        final fun hasValue(com.kylecorry.andromeda.pdf/PDFValue.PDFName, com.kylecorry.andromeda.pdf/PDFValue): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.hasValue|hasValue(com.kylecorry.andromeda.pdf.PDFValue.PDFName;com.kylecorry.andromeda.pdf.PDFValue){}[0]
+        final fun hasValue(kotlin/String, com.kylecorry.andromeda.pdf/PDFValue): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.hasValue|hasValue(kotlin.String;com.kylecorry.andromeda.pdf.PDFValue){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary.toString|toString(){}[0]
+    }
+
+    final class PDFIndirectObject : com.kylecorry.andromeda.pdf/PDFValue { // com.kylecorry.andromeda.pdf/PDFValue.PDFIndirectObject|null[0]
+        constructor <init>(kotlin/Int, kotlin/Int = ...) // com.kylecorry.andromeda.pdf/PDFValue.PDFIndirectObject.<init>|<init>(kotlin.Int;kotlin.Int){}[0]
+
+        final val generation // com.kylecorry.andromeda.pdf/PDFValue.PDFIndirectObject.generation|{}generation[0]
+            final fun <get-generation>(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFIndirectObject.generation.<get-generation>|<get-generation>(){}[0]
+        final val id // com.kylecorry.andromeda.pdf/PDFValue.PDFIndirectObject.id|{}id[0]
+            final fun <get-id>(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFIndirectObject.id.<get-id>|<get-id>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFIndirectObject.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFIndirectObject.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/PDFValue.PDFIndirectObject.toString|toString(){}[0]
+    }
+
+    final class PDFName : com.kylecorry.andromeda.pdf/PDFValue { // com.kylecorry.andromeda.pdf/PDFValue.PDFName|null[0]
+        constructor <init>(kotlin/String) // com.kylecorry.andromeda.pdf/PDFValue.PDFName.<init>|<init>(kotlin.String){}[0]
+
+        final val name // com.kylecorry.andromeda.pdf/PDFValue.PDFName.name|{}name[0]
+            final fun <get-name>(): kotlin/String // com.kylecorry.andromeda.pdf/PDFValue.PDFName.name.<get-name>|<get-name>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFName.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFName.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/PDFValue.PDFName.toString|toString(){}[0]
+    }
+
+    final class PDFNull : com.kylecorry.andromeda.pdf/PDFValue { // com.kylecorry.andromeda.pdf/PDFValue.PDFNull|null[0]
+        constructor <init>() // com.kylecorry.andromeda.pdf/PDFValue.PDFNull.<init>|<init>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFNull.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFNull.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/PDFValue.PDFNull.toString|toString(){}[0]
+    }
+
+    final class PDFNumber : com.kylecorry.andromeda.pdf/PDFValue { // com.kylecorry.andromeda.pdf/PDFValue.PDFNumber|null[0]
+        constructor <init>(kotlin/Number) // com.kylecorry.andromeda.pdf/PDFValue.PDFNumber.<init>|<init>(kotlin.Number){}[0]
+
+        final val value // com.kylecorry.andromeda.pdf/PDFValue.PDFNumber.value|{}value[0]
+            final fun <get-value>(): kotlin/Number // com.kylecorry.andromeda.pdf/PDFValue.PDFNumber.value.<get-value>|<get-value>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFNumber.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFNumber.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/PDFValue.PDFNumber.toString|toString(){}[0]
+    }
+
+    final class PDFObject : com.kylecorry.andromeda.pdf/PDFValue { // com.kylecorry.andromeda.pdf/PDFValue.PDFObject|null[0]
+        constructor <init>(kotlin/Int, kotlin/Int = ..., kotlin.collections/List<com.kylecorry.andromeda.pdf/PDFValue>) // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.collections.List<com.kylecorry.andromeda.pdf.PDFValue>){}[0]
+
+        final val content // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.content|{}content[0]
+            final fun <get-content>(): kotlin.collections/List<com.kylecorry.andromeda.pdf/PDFValue> // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.content.<get-content>|<get-content>(){}[0]
+        final val generation // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.generation|{}generation[0]
+            final fun <get-generation>(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.generation.<get-generation>|<get-generation>(){}[0]
+        final val id // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.id|{}id[0]
+            final fun <get-id>(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.id.<get-id>|<get-id>(){}[0]
+        final val reference // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.reference|{}reference[0]
+            final fun <get-reference>(): com.kylecorry.andromeda.pdf/PDFValue.PDFIndirectObject // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.reference.<get-reference>|<get-reference>(){}[0]
+
+        final fun <#A2: com.kylecorry.andromeda.pdf/PDFValue> getProperty(com.kylecorry.andromeda.pdf/PDFValue.PDFName): #A2? // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.getProperty|getProperty(com.kylecorry.andromeda.pdf.PDFValue.PDFName){0§<com.kylecorry.andromeda.pdf.PDFValue>}[0]
+        final fun <#A2: com.kylecorry.andromeda.pdf/PDFValue> getProperty(kotlin/String): #A2? // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.getProperty|getProperty(kotlin.String){0§<com.kylecorry.andromeda.pdf.PDFValue>}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.equals|equals(kotlin.Any?){}[0]
+        final fun hasProperty(com.kylecorry.andromeda.pdf/PDFValue.PDFName): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.hasProperty|hasProperty(com.kylecorry.andromeda.pdf.PDFValue.PDFName){}[0]
+        final fun hasProperty(kotlin/String): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.hasProperty|hasProperty(kotlin.String){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.hashCode|hashCode(){}[0]
+        final fun toByteArray(): kotlin/ByteArray // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.toByteArray|toByteArray(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/PDFValue.PDFObject.toString|toString(){}[0]
+    }
+
+    final class PDFStream : com.kylecorry.andromeda.pdf/PDFValue { // com.kylecorry.andromeda.pdf/PDFValue.PDFStream|null[0]
+        constructor <init>(kotlin/ByteArray) // com.kylecorry.andromeda.pdf/PDFValue.PDFStream.<init>|<init>(kotlin.ByteArray){}[0]
+
+        final val content // com.kylecorry.andromeda.pdf/PDFValue.PDFStream.content|{}content[0]
+            final fun <get-content>(): kotlin/ByteArray // com.kylecorry.andromeda.pdf/PDFValue.PDFStream.content.<get-content>|<get-content>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFStream.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFStream.hashCode|hashCode(){}[0]
+        final fun toByteArray(): kotlin/ByteArray // com.kylecorry.andromeda.pdf/PDFValue.PDFStream.toByteArray|toByteArray(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/PDFValue.PDFStream.toString|toString(){}[0]
+    }
+
+    final class PDFString : com.kylecorry.andromeda.pdf/PDFValue { // com.kylecorry.andromeda.pdf/PDFValue.PDFString|null[0]
+        constructor <init>(kotlin/String) // com.kylecorry.andromeda.pdf/PDFValue.PDFString.<init>|<init>(kotlin.String){}[0]
+
+        final val value // com.kylecorry.andromeda.pdf/PDFValue.PDFString.value|{}value[0]
+            final fun <get-value>(): kotlin/String // com.kylecorry.andromeda.pdf/PDFValue.PDFString.value.<get-value>|<get-value>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/PDFValue.PDFString.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/PDFValue.PDFString.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/PDFValue.PDFString.toString|toString(){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.pdf/PdfPageSize { // com.kylecorry.andromeda.pdf/PdfPageSize|null[0]
+    constructor <init>(kotlin/Float, kotlin/Float) // com.kylecorry.andromeda.pdf/PdfPageSize.<init>|<init>(kotlin.Float;kotlin.Float){}[0]
+
+    final val heightPoints // com.kylecorry.andromeda.pdf/PdfPageSize.heightPoints|{}heightPoints[0]
+        final fun <get-heightPoints>(): kotlin/Float // com.kylecorry.andromeda.pdf/PdfPageSize.heightPoints.<get-heightPoints>|<get-heightPoints>(){}[0]
+    final val widthPoints // com.kylecorry.andromeda.pdf/PdfPageSize.widthPoints|{}widthPoints[0]
+        final fun <get-widthPoints>(): kotlin/Float // com.kylecorry.andromeda.pdf/PdfPageSize.widthPoints.<get-widthPoints>|<get-widthPoints>(){}[0]
+
+    final fun component1(): kotlin/Float // com.kylecorry.andromeda.pdf/PdfPageSize.component1|component1(){}[0]
+    final fun component2(): kotlin/Float // com.kylecorry.andromeda.pdf/PdfPageSize.component2|component2(){}[0]
+    final fun copy(kotlin/Float = ..., kotlin/Float = ...): com.kylecorry.andromeda.pdf/PdfPageSize // com.kylecorry.andromeda.pdf/PdfPageSize.copy|copy(kotlin.Float;kotlin.Float){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.pdf/PdfPageSize.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.pdf/PdfPageSize.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.pdf/PdfPageSize.toString|toString(){}[0]
+}
+
+final class com.kylecorry.andromeda.pdf/PdfPages : kotlin/AutoCloseable { // com.kylecorry.andromeda.pdf/PdfPages|null[0]
+    constructor <init>(kotlin/ByteArray) // com.kylecorry.andromeda.pdf/PdfPages.<init>|<init>(kotlin.ByteArray){}[0]
+
+    final val pageCount // com.kylecorry.andromeda.pdf/PdfPages.pageCount|{}pageCount[0]
+        final fun <get-pageCount>(): kotlin/Int // com.kylecorry.andromeda.pdf/PdfPages.pageCount.<get-pageCount>|<get-pageCount>(){}[0]
+
+    final fun close() // com.kylecorry.andromeda.pdf/PdfPages.close|close(){}[0]
+    final fun pageSize(kotlin/Int): com.kylecorry.andromeda.pdf/PdfPageSize // com.kylecorry.andromeda.pdf/PdfPages.pageSize|pageSize(kotlin.Int){}[0]
+    final fun render(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.pdf/PdfPages.render|render(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+}
+
+final fun (com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary).com.kylecorry.andromeda.pdf/getProperties(kotlin/String, kotlin.collections/List<com.kylecorry.andromeda.pdf/PDFValue.PDFObject>): com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary? // com.kylecorry.andromeda.pdf/getProperties|getProperties@com.kylecorry.andromeda.pdf.PDFValue.PDFDictionary(kotlin.String;kotlin.collections.List<com.kylecorry.andromeda.pdf.PDFValue.PDFObject>){}[0]
+final fun (com.kylecorry.andromeda.pdf/PDFValue.PDFObject).com.kylecorry.andromeda.pdf/getProperties(): com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary // com.kylecorry.andromeda.pdf/getProperties|getProperties@com.kylecorry.andromeda.pdf.PDFValue.PDFObject(){}[0]
+final fun (kotlin.collections/List<com.kylecorry.andromeda.pdf/PDFValue.PDFObject>).com.kylecorry.andromeda.pdf/getById(kotlin/Int): com.kylecorry.andromeda.pdf/PDFValue.PDFObject? // com.kylecorry.andromeda.pdf/getById|getById@kotlin.collections.List<com.kylecorry.andromeda.pdf.PDFValue.PDFObject>(kotlin.Int){}[0]
+final fun (kotlin.collections/List<com.kylecorry.andromeda.pdf/PDFValue.PDFObject>).com.kylecorry.andromeda.pdf/getByProperty(kotlin/String, com.kylecorry.andromeda.pdf/PDFValue): kotlin.collections/List<com.kylecorry.andromeda.pdf/PDFValue.PDFObject> // com.kylecorry.andromeda.pdf/getByProperty|getByProperty@kotlin.collections.List<com.kylecorry.andromeda.pdf.PDFValue.PDFObject>(kotlin.String;com.kylecorry.andromeda.pdf.PDFValue){}[0]
+final fun com.kylecorry.andromeda.pdf/array(kotlin/Array<out com.kylecorry.andromeda.pdf/PDFValue>...): com.kylecorry.andromeda.pdf/PDFValue.PDFArray // com.kylecorry.andromeda.pdf/array|array(kotlin.Array<out|com.kylecorry.andromeda.pdf.PDFValue>...){}[0]
+final fun com.kylecorry.andromeda.pdf/catalog(kotlin/Int, kotlin/Int): com.kylecorry.andromeda.pdf/PDFValue.PDFObject // com.kylecorry.andromeda.pdf/catalog|catalog(kotlin.Int;kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.pdf/createPDF(kotlin.collections/List<com.kylecorry.andromeda.pdf/PDFValue.PDFObject>): kotlin/ByteArray // com.kylecorry.andromeda.pdf/createPDF|createPDF(kotlin.collections.List<com.kylecorry.andromeda.pdf.PDFValue.PDFObject>){}[0]
+final fun com.kylecorry.andromeda.pdf/dict(kotlin/Array<out kotlin/Pair<com.kylecorry.andromeda.pdf/PDFValue.PDFName, com.kylecorry.andromeda.pdf/PDFValue>?>...): com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary // com.kylecorry.andromeda.pdf/dict|dict(kotlin.Array<out|kotlin.Pair<com.kylecorry.andromeda.pdf.PDFValue.PDFName,com.kylecorry.andromeda.pdf.PDFValue>?>...){}[0]
+final fun com.kylecorry.andromeda.pdf/gcs(kotlin/Int, com.kylecorry.andromeda.pdf/ProjectedCoordinateSystem, com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary = ...): com.kylecorry.andromeda.pdf/PDFValue.PDFObject // com.kylecorry.andromeda.pdf/gcs|gcs(kotlin.Int;com.kylecorry.andromeda.pdf.ProjectedCoordinateSystem;com.kylecorry.andromeda.pdf.PDFValue.PDFDictionary){}[0]
+final fun com.kylecorry.andromeda.pdf/geo(kotlin/Int, kotlin.collections/List<com.kylecorry.sol.units/Coordinate>, kotlin.collections/List<com.kylecorry.sol.math/Vector2> = ..., kotlin/Int? = ..., kotlin.collections/List<com.kylecorry.sol.math/Vector2> = ..., com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary = ...): com.kylecorry.andromeda.pdf/PDFValue.PDFObject // com.kylecorry.andromeda.pdf/geo|geo(kotlin.Int;kotlin.collections.List<com.kylecorry.sol.units.Coordinate>;kotlin.collections.List<com.kylecorry.sol.math.Vector2>;kotlin.Int?;kotlin.collections.List<com.kylecorry.sol.math.Vector2>;com.kylecorry.andromeda.pdf.PDFValue.PDFDictionary){}[0]
+final fun com.kylecorry.andromeda.pdf/image(kotlin/Int, com.kylecorry.andromeda.bitmaps/PixelImage, kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary = ...): com.kylecorry.andromeda.pdf/PDFValue.PDFObject // com.kylecorry.andromeda.pdf/image|image(kotlin.Int;com.kylecorry.andromeda.bitmaps.PixelImage;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;com.kylecorry.andromeda.pdf.PDFValue.PDFDictionary){}[0]
+final fun com.kylecorry.andromeda.pdf/jpg(kotlin/Int, kotlin/ByteArray, kotlin/Int, kotlin/Int, kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary = ...): com.kylecorry.andromeda.pdf/PDFValue.PDFObject // com.kylecorry.andromeda.pdf/jpg|jpg(kotlin.Int;kotlin.ByteArray;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;com.kylecorry.andromeda.pdf.PDFValue.PDFDictionary){}[0]
+final fun com.kylecorry.andromeda.pdf/name(kotlin/String): com.kylecorry.andromeda.pdf/PDFValue.PDFName // com.kylecorry.andromeda.pdf/name|name(kotlin.String){}[0]
+final fun com.kylecorry.andromeda.pdf/number(kotlin/Number): com.kylecorry.andromeda.pdf/PDFValue.PDFNumber // com.kylecorry.andromeda.pdf/number|number(kotlin.Number){}[0]
+final fun com.kylecorry.andromeda.pdf/obj(kotlin/Int, kotlin/Array<out com.kylecorry.andromeda.pdf/PDFValue?>...): com.kylecorry.andromeda.pdf/PDFValue.PDFObject // com.kylecorry.andromeda.pdf/obj|obj(kotlin.Int;kotlin.Array<out|com.kylecorry.andromeda.pdf.PDFValue?>...){}[0]
+final fun com.kylecorry.andromeda.pdf/page(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin.collections/List<kotlin/Int>, kotlin.collections/List<kotlin/Int> = ..., com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary = ...): com.kylecorry.andromeda.pdf/PDFValue.PDFObject // com.kylecorry.andromeda.pdf/page|page(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.collections.List<kotlin.Int>;kotlin.collections.List<kotlin.Int>;com.kylecorry.andromeda.pdf.PDFValue.PDFDictionary){}[0]
+final fun com.kylecorry.andromeda.pdf/pages(kotlin/Int, kotlin.collections/List<kotlin/Int>): com.kylecorry.andromeda.pdf/PDFValue.PDFObject // com.kylecorry.andromeda.pdf/pages|pages(kotlin.Int;kotlin.collections.List<kotlin.Int>){}[0]
+final fun com.kylecorry.andromeda.pdf/parseGeospatialPDF(kotlin/ByteArray): com.kylecorry.andromeda.pdf/GeospatialPDFMetadata? // com.kylecorry.andromeda.pdf/parseGeospatialPDF|parseGeospatialPDF(kotlin.ByteArray){}[0]
+final fun com.kylecorry.andromeda.pdf/parsePDF(kotlin/ByteArray, kotlin/Boolean = ...): kotlin.collections/List<com.kylecorry.andromeda.pdf/PDFValue.PDFObject> // com.kylecorry.andromeda.pdf/parsePDF|parsePDF(kotlin.ByteArray;kotlin.Boolean){}[0]
+final fun com.kylecorry.andromeda.pdf/ref(kotlin/Int): com.kylecorry.andromeda.pdf/PDFValue.PDFIndirectObject // com.kylecorry.andromeda.pdf/ref|ref(kotlin.Int){}[0]
+final fun com.kylecorry.andromeda.pdf/stream(kotlin/ByteArray): com.kylecorry.andromeda.pdf/PDFValue.PDFStream // com.kylecorry.andromeda.pdf/stream|stream(kotlin.ByteArray){}[0]
+final fun com.kylecorry.andromeda.pdf/stream(kotlin/Int, kotlin/ByteArray, com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary = ...): com.kylecorry.andromeda.pdf/PDFValue.PDFObject // com.kylecorry.andromeda.pdf/stream|stream(kotlin.Int;kotlin.ByteArray;com.kylecorry.andromeda.pdf.PDFValue.PDFDictionary){}[0]
+final fun com.kylecorry.andromeda.pdf/stream(kotlin/Int, kotlin/String, com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary = ...): com.kylecorry.andromeda.pdf/PDFValue.PDFObject // com.kylecorry.andromeda.pdf/stream|stream(kotlin.Int;kotlin.String;com.kylecorry.andromeda.pdf.PDFValue.PDFDictionary){}[0]
+final fun com.kylecorry.andromeda.pdf/stream(kotlin/String): com.kylecorry.andromeda.pdf/PDFValue.PDFStream // com.kylecorry.andromeda.pdf/stream|stream(kotlin.String){}[0]
+final fun com.kylecorry.andromeda.pdf/string(kotlin/String): com.kylecorry.andromeda.pdf/PDFValue.PDFString // com.kylecorry.andromeda.pdf/string|string(kotlin.String){}[0]
+final fun com.kylecorry.andromeda.pdf/text(kotlin/Int, kotlin/String, kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary = ...): com.kylecorry.andromeda.pdf/PDFValue.PDFObject // com.kylecorry.andromeda.pdf/text|text(kotlin.Int;kotlin.String;kotlin.Int;kotlin.Int;kotlin.Int;com.kylecorry.andromeda.pdf.PDFValue.PDFDictionary){}[0]
+final fun com.kylecorry.andromeda.pdf/viewport(kotlin/Int, kotlin/Int, kotlin/DoubleArray, com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary = ...): com.kylecorry.andromeda.pdf/PDFValue.PDFObject // com.kylecorry.andromeda.pdf/viewport|viewport(kotlin.Int;kotlin.Int;kotlin.DoubleArray;com.kylecorry.andromeda.pdf.PDFValue.PDFDictionary){}[0]

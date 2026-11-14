@@ -1,0 +1,13 @@
+public final class com/kylecorry/andromeda/clipboard/Clipboard {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/clipboard/Clipboard;
+	public final fun copy (Landroid/content/Context;Ljava/lang/String;)V
+}
+
+public abstract interface class com/kylecorry/andromeda/clipboard/ClipboardWriter {
+	public abstract fun copy (Ljava/lang/String;)V
+}
+
+public final class com/kylecorry/andromeda/clipboard/ClipboardWriterKt {
+	public static final fun clipboardWriter (Landroid/content/Context;)Lcom/kylecorry/andromeda/clipboard/ClipboardWriter;
+}
+

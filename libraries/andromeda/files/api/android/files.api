@@ -1,0 +1,224 @@
+public final class com/kylecorry/andromeda/files/AppFilesKt {
+	public static final fun appCache ()Lcom/kylecorry/andromeda/files/FileStorage;
+	public static final fun appFiles ()Lcom/kylecorry/andromeda/files/FileStorage;
+}
+
+public final class com/kylecorry/andromeda/files/ArchiveEntry {
+	public fun <init> (Ljava/lang/String;ZJJ)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Z
+	public final fun component3 ()J
+	public final fun component4 ()J
+	public final fun copy (Ljava/lang/String;ZJJ)Lcom/kylecorry/andromeda/files/ArchiveEntry;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/files/ArchiveEntry;Ljava/lang/String;ZJJILjava/lang/Object;)Lcom/kylecorry/andromeda/files/ArchiveEntry;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCompressedSize ()J
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSize ()J
+	public fun hashCode ()I
+	public final fun isDirectory ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/files/ArchivesKt {
+	public static final fun listArchive (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;I)Ljava/util/List;
+	public static synthetic fun listArchive$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;IILjava/lang/Object;)Ljava/util/List;
+	public static final fun readArchiveEntry (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)[B
+	public static synthetic fun readArchiveEntry$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)[B
+	public static final fun unzip (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun unzip$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun zip (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Set;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun zip$default (Lcom/kylecorry/andromeda/files/FileStorage;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/Set;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/files/AssetFileSystem {
+	public fun <init> (Landroid/content/Context;)V
+	public final fun list (Ljava/lang/String;)Ljava/util/List;
+	public final fun read (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun stream (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class com/kylecorry/andromeda/files/BaseFileSystem : com/kylecorry/andromeda/files/IFileSystem {
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun createDirectory (Ljava/lang/String;)V
+	public fun createFile (Ljava/lang/String;)V
+	public fun delete (Ljava/lang/String;Z)V
+	public fun getDirectory (Ljava/lang/String;Z)Ljava/io/File;
+	public fun getFile (Ljava/lang/String;Z)Ljava/io/File;
+	public fun getMimeType (Ljava/lang/String;)Ljava/lang/String;
+	public fun getRelativePath (Ljava/io/File;)Ljava/lang/String;
+	public fun getUri (Ljava/lang/String;Ljava/lang/String;Z)Landroid/net/Uri;
+	public fun getUri (Ljava/lang/String;Z)Landroid/net/Uri;
+	public fun inputStream (Ljava/lang/String;Z)Ljava/io/InputStream;
+	public fun list (Ljava/lang/String;)Ljava/util/List;
+	public fun outputStream (Ljava/lang/String;)Ljava/io/OutputStream;
+	public fun read (Ljava/lang/String;Z)Ljava/lang/String;
+	public fun write (Ljava/lang/String;Ljava/lang/String;Z)V
+}
+
+public final class com/kylecorry/andromeda/files/BundledAssetsAndroidKt {
+	public static final fun listAssets (Ljava/lang/String;)Ljava/util/List;
+	public static synthetic fun listAssets$default (Ljava/lang/String;ILjava/lang/Object;)Ljava/util/List;
+	public static final fun openAsset (Ljava/lang/String;)Lokio/Source;
+}
+
+public final class com/kylecorry/andromeda/files/BundledAssetsKt {
+	public static final fun readAsset (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun readAssetText (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/files/CacheFileSystem : com/kylecorry/andromeda/files/BaseFileSystem {
+	public fun <init> (Landroid/content/Context;)V
+}
+
+public final class com/kylecorry/andromeda/files/ContentDocument {
+	public fun <init> (Landroid/net/Uri;Ljava/lang/String;Ljava/lang/String;ZZLkotlin/time/Instant;J)V
+	public final fun component1 ()Landroid/net/Uri;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun component6 ()Lkotlin/time/Instant;
+	public final fun component7 ()J
+	public final fun copy (Landroid/net/Uri;Ljava/lang/String;Ljava/lang/String;ZZLkotlin/time/Instant;J)Lcom/kylecorry/andromeda/files/ContentDocument;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/files/ContentDocument;Landroid/net/Uri;Ljava/lang/String;Ljava/lang/String;ZZLkotlin/time/Instant;JILjava/lang/Object;)Lcom/kylecorry/andromeda/files/ContentDocument;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCanRead ()Z
+	public final fun getCanWrite ()Z
+	public final fun getDisplayName ()Ljava/lang/String;
+	public final fun getLastModified ()Lkotlin/time/Instant;
+	public final fun getMimeType ()Ljava/lang/String;
+	public final fun getSize ()J
+	public final fun getUri ()Landroid/net/Uri;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/files/ContentFileSystem {
+	public static final field Companion Lcom/kylecorry/andromeda/files/ContentFileSystem$Companion;
+	public fun <init> (Landroid/content/Context;Landroid/net/Uri;)V
+	public final fun canRead (Ljava/lang/String;)Z
+	public static synthetic fun canRead$default (Lcom/kylecorry/andromeda/files/ContentFileSystem;Ljava/lang/String;ILjava/lang/Object;)Z
+	public final fun canWrite (Ljava/lang/String;)Z
+	public static synthetic fun canWrite$default (Lcom/kylecorry/andromeda/files/ContentFileSystem;Ljava/lang/String;ILjava/lang/Object;)Z
+	public final fun createFile (Ljava/lang/String;Ljava/lang/String;)Lcom/kylecorry/andromeda/files/ContentDocument;
+	public final fun deleteFile (Ljava/lang/String;)Z
+	public final fun getFile (Ljava/lang/String;)Lcom/kylecorry/andromeda/files/ContentDocument;
+	public final fun listFiles ()Ljava/util/List;
+}
+
+public final class com/kylecorry/andromeda/files/ContentFileSystem$Companion {
+	public final fun getDocumentFromUri (Landroid/content/Context;Landroid/net/Uri;)Lcom/kylecorry/andromeda/files/ContentDocument;
+}
+
+public final class com/kylecorry/andromeda/files/CreateDocumentKt {
+	public static final fun createDocument (Landroid/content/Context;Lio/github/vinceglb/filekit/PlatformFile;Ljava/lang/String;Ljava/lang/String;)Lio/github/vinceglb/filekit/PlatformFile;
+}
+
+public final class com/kylecorry/andromeda/files/DataFileSystem : com/kylecorry/andromeda/files/BaseFileSystem {
+	public fun <init> (Landroid/content/Context;)V
+}
+
+public final class com/kylecorry/andromeda/files/ExternalFileSystem {
+	public fun <init> (Landroid/content/Context;)V
+	public final fun getExtension (Landroid/net/Uri;)Ljava/lang/String;
+	public final fun getFileName (Landroid/net/Uri;ZZ)Ljava/lang/String;
+	public static synthetic fun getFileName$default (Lcom/kylecorry/andromeda/files/ExternalFileSystem;Landroid/net/Uri;ZZILjava/lang/Object;)Ljava/lang/String;
+	public final fun getMimeType (Landroid/net/Uri;)Ljava/lang/String;
+	public final fun outputStream (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun read (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun stream (Landroid/net/Uri;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun write (Landroid/net/Uri;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/kylecorry/andromeda/files/FileSaver {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun save (Ljava/io/File;Ljava/io/File;)V
+	public final fun save (Ljava/io/File;Ljava/io/OutputStream;)V
+	public final fun save (Ljava/io/InputStream;Ljava/io/File;)V
+	public final fun save (Ljava/io/InputStream;Ljava/io/OutputStream;)V
+}
+
+public abstract interface class com/kylecorry/andromeda/files/IFileSystem {
+	public abstract fun createDirectory (Ljava/lang/String;)V
+	public abstract fun createFile (Ljava/lang/String;)V
+	public abstract fun delete (Ljava/lang/String;Z)V
+	public static synthetic fun delete$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;ZILjava/lang/Object;)V
+	public abstract fun getDirectory (Ljava/lang/String;Z)Ljava/io/File;
+	public static synthetic fun getDirectory$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/File;
+	public abstract fun getFile (Ljava/lang/String;Z)Ljava/io/File;
+	public static synthetic fun getFile$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/File;
+	public abstract fun getMimeType (Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getRelativePath (Ljava/io/File;)Ljava/lang/String;
+	public abstract fun getUri (Ljava/lang/String;Ljava/lang/String;Z)Landroid/net/Uri;
+	public abstract fun getUri (Ljava/lang/String;Z)Landroid/net/Uri;
+	public static synthetic fun getUri$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Landroid/net/Uri;
+	public static synthetic fun getUri$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;ZILjava/lang/Object;)Landroid/net/Uri;
+	public abstract fun inputStream (Ljava/lang/String;Z)Ljava/io/InputStream;
+	public static synthetic fun inputStream$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/InputStream;
+	public abstract fun list (Ljava/lang/String;)Ljava/util/List;
+	public abstract fun outputStream (Ljava/lang/String;)Ljava/io/OutputStream;
+	public abstract fun read (Ljava/lang/String;Z)Ljava/lang/String;
+	public static synthetic fun read$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;ZILjava/lang/Object;)Ljava/lang/String;
+	public abstract fun write (Ljava/lang/String;Ljava/lang/String;Z)V
+	public static synthetic fun write$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/files/IFileSystem$DefaultImpls {
+	public static synthetic fun delete$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;ZILjava/lang/Object;)V
+	public static synthetic fun getDirectory$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/File;
+	public static synthetic fun getFile$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/File;
+	public static synthetic fun getUri$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Landroid/net/Uri;
+	public static synthetic fun getUri$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;ZILjava/lang/Object;)Landroid/net/Uri;
+	public static synthetic fun inputStream$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;ZILjava/lang/Object;)Ljava/io/InputStream;
+	public static synthetic fun read$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;ZILjava/lang/Object;)Ljava/lang/String;
+	public static synthetic fun write$default (Lcom/kylecorry/andromeda/files/IFileSystem;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/files/LocalFileSystem : com/kylecorry/andromeda/files/BaseFileSystem {
+	public fun <init> (Landroid/content/Context;)V
+}
+
+public final class com/kylecorry/andromeda/files/MimeType {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/files/MimeType;
+	public final fun toExtension (Ljava/lang/String;)Ljava/lang/String;
+	public final fun toMimeType (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/files/ShareableUriKt {
+	public static final fun shareableUri (Landroid/content/Context;Ljava/lang/String;Lokio/Path;)Landroid/net/Uri;
+}
+
+public final class com/kylecorry/andromeda/files/ZipFile {
+	public fun <init> (Ljava/io/File;Z)V
+	public final fun component1 ()Ljava/io/File;
+	public final fun component2 ()Z
+	public final fun copy (Ljava/io/File;Z)Lcom/kylecorry/andromeda/files/ZipFile;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/files/ZipFile;Ljava/io/File;ZILjava/lang/Object;)Lcom/kylecorry/andromeda/files/ZipFile;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFile ()Ljava/io/File;
+	public fun hashCode ()I
+	public final fun isDirectory ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/files/ZipUtils {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/files/ZipUtils;
+	public final fun forEach (Ljava/util/zip/ZipInputStream;Lkotlin/jvm/functions/Function1;)V
+	public final fun list (Ljava/io/File;I)Ljava/util/List;
+	public final fun list (Ljava/io/InputStream;I)Ljava/util/List;
+	public static synthetic fun list$default (Lcom/kylecorry/andromeda/files/ZipUtils;Ljava/io/File;IILjava/lang/Object;)Ljava/util/List;
+	public static synthetic fun list$default (Lcom/kylecorry/andromeda/files/ZipUtils;Ljava/io/InputStream;IILjava/lang/Object;)Ljava/util/List;
+	public final fun unzip (Ljava/io/File;Ljava/io/File;I)V
+	public final fun unzip (Ljava/io/InputStream;Ljava/io/File;ILkotlin/jvm/functions/Function1;)V
+	public static synthetic fun unzip$default (Lcom/kylecorry/andromeda/files/ZipUtils;Ljava/io/File;Ljava/io/File;IILjava/lang/Object;)V
+	public static synthetic fun unzip$default (Lcom/kylecorry/andromeda/files/ZipUtils;Ljava/io/InputStream;Ljava/io/File;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public final fun zip (Ljava/io/File;[Ljava/io/File;Ljava/util/List;)V
+	public final fun zip (Ljava/io/OutputStream;[Ljava/io/File;Ljava/util/List;)V
+	public static synthetic fun zip$default (Lcom/kylecorry/andromeda/files/ZipUtils;Ljava/io/File;[Ljava/io/File;Ljava/util/List;ILjava/lang/Object;)V
+	public static synthetic fun zip$default (Lcom/kylecorry/andromeda/files/ZipUtils;Ljava/io/OutputStream;[Ljava/io/File;Ljava/util/List;ILjava/lang/Object;)V
+}
+

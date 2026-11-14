@@ -1,0 +1,56 @@
+public final class com/kylecorry/andromeda/notify/ForegroundNotificationKt {
+	public static final fun foregroundNotification (Landroid/content/Context;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Landroid/app/PendingIntent;Ljava/util/List;Z)Landroid/app/Notification;
+	public static synthetic fun foregroundNotification$default (Landroid/content/Context;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Landroid/app/PendingIntent;Ljava/util/List;ZILjava/lang/Object;)Landroid/app/Notification;
+}
+
+public abstract interface class com/kylecorry/andromeda/notify/NotificationSender {
+	public abstract fun cancel (I)V
+	public abstract fun send (ILjava/lang/String;Ljava/lang/String;)V
+}
+
+public final class com/kylecorry/andromeda/notify/NotificationSenderKt {
+	public static final fun notificationSender (Landroid/content/Context;Ljava/lang/String;I)Lcom/kylecorry/andromeda/notify/NotificationSender;
+}
+
+public final class com/kylecorry/andromeda/notify/NotifierAdapterKt {
+	public static final fun asNotificationSender (Lcom/mmk/kmpnotifier/notification/Notifier;)Lcom/kylecorry/andromeda/notify/NotificationSender;
+}
+
+public final class com/kylecorry/andromeda/notify/Notify {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/notify/Notify;
+	public final fun action (Ljava/lang/String;Landroid/app/PendingIntent;Landroidx/core/graphics/drawable/IconCompat;)Landroidx/core/app/NotificationCompat$Action;
+	public final fun action (Ljava/lang/String;Landroid/app/PendingIntent;Ljava/lang/Integer;)Landroidx/core/app/NotificationCompat$Action;
+	public static synthetic fun action$default (Lcom/kylecorry/andromeda/notify/Notify;Ljava/lang/String;Landroid/app/PendingIntent;Landroidx/core/graphics/drawable/IconCompat;ILjava/lang/Object;)Landroidx/core/app/NotificationCompat$Action;
+	public static synthetic fun action$default (Lcom/kylecorry/andromeda/notify/Notify;Ljava/lang/String;Landroid/app/PendingIntent;Ljava/lang/Integer;ILjava/lang/Object;)Landroidx/core/app/NotificationCompat$Action;
+	public final fun alert (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IZZZLjava/lang/String;Landroid/app/PendingIntent;Ljava/util/List;ZZLjava/lang/String;)Landroid/app/Notification;
+	public static synthetic fun alert$default (Lcom/kylecorry/andromeda/notify/Notify;Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IZZZLjava/lang/String;Landroid/app/PendingIntent;Ljava/util/List;ZZLjava/lang/String;ILjava/lang/Object;)Landroid/app/Notification;
+	public final fun areNotificationsBlocked (Landroid/content/Context;)Z
+	public final fun background (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Landroid/app/PendingIntent;Ljava/util/List;ZLjava/lang/String;)Landroid/app/Notification;
+	public static synthetic fun background$default (Lcom/kylecorry/andromeda/notify/Notify;Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Landroid/app/PendingIntent;Ljava/util/List;ZLjava/lang/String;ILjava/lang/Object;)Landroid/app/Notification;
+	public final fun cancel (Landroid/content/Context;I)V
+	public final fun channelGroups (Landroid/content/Context;)Ljava/util/List;
+	public final fun channels (Landroid/content/Context;)Ljava/util/List;
+	public final fun createChannel (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IZZZLjava/lang/String;)V
+	public static synthetic fun createChannel$default (Lcom/kylecorry/andromeda/notify/Notify;Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IZZZLjava/lang/String;ILjava/lang/Object;)V
+	public final fun createChannelGroup (Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;)V
+	public static synthetic fun createChannelGroup$default (Lcom/kylecorry/andromeda/notify/Notify;Landroid/content/Context;Ljava/lang/String;Ljava/lang/CharSequence;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun deleteChannel (Landroid/content/Context;Ljava/lang/String;)V
+	public final fun deleteChannelGroup (Landroid/content/Context;Ljava/lang/String;)V
+	public final fun getCHANNEL_IMPORTANCE_DEFAULT ()I
+	public final fun getCHANNEL_IMPORTANCE_HIGH ()I
+	public final fun getCHANNEL_IMPORTANCE_LOW ()I
+	public final fun getCHANNEL_IMPORTANCE_MAX ()I
+	public final fun getCHANNEL_IMPORTANCE_MIN ()I
+	public final fun getCHANNEL_IMPORTANCE_NONE ()I
+	public final fun getSoundUri (Landroid/content/Context;Ljava/lang/String;)Landroid/net/Uri;
+	public final fun isActive (Landroid/content/Context;I)Z
+	public final fun isChannelBlocked (Landroid/content/Context;Ljava/lang/String;)Z
+	public final fun persistent (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IZZZLjava/lang/String;Landroid/app/PendingIntent;Ljava/util/List;ZLjava/lang/String;)Landroid/app/Notification;
+	public static synthetic fun persistent$default (Lcom/kylecorry/andromeda/notify/Notify;Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IZZZLjava/lang/String;Landroid/app/PendingIntent;Ljava/util/List;ZLjava/lang/String;ILjava/lang/Object;)Landroid/app/Notification;
+	public final fun send (Landroid/content/Context;ILandroid/app/Notification;ZI)V
+	public static synthetic fun send$default (Lcom/kylecorry/andromeda/notify/Notify;Landroid/content/Context;ILandroid/app/Notification;ZIILjava/lang/Object;)V
+	public final fun status (Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IZZZLjava/lang/String;Landroid/app/PendingIntent;Ljava/util/List;Ljava/lang/String;)Landroid/app/Notification;
+	public static synthetic fun status$default (Lcom/kylecorry/andromeda/notify/Notify;Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IZZZLjava/lang/String;Landroid/app/PendingIntent;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Landroid/app/Notification;
+	public final fun update (Landroid/content/Context;ILandroid/app/Notification;)V
+}
+

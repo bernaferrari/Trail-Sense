@@ -1,0 +1,45 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.kylecorry.andromeda:xml>
+final class com.kylecorry.andromeda.xml/XMLNode { // com.kylecorry.andromeda.xml/XMLNode|null[0]
+    constructor <init>(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String>, kotlin/String?, kotlin.collections/List<com.kylecorry.andromeda.xml/XMLNode>) // com.kylecorry.andromeda.xml/XMLNode.<init>|<init>(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.List<com.kylecorry.andromeda.xml.XMLNode>){}[0]
+
+    final val attributes // com.kylecorry.andromeda.xml/XMLNode.attributes|{}attributes[0]
+        final fun <get-attributes>(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.kylecorry.andromeda.xml/XMLNode.attributes.<get-attributes>|<get-attributes>(){}[0]
+    final val children // com.kylecorry.andromeda.xml/XMLNode.children|{}children[0]
+        final fun <get-children>(): kotlin.collections/List<com.kylecorry.andromeda.xml/XMLNode> // com.kylecorry.andromeda.xml/XMLNode.children.<get-children>|<get-children>(){}[0]
+    final val tag // com.kylecorry.andromeda.xml/XMLNode.tag|{}tag[0]
+        final fun <get-tag>(): kotlin/String // com.kylecorry.andromeda.xml/XMLNode.tag.<get-tag>|<get-tag>(){}[0]
+    final val text // com.kylecorry.andromeda.xml/XMLNode.text|{}text[0]
+        final fun <get-text>(): kotlin/String? // com.kylecorry.andromeda.xml/XMLNode.text.<get-text>|<get-text>(){}[0]
+
+    final fun component1(): kotlin/String // com.kylecorry.andromeda.xml/XMLNode.component1|component1(){}[0]
+    final fun component2(): kotlin.collections/Map<kotlin/String, kotlin/String> // com.kylecorry.andromeda.xml/XMLNode.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // com.kylecorry.andromeda.xml/XMLNode.component3|component3(){}[0]
+    final fun component4(): kotlin.collections/List<com.kylecorry.andromeda.xml/XMLNode> // com.kylecorry.andromeda.xml/XMLNode.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin.collections/List<com.kylecorry.andromeda.xml/XMLNode> = ...): com.kylecorry.andromeda.xml/XMLNode // com.kylecorry.andromeda.xml/XMLNode.copy|copy(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.collections.List<com.kylecorry.andromeda.xml.XMLNode>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.kylecorry.andromeda.xml/XMLNode.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.kylecorry.andromeda.xml/XMLNode.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.kylecorry.andromeda.xml/XMLNode.toString|toString(){}[0]
+
+    final object Companion { // com.kylecorry.andromeda.xml/XMLNode.Companion|null[0]
+        final fun text(kotlin/String, kotlin/String?): com.kylecorry.andromeda.xml/XMLNode // com.kylecorry.andromeda.xml/XMLNode.Companion.text|text(kotlin.String;kotlin.String?){}[0]
+    }
+}
+
+final class com.kylecorry.andromeda.xml/XmlSerializer { // com.kylecorry.andromeda.xml/XmlSerializer|null[0]
+    constructor <init>(kotlin/Boolean = ...) // com.kylecorry.andromeda.xml/XmlSerializer.<init>|<init>(kotlin.Boolean){}[0]
+
+    final fun deserialize(kotlin/ByteArray): com.kylecorry.andromeda.xml/XMLNode // com.kylecorry.andromeda.xml/XmlSerializer.deserialize|deserialize(kotlin.ByteArray){}[0]
+    final fun serialize(com.kylecorry.andromeda.xml/XMLNode): kotlin/ByteArray // com.kylecorry.andromeda.xml/XmlSerializer.serialize|serialize(com.kylecorry.andromeda.xml.XMLNode){}[0]
+}
+
+final object com.kylecorry.andromeda.xml/XMLConvert { // com.kylecorry.andromeda.xml/XMLConvert|null[0]
+    final fun parse(kotlin/String): com.kylecorry.andromeda.xml/XMLNode // com.kylecorry.andromeda.xml/XMLConvert.parse|parse(kotlin.String){}[0]
+    final fun toString(com.kylecorry.andromeda.xml/XMLNode, kotlin/Boolean = ...): kotlin/String // com.kylecorry.andromeda.xml/XMLConvert.toString|toString(com.kylecorry.andromeda.xml.XMLNode;kotlin.Boolean){}[0]
+}

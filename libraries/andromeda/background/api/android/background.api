@@ -1,0 +1,305 @@
+public final class com/kylecorry/andromeda/background/AdaptivePeriodicScheduler : com/kylecorry/andromeda/background/PeriodicTaskScheduler {
+	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/kylecorry/andromeda/background/PeriodicBackgroundScheduler;Lkotlin/jvm/functions/Function1;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineScope;Lcom/kylecorry/andromeda/background/PeriodicBackgroundScheduler;Lkotlin/jvm/functions/Function1;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun cancel ()V
+	public fun interval-QTBD994 (JJ)V
+	public fun interval-VtjQ1oo (JLkotlin/time/Instant;)V
+}
+
+public final class com/kylecorry/andromeda/background/AlarmBroadcastTaskScheduler : com/kylecorry/andromeda/background/OneTimeTaskScheduler, com/kylecorry/andromeda/background/PeriodicTaskScheduler {
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/Class;IZZJZLandroid/os/Bundle;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/Class;IZZJZLandroid/os/Bundle;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun cancel ()V
+	public fun interval-QTBD994 (JJ)V
+	public fun interval-VtjQ1oo (JLkotlin/time/Instant;)V
+	public fun once (Lkotlin/time/Instant;)V
+	public fun once-LRDsOJo (J)V
+	public fun start ()V
+}
+
+public final class com/kylecorry/andromeda/background/AlarmClockTaskScheduler : com/kylecorry/andromeda/background/OneTimeTaskScheduler {
+	public fun <init> (Landroid/content/Context;Landroid/app/PendingIntent;Lkotlin/jvm/functions/Function0;)V
+	public fun cancel ()V
+	public fun once (Lkotlin/time/Instant;)V
+	public fun once-LRDsOJo (J)V
+	public fun start ()V
+}
+
+public abstract interface class com/kylecorry/andromeda/background/AlarmDelivery {
+}
+
+public final class com/kylecorry/andromeda/background/AlarmDelivery$AlarmClock : com/kylecorry/andromeda/background/AlarmDelivery {
+	public fun <init> (Landroid/app/PendingIntent;)V
+	public final fun component1 ()Landroid/app/PendingIntent;
+	public final fun copy (Landroid/app/PendingIntent;)Lcom/kylecorry/andromeda/background/AlarmDelivery$AlarmClock;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/background/AlarmDelivery$AlarmClock;Landroid/app/PendingIntent;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/AlarmDelivery$AlarmClock;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getShowIntent ()Landroid/app/PendingIntent;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/background/AlarmDelivery$Exact : com/kylecorry/andromeda/background/AlarmDelivery {
+	public fun <init> ()V
+	public fun <init> (ZZ)V
+	public synthetic fun <init> (ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun copy (ZZ)Lcom/kylecorry/andromeda/background/AlarmDelivery$Exact;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/background/AlarmDelivery$Exact;ZZILjava/lang/Object;)Lcom/kylecorry/andromeda/background/AlarmDelivery$Exact;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowWhileIdle ()Z
+	public final fun getFallbackToInexact ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/background/AlarmDelivery$Inexact : com/kylecorry/andromeda/background/AlarmDelivery {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lcom/kylecorry/andromeda/background/AlarmDelivery$Inexact;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/background/AlarmDelivery$Inexact;ZILjava/lang/Object;)Lcom/kylecorry/andromeda/background/AlarmDelivery$Inexact;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowWhileIdle ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/background/AlarmDelivery$Window : com/kylecorry/andromeda/background/AlarmDelivery {
+	public synthetic fun <init> (JZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-UwyO8pc ()J
+	public final fun component2 ()Z
+	public final fun copy-VtjQ1oo (JZ)Lcom/kylecorry/andromeda/background/AlarmDelivery$Window;
+	public static synthetic fun copy-VtjQ1oo$default (Lcom/kylecorry/andromeda/background/AlarmDelivery$Window;JZILjava/lang/Object;)Lcom/kylecorry/andromeda/background/AlarmDelivery$Window;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCentered ()Z
+	public final fun getDuration-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/background/AlarmSchedulerKt {
+	public static final fun alarmScheduler (Landroid/content/Context;Landroid/app/PendingIntent;Lcom/kylecorry/andromeda/background/AlarmDelivery;)Lcom/kylecorry/andromeda/background/BackgroundScheduler;
+	public static synthetic fun alarmScheduler$default (Landroid/content/Context;Landroid/app/PendingIntent;Lcom/kylecorry/andromeda/background/AlarmDelivery;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/BackgroundScheduler;
+	public static final fun repeatingAlarmScheduler (Landroid/content/Context;Landroid/app/PendingIntent;)Lcom/kylecorry/andromeda/background/PeriodicBackgroundScheduler;
+}
+
+public final class com/kylecorry/andromeda/background/AlarmTaskScheduler : com/kylecorry/andromeda/background/OneTimeTaskScheduler {
+	public synthetic fun <init> (Landroid/content/Context;ZZJZLkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Landroid/content/Context;ZZJZLkotlin/jvm/functions/Function0;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun cancel ()V
+	public fun once (Lkotlin/time/Instant;)V
+	public fun once-LRDsOJo (J)V
+	public fun start ()V
+}
+
+public final class com/kylecorry/andromeda/background/Alarms {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/background/Alarms;
+	public final fun cancel (Landroid/content/Context;Landroid/app/PendingIntent;)V
+	public final fun isAlarmRunning (Landroid/content/Context;ILandroid/content/Intent;)Z
+	public final fun set-7Yrd8eY (Landroid/content/Context;Lkotlin/time/Instant;Landroid/app/PendingIntent;ZZLkotlin/time/Duration;Z)V
+	public static synthetic fun set-7Yrd8eY$default (Lcom/kylecorry/andromeda/background/Alarms;Landroid/content/Context;Lkotlin/time/Instant;Landroid/app/PendingIntent;ZZLkotlin/time/Duration;ZILjava/lang/Object;)V
+	public final fun setAlarmClock (Landroid/content/Context;Lkotlin/time/Instant;Landroid/app/PendingIntent;Landroid/app/PendingIntent;)V
+	public final fun setRepeating-exY8QGI (Landroid/content/Context;Lkotlin/time/Instant;JLandroid/app/PendingIntent;)V
+}
+
+public abstract interface class com/kylecorry/andromeda/background/BackgroundScheduler : com/kylecorry/andromeda/background/OneTimeTaskScheduler {
+	public fun once (Lkotlin/time/Instant;)V
+	public fun once-LRDsOJo (J)V
+	public abstract fun schedule (Lkotlin/time/Instant;)V
+}
+
+public final class com/kylecorry/andromeda/background/BackgroundScheduler$DefaultImpls {
+	public static fun once (Lcom/kylecorry/andromeda/background/BackgroundScheduler;Lkotlin/time/Instant;)V
+	public static fun once-LRDsOJo (Lcom/kylecorry/andromeda/background/BackgroundScheduler;J)V
+	public static fun start (Lcom/kylecorry/andromeda/background/BackgroundScheduler;)V
+}
+
+public final class com/kylecorry/andromeda/background/BackgroundSchedulerKt {
+	public static final fun backgroundScheduler (Landroid/content/Context;Ljava/lang/String;Ljava/lang/Class;Landroidx/work/Data;Landroidx/work/Constraints;Z)Lcom/kylecorry/andromeda/background/BackgroundScheduler;
+	public static synthetic fun backgroundScheduler$default (Landroid/content/Context;Ljava/lang/String;Ljava/lang/Class;Landroidx/work/Data;Landroidx/work/Constraints;ZILjava/lang/Object;)Lcom/kylecorry/andromeda/background/BackgroundScheduler;
+	public static final fun periodicBackgroundScheduler-BAu0izY (Landroid/content/Context;Ljava/lang/String;Ljava/lang/Class;Landroidx/work/Data;Landroidx/work/Constraints;Lkotlin/time/Duration;)Lcom/kylecorry/andromeda/background/PeriodicBackgroundScheduler;
+	public static synthetic fun periodicBackgroundScheduler-BAu0izY$default (Landroid/content/Context;Ljava/lang/String;Ljava/lang/Class;Landroidx/work/Data;Landroidx/work/Constraints;Lkotlin/time/Duration;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/PeriodicBackgroundScheduler;
+}
+
+public final class com/kylecorry/andromeda/background/BroadcastWorker : androidx/work/Worker {
+	public fun <init> (Landroid/content/Context;Landroidx/work/WorkerParameters;)V
+	public fun doWork ()Landroidx/work/ListenableWorker$Result;
+}
+
+public final class com/kylecorry/andromeda/background/CoroutineTaskScheduler : com/kylecorry/andromeda/background/OneTimeTaskScheduler, com/kylecorry/andromeda/background/PeriodicTaskScheduler {
+	public fun <init> (Lkotlinx/coroutines/CoroutineScope;Lkotlin/jvm/functions/Function1;)V
+	public fun cancel ()V
+	public fun interval-QTBD994 (JJ)V
+	public fun interval-VtjQ1oo (JLkotlin/time/Instant;)V
+	public fun once (Lkotlin/time/Instant;)V
+	public fun once-LRDsOJo (J)V
+	public fun start ()V
+}
+
+public final class com/kylecorry/andromeda/background/DailyScheduleDecision {
+	public fun <init> (ZLkotlinx/datetime/LocalDate;Lkotlin/time/Instant;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Lkotlinx/datetime/LocalDate;
+	public final fun component3 ()Lkotlin/time/Instant;
+	public final fun copy (ZLkotlinx/datetime/LocalDate;Lkotlin/time/Instant;)Lcom/kylecorry/andromeda/background/DailyScheduleDecision;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/background/DailyScheduleDecision;ZLkotlinx/datetime/LocalDate;Lkotlin/time/Instant;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/DailyScheduleDecision;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLocalDate ()Lkotlinx/datetime/LocalDate;
+	public final fun getNextRun ()Lkotlin/time/Instant;
+	public final fun getShouldRun ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/background/DailyScheduleKt {
+	public static final fun planDailyTask-17CK4j0 (Lkotlin/time/Instant;Lkotlinx/datetime/LocalTime;Lkotlinx/datetime/TimeZone;Lkotlinx/datetime/LocalDate;ZJ)Lcom/kylecorry/andromeda/background/DailyScheduleDecision;
+	public static synthetic fun planDailyTask-17CK4j0$default (Lkotlin/time/Instant;Lkotlinx/datetime/LocalTime;Lkotlinx/datetime/TimeZone;Lkotlinx/datetime/LocalDate;ZJILjava/lang/Object;)Lcom/kylecorry/andromeda/background/DailyScheduleDecision;
+}
+
+public abstract class com/kylecorry/andromeda/background/DailyWorker : androidx/work/CoroutineWorker {
+	public synthetic fun <init> (Landroid/content/Context;Landroidx/work/WorkerParameters;JLkotlin/time/Duration;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Landroid/content/Context;Landroidx/work/WorkerParameters;JLkotlin/time/Duration;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun doWork (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected abstract fun execute (Landroid/content/Context;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected fun getForegroundInfo (Landroid/content/Context;)Landroidx/work/ForegroundInfo;
+	protected fun getLastRunKey (Landroid/content/Context;)Ljava/lang/String;
+	protected abstract fun getScheduledTime (Landroid/content/Context;)Lkotlinx/datetime/LocalTime;
+	protected fun getScheduler (Landroid/content/Context;)Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;
+	protected abstract fun getUniqueId ()I
+	protected fun isEnabled (Landroid/content/Context;)Z
+}
+
+public abstract interface class com/kylecorry/andromeda/background/OneTimeTaskScheduler : com/kylecorry/andromeda/background/TaskScheduler {
+	public fun once (Lkotlin/time/Instant;)V
+	public abstract fun once-LRDsOJo (J)V
+	public static synthetic fun once-LRDsOJo$default (Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;JILjava/lang/Object;)V
+	public fun start ()V
+}
+
+public final class com/kylecorry/andromeda/background/OneTimeTaskScheduler$DefaultImpls {
+	public static fun once (Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;Lkotlin/time/Instant;)V
+	public static synthetic fun once-LRDsOJo$default (Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;JILjava/lang/Object;)V
+	public static fun start (Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;)V
+}
+
+public final class com/kylecorry/andromeda/background/OneTimeTaskSchedulerFactory {
+	public fun <init> (Landroid/content/Context;)V
+	public final fun alarm (Ljava/lang/Class;Landroid/app/PendingIntent;ILandroid/os/Bundle;)Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;
+	public static synthetic fun alarm$default (Lcom/kylecorry/andromeda/background/OneTimeTaskSchedulerFactory;Ljava/lang/Class;Landroid/app/PendingIntent;ILandroid/os/Bundle;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;
+	public final fun deferrable (Ljava/lang/Class;ILandroid/os/Bundle;)Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;
+	public static synthetic fun deferrable$default (Lcom/kylecorry/andromeda/background/OneTimeTaskSchedulerFactory;Ljava/lang/Class;ILandroid/os/Bundle;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;
+	public final fun exact (Ljava/lang/Class;ILandroid/os/Bundle;)Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;
+	public static synthetic fun exact$default (Lcom/kylecorry/andromeda/background/OneTimeTaskSchedulerFactory;Ljava/lang/Class;ILandroid/os/Bundle;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;
+}
+
+public abstract interface class com/kylecorry/andromeda/background/PeriodicBackgroundScheduler : com/kylecorry/andromeda/background/PeriodicTaskScheduler {
+	public abstract fun onTaskStarted ()V
+}
+
+public final class com/kylecorry/andromeda/background/PeriodicBackgroundScheduler$DefaultImpls {
+	public static fun interval-VtjQ1oo (Lcom/kylecorry/andromeda/background/PeriodicBackgroundScheduler;JLkotlin/time/Instant;)V
+}
+
+public abstract interface class com/kylecorry/andromeda/background/PeriodicTaskScheduler : com/kylecorry/andromeda/background/TaskScheduler {
+	public abstract fun interval-QTBD994 (JJ)V
+	public static synthetic fun interval-QTBD994$default (Lcom/kylecorry/andromeda/background/PeriodicTaskScheduler;JJILjava/lang/Object;)V
+	public fun interval-VtjQ1oo (JLkotlin/time/Instant;)V
+}
+
+public final class com/kylecorry/andromeda/background/PeriodicTaskScheduler$DefaultImpls {
+	public static synthetic fun interval-QTBD994$default (Lcom/kylecorry/andromeda/background/PeriodicTaskScheduler;JJILjava/lang/Object;)V
+	public static fun interval-VtjQ1oo (Lcom/kylecorry/andromeda/background/PeriodicTaskScheduler;JLkotlin/time/Instant;)V
+}
+
+public final class com/kylecorry/andromeda/background/PeriodicTaskSchedulerFactory {
+	public fun <init> (Landroid/content/Context;)V
+	public final fun deferrable (Ljava/lang/Class;ILandroid/os/Bundle;)Lcom/kylecorry/andromeda/background/PeriodicTaskScheduler;
+	public static synthetic fun deferrable$default (Lcom/kylecorry/andromeda/background/PeriodicTaskSchedulerFactory;Ljava/lang/Class;ILandroid/os/Bundle;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/PeriodicTaskScheduler;
+}
+
+public final class com/kylecorry/andromeda/background/ServiceSchedulerKt {
+	public static final fun serviceScheduler (Landroid/content/Context;Landroid/content/Intent;Z)Lcom/kylecorry/andromeda/background/AlwaysOnTaskScheduler;
+	public static synthetic fun serviceScheduler$default (Landroid/content/Context;Landroid/content/Intent;ZILjava/lang/Object;)Lcom/kylecorry/andromeda/background/AlwaysOnTaskScheduler;
+}
+
+public final class com/kylecorry/andromeda/background/ServiceTaskScheduler : com/kylecorry/andromeda/background/AlwaysOnTaskScheduler {
+	public fun <init> (Landroid/content/Context;Ljava/lang/Class;ZLandroid/os/Bundle;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/Class;ZLandroid/os/Bundle;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun cancel ()V
+	public fun start ()V
+}
+
+public final class com/kylecorry/andromeda/background/TaskSchedulerFactory {
+	public fun <init> (Landroid/content/Context;)V
+	public final fun alwaysOn (Ljava/lang/Class;ZLandroid/os/Bundle;)Lcom/kylecorry/andromeda/background/AlwaysOnTaskScheduler;
+	public static synthetic fun alwaysOn$default (Lcom/kylecorry/andromeda/background/TaskSchedulerFactory;Ljava/lang/Class;ZLandroid/os/Bundle;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/AlwaysOnTaskScheduler;
+	public final fun interval (Ljava/lang/Class;ILandroid/os/Bundle;)Lcom/kylecorry/andromeda/background/PeriodicTaskScheduler;
+	public static synthetic fun interval$default (Lcom/kylecorry/andromeda/background/TaskSchedulerFactory;Ljava/lang/Class;ILandroid/os/Bundle;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/PeriodicTaskScheduler;
+	public final fun once (Ljava/lang/Class;ILandroid/os/Bundle;)Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;
+	public static synthetic fun once$default (Lcom/kylecorry/andromeda/background/TaskSchedulerFactory;Ljava/lang/Class;ILandroid/os/Bundle;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/OneTimeTaskScheduler;
+}
+
+public final class com/kylecorry/andromeda/background/WorkTaskScheduler : com/kylecorry/andromeda/background/OneTimeTaskScheduler, com/kylecorry/andromeda/background/PeriodicTaskScheduler {
+	public static final field Companion Lcom/kylecorry/andromeda/background/WorkTaskScheduler$Companion;
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/Class;Ljava/lang/String;ZLandroidx/work/Constraints;Lkotlin/time/Duration;Landroid/os/Bundle;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/Class;Ljava/lang/String;ZLandroidx/work/Constraints;Lkotlin/time/Duration;Landroid/os/Bundle;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun cancel ()V
+	public fun interval-QTBD994 (JJ)V
+	public fun interval-VtjQ1oo (JLkotlin/time/Instant;)V
+	public fun once (Lkotlin/time/Instant;)V
+	public fun once-LRDsOJo (J)V
+	public fun start ()V
+}
+
+public final class com/kylecorry/andromeda/background/WorkTaskScheduler$Companion {
+	public final fun createStringId (Landroid/content/Context;I)Ljava/lang/String;
+}
+
+public abstract class com/kylecorry/andromeda/background/services/AndromedaService : android/app/Service {
+	public fun <init> ()V
+	public final fun acquireWakelock-6Au4x4Y (Ljava/lang/String;Lkotlin/time/Duration;)V
+	public static synthetic fun acquireWakelock-6Au4x4Y$default (Lcom/kylecorry/andromeda/background/services/AndromedaService;Ljava/lang/String;Lkotlin/time/Duration;ILjava/lang/Object;)V
+	public fun getForegroundInfo ()Lcom/kylecorry/andromeda/background/services/ForegroundInfo;
+	public fun getTag ()Ljava/lang/String;
+	public fun onBind (Landroid/content/Intent;)Landroid/os/IBinder;
+	public fun onDestroy ()V
+	public fun onStartCommand (Landroid/content/Intent;II)I
+	public final fun releaseWakelock ()V
+	public final fun stopService (Z)V
+	public static synthetic fun stopService$default (Lcom/kylecorry/andromeda/background/services/AndromedaService;ZILjava/lang/Object;)V
+}
+
+public final class com/kylecorry/andromeda/background/services/ForegroundInfo {
+	public fun <init> (ILandroid/app/Notification;Ljava/util/List;)V
+	public synthetic fun <init> (ILandroid/app/Notification;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()Landroid/app/Notification;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (ILandroid/app/Notification;Ljava/util/List;)Lcom/kylecorry/andromeda/background/services/ForegroundInfo;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/background/services/ForegroundInfo;ILandroid/app/Notification;Ljava/util/List;ILjava/lang/Object;)Lcom/kylecorry/andromeda/background/services/ForegroundInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getForegroundServiceTypeOverride ()Ljava/util/List;
+	public final fun getId ()I
+	public final fun getNotification ()Landroid/app/Notification;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/kylecorry/andromeda/background/services/IntervalService : com/kylecorry/andromeda/background/services/AndromedaService {
+	public fun <init> ()V
+	public synthetic fun <init> (JLkotlin/time/Duration;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JLkotlin/time/Duration;ZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public abstract fun doWork (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getAction ()Ljava/lang/String;
+	protected fun getHoldWakelockWhenBelowThreshold ()Z
+	protected fun getNonWorkerTimer (Lkotlin/jvm/functions/Function1;)Lcom/kylecorry/luna/time/ITimer;
+	public abstract fun getPeriod-UwyO8pc ()J
+	public abstract fun getUniqueId ()I
+	public fun onDestroy ()V
+	public fun onStartCommand (Landroid/content/Intent;II)I
+}
+

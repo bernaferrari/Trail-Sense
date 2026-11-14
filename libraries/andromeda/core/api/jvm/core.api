@@ -1,0 +1,135 @@
+public final class com/kylecorry/andromeda/core/CollectionRangesKt {
+	public static final fun rangeOrNull (Ljava/lang/Iterable;)Lkotlin/ranges/ClosedRange;
+}
+
+public final class com/kylecorry/andromeda/core/math/SizeExtensionsKt {
+	public static final fun scaleToFit (Lcom/kylecorry/sol/math/geometry/Size;Lcom/kylecorry/sol/math/geometry/Size;)Lcom/kylecorry/sol/math/geometry/Size;
+}
+
+public final class com/kylecorry/andromeda/core/system/AppInfo {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/kylecorry/andromeda/core/system/AppInfo;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/core/system/AppInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/core/system/AppInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBuild ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/system/AppInfoJvmKt {
+	public static final fun appInfo ()Lcom/kylecorry/andromeda/core/system/AppInfo;
+}
+
+public final class com/kylecorry/andromeda/core/system/DeviceInfo {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/Integer;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;)Lcom/kylecorry/andromeda/core/system/DeviceInfo;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/core/system/DeviceInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/kylecorry/andromeda/core/system/DeviceInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApiLevel ()Ljava/lang/Integer;
+	public final fun getManufacturer ()Ljava/lang/String;
+	public final fun getModel ()Ljava/lang/String;
+	public final fun getOperatingSystemVersion ()Ljava/lang/String;
+	public final fun getPlatform ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/system/DeviceInfoKt {
+	public static final fun deviceInfo ()Lcom/kylecorry/andromeda/core/system/DeviceInfo;
+}
+
+public final class com/kylecorry/andromeda/core/system/DeviceMemory {
+	public fun <init> (Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Boolean;)V
+	public final fun component1 ()Ljava/lang/Long;
+	public final fun component2 ()Ljava/lang/Long;
+	public final fun component3 ()Ljava/lang/Boolean;
+	public final fun copy (Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Boolean;)Lcom/kylecorry/andromeda/core/system/DeviceMemory;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/core/system/DeviceMemory;Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Boolean;ILjava/lang/Object;)Lcom/kylecorry/andromeda/core/system/DeviceMemory;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAvailableBytes ()Ljava/lang/Long;
+	public final fun getLowMemory ()Ljava/lang/Boolean;
+	public final fun getTotalBytes ()Ljava/lang/Long;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/system/DeviceMemoryJvmKt {
+	public static final fun deviceMemory ()Lcom/kylecorry/andromeda/core/system/DeviceMemory;
+}
+
+public final class com/kylecorry/andromeda/core/system/GeoUri {
+	public static final field Companion Lcom/kylecorry/andromeda/core/system/GeoUri$Companion;
+	public synthetic fun <init> (JLjava/lang/Float;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JLjava/lang/Float;Ljava/util/Map;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-VMd8-xo ()J
+	public final fun component2 ()Ljava/lang/Float;
+	public final fun component3 ()Ljava/util/Map;
+	public final fun copy-TbpPH1g (JLjava/lang/Float;Ljava/util/Map;)Lcom/kylecorry/andromeda/core/system/GeoUri;
+	public static synthetic fun copy-TbpPH1g$default (Lcom/kylecorry/andromeda/core/system/GeoUri;JLjava/lang/Float;Ljava/util/Map;ILjava/lang/Object;)Lcom/kylecorry/andromeda/core/system/GeoUri;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAltitude ()Ljava/lang/Float;
+	public final fun getCoordinate-VMd8-xo ()J
+	public final fun getQueryParameters ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/kylecorry/andromeda/core/system/GeoUri$Companion {
+	public final fun parse (Ljava/lang/String;)Lcom/kylecorry/andromeda/core/system/GeoUri;
+}
+
+public final class com/kylecorry/andromeda/core/time/TimeoutTracker {
+	public fun <init> ()V
+	public fun <init> (Lcom/kylecorry/andromeda/core/time/TimeProvider;)V
+	public synthetic fun <init> (Lcom/kylecorry/andromeda/core/time/TimeProvider;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun elapsed-UwyO8pc ()J
+	public final fun isStarted ()Z
+	public final fun isTimedOut-VtjQ1oo (JZ)Z
+	public static synthetic fun isTimedOut-VtjQ1oo$default (Lcom/kylecorry/andromeda/core/time/TimeoutTracker;JZILjava/lang/Object;)Z
+	public final fun reset ()V
+	public final fun start ()V
+}
+
+public final class com/kylecorry/andromeda/core/ui/Colors {
+	public static final field INSTANCE Lcom/kylecorry/andromeda/core/ui/Colors;
+	public final fun fromColorTemperature (F)I
+	public final fun interpolate (IIF)I
+	public final fun mostContrastingColor (III)I
+	public final fun toHex (I)Ljava/lang/String;
+	public final fun withAlpha (II)I
+}
+
+public final class com/kylecorry/andromeda/core/ui/Progress {
+	public fun <init> (IILjava/lang/String;)V
+	public synthetic fun <init> (IILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (IILjava/lang/String;)Lcom/kylecorry/andromeda/core/ui/Progress;
+	public static synthetic fun copy$default (Lcom/kylecorry/andromeda/core/ui/Progress;IILjava/lang/String;ILjava/lang/Object;)Lcom/kylecorry/andromeda/core/ui/Progress;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getPercent ()F
+	public final fun getProcessed ()I
+	public final fun getTotal ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/kylecorry/andromeda/core/ui/ProgressReporter {
+	public abstract fun getProgress ()Lkotlinx/coroutines/flow/Flow;
+}
+
