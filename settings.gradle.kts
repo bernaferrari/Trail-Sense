@@ -33,32 +33,23 @@ include(":shared")
 include(":core")
 rootProject.name = "Trail Sense"
 
-// Opt in while the app is being migrated to the adjacent multiplatform libraries.
-// The catalog pins sol 20.0.0, andromeda 26.0.0 and luna 3.0.0, which exist only as the sibling ../sol, ../andromeda
-// and ../luna checkouts until they are published. Until then, build with -PlocalMultiplatformLibraries=true; the default
-// (published-library) path resolves from Maven and needs those versions released first.
-if (providers.gradleProperty("localMultiplatformLibraries").orNull == "true") {
-    includeBuild("../andromeda") {
-        dependencySubstitution {
-            listOf(
-                "alerts", "background", "battery", "bitmaps", "camera", "canvas", "clipboard",
-                "compression", "core", "csv", "exceptions", "files", "forms", "geojson", "gpx",
-                "haptics", "ipc", "json", "list", "markdown", "notify", "pdf", "permissions", "print",
-                "qr", "sense", "signal", "sound", "torch", "views", "widgets", "xml"
-            ).forEach { name ->
-                substitute(module("com.kylecorry.andromeda:$name")).using(project(":$name"))
-            }
-            substitute(module("com.kylecorry.andromeda:preferences")).using(project(":storage"))
+// Build the shared libraries from this repository so every target uses the same revisions.
+includeBuild("libraries/andromeda") {
+    dependencySubstitution {
+        listOf(
+            "alerts", "background", "battery", "bitmaps", "camera", "canvas", "clipboard",
+            "compression", "core", "csv", "exceptions", "files", "forms", "geojson", "gpx",
+            "haptics", "ipc", "json", "list", "markdown", "notify", "pdf", "permissions", "print",
+            "qr", "sense", "signal", "sound", "torch", "views", "widgets", "xml"
+        ).forEach { name ->
+            substitute(module("com.kylecorry.andromeda:$name")).using(project(":$name"))
         }
+        substitute(module("com.kylecorry.andromeda:preferences")).using(project(":storage"))
     }
-    includeBuild("../sol") {
-        dependencySubstitution {
-            substitute(module("com.kylecorry:sol")).using(project(":"))
-        }
-    }
-    includeBuild("../luna") {
-        dependencySubstitution {
-            substitute(module("com.kylecorry:luna")).using(project(":"))
-        }
-    }
+}
+includeBuild("libraries/sol") {
+    dependencySubstitution { substitute(module("com.kylecorry:sol")).using(project(":")) }
+}
+includeBuild("libraries/luna") {
+    dependencySubstitution { substitute(module("com.kylecorry:luna")).using(project(":")) }
 }

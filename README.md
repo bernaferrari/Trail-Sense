@@ -123,6 +123,10 @@ Trail Sense does not require an Internet connection. All app data, including loc
 - **WAKE_LOCK**
   - Allows Trail Sense to reliably run services such as backtrack and weather monitor, especially when the frequency is under 15 minutes.
 
+## Building
+
+Sol, Andromeda, and Luna live in `libraries/` and are included in the Gradle build automatically. With the Android SDK installed, run `scripts/build.sh` to build the debug app. Their individual licenses and build files are in each library directory.
+
 ## Contributing
 See the [CONTRIBUTING.md](https://github.com/kylecorry31/Trail-Sense/blob/main/CONTRIBUTING.md) file for details on contributing to Trail Sense.
 
