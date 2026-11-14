@@ -6,6 +6,8 @@ import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.persistence.NavigationBearingService
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.BuiltInFieldGuide
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.persistence.AndroidMapFileAccess
+import com.kylecorry.trail_sense.tools.offline_maps.map_layers.PhotoMapTileSource
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
@@ -213,7 +215,14 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton<ElevationModel>(DEM)
         DependencyRegistry.addSingleton<WaterPurificationTimer>(AndroidWaterPurificationTimer(appContext))
         DependencyRegistry.addSingleton<WhiteNoisePlayer>(AndroidWhiteNoisePlayer(appContext))
-        DependencyRegistry.addSingleton(MapService::class) { MapService(MapRepo.getInstance(appContext)) }
+        DependencyRegistry.addSingleton(MapService::class) { AndroidAppDatabase.getInstance(appContext).let { database ->
+            MapService(MapRepo(database.vectorMapDao(), database.photoMapDao(), database.mapGroupDao(), AndroidMapFileAccess(appContext)) { mapId ->
+                val cache = getAppService<PersistentTileCache>()
+                listOf("true-$mapId", "false-$mapId", "null-$mapId", "true", "false", "null").forEach {
+                    cache.invalidate("${PhotoMapTileSource.SOURCE_ID}-$it")
+                }
+            })
+        } }
 
         // Map layers
         DependencyRegistry.addSingleton(MapLayerLoader(appContext))
