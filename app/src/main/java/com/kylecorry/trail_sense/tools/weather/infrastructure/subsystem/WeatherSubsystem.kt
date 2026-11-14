@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem
 
+import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.andromeda.sense.Sensors
@@ -46,7 +47,6 @@ import com.kylecorry.trail_sense.tools.weather.domain.forecasting.temperatures.I
 import com.kylecorry.trail_sense.tools.weather.domain.sealevel.SeaLevelCalibrationFactory
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.WeatherAlertCommands
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.SendWeatherAlertsCommand
-import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineScope
@@ -63,9 +63,9 @@ import kotlinx.datetime.Month
 
 class WeatherSubsystem private constructor(private val context: Context) : IWeatherSubsystem {
 
-    private val weatherRepo by lazy { WeatherRepo.getInstance(context) }
+    private val weatherRepo by lazy { getAppService<IWeatherRepo>() }
     private val climate by lazy { ClimateSubsystem.getInstance(context) }
-    private val cloudRepo by lazy { CloudRepo.getInstance(context) }
+    private val cloudRepo by lazy { getAppService<CloudRepo>() }
     private val prefs by lazy { UserPreferences(context) }
     private val sharedPrefs by lazy { PreferencesSubsystem.getInstance(context).preferences }
     private val location by lazy { getAppService<ILocationSubsystem>() }

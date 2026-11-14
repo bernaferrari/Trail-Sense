@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.test_utils
 
+import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMapFileType
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
@@ -23,7 +24,6 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.PathStyle
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
-import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import kotlinx.coroutines.runBlocking
 import java.time.Duration
 import java.time.Instant
@@ -134,7 +134,7 @@ object TestData {
         temperatureCelsius: Float = 15f,
         humidity: Float? = null
     ) = runBlocking {
-        WeatherRepo.getInstance(context).add(
+        getAppService<IWeatherRepo>().add(
             Reading(
                 RawWeatherObservation(
                     0,

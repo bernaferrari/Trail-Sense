@@ -3,7 +3,6 @@ package com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
-import android.content.Context
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.kylecorry.luna.concurrency.onIO
@@ -11,10 +10,9 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.main.persistence.IReadingRepo
 
-class CloudRepo private constructor(private val dao: CloudReadingDao) :
+class CloudRepo(private val dao: CloudReadingDao) :
     IReadingRepo<CloudObservation> {
 
     private val _readingsChanged =
@@ -71,14 +69,5 @@ class CloudRepo private constructor(private val dao: CloudReadingDao) :
 
         private val CLOUD_HISTORY_DURATION = 2.days
 
-        private var instance: CloudRepo? = null
-
-        @Synchronized
-        fun getInstance(context: Context): CloudRepo {
-            if (instance == null) {
-                instance = CloudRepo(AndroidAppDatabase.getInstance(context).cloudDao())
-            }
-            return instance!!
-        }
     }
 }

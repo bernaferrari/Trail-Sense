@@ -4,6 +4,7 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.from
 import android.graphics.drawable.Drawable
@@ -121,7 +122,7 @@ fun CloudToolScreen(route: Route.Clouds) {
     // The file picker needs the activity's result launcher; MainActivity is the IntentResultRetriever.
     val resultRetriever = LocalActivity.current as IntentResultRetriever
     val scope = rememberCoroutineScope()
-    val viewModel = viewModel { CloudViewModel(CloudRepo.getInstance(appContext)) }
+    val viewModel = viewModel { CloudViewModel(getAppService<CloudRepo>()) }
     val formatter = remember(appContext) { FormatService.getInstance(appContext) }
     val cloudDetailsService = remember { CloudDetailsText() }
     val files = remember(appContext) { FileSubsystem.getInstance(appContext) }

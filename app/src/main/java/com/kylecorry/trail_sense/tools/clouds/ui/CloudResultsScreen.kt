@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.clouds.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.from
 import com.kylecorry.trail_sense.shared.time.toInstant
@@ -119,7 +120,7 @@ fun CloudResultsToolScreen(route: Route.CloudResults) {
     val viewModel = viewModel {
         CloudResultsViewModel(
             imageUri = route.imageUri,
-            repo = CloudRepo.getInstance(appContext),
+            repo = getAppService<CloudRepo>(),
             classifier = SoftmaxCloudClassifier { DebugCloudCommand(appContext, it).execute() },
             loadImage = { loadCloudImage(it.toUri()) },
             clearTemp = { DeleteTempFilesCommand(appContext).execute() }

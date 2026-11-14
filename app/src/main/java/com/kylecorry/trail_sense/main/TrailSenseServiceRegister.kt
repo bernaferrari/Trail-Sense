@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.main
 
+import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
@@ -153,7 +154,8 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(IPathService::class) { PathService.getInstance() }
         DependencyRegistry.addSingleton<IBeaconService>(BeaconService(appContext))
         DependencyRegistry.addSingleton(IWeatherSubsystem::class) { WeatherSubsystem.getInstance(appContext) }
-        DependencyRegistry.addSingleton(IWeatherRepo::class) { WeatherRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(CloudRepo::class) { CloudRepo(AndroidAppDatabase.getInstance(appContext).cloudDao()) }
+        DependencyRegistry.addSingleton(IWeatherRepo::class) { WeatherRepo(AndroidAppDatabase.getInstance(appContext).pressureDao()) }
         DependencyRegistry.addSingleton(AstronomyAlertEnabler::class) {
             AstronomyAlertEnabler { serviceId, effects, scope -> enableAstronomyAlert(appContext, serviceId, effects, scope) }
         }

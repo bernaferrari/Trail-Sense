@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.main.persistence
 
+import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
 import android.content.Context
 import android.os.SystemClock
 import androidx.work.CoroutineWorker
@@ -18,7 +19,6 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.co
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.infrastructure.persistence.PathService
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackerService
-import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -38,8 +38,8 @@ class RepoCleanupWorker(
         // Named explicitly because class names are obfuscated in release builds
         val cleanables: List<Pair<String, ICleanable>> = listOf(
             "PathService" to getAppService<IPathService>(),
-            "WeatherRepo" to WeatherRepo.getInstance(context),
-            "CloudRepo" to CloudRepo.getInstance(context),
+            "WeatherRepo" to getAppService<IWeatherRepo>(),
+            "CloudRepo" to getAppService<CloudRepo>(),
             "LightningRepo" to LightningRepo.getInstance(context),
             "DEMRepo" to DEMRepo.getInstance(),
             "NavigationBearingService" to NavigationBearingService.getInstance(context),

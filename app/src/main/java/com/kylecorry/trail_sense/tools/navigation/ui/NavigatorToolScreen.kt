@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
+import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.foundation.clickable
@@ -75,7 +76,6 @@ import com.kylecorry.trail_sense.tools.navigation.ui.errors.NavigatorUserErrors
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.GPSDiagnosticScanner
 import com.kylecorry.trail_sense.tools.tools.infrastructure.diagnostics.MagnetometerDiagnosticScanner
-import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -104,7 +104,7 @@ fun NavigatorToolScreen(
             navigator = Navigator.getInstance(appContext),
             beaconUpdates = BeaconRepo.getInstance(appContext).getBeacons(),
             pathService = getAppService<IPathService>(),
-            weatherRepo = WeatherRepo.getInstance(appContext),
+            weatherRepo = getAppService<IWeatherRepo>(),
             prefs = userPrefs.navigation,
             useTrueNorth = userPrefs.compass.useTrueNorth,
             diagnostics = listOf(

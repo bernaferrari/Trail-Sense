@@ -5,7 +5,6 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
-import android.content.Context
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.kylecorry.luna.concurrency.onIO
@@ -13,12 +12,9 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 
-class WeatherRepo private constructor(context: Context) : IWeatherRepo {
-
-    private val pressureDao = AndroidAppDatabase.getInstance(context).pressureDao()
+class WeatherRepo(private val pressureDao: PressureReadingDao) : IWeatherRepo {
 
     private val _readingsChanged =
         MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
@@ -98,14 +94,5 @@ class WeatherRepo private constructor(context: Context) : IWeatherRepo {
 
         private val PRESSURE_HISTORY_DURATION = 2.days.plus(6.hours)
 
-        private var instance: WeatherRepo? = null
-
-        @Synchronized
-        fun getInstance(context: Context): WeatherRepo {
-            if (instance == null) {
-                instance = WeatherRepo(context.applicationContext)
-            }
-            return instance!!
-        }
     }
 }

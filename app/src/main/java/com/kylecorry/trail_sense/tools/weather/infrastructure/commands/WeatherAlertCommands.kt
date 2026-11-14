@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.weather.infrastructure.commands
 
+import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
 import android.content.Context
 import com.kylecorry.andromeda.core.time.SystemZonedDateTimeProvider
 import com.kylecorry.trail_sense.main.getAppService
@@ -12,7 +13,6 @@ import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.weather.infrastructure.alerts.CurrentWeatherAlerter
 import com.kylecorry.trail_sense.tools.weather.infrastructure.alerts.DailyWeatherAlerter
 import com.kylecorry.trail_sense.tools.weather.infrastructure.alerts.StormAlerter
-import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
 import kotlin.time.Duration.Companion.seconds
 
@@ -53,7 +53,7 @@ object WeatherAlertCommands {
 
     fun monitor(context: Context): MonitorWeatherCommand {
         return MonitorWeatherCommand(
-            WeatherRepo.getInstance(context),
+            getAppService<IWeatherRepo>(),
             WeatherObserver(context, 10.seconds),
             getAppService<IWeatherSubsystem>(),
             SendWeatherAlertsCommand(context)
