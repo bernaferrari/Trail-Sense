@@ -31,7 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.markdown.MarkdownDelimiter
 import com.kylecorry.andromeda.preferences.Preferences
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.plugins.PluginSubsystem
 import com.kylecorry.trail_sense.shared.AltitudeCorrection
 import com.kylecorry.trail_sense.shared.FormatService
@@ -136,7 +136,7 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton<SensorService>(AndroidSensorService(appContext))
         DependencyRegistry.addSingleton(FileSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton(AppImages::class) { AndroidAppImages(FileSubsystem.getInstance(appContext)) }
-        DependencyRegistry.addSingleton(AppDatabase.getInstance(appContext))
+        DependencyRegistry.addSingleton(AndroidAppDatabase.getInstance(appContext))
         DependencyRegistry.addSingleton(SensorSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton<ISensorSubsystem>(SensorSubsystem.getInstance(appContext))
         DependencyRegistry.addSingleton(LocationSubsystem.getInstance(appContext))
@@ -167,7 +167,7 @@ object TrailSenseServiceRegister {
             BatteryRestrictionPrompt { alerter -> RequestRemoveBatteryRestrictionCommand(appContext, alerter).execute() }
         }
         DependencyRegistry.addSingleton(ITideTableRepo::class) { TideTableRepo.getInstance(appContext) }
-        DependencyRegistry.addSingleton(INoteRepo::class) { NoteRepo(AppDatabase.getInstance(appContext).noteDao()) }
+        DependencyRegistry.addSingleton(INoteRepo::class) { NoteRepo(AndroidAppDatabase.getInstance(appContext).noteDao()) }
         DependencyRegistry.addSingleton(ILightningRepo::class) { LightningRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(IBatteryRepo::class) { BatteryRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(IPackRepo::class) { PackRepo.getInstance(appContext) }

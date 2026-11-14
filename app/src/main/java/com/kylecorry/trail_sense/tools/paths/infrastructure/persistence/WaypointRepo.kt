@@ -4,14 +4,14 @@ import android.content.Context
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.WaypointEntity
 import kotlin.time.Instant
 
 class WaypointRepo private constructor(context: Context) : IWaypointRepo {
 
-    private val waypointDao = AppDatabase.getInstance(context).waypointDao()
+    private val waypointDao = AndroidAppDatabase.getInstance(context).waypointDao()
 
     override suspend fun add(value: PathPoint): Long {
         return if (value.id != 0L) {

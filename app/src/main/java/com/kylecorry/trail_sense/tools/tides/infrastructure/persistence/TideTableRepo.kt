@@ -5,7 +5,7 @@ import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideEstimator
 
@@ -76,7 +76,7 @@ class TideTableRepo private constructor(
         fun getInstance(context: Context): TideTableRepo {
             if (instance == null) {
                 instance = TideTableRepo(
-                    AppDatabase.getInstance(context).tideTableDao(),
+                    AndroidAppDatabase.getInstance(context).tideTableDao(),
                     context.applicationContext
                 )
             }

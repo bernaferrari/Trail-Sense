@@ -3,11 +3,11 @@ package com.kylecorry.trail_sense.plugins.infrastructure.persistence
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 
 class PluginRegistrationRepo private constructor(context: Context) {
 
-    private val dao = AppDatabase.getInstance(context).pluginRegistrationDao()
+    private val dao = AndroidAppDatabase.getInstance(context).pluginRegistrationDao()
 
     suspend fun get(packageId: String): PluginRegistrationEntity? = onIO {
         dao.get(packageId)

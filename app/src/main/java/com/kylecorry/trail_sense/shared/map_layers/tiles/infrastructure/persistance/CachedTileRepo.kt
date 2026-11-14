@@ -7,7 +7,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.andromeda.files.CacheFileSystem
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.main.persistence.ICleanable
 import com.kylecorry.trail_sense.shared.getUpsertedId
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
@@ -15,7 +15,7 @@ import kotlin.time.Instant
 
 class CachedTileRepo private constructor(context: Context) : ICleanable {
 
-    private val dao = AppDatabase.getInstance(context).cachedTileDao()
+    private val dao = AndroidAppDatabase.getInstance(context).cachedTileDao()
     private val files = CacheFileSystem(context)
 
     suspend fun get(key: String, tile: Tile): CachedTile? = onIO {

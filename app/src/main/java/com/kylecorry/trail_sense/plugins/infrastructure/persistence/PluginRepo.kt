@@ -3,11 +3,11 @@ package com.kylecorry.trail_sense.plugins.infrastructure.persistence
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 
 class PluginRepo private constructor(context: Context) {
 
-    private val dao = AppDatabase.getInstance(context).pluginDao()
+    private val dao = AndroidAppDatabase.getInstance(context).pluginDao()
 
     suspend fun getAll(): List<PersistedPlugin> = onIO {
         dao.getAll().map { it.toPlugin() }

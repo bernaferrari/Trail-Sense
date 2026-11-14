@@ -11,7 +11,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.main.persistence.IReadingRepo
 
 class CloudRepo private constructor(private val dao: CloudReadingDao) :
@@ -76,7 +76,7 @@ class CloudRepo private constructor(private val dao: CloudReadingDao) :
         @Synchronized
         fun getInstance(context: Context): CloudRepo {
             if (instance == null) {
-                instance = CloudRepo(AppDatabase.getInstance(context).cloudDao())
+                instance = CloudRepo(AndroidAppDatabase.getInstance(context).cloudDao())
             }
             return instance!!
         }

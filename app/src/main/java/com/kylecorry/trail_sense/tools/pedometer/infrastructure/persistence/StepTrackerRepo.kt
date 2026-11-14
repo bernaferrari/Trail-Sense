@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.pedometer.infrastructure.persistence
 
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepCountBucket
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackingPeriod
 import com.kylecorry.trail_sense.tools.pedometer.domain.abstractions.IStepTrackerRepository
@@ -68,7 +68,7 @@ class StepTrackerRepo private constructor(private val dao: StepTrackerDao) : ISt
         fun getInstance(context: Context): StepTrackerRepo {
             if (instance == null) {
                 instance = StepTrackerRepo(
-                    AppDatabase.getInstance(context.applicationContext).stepTrackerDao()
+                    AndroidAppDatabase.getInstance(context.applicationContext).stepTrackerDao()
                 )
             }
             return instance!!

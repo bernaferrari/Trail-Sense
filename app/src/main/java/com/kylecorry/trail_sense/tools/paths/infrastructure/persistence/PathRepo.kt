@@ -1,7 +1,7 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
 import android.content.Context
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.domain.Path
@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.map
 
 class PathRepo private constructor(context: Context) : IPathRepo {
 
-    private val pathDao = AppDatabase.getInstance(context).pathDao()
-    private val groupDao = AppDatabase.getInstance(context).pathGroupDao()
+    private val pathDao = AndroidAppDatabase.getInstance(context).pathDao()
+    private val groupDao = AndroidAppDatabase.getInstance(context).pathGroupDao()
 
     /**
      * A key that increments when a change is made

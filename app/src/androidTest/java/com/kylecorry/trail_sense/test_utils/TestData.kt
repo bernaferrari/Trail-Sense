@@ -11,7 +11,7 @@ import com.kylecorry.andromeda.gpx.GpxSerializer
 import com.kylecorry.andromeda.files.AssetFileSystem
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
@@ -38,7 +38,7 @@ object TestData {
      * Removes all seeded and recorded data (paths, beacons, readings, etc.)
      */
     fun clear() {
-        AppDatabase.getInstance(context).clearAllTables()
+        AndroidAppDatabase.getInstance(context).clearAllTables()
     }
 
     /**

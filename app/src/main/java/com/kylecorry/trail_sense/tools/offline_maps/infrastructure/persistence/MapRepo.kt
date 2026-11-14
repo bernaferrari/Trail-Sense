@@ -9,7 +9,7 @@ import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.luna.concurrency.ParallelCoroutineRunner
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.shared.getUpsertedId
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance.PersistentTileCache
@@ -24,9 +24,9 @@ import com.kylecorry.trail_sense.tools.offline_maps.map_layers.PhotoMapTileSourc
 import java.util.UUID
 
 class MapRepo private constructor(context: Context) : IMapRepo {
-    private val offlineMapFileDao = AppDatabase.getInstance(context).vectorMapDao()
-    private val photoMapDao = AppDatabase.getInstance(context).photoMapDao()
-    private val mapGroupDao = AppDatabase.getInstance(context).mapGroupDao()
+    private val offlineMapFileDao = AndroidAppDatabase.getInstance(context).vectorMapDao()
+    private val photoMapDao = AndroidAppDatabase.getInstance(context).photoMapDao()
+    private val mapGroupDao = AndroidAppDatabase.getInstance(context).mapGroupDao()
     private val files = FileSubsystem.getInstance(context)
     private val tileCache = getAppService<PersistentTileCache>()
 

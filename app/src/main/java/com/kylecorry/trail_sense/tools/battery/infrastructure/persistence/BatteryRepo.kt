@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.andromeda.preferences.FloatPreference
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.shared.preferences.PreferencesSubsystem
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReadingEntity
@@ -13,7 +13,7 @@ import kotlin.time.Instant
 
 class BatteryRepo private constructor(context: Context) : IBatteryRepo {
 
-    private val batteryDao = AppDatabase.getInstance(context).batteryDao()
+    private val batteryDao = AndroidAppDatabase.getInstance(context).batteryDao()
     private val prefs = PreferencesSubsystem.getInstance(context).preferences
     private var maxCapacityPref by FloatPreference(prefs, "pref_max_battery_capacity", 0f)
 

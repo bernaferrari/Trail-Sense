@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.geology.CoordinateBounds
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.tools.beacons.BeaconsToolRegistration
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.map
 
 class BeaconRepo private constructor(context: Context) {
 
-    private val beaconDao = AppDatabase.getInstance(context).beaconDao()
-    private val beaconGroupDao = AppDatabase.getInstance(context).beaconGroupDao()
+    private val beaconDao = AndroidAppDatabase.getInstance(context).beaconDao()
+    private val beaconGroupDao = AndroidAppDatabase.getInstance(context).beaconGroupDao()
 
     fun getBeacons(): Flow<List<Beacon>> = beaconDao.getAll()
         .map { it.map { it.toBeacon() } }

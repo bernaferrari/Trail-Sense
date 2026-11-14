@@ -10,7 +10,7 @@ import com.kylecorry.andromeda.files.ZipFile
 import com.kylecorry.andromeda.files.ZipUtils
 import com.kylecorry.andromeda.files.ZipUtils.unzip
 import com.kylecorry.trail_sense.main.getAppService
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.receivers.TrailSenseServiceUtils
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
@@ -38,7 +38,7 @@ class BackupService(
 
         try {
             // Create a DB checkpoint to avoid losing data
-            AppDatabase.createCheckpoint(context)
+            AndroidAppDatabase.createCheckpoint(context)
 
             val excludedFiles = listOf(
                 fileSubsystem.getDirectory("dem"),
@@ -75,7 +75,7 @@ class BackupService(
         TrailSenseServiceUtils.stopServices(context)
 
         // Close the DB before restoring
-        AppDatabase.close()
+        AndroidAppDatabase.close()
 
         // Remove the shared prefs directory (this is to support switching between build variants)
         AppData.getSharedPrefsDirectory(context).deleteRecursively()

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
 
 class LightningRepo private constructor(private val dao: LightningStrikeDao) : ILightningRepo {
@@ -61,7 +61,7 @@ class LightningRepo private constructor(private val dao: LightningStrikeDao) : I
         fun getInstance(context: Context): LightningRepo {
             if (instance == null) {
                 instance = LightningRepo(
-                    AppDatabase.getInstance(context.applicationContext).lightningDao()
+                    AndroidAppDatabase.getInstance(context.applicationContext).lightningDao()
                 )
             }
             return instance!!

@@ -3,7 +3,7 @@ package com.kylecorry.trail_sense.tools.field_guide.infrastructure
 import android.annotation.SuppressLint
 import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.shared.getUpsertedId
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
@@ -12,8 +12,8 @@ import com.kylecorry.trail_sense.shared.UserPreferences
 
 class FieldGuideRepo private constructor(private val context: Context) : IFieldGuideRepo {
 
-    private val pageDao = AppDatabase.getInstance(context).fieldGuidePageDao()
-    private val sightingDao = AppDatabase.getInstance(context).fieldGuideSightingDao()
+    private val pageDao = AndroidAppDatabase.getInstance(context).fieldGuidePageDao()
+    private val sightingDao = AndroidAppDatabase.getInstance(context).fieldGuideSightingDao()
     private val preferences = UserPreferences(context).fieldGuide
     private val files = FileSubsystem.getInstance(context)
 

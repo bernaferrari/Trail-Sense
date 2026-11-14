@@ -13,12 +13,12 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import com.kylecorry.sol.units.Reading
-import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.tools.weather.domain.RawWeatherObservation
 
 class WeatherRepo private constructor(context: Context) : IWeatherRepo {
 
-    private val pressureDao = AppDatabase.getInstance(context).pressureDao()
+    private val pressureDao = AndroidAppDatabase.getInstance(context).pressureDao()
 
     private val _readingsChanged =
         MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
