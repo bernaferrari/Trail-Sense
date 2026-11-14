@@ -3,6 +3,7 @@ package com.kylecorry.trail_sense.main
 import com.kylecorry.trail_sense.tools.beacons.BeaconsToolRegistration
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.persistence.NavigationBearingService
 import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.BuiltInFieldGuide
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
@@ -190,7 +191,7 @@ object TrailSenseServiceRegister {
             appContext.getString(com.kylecorry.trail_sense.R.string.navigation_nearby_category)
         } }
         DependencyRegistry.addSingleton(INoteRepo::class) { NoteRepo(AndroidAppDatabase.getInstance(appContext).noteDao()) }
-        DependencyRegistry.addSingleton(ILightningRepo::class) { LightningRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(ILightningRepo::class) { LightningRepo(AndroidAppDatabase.getInstance(appContext).lightningDao()) }
         DependencyRegistry.addSingleton(IBatteryRepo::class) { BatteryRepo(AndroidAppDatabase.getInstance(appContext).batteryDao(), PreferencesSubsystem.getInstance(appContext).preferences) }
         DependencyRegistry.addSingleton(IPackRepo::class) { AndroidAppDatabase.getInstance(appContext).let { PackRepo(it.packItemDao(), it.packDao()) } }
         DependencyRegistry.addSingleton(IWaypointRepo::class) { WaypointRepo(AndroidAppDatabase.getInstance(appContext).waypointDao()) }
@@ -207,6 +208,7 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(FieldGuideImageCleanup::class) {
             FieldGuideImageCleanup { FieldGuideCleanupCommand(appContext).execute() }
         }
+        DependencyRegistry.addSingleton(NavigationBearingService::class) { NavigationBearingService(AndroidAppDatabase.getInstance(appContext).bearingDao()) }
         DependencyRegistry.addSingleton(INavigator::class) { Navigator.getInstance(appContext) }
         DependencyRegistry.addSingleton<ElevationModel>(DEM)
         DependencyRegistry.addSingleton<WaterPurificationTimer>(AndroidWaterPurificationTimer(appContext))

@@ -43,7 +43,7 @@ class Navigator private constructor(context: Context) : INavigator {
     private val prefs = SessionStateSubsystem.getInstance(context).preferences
     private val userPrefs = DependencyRegistry.get<UserPreferences>()
     private val beacons = getAppService<IBeaconService>()
-    private val bearings = NavigationBearingService.getInstance(context)
+    private val bearings = getAppService<NavigationBearingService>()
     private val locationSubsystem = DependencyRegistry.get<LocationSubsystem>()
 
     // Flows

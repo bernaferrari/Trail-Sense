@@ -13,7 +13,7 @@ import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.logging.Logger
 import com.kylecorry.trail_sense.shared.map_layers.tiles.infrastructure.persistance.CachedTileRepo
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
-import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.LightningRepo
+import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.ILightningRepo
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.persistence.NavigationBearingService
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.commands.MapCleanupCommand
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
@@ -40,9 +40,9 @@ class RepoCleanupWorker(
             "PathService" to getAppService<IPathService>(),
             "WeatherRepo" to getAppService<IWeatherRepo>(),
             "CloudRepo" to getAppService<CloudRepo>(),
-            "LightningRepo" to LightningRepo.getInstance(context),
+            "LightningRepo" to getAppService<ILightningRepo>(),
             "DEMRepo" to DEMRepo.getInstance(),
-            "NavigationBearingService" to NavigationBearingService.getInstance(context),
+            "NavigationBearingService" to getAppService<NavigationBearingService>(),
             "CachedTileRepo" to getAppService<CachedTileRepo>(),
             "StepTrackerService" to getAppService<StepTrackerService>()
         )

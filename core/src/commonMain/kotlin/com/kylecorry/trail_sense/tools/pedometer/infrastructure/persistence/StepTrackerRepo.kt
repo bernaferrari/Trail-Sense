@@ -1,14 +1,12 @@
 package com.kylecorry.trail_sense.tools.pedometer.infrastructure.persistence
 
-import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepCountBucket
 import com.kylecorry.trail_sense.tools.pedometer.domain.StepTrackingPeriod
 import com.kylecorry.trail_sense.tools.pedometer.domain.abstractions.IStepTrackerRepository
 import kotlin.time.Instant
 
-class StepTrackerRepo private constructor(private val dao: StepTrackerDao) : IStepTrackerRepository {
+class StepTrackerRepo(private val dao: StepTrackerDao) : IStepTrackerRepository {
 
     override suspend fun getStepTrackingPeriods(): List<StepTrackingPeriod> = onIO {
         dao.getStepTrackingPeriods().map { it.toStepTrackingPeriod(getBuckets(it.id)) }
@@ -61,17 +59,4 @@ class StepTrackerRepo private constructor(private val dao: StepTrackerDao) : ISt
         return dao.getStepCountBuckets(periodId).map { it.toStepCountBucket() }
     }
 
-    companion object {
-        private var instance: StepTrackerRepo? = null
-
-        @Synchronized
-        fun getInstance(context: Context): StepTrackerRepo {
-            if (instance == null) {
-                instance = StepTrackerRepo(
-                    AndroidAppDatabase.getInstance(context.applicationContext).stepTrackerDao()
-                )
-            }
-            return instance!!
-        }
-    }
 }

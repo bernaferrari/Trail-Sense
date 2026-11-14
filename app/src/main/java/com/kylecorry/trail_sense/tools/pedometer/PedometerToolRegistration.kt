@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.pedometer
 
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import android.content.Context
 import android.hardware.Sensor
 import com.kylecorry.andromeda.notify.Notify
@@ -54,7 +55,7 @@ object PedometerToolRegistration : ToolRegistration {
             singletons = listOf(
                 {
                     StepTrackerService(
-                        StepTrackerRepo.getInstance(it),
+                        StepTrackerRepo(AndroidAppDatabase.getInstance(it).stepTrackerDao()),
                         ToolEventEmitter,
                         UserPreferences(it).pedometer
                     )
