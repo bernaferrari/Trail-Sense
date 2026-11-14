@@ -10,25 +10,25 @@ import java.nio.channels.FileChannel
 /**
  * Reads pieces of a file without loading the rest of it.
  */
-fun interface ByteRangeReader : Closeable {
+public fun interface ByteRangeReader : Closeable {
 
-    suspend fun read(offset: Long, length: Int): ByteArray
+    public suspend fun read(offset: Long, length: Int): ByteArray
 
     override fun close() {
         // Nothing to close by default
     }
 
-    companion object {
-        fun fromBytes(bytes: ByteArray): ByteRangeReader {
+    public companion object {
+        public fun fromBytes(bytes: ByteArray): ByteRangeReader {
             return ByteRangeReader { offset, length ->
-                if (offset < 0 || length < 0 || offset + length > bytes.size) {
+                if (offset < 0 || length < 0 || offset > bytes.size || length.toLong() > bytes.size.toLong() - offset) {
                     throw EOFException()
                 }
                 bytes.copyOfRange(offset.toInt(), (offset + length).toInt())
             }
         }
 
-        fun fromFile(file: File): ByteRangeReader {
+        public fun fromFile(file: File): ByteRangeReader {
             return ChannelByteRangeReader {
                 val randomAccessFile = RandomAccessFile(file, "r")
                 ChannelByteRangeReader.OpenChannel(
@@ -43,14 +43,14 @@ fun interface ByteRangeReader : Closeable {
         /**
          * Reads [length] bytes at [offset] of a file that is [size] bytes long and starts at [start] in the channel.
          */
-        fun readFully(
+        public fun readFully(
             channel: FileChannel,
             start: Long,
             size: Long,
             offset: Long,
             length: Int
         ): ByteArray {
-            if (offset < 0 || length < 0 || offset + length > size) {
+            if (offset < 0 || length < 0 || offset > size || length.toLong() > size - offset) {
                 throw EOFException()
             }
             val buffer = ByteBuffer.allocate(length)

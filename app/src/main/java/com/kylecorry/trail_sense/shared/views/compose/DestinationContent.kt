@@ -163,7 +163,10 @@ fun DestinationContent(
             Route.Licenses -> LicensesToolScreen()
             Route.About -> AboutToolScreen()
             Route.BeaconSettings -> BeaconSettingsToolScreen()
-            Route.BubbleLevelSettings -> BubbleLevelSettingsToolScreen()
+            Route.BubbleLevelSettings -> BubbleLevelSettingsToolScreen(
+                com.kylecorry.trail_sense.shared.UserPreferences(host.context).bubbleLevel,
+                com.kylecorry.trail_sense.shared.FormatService.getInstance()
+            )
             Route.CameraSettings -> CameraSettingsToolScreen()
             Route.ErrorSettings -> ErrorSettingsToolScreen()
             Route.ClinometerSettings -> ClinometerSettingsToolScreen()

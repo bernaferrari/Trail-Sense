@@ -36,6 +36,7 @@ class ByteRangeReaderTest {
         ByteRangeReader.fromFile(file()).use { reader ->
             assertThrows(EOFException::class.java) { runBlocking { reader.read(98, 5) } }
             assertThrows(EOFException::class.java) { runBlocking { reader.read(-1, 5) } }
+            assertThrows(EOFException::class.java) { runBlocking { reader.read(Long.MAX_VALUE, 1) } }
         }
     }
 
@@ -44,6 +45,7 @@ class ByteRangeReaderTest {
         val reader = ByteRangeReader.fromBytes(bytes)
         assertArrayEquals(bytes.copyOfRange(90, 100), runBlocking { reader.read(90, 10) })
         assertThrows(EOFException::class.java) { runBlocking { reader.read(95, 10) } }
+        assertThrows(EOFException::class.java) { runBlocking { reader.read(Long.MAX_VALUE, 1) } }
     }
 
     @Test

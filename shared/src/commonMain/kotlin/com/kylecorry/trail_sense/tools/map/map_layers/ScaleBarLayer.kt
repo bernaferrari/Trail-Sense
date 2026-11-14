@@ -4,27 +4,20 @@ import com.kylecorry.trail_sense.shared.colors.ColorInts
 import androidx.compose.ui.graphics.Path
 import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.andromeda.canvas.TextMode
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.trail_sense.shared.Units
-import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.IMapView
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.overlay.OverlayLayer
 import com.kylecorry.trail_sense.tools.paths.ui.DistanceScale
 
 // TODO: Allow position to be adjusted
-class ScaleBarLayer : OverlayLayer() {
+class ScaleBarLayer(private val units: DistanceUnits, private val formatter: FormatService) : OverlayLayer() {
 
     override val layerId: String = LAYER_ID
 
     private val scaleBar = Path()
     private val distanceScale = DistanceScale()
-
-    private val prefs = DependencyRegistry.get<UserPreferences>()
-
-    private val units = prefs.baseDistanceUnits
-
-    private val formatter = DependencyRegistry.get<FormatService>()
 
     private val bottomMargin: Float = 32f
 

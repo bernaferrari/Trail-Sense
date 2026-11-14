@@ -23,7 +23,7 @@ import com.kylecorry.andromeda.files.LocalFileSystem
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.debugging.ifDebug
 import com.kylecorry.trail_sense.shared.logging.Logger
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.ImageSaver
+import com.kylecorry.andromeda.bitmaps.ImageSaver
 import kotlinx.coroutines.CancellationException
 import java.io.File
 import java.io.FileInputStream
@@ -123,7 +123,7 @@ class FileSubsystem private constructor(private val context: Context) {
         try {
             @Suppress("BlockingMethodInNonBlockingContext")
             FileOutputStream(get(path, create = true)).use { out ->
-                ImageSaver().save(bitmap, out, quality)
+                ImageSaver().saveAsWebp(bitmap, out, quality)
             }
         } finally {
             if (recycleOnSave) {

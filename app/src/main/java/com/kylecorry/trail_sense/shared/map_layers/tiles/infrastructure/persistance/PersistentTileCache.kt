@@ -10,7 +10,7 @@ import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.map_layers.tiles.Tile
 import com.kylecorry.trail_sense.tools.offline_maps.OfflineMapsToolRegistration
 import com.kylecorry.trail_sense.tools.offline_maps.domain.OfflineMapType
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.photo_maps.ImageSaver
+import com.kylecorry.andromeda.bitmaps.ImageSaver
 import com.kylecorry.trail_sense.tools.offline_maps.map_layers.PhotoMapTileSource
 import java.io.FileOutputStream
 import java.util.UUID
@@ -128,7 +128,7 @@ class PersistentTileCache(context: Context) {
         val file = files.getFile("${CachedTileRepo.TILES_FOLDER}/$filename", create = true)
 
         FileOutputStream(file).use { out ->
-            imageSaver.save(bitmap, out, LOSSLESS_QUALITY)
+            imageSaver.saveAsWebp(bitmap, out, LOSSLESS_QUALITY)
         }
 
         val hasAlpha = bitmap.config == Bitmap.Config.ARGB_8888

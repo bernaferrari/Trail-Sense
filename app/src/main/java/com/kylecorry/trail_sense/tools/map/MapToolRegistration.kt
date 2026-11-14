@@ -22,6 +22,8 @@ import com.kylecorry.trail_sense.tools.map.map_layers.BaseMapTileSource
 import com.kylecorry.trail_sense.tools.map.map_layers.MyElevationLayer
 import com.kylecorry.trail_sense.tools.map.map_layers.MyLocationGeoJsonSource
 import com.kylecorry.trail_sense.tools.map.map_layers.ScaleBarLayer
+import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.tools.map.widgets.AppWidgetMap
 import com.kylecorry.trail_sense.tools.map.widgets.MapToolWidgetView
 import com.kylecorry.trail_sense.tools.navigation.map_layers.CompassOverlayLayer
@@ -261,7 +263,7 @@ object MapToolRegistration : ToolRegistration {
                     context.getString(R.string.map_scale_title),
                     isConfigurable = false,
                     layerType = MapLayerType.Overlay,
-                    layer = ::ScaleBarLayer
+                    layer = { ScaleBarLayer(UserPreferences(context).baseDistanceUnits, FormatService.getInstance()) }
                 ),
                 MapLayerDefinition(
                     CompassOverlayLayer.LAYER_ID,

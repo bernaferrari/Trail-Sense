@@ -4,9 +4,9 @@ import android.graphics.Bitmap
 import android.os.Build
 import java.io.OutputStream
 
-class ImageSaver(private val losslessWhenQualityIsMax: Boolean = true) {
+public class ImageSaver(private val losslessWhenQualityIsMax: Boolean = true) {
 
-    fun saveAsWebp(
+    public fun saveAsWebp(
         image: Bitmap,
         stream: OutputStream,
         quality: Int = 90,

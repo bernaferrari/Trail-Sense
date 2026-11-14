@@ -10,16 +10,16 @@ import java.nio.channels.FileChannel
  * Reads a file through a channel, which is opened on the first read and kept open until [close] (or reading the channel
  * fails, in which case the next read opens it again). Once closed, every read throws an [IOException].
  */
-class ChannelByteRangeReader(private val openChannel: suspend () -> OpenChannel) : ByteRangeReader {
+public class ChannelByteRangeReader(private val openChannel: suspend () -> OpenChannel) : ByteRangeReader {
 
     /**
      * A file that is [size] bytes long, starting at [start] in [channel]. Closing [resource] closes the channel.
      */
-    class OpenChannel(
-        val channel: FileChannel,
-        val start: Long,
-        val size: Long,
-        val resource: Closeable
+    public class OpenChannel(
+        public val channel: FileChannel,
+        public val start: Long,
+        public val size: Long,
+        public val resource: Closeable
     )
 
     private var current: OpenChannel? = null
@@ -28,7 +28,7 @@ class ChannelByteRangeReader(private val openChannel: suspend () -> OpenChannel)
     override suspend fun read(offset: Long, length: Int): ByteArray = onIO {
         val open = getOrOpen()
         // A range past the end is the caller's mistake, so the channel stays open
-        if (offset < 0 || length < 0 || offset + length > open.size) {
+        if (offset < 0 || length < 0 || offset > open.size || length.toLong() > open.size - offset) {
             throw EOFException()
         }
         try {

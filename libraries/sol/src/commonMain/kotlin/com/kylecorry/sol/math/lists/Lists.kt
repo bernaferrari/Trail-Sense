@@ -83,7 +83,7 @@ public object Lists {
      * The first index in 0 until [count] where [condition] is true, or [count] if there is none. The condition must be
      * false for every index before that one and true for every index after it (ex. comparing a sorted list to a value).
      */
-    inline fun binarySearch(count: Int, condition: (Int) -> Boolean): Int {
+    public inline fun binarySearch(count: Int, condition: (Int) -> Boolean): Int {
         var low = 0
         var high = count
         while (low < high) {
@@ -97,7 +97,7 @@ public object Lists {
         return low
     }
 
-    fun <T> binarySearch(list: List<T>, condition: (T) -> Boolean): Int {
+    public fun <T> binarySearch(list: List<T>, condition: (T) -> Boolean): Int {
         return binarySearch(list.size) { condition(list[it]) }
     }
 }

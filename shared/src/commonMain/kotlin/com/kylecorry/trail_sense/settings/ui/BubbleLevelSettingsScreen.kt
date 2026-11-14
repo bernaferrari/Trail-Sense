@@ -5,18 +5,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.trail_sense.shared.FormatService
-import com.kylecorry.trail_sense.shared.UserPreferences
+import com.kylecorry.trail_sense.settings.infrastructure.BubbleLevelPreferences
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import kotlin.math.roundToInt
 
 @Composable
-fun BubbleLevelSettingsToolScreen() {
-    val prefs = remember { DependencyRegistry.get<UserPreferences>().bubbleLevel }
-    val formatter = remember { DependencyRegistry.get<FormatService>() }
+fun BubbleLevelSettingsToolScreen(prefs: BubbleLevelPreferences, formatter: FormatService) {
     var threshold by remember { mutableIntStateOf(prefs.threshold.toInt()) }
     SettingsList(title = appString(Res.string.tool_bubble_level_title)) {
         trailSenseSection("threshold") {

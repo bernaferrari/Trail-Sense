@@ -246,7 +246,7 @@ fun PathOverviewToolScreen(
                 listOf(
                     layer,
                     GeoJsonLayer(MyLocationGeoJsonSource(), MyLocationGeoJsonSource.SOURCE_ID),
-                    ScaleBarLayer()
+                    ScaleBarLayer(prefs.baseDistanceUnits, formatService)
                 )
             )
         }

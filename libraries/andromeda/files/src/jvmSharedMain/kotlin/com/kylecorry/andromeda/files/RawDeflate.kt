@@ -7,7 +7,7 @@ import java.util.zip.Inflater
 /**
  * Deflate data without a zlib or gzip header (RFC 1951).
  */
-object RawDeflate {
+public object RawDeflate {
 
     private const val BUFFER_BYTES = 8 * 1024
 
@@ -15,7 +15,7 @@ object RawDeflate {
      * Decompresses [data], throwing a [DataFormatException] if it is incomplete, invalid, or more than [maxBytes] when
      * decompressed.
      */
-    fun inflate(data: ByteArray, maxBytes: Int): ByteArray {
+    public fun inflate(data: ByteArray, maxBytes: Int): ByteArray {
         val inflater = Inflater(true)
         try {
             inflater.setInput(data)
