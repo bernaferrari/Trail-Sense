@@ -1,9 +1,11 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers
 
 import android.graphics.Bitmap
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.tiles.TileMapLayer
 
-fun androidLayerFactory(): LayerFactory<Bitmap> = LayerFactory { definition ->
+fun androidLayerFactory(): LayerFactory<Bitmap> = LayerFactory({ getAppService<UserPreferences>().paths.useFastPathRendering }) { definition ->
     TileMapLayer(
         definition.tileSource!!.invoke(),
         definition.id,

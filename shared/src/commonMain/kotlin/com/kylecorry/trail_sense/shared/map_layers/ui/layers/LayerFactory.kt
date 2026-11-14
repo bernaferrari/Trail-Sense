@@ -5,7 +5,10 @@ import com.kylecorry.trail_sense.shared.map_layers.preferences.repo.MapLayerType
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.GeoJsonLayer
 
 /** Builds shared feature layers and delegates platform image tile layers to the host. */
-class LayerFactory<Image>(private val createTileLayer: (MapLayerDefinition<Image>) -> ILayer) {
+class LayerFactory<Image>(
+    private val useFastPathRendering: () -> Boolean,
+    private val createTileLayer: (MapLayerDefinition<Image>) -> ILayer
+) {
     fun createLayer(definition: MapLayerDefinition<Image>): ILayer {
         definition.layer?.let { return it() }
         return when (definition.layerType) {
@@ -13,6 +16,7 @@ class LayerFactory<Image>(private val createTileLayer: (MapLayerDefinition<Image
             MapLayerType.Feature -> GeoJsonLayer(
                 definition.geoJsonSource!!.invoke(),
                 definition.id,
+                useFastPathRendering = useFastPathRendering(),
                 minZoomLevel = definition.minZoomLevel,
                 isTimeDependent = definition.isTimeDependent,
                 refreshInterval = definition.refreshInterval,

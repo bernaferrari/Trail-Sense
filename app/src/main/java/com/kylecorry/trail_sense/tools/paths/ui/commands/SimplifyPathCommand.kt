@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
+import com.kylecorry.trail_sense.shared.UserPreferences
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -109,19 +110,21 @@ fun SimplifyPathDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val useFastPathRendering = remember(context, request) { UserPreferences(context).paths.useFastPathRendering }
     val path = request.path
     val points = request.points
     val originalCoordinates = remember(request) { points.map { it.coordinate } }
     val simplifiedSource = remember(request) {
         StaticLineGeoJsonSource(emptyList(), path.style.color, thicknessScale = 0.75f)
     }
-    val simplifiedLayer = remember(request) { GeoJsonLayer(simplifiedSource, SIMPLIFIED_LAYER_ID) }
+    val simplifiedLayer = remember(request) { GeoJsonLayer(simplifiedSource, SIMPLIFIED_LAYER_ID, useFastPathRendering) }
     // The preview map is a rendering object, so it lives with the dialog.
     val map = remember(request) {
         MapView(context).apply {
             val originalLayer = GeoJsonLayer(
                 StaticLineGeoJsonSource(originalCoordinates, ColorInts.Gray, thicknessScale = 1.5f),
-                ORIGINAL_LAYER_ID
+                ORIGINAL_LAYER_ID,
+                useFastPathRendering
             ).also { it.percentOpacity = ORIGINAL_PATH_OPACITY }
             setLayers(listOf(originalLayer, simplifiedLayer))
         }

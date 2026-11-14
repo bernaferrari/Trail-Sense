@@ -6,12 +6,14 @@ import com.kylecorry.andromeda.geojson.GeoJsonObject
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.ConfigurableGeoJsonSource
 
 class ConfigurableGeoJsonLayer(
+    useFastPathRendering: Boolean,
     initialData: GeoJsonObject = GeoJsonFeatureCollection(emptyList()),
     layerId: String = ""
 ) :
     GeoJsonLayer<ConfigurableGeoJsonSource>(
         ConfigurableGeoJsonSource(initialData),
-        layerId
+        layerId,
+        useFastPathRendering = useFastPathRendering
     ) {
 
     private var onClickListener: ((GeoJsonFeature) -> Boolean)? = null

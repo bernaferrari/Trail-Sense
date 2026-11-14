@@ -198,7 +198,7 @@ private class MapController(
     val views = createMapViews(context)
     private val mapView = views.map
     private val layerEditSheet = MapLayersSheetState(MapToolRegistration.MAP_ID)
-    private val manager = MapToolLayerManager()
+    private val manager = MapToolLayerManager(prefs.paths.useFastPathRendering)
     private val hasCompass = sensors.hasCompass()
     private val screenLight = ScreenTorch(screenBrightness(mainActivity.window))
     private val screenLock = NavigationScreenLock(prefs.map.keepScreenUnlockedWhileOpen)

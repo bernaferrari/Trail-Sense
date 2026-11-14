@@ -29,8 +29,8 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathEditState
 import com.kylecorry.trail_sense.tools.paths.infrastructure.PathElevationPrefetcher
 import kotlin.time.Instant
 
-class MapToolLayerManager {
-    private val selectedPointLayer = ConfigurableGeoJsonLayer()
+class MapToolLayerManager(useFastPathRendering: Boolean) {
+    private val selectedPointLayer = ConfigurableGeoJsonLayer(useFastPathRendering)
     private val distanceLayer = MapDistanceLayer().apply { isEnabled = false }
     private var onDistanceChangedCallback: ((Distance) -> Unit)? = null
     private var onDistanceEditStateChanged: ((PathEditState) -> Unit)? = null

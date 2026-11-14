@@ -29,9 +29,9 @@ import com.kylecorry.trail_sense.tools.offline_maps.map_layers.PhotoMapTileSourc
 import com.kylecorry.trail_sense.tools.paths.domain.PathEditState
 import com.kylecorry.trail_sense.tools.paths.infrastructure.PathElevationPrefetcher
 
-class PhotoMapToolLayerManager {
+class PhotoMapToolLayerManager(useFastPathRendering: Boolean) {
 
-    private val selectedPointLayer = ConfigurableGeoJsonLayer()
+    private val selectedPointLayer = ConfigurableGeoJsonLayer(useFastPathRendering)
     private val distanceLayer = MapDistanceLayer()
     private var onDistanceChangedCallback: ((Distance) -> Unit)? = null
     private var onDistanceEditStateChanged: ((PathEditState) -> Unit)? = null

@@ -289,7 +289,7 @@ private class ViewPhotoMapRenderer(
     private val screenLight by lazy { ScreenTorch(screenBrightness(activity.window)) }
 
     // Map layers
-    private val layerManager = PhotoMapToolLayerManager()
+    private val layerManager = PhotoMapToolLayerManager(prefs.paths.useFastPathRendering)
     private val featureClickHandler =
         MapFeatureClickHandler(context, screenNavigator, effects, scope)
     private val layerSheet = MapLayersSheetState(

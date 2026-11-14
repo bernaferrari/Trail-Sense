@@ -1,12 +1,10 @@
 package com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson
 
-import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.core.units.PixelCoordinate
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.luna.concurrency.BackgroundTask
 import com.kylecorry.luna.time.CoroutineTimer
-import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.canvas.MapDrawer
 import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
@@ -34,6 +32,7 @@ import kotlinx.coroutines.CancellationException
 open class GeoJsonLayer<T : GeoJsonSource>(
     protected val source: T,
     override val layerId: String,
+    useFastPathRendering: Boolean,
     private val minZoomLevel: Int? = null,
     private val taskRunner: MapLayerBackgroundTask = MapLayerBackgroundTask(),
     override val isTimeDependent: Boolean = false,
@@ -83,8 +82,7 @@ open class GeoJsonLayer<T : GeoJsonSource>(
     }
 
     init {
-        val prefs = DependencyRegistry.get<UserPreferences>()
-        renderer.configureLineStringRenderer(shouldRenderWithDrawLines = prefs.paths.useFastPathRendering)
+        renderer.configureLineStringRenderer(shouldRenderWithDrawLines = useFastPathRendering)
         renderer.setOnClickListener(this::onClick)
         taskRunner.addTask { viewBounds, bounds, projection ->
             isInvalid = false

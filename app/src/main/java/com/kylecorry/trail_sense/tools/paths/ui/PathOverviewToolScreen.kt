@@ -235,7 +235,7 @@ fun PathOverviewToolScreen(
     }
 
     // The map and its layers are rendering objects, so they live with the composition.
-    val layer = remember { ConfigurableGeoJsonLayer() }
+    val layer = remember { ConfigurableGeoJsonLayer(prefs.paths.useFastPathRendering) }
     val map = remember(context) {
         MapView(context).apply {
             id = R.id.path_image
@@ -245,7 +245,7 @@ fun PathOverviewToolScreen(
             setLayers(
                 listOf(
                     layer,
-                    GeoJsonLayer(MyLocationGeoJsonSource(), MyLocationGeoJsonSource.SOURCE_ID),
+                    GeoJsonLayer(MyLocationGeoJsonSource(), MyLocationGeoJsonSource.SOURCE_ID, prefs.paths.useFastPathRendering),
                     ScaleBarLayer(prefs.baseDistanceUnits, formatService)
                 )
             )
