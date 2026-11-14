@@ -41,6 +41,14 @@ class LazyPriorityQueue<T : Any>(initialCapacity: Int, private val comparator: C
         prioritiesChanged = false
     }
 
+    fun peek(): T? = synchronized(lock) {
+        if (prioritiesChanged) {
+            for (index in heap.size / 2 - 1 downTo 0) siftDown(index)
+            prioritiesChanged = false
+        }
+        heap.firstOrNull()
+    }
+
     fun count(): Int = synchronized(lock) { heap.size }
 
     private fun siftUp(start: Int) {

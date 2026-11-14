@@ -6,15 +6,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.write
 
 class ImageTile(
-    val key: String,
-    val tile: Tile,
+    override val key: String,
+    override val tile: Tile,
     @Volatile private var image: Bitmap? = null,
     state: TileState = TileState.Idle,
     private val shouldFadeIn: Boolean = true,
     val owner: String = "",
     private val errorRetryDelayMillis: Long = 10_000L,
     loadFunction: (suspend () -> Bitmap?)?
-) {
+) : QueuedTile {
 
     private val imageLock = ReentrantReadWriteLock()
     private val stateLock = Any()
@@ -23,14 +23,14 @@ class ImageTile(
     private var _loadFunction: (suspend () -> Bitmap?)? = loadFunction
 
     @Volatile
-    var state: TileState = state
+    override var state: TileState = state
         private set
 
     @Volatile
-    internal var retryAfterMillis = 0L
+    override var retryAfterMillis = 0L
         private set
 
-    fun isLoadable(): Boolean {
+    override fun isLoadable(): Boolean {
         return state == TileState.Idle || state == TileState.Stale ||
                 (state == TileState.Error && System.currentTimeMillis() >= retryAfterMillis)
     }
@@ -71,7 +71,7 @@ class ImageTile(
         }
     }
 
-    suspend fun load() {
+    override suspend fun load() {
         var wasIdle = false
         val loader = synchronized(stateLock) {
             val loadFn = _loadFunction
@@ -155,13 +155,4 @@ class ImageTile(
             }
         }
     }
-}
-
-enum class TileState {
-    Idle,
-    Loading,
-    Loaded,
-    Error,
-    Empty,
-    Stale
 }
