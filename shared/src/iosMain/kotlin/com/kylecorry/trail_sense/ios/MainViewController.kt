@@ -1,18 +1,35 @@
 package com.kylecorry.trail_sense.ios
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.ComposeUIViewController
+import com.kylecorry.andromeda.device.DeviceSensors
+import com.kylecorry.andromeda.device.LocationReading
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.kylecorry.trail_sense.shared.generated.resources.Res
 import com.kylecorry.trail_sense.shared.generated.resources.delete
+import com.kylecorry.trail_sense.shared.generated.resources.notes
+import com.kylecorry.trail_sense.shared.generated.resources.my_location
 import com.kylecorry.trail_sense.shared.generated.resources.delete_note_title
 import com.kylecorry.trail_sense.shared.generated.resources.dialog_leave
 import com.kylecorry.trail_sense.shared.generated.resources.unsaved_changes
@@ -28,10 +45,12 @@ import com.kylecorry.trail_sense.shared.text.SystemString
 import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.text.systemString
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.tools.location.ui.LocationContent
 import com.kylecorry.trail_sense.tools.notes.domain.Note
 import com.kylecorry.trail_sense.tools.notes.infrastructure.iosNoteRepository
 import com.kylecorry.trail_sense.tools.notes.ui.NoteEditorScreen
 import com.kylecorry.trail_sense.tools.notes.ui.NotesScreen
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import platform.UIKit.UIViewController
 import kotlin.time.Clock
@@ -47,8 +66,47 @@ fun MainViewController(databasePath: String): UIViewController {
         val scope = rememberCoroutineScope()
         val notesFlow = remember { notes.getNotes() }
         var deleting by remember { mutableStateOf<Note?>(null) }
+        var showLocation by remember { mutableStateOf(false) }
+        var location by remember { mutableStateOf<LocationReading?>(null) }
+        var locationUnavailable by remember { mutableStateOf(false) }
+        val sensors = remember { DeviceSensors() }
+        val lifecycleOwner = LocalLifecycleOwner.current
+        LaunchedEffect(showLocation, lifecycleOwner) {
+            if (showLocation) {
+                lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    location = null
+                    locationUnavailable = false
+                    try {
+                        sensors.location().collect { location = it.value }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        locationUnavailable = true
+                    }
+                }
+            }
+        }
         CompositionLocalProvider(LocalAppStrings provides strings, LocalNavigator provides navigator) {
             TrailSenseTheme {
+                Scaffold(bottomBar = {
+                    if (navigator.currentRoute !is Route.NoteEditor) {
+                        NavigationBar {
+                            NavigationBarItem(
+                                selected = !showLocation,
+                                onClick = { showLocation = false },
+                                icon = { Icon(Icons.Default.Notes, contentDescription = null) },
+                                label = { Text(appString(Res.string.notes)) }
+                            )
+                            NavigationBarItem(
+                                selected = showLocation,
+                                onClick = { showLocation = true },
+                                icon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
+                                label = { Text(appString(Res.string.my_location)) }
+                            )
+                        }
+                    }
+                }) { padding ->
+                Box(Modifier.padding(padding)) {
                 when (val route = navigator.currentRoute) {
                     is Route.NoteEditor -> {
                         var existing by remember(route.editNoteId) { mutableStateOf<Note?>(null) }
@@ -87,7 +145,9 @@ fun MainViewController(databasePath: String): UIViewController {
                             )
                         }
                     }
-                    else -> NotesScreen(
+                    else -> if (showLocation) {
+                        LocationContent(location, locationUnavailable)
+                    } else NotesScreen(
                         notes = notesFlow,
                         lifecycleOwner = LocalLifecycleOwner.current,
                         onAdd = { navigator.navigate(Route.NoteEditor()) },
@@ -101,6 +161,8 @@ fun MainViewController(databasePath: String): UIViewController {
                             )
                         }
                     )
+                }
+                }
                 }
                 deleting?.let { note ->
                     AlertDialog(
