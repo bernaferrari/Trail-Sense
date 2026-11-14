@@ -200,10 +200,11 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(IFlashlightSubsystem::class) { FlashlightSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IPedometerSubsystem::class) { PedometerSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IFieldGuideRepo::class) { AndroidAppDatabase.getInstance(appContext).let { database ->
+            val builtIn = BuiltInFieldGuide(getAppService()) { "android-assets://$it" }
             FieldGuideRepo(
                 database.fieldGuidePageDao(), database.fieldGuideSightingDao(),
                 UserPreferences(appContext).fieldGuide,
-                { BuiltInFieldGuide.getFieldGuide() }, { BuiltInFieldGuide.getFieldGuidePage(it) },
+                builtIn::getFieldGuide, builtIn::getFieldGuidePage,
                 { FileSubsystem.getInstance(appContext).delete(it) }
             )
         } }

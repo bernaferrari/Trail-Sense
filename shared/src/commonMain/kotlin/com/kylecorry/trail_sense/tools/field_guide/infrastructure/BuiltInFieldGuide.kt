@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.field_guide.infrastructure
 
-import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.ProguardIgnore
 import com.kylecorry.trail_sense.shared.text.RawText
 import com.kylecorry.trail_sense.shared.text.RawTextReader
@@ -15,7 +14,10 @@ import kotlinx.serialization.json.Json
 /**
  * The read-only pages bundled with the app. Built-in pages have negative ids: page n of the index is -(n + 1).
  */
-object BuiltInFieldGuide {
+class BuiltInFieldGuide(
+    private val reader: RawTextReader,
+    private val assetPath: (String) -> String
+) {
 
     @Serializable
     private class Pages : ProguardIgnore {
@@ -34,7 +36,7 @@ object BuiltInFieldGuide {
     private val lock = Mutex()
     private var pages: List<BuiltInFieldGuidePage>? = null
 
-    private suspend fun getPages(reader: RawTextReader): List<BuiltInFieldGuidePage> = lock.withLock {
+    private suspend fun getPages(): List<BuiltInFieldGuidePage> = lock.withLock {
         pages ?: run {
             val rawJson = reader.read(RawTexts.field_guide_pages)
             val parsed = runCatching { json.decodeFromString<Pages>(rawJson).pages }.getOrDefault(emptyList())
@@ -43,17 +45,16 @@ object BuiltInFieldGuide {
         }
     }
 
-    suspend fun getFieldGuidePage(id: Long, reader: RawTextReader = getAppService()): FieldGuidePage? {
+    suspend fun getFieldGuidePage(id: Long): FieldGuidePage? {
         val index = -id.toInt() - 1
-        return getPages(reader).getOrNull(index)?.let { loadPage(reader, it, index) }
+        return getPages().getOrNull(index)?.let { loadPage(it, index) }
     }
 
-    suspend fun getFieldGuide(reader: RawTextReader = getAppService()): List<FieldGuidePage> {
-        return getPages(reader).mapIndexed { index, page -> loadPage(reader, page, index) }
+    suspend fun getFieldGuide(): List<FieldGuidePage> {
+        return getPages().mapIndexed { index, page -> loadPage(page, index) }
     }
 
     private suspend fun loadPage(
-        reader: RawTextReader,
         page: BuiltInFieldGuidePage,
         index: Int
     ): FieldGuidePage {
@@ -65,7 +66,7 @@ object BuiltInFieldGuide {
             id = -(index.toLong() + 1),
             name = name,
             scientificName = page.scientificName,
-            images = listOf("android-assets://${page.image}"),
+            images = listOf(assetPath(page.image)),
             directTags = page.tags.map { FieldGuidePageTag.valueOf(it.split("_").last()) },
             notes = notes,
             isReadOnly = true

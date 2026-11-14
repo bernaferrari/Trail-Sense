@@ -25,7 +25,8 @@ class BuiltInFieldGuideTest {
 
     @Test
     fun loadsEveryBundledPage() = runBlocking {
-        val pages = BuiltInFieldGuide.getFieldGuide(reader)
+        val guide = BuiltInFieldGuide(reader) { "android-assets://$it" }
+        val pages = guide.getFieldGuide()
         val expected = Regex("\"content\"").findAll(File("src/main/res/raw/field_guide_pages.json").readText()).count()
         assertEquals(expected, pages.size)
         pages.forEachIndexed { index, page ->
@@ -36,7 +37,7 @@ class BuiltInFieldGuideTest {
             assertTrue(File("src/main/assets/$asset").exists(), asset)
             assertFalse(page.directTags.isEmpty())
         }
-        val squirrel = BuiltInFieldGuide.getFieldGuidePage(-1, reader)
+        val squirrel = guide.getFieldGuidePage(-1)
         assertNotNull(squirrel)
         assertEquals(pages.first(), squirrel)
     }
