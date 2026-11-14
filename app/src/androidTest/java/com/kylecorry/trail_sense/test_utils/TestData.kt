@@ -16,7 +16,7 @@ import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.test_utils.TestUtils.context
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconGroup
-import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconService
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
 import com.kylecorry.trail_sense.tools.paths.domain.PathMetadata
@@ -72,7 +72,7 @@ object TestData {
         comment: String? = null,
         groupId: Long? = null
     ): Long = runBlocking {
-        BeaconService(context).add(
+        getAppService<IBeaconService>().add(
             Beacon(
                 0,
                 name,
@@ -85,7 +85,7 @@ object TestData {
     }
 
     fun addBeaconGroup(name: String, parentId: Long? = null): Long = runBlocking {
-        BeaconService(context).add(BeaconGroup(0, name, parentId))
+        getAppService<IBeaconService>().add(BeaconGroup(0, name, parentId))
     }
 
     fun addPathGroup(name: String, parentId: Long? = null): Long = runBlocking {

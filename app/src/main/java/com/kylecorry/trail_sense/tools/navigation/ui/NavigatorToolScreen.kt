@@ -102,7 +102,7 @@ fun NavigatorToolScreen(
             route = route,
             sensors = sensors,
             navigator = Navigator.getInstance(appContext),
-            beaconUpdates = BeaconRepo.getInstance(appContext).getBeacons(),
+            beaconUpdates = getAppService<BeaconRepo>().getBeacons(),
             pathService = getAppService<IPathService>(),
             weatherRepo = getAppService<IWeatherRepo>(),
             prefs = userPrefs.navigation,

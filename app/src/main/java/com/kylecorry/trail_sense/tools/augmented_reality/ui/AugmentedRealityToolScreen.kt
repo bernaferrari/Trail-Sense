@@ -2,6 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.augmented_reality.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
@@ -209,7 +210,7 @@ private class AugmentedRealityController(
 
     private val userPrefs by lazy { UserPreferences(context) }
     private val beaconRepo by lazy {
-        BeaconRepo.getInstance(context)
+        getAppService<BeaconRepo>()
     }
 
     private val formatter by lazy { FormatService.getInstance(context) }

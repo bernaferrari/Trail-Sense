@@ -1,5 +1,9 @@
 package com.kylecorry.trail_sense.main
 
+import com.kylecorry.trail_sense.tools.beacons.BeaconsToolRegistration
+import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.BeaconRepo
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
+import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.clouds.infrastructure.persistence.CloudRepo
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.WeatherRepo
@@ -149,10 +153,21 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(TonePlayerFactory::class) {
             TonePlayerFactory { frequency -> AudioTrackSoundPlayer(ToneGenerator().getTone(frequency)) }
         }
-        DependencyRegistry.addSingleton(IPathRepo::class) { PathRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IPathRepo::class) { AndroidAppDatabase.getInstance(appContext).let { database ->
+            PathRepo(database.pathDao(), database.pathGroupDao()) {
+                ToolBroadcasts.broadcast(PathsToolRegistration.BROADCAST_PATHS_CHANGED)
+            }
+        } }
         DependencyRegistry.addSingleton(TideHarmonicsSource::class) { AndroidTideHarmonicsSource(appContext) }
         DependencyRegistry.addSingleton(IPathService::class) { PathService.getInstance() }
-        DependencyRegistry.addSingleton<IBeaconService>(BeaconService(appContext))
+        DependencyRegistry.addSingleton(BeaconRepo::class) {
+            AndroidAppDatabase.getInstance(appContext).let { database ->
+                BeaconRepo(database.beaconDao(), database.beaconGroupDao()) {
+                    ToolBroadcasts.broadcast(BeaconsToolRegistration.BROADCAST_BEACONS_CHANGED)
+                }
+            }
+        }
+        DependencyRegistry.addSingleton(IBeaconService::class) { BeaconService(getAppService()) }
         DependencyRegistry.addSingleton(IWeatherSubsystem::class) { WeatherSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(CloudRepo::class) { CloudRepo(AndroidAppDatabase.getInstance(appContext).cloudDao()) }
         DependencyRegistry.addSingleton(IWeatherRepo::class) { WeatherRepo(AndroidAppDatabase.getInstance(appContext).pressureDao()) }
@@ -171,9 +186,9 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(ITideTableRepo::class) { TideTableRepo.getInstance(appContext) }
         DependencyRegistry.addSingleton(INoteRepo::class) { NoteRepo(AndroidAppDatabase.getInstance(appContext).noteDao()) }
         DependencyRegistry.addSingleton(ILightningRepo::class) { LightningRepo.getInstance(appContext) }
-        DependencyRegistry.addSingleton(IBatteryRepo::class) { BatteryRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IBatteryRepo::class) { BatteryRepo(AndroidAppDatabase.getInstance(appContext).batteryDao(), PreferencesSubsystem.getInstance(appContext).preferences) }
         DependencyRegistry.addSingleton(IPackRepo::class) { AndroidAppDatabase.getInstance(appContext).let { PackRepo(it.packItemDao(), it.packDao()) } }
-        DependencyRegistry.addSingleton(IWaypointRepo::class) { WaypointRepo.getInstance(appContext) }
+        DependencyRegistry.addSingleton(IWaypointRepo::class) { WaypointRepo(AndroidAppDatabase.getInstance(appContext).waypointDao()) }
         DependencyRegistry.addSingleton(IFlashlightSubsystem::class) { FlashlightSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IPedometerSubsystem::class) { PedometerSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IFieldGuideRepo::class) { FieldGuideRepo.getInstance(appContext) }

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.tools.battery.infrastructure.commands
 
+import com.kylecorry.trail_sense.main.getAppService
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
@@ -13,7 +14,7 @@ import com.kylecorry.andromeda.battery.AndroidBattery
 import com.kylecorry.andromeda.battery.BatteryChargingStatus
 import com.kylecorry.trail_sense.shared.commands.CoroutineCommand
 import com.kylecorry.trail_sense.tools.battery.domain.BatteryReading
-import com.kylecorry.trail_sense.tools.battery.infrastructure.persistence.BatteryRepo
+import com.kylecorry.trail_sense.tools.battery.infrastructure.persistence.IBatteryRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -21,7 +22,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 class BatteryLogCommand(private val context: Context) : CoroutineCommand {
     override suspend fun execute() {
         val battery = AndroidBattery(context)
-        val batteryRepo = BatteryRepo.getInstance(context)
+        val batteryRepo = getAppService<IBatteryRepo>()
         withContext(Dispatchers.IO) {
             try {
                 withTimeoutOrNull(10.seconds.inWholeMilliseconds) {

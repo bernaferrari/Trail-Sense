@@ -1,22 +1,20 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence
 
-import android.content.Context
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.geology.CoordinateBounds
-import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
-import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
-import com.kylecorry.trail_sense.tools.beacons.BeaconsToolRegistration
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
-class BeaconRepo private constructor(context: Context) {
-
-    private val beaconDao = AndroidAppDatabase.getInstance(context).beaconDao()
-    private val beaconGroupDao = AndroidAppDatabase.getInstance(context).beaconGroupDao()
+class BeaconRepo(
+    private val beaconDao: BeaconDao,
+    private val beaconGroupDao: BeaconGroupDao,
+    private val onChanged: () -> Unit
+) {
 
     fun getBeacons(): Flow<List<Beacon>> = beaconDao.getAll()
         .map { it.map { it.toBeacon() } }
@@ -32,7 +30,7 @@ class BeaconRepo private constructor(context: Context) {
 
     suspend fun deleteBeacon(beacon: BeaconEntity) = onIO {
         beaconDao.delete(beacon)
-        ToolBroadcasts.broadcast(BeaconsToolRegistration.BROADCAST_BEACONS_CHANGED)
+        onChanged()
     }
 
     suspend fun addBeacon(beacon: BeaconEntity): Long = onIO {
@@ -42,7 +40,7 @@ class BeaconRepo private constructor(context: Context) {
         } else {
             beaconDao.insert(beacon)
         }
-        ToolBroadcasts.broadcast(BeaconsToolRegistration.BROADCAST_BEACONS_CHANGED)
+        onChanged()
         newId
     }
 
@@ -58,7 +56,7 @@ class BeaconRepo private constructor(context: Context) {
     suspend fun deleteBeaconGroup(group: BeaconGroupEntity?) {
         // Delete beacons
         beaconDao.deleteInGroup(group?.id)
-        ToolBroadcasts.broadcast(BeaconsToolRegistration.BROADCAST_BEACONS_CHANGED)
+        onChanged()
 
         // Delete groups
         val groups = getGroupsWithParent(group?.id)
@@ -87,18 +85,6 @@ class BeaconRepo private constructor(context: Context) {
             )
         } else {
             beaconDao.getAllInRegion(region.north, region.south, region.east, region.west)
-        }
-    }
-
-    companion object {
-        private var instance: BeaconRepo? = null
-
-        @Synchronized
-        fun getInstance(context: Context): BeaconRepo {
-            if (instance == null) {
-                instance = BeaconRepo(context.applicationContext)
-            }
-            return instance!!
         }
     }
 

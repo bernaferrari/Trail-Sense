@@ -1,17 +1,13 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
-import android.content.Context
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.WaypointEntity
 import kotlin.time.Instant
 
-class WaypointRepo private constructor(context: Context) : IWaypointRepo {
-
-    private val waypointDao = AndroidAppDatabase.getInstance(context).waypointDao()
+class WaypointRepo(private val waypointDao: WaypointDao) : IWaypointRepo {
 
     override suspend fun add(value: PathPoint): Long {
         return if (value.id != 0L) {
@@ -97,15 +93,4 @@ class WaypointRepo private constructor(context: Context) : IWaypointRepo {
         waypointDao.getAllWithCellSignal().map { it.toPathPoint() }
     }
 
-    companion object {
-        private var instance: WaypointRepo? = null
-
-        @Synchronized
-        fun getInstance(context: Context): WaypointRepo {
-            if (instance == null) {
-                instance = WaypointRepo(context.applicationContext)
-            }
-            return instance!!
-        }
-    }
 }

@@ -1,25 +1,22 @@
 package com.kylecorry.trail_sense.tools.paths.infrastructure.persistence
 
-import android.content.Context
-import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
-import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
-import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class PathRepo private constructor(context: Context) : IPathRepo {
-
-    private val pathDao = AndroidAppDatabase.getInstance(context).pathDao()
-    private val groupDao = AndroidAppDatabase.getInstance(context).pathGroupDao()
+class PathRepo(
+    private val pathDao: PathDao,
+    private val groupDao: PathGroupDao,
+    private val onChanged: () -> Unit
+) : IPathRepo {
 
     /**
      * A key that increments when a change is made
      */
-    override var changeKey: Int = 0
-        private set
-    private val changeLock = Any()
+    private val changeCounter = atomic(0)
+    override val changeKey: Int get() = changeCounter.value
 
     override suspend fun add(value: Path): Long {
         val id = if (value.id != 0L) {
@@ -38,10 +35,8 @@ class PathRepo private constructor(context: Context) : IPathRepo {
     }
 
     private fun notifyChanged() {
-        synchronized(changeLock) {
-            changeKey++
-        }
-        ToolBroadcasts.broadcast(PathsToolRegistration.BROADCAST_PATHS_CHANGED)
+        changeCounter.incrementAndGet()
+        onChanged()
     }
 
     override suspend fun get(id: Long): Path? {
@@ -85,15 +80,4 @@ class PathRepo private constructor(context: Context) : IPathRepo {
         return groupDao.get(id)?.toPathGroup()
     }
 
-    companion object {
-        private var instance: PathRepo? = null
-
-        @Synchronized
-        fun getInstance(context: Context): PathRepo {
-            if (instance == null) {
-                instance = PathRepo(context.applicationContext)
-            }
-            return instance!!
-        }
-    }
 }

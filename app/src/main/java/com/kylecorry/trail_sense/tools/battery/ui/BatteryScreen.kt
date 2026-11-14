@@ -3,6 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.battery.ui
 
+import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.views.compose.chartHeight
 
 import kotlin.time.Clock
@@ -102,7 +103,7 @@ import com.kylecorry.trail_sense.tools.battery.domain.RunningService
 import com.kylecorry.trail_sense.tools.battery.domain.SystemBatteryTip
 import com.kylecorry.trail_sense.tools.battery.infrastructure.BatteryService
 import com.kylecorry.trail_sense.tools.battery.infrastructure.LowPowerMode
-import com.kylecorry.trail_sense.tools.battery.infrastructure.persistence.BatteryRepo
+import com.kylecorry.trail_sense.tools.battery.infrastructure.persistence.IBatteryRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -127,7 +128,7 @@ fun BatteryToolScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val batteryService = remember { BatteryService() }
     val battery = remember { AndroidBattery(context) }
-    val batteryRepo = remember { BatteryRepo.getInstance(context) }
+    val batteryRepo = remember { getAppService<IBatteryRepo>() }
     val lowPowerMode = remember { LowPowerMode() }
     val prefs = remember { UserPreferences(context) }
     val formatter = remember { FormatService.getInstance(context) }

@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence
 
-import android.content.Context
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.geology.CoordinateBounds
@@ -13,9 +12,7 @@ import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.beacons.domain.IBeacon
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
 
-class BeaconService(context: Context) : IBeaconService {
-
-    private val repo = BeaconRepo.getInstance(context)
+class BeaconService(private val repo: BeaconRepo) : IBeaconService {
 
     private val loaderWithoutCounts =
         GroupLoader(this::getGroupWithoutCount, this::getChildrenWithoutCounts)
