@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.graphics.shapes.Morph
 import com.kylecorry.luna.time.Throttle
+import com.kylecorry.andromeda.sense.accelerometer.Accelerometer
 import com.kylecorry.sol.math.MathExtensions.toDegrees
 import com.kylecorry.sol.math.MathExtensions.toRadians
 import com.kylecorry.trail_sense.main.getAppService
@@ -80,12 +81,14 @@ import org.jetbrains.compose.resources.StringResource
  * a cookie and the phone gives one haptic tick.
  */
 @Composable
-fun LevelScreen(modifier: Modifier = Modifier) {
+fun LevelScreen(
+    modifier: Modifier = Modifier,
+    gravity: Accelerometer = remember { getAppService<SensorService>().getGravity() },
+    threshold: Float = remember { getAppService<UserPreferences>().bubbleLevel.threshold },
+    formatService: FormatService = remember { FormatService.getInstance() }
+) {
     // One question: is it level, and if not, which side is high?
     KeepScreenOn()
-    val formatService = remember { FormatService.getInstance() }
-    val threshold = remember { getAppService<UserPreferences>().bubbleLevel.threshold }
-    val gravity = remember { getAppService<SensorService>().getGravity() }
     val throttle = remember { Throttle(20) }
     // The up vector in the phone's frame (what a gravity sensor reports): +z out of the screen, +x right, +y top.
     var gx by remember { mutableFloatStateOf(0f) }

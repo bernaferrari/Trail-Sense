@@ -66,7 +66,7 @@ fun <T : ToolDescriptor> ToolsScreen(
     quickActions: List<ComposeQuickActionButtonView> = emptyList(),
     onToolClick: (T) -> Unit,
     onToolLongClick: (T) -> Unit,
-    onSettingsClick: () -> Unit,
+    onSettingsClick: (() -> Unit)?,
     onSearchFocusRequestChanged: (((() -> Boolean)?) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -116,8 +116,10 @@ fun <T : ToolDescriptor> ToolsScreen(
         onBack = null,
         modifier = modifier,
         actions = {
-            IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Rounded.Settings, contentDescription = appString(Res.string.settings))
+            if (onSettingsClick != null) {
+                IconButton(onClick = onSettingsClick) {
+                    Icon(Icons.Rounded.Settings, contentDescription = appString(Res.string.settings))
+                }
             }
         }
     ) {

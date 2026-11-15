@@ -280,10 +280,30 @@ val syncSharedStrings = tasks.register<SyncSharedStringsTask>("syncSharedStrings
     outputDir.set(layout.buildDirectory.dir("generated/sharedComposeResources/commonMain"))
 }
 
+val syncSharedRawTexts = tasks.register<Sync>("syncSharedRawTexts") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    // English guides are maintained in guides/en-US; the copies in app resources are updated separately.
+    from(rootProject.layout.projectDirectory.dir("guides/en-US")) {
+        include("*.txt")
+        into("files/trailtext/raw")
+    }
+    from(rootProject.layout.projectDirectory.dir("app/src/main/res")) {
+        include("raw*/*.txt", "raw*/*.md", "raw*/*.json")
+        into("files/trailtext")
+    }
+    into(layout.buildDirectory.dir("generated/sharedRawResources/commonMain"))
+}
+
+val mergeSharedResources = tasks.register<Sync>("mergeSharedResources") {
+    from(syncSharedStrings.flatMap { it.outputDir })
+    from(syncSharedRawTexts)
+    into(layout.buildDirectory.dir("generated/sharedAppResources/commonMain"))
+}
+
 compose.resources {
     customDirectory(
         sourceSetName = "commonMain",
-        directoryProvider = syncSharedStrings.flatMap { it.outputDir }
+        directoryProvider = mergeSharedResources.map { layout.buildDirectory.dir("generated/sharedAppResources/commonMain").get() }
     )
 }
 

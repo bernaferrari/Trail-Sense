@@ -10,6 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.ComposeUIViewController
@@ -38,7 +39,11 @@ import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.generated.resources.Res
 import com.kylecorry.trail_sense.shared.generated.resources.my_location
-import com.kylecorry.trail_sense.shared.generated.resources.notes
+import com.kylecorry.trail_sense.shared.generated.resources.tools
+import com.kylecorry.trail_sense.shared.generated.resources.pin
+import com.kylecorry.trail_sense.shared.generated.resources.unpin
+import com.kylecorry.trail_sense.shared.generated.resources.tool_user_guide_title
+import com.kylecorry.trail_sense.shared.generated.resources.tool_long_press_hint_toast
 import com.kylecorry.trail_sense.shared.generated.resources.navigation_nearby_category
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
@@ -46,33 +51,51 @@ import com.kylecorry.trail_sense.shared.navigation.SharedNavigationDisplay
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.shared.text.ComposeAppStrings
+import com.kylecorry.trail_sense.shared.text.ComposeRawTextReader
 import com.kylecorry.trail_sense.shared.text.IosPlatformFormats
 import com.kylecorry.trail_sense.shared.text.LocalAppStrings
+import com.kylecorry.trail_sense.shared.text.RawTextReader
 import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.AppHostDialogs
 import com.kylecorry.trail_sense.shared.views.compose.AppHostOverlays
 import com.kylecorry.trail_sense.shared.views.compose.AppHostSnackbar
+import com.kylecorry.trail_sense.shared.dialogs.Pickers
+import com.kylecorry.trail_sense.shared.dialogs.Alerts
+import com.kylecorry.trail_sense.shared.dialogs.oneTimeSnackbar
+import com.kylecorry.trail_sense.tools.ballistics.ui.BallisticsScreen
+import com.kylecorry.trail_sense.tools.convert.ui.ConvertScreen
+import com.kylecorry.trail_sense.tools.guide.ui.GuideScreen
 import com.kylecorry.trail_sense.tools.location.ui.LocationContent
+import com.kylecorry.trail_sense.tools.level.ui.LevelScreen
+import com.kylecorry.trail_sense.tools.lightning.ui.LightningScreen
 import com.kylecorry.trail_sense.tools.beacons.BeaconBroadcasts
 import com.kylecorry.trail_sense.tools.paths.PathsBroadcasts
 import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
 import com.kylecorry.trail_sense.tools.notes.ui.NoteEditorToolScreen
 import com.kylecorry.trail_sense.tools.notes.ui.NotesToolScreen
 import com.kylecorry.trail_sense.tools.qr.ui.QRShareScreen
+import com.kylecorry.trail_sense.tools.tools.infrastructure.sharedTools
+import com.kylecorry.trail_sense.tools.tools.ui.PinnedToolManager
+import com.kylecorry.trail_sense.tools.tools.ui.ToolsHomeContent
+import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 import kotlinx.coroutines.CancellationException
 import platform.UIKit.UIViewController
+import platform.CoreMotion.CMMotionManager
+import kotlin.time.Duration.Companion.milliseconds
 
 /** Entry point for the iOS host. [databasePath] is in the app's documents directory. */
 @OptIn(ExperimentalCalfUiApi::class)
 fun MainViewController(databasePath: String): UIViewController {
     val database = iosAppDatabase(databasePath)
     val strings = ComposeAppStrings()
+    val rawTexts = ComposeRawTextReader()
     val preferences = Preferences()
     val userPreferences = UserPreferences(preferences, IosDeviceProfile())
     val formatter = FormatService(strings, IosPlatformFormats(), userPreferences)
     DependencyRegistry.addSingleton<AppStrings>(strings)
+    DependencyRegistry.addSingleton<RawTextReader>(rawTexts)
     DependencyRegistry.addSingleton(preferences)
     DependencyRegistry.addSingleton(userPreferences)
     DependencyRegistry.addSingleton(formatter)
@@ -85,7 +108,9 @@ fun MainViewController(databasePath: String): UIViewController {
     )
     val notes = getAppService<INoteRepo>()
     return ComposeUIViewController {
-        val navigator = remember { TrailSenseNavigator().apply { setStartRoute(Route.Notes) } }
+        val navigator = remember { TrailSenseNavigator().apply { setStartRoute(Route.Tools) } }
+        val tools = remember(strings) { sharedTools(strings, CMMotionManager().deviceMotionAvailable) }
+        val pinnedTools = remember(userPreferences) { PinnedToolManager(userPreferences) }
         val host = remember { AppHost().also(AppHost::attach) }
         val viewModelOwner = remember {
             object : ViewModelStoreOwner {
@@ -99,9 +124,12 @@ fun MainViewController(databasePath: String): UIViewController {
             }
         }
         var showLocation by remember { mutableStateOf(false) }
+        var toolsController by remember { mutableStateOf<ToolSearchFocusable?>(null) }
         var location by remember { mutableStateOf<LocationReading?>(null) }
         var locationUnavailable by remember { mutableStateOf(false) }
         val sensors = remember { DeviceSensors() }
+        val sensorScope = rememberCoroutineScope()
+        val gravity = remember(sensors, sensorScope) { sensors.gravitySensor(sensorScope, 20.milliseconds) }
         val lifecycleOwner = LocalLifecycleOwner.current
         LaunchedEffect(showLocation, lifecycleOwner) {
             if (showLocation) {
@@ -126,13 +154,13 @@ fun MainViewController(databasePath: String): UIViewController {
             TrailSenseTheme {
                 Box(Modifier.fillMaxSize()) {
                     AdaptiveScaffold(bottomBar = {
-                        if (navigator.currentRoute == Route.Notes) {
+                        if (navigator.currentRoute == Route.Tools) {
                             AdaptiveNavigationBar(
                                 iosItems = listOf(
                                     UIKitUITabBarItem(
-                                        title = appString(Res.string.notes),
-                                        image = UIKitImage.SystemName(SFSymbol.listBulletRectangle),
-                                        selectedImage = UIKitImage.SystemName(SFSymbol.listBulletRectangleFill)
+                                        title = appString(Res.string.tools),
+                                        image = UIKitImage.SystemName(SFSymbol.wrenchAndScrewdriver),
+                                        selectedImage = UIKitImage.SystemName(SFSymbol.wrenchAndScrewdriverFill)
                                     ),
                                     UIKitUITabBarItem(
                                         title = appString(Res.string.my_location),
@@ -142,7 +170,8 @@ fun MainViewController(databasePath: String): UIViewController {
                                 ),
                                 iosSelectedIndex = if (showLocation) 1 else 0,
                                 iosOnItemSelected = { index ->
-                                    showLocation = index == 1
+                                    if (index == 0 && !showLocation) toolsController?.focusSearch()
+                                    else showLocation = index == 1
                                 },
                                 iosConfiguration = UIKitTabBarConfiguration(
                                     selectedItemColor = MaterialTheme.colorScheme.primary
@@ -152,11 +181,46 @@ fun MainViewController(databasePath: String): UIViewController {
                     }) { padding ->
                         SharedNavigationDisplay(navigator, Modifier.padding(padding)) { route ->
                             when (route) {
-                                Route.Notes -> if (showLocation) {
+                                Route.Tools -> if (showLocation) {
                                     LocationContent(location, locationUnavailable)
                                 } else {
-                                    NotesToolScreen(notes, strings, formatter, showBack = false)
+                                    ToolsHomeContent(
+                                        tools = tools,
+                                        pinnedTools = pinnedTools,
+                                        keywordReader = rawTexts,
+                                        quickActions = emptyList(),
+                                        onShowLongPressHint = {
+                                            Alerts.oneTimeSnackbar(
+                                                host, strings.get(Res.string.tool_long_press_hint_toast),
+                                                "tools_long_press_notice_shown", short = false
+                                            )
+                                        },
+                                        onToolClick = { navigator.navigate(it.route) },
+                                        onToolLongClick = { tool, model ->
+                                            val pinLabel = strings.get(if (model.isPinned(tool.id)) Res.string.unpin else Res.string.pin)
+                                            val guide = tool.guideId
+                                            val choices = listOfNotNull(pinLabel, guide?.let { strings.get(Res.string.tool_user_guide_title) })
+                                            Pickers.item(host, tool.name, choices) { selected ->
+                                                when (selected) {
+                                                    0 -> if (model.isPinned(tool.id)) model.unpin(tool.id) else model.pin(tool.id)
+                                                    1 -> if (guide != null) navigator.navigate(Route.Guide(tool.name, guide))
+                                                }
+                                            }
+                                        },
+                                        onSettingsClick = null,
+                                        onController = { toolsController = it }
+                                    )
                                 }
+                                Route.Notes -> NotesToolScreen(notes, strings, formatter)
+                                Route.Convert -> ConvertScreen()
+                                Route.Ballistics -> BallisticsScreen()
+                                Route.Lightning -> LightningScreen()
+                                Route.Level -> LevelScreen(
+                                    gravity = gravity,
+                                    threshold = userPreferences.bubbleLevel.threshold,
+                                    formatService = formatter
+                                )
+                                is Route.Guide -> GuideScreen(route.name, route.contents)
                                 is Route.NoteEditor -> NoteEditorToolScreen(route, notes)
                                 is Route.ViewQr -> QRShareScreen(route.title, route.text)
                                 else -> Unit

@@ -19,7 +19,7 @@ fun <T : ToolDescriptor> ToolsHomeContent(
     onShowLongPressHint: () -> Unit,
     onToolClick: (T) -> Unit,
     onToolLongClick: (T, ToolsHomeViewModel) -> Unit,
-    onSettingsClick: () -> Unit,
+    onSettingsClick: (() -> Unit)?,
     onController: (ToolSearchFocusable?) -> Unit
 ) {
     val model = viewModel { ToolsHomeViewModel(pinnedTools) }

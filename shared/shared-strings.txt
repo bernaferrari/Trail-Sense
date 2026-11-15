@@ -1336,3 +1336,7 @@ no_gps_signal
 pip_button
 reload
 navigation_nearby_category
+pin
+unpin
+tool_bubble_level_summary
+tool_lightning_description
