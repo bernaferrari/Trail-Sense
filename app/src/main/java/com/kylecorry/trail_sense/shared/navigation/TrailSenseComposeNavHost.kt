@@ -4,14 +4,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.core.EaseOutCubic
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -25,9 +17,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.shared.views.compose.LocalTrailSenseBack
@@ -56,35 +46,17 @@ fun TrailSenseNavDisplay(
         null
     }
     CompositionLocalProvider(LocalTrailSenseBack provides back, LocalNavigator provides navigator) {
-        NavDisplay(
-            backStack = backStack,
+        SharedNavigationDisplay(
+            navigator = navigator,
             modifier = modifier,
-            onBack = { navigator.popBackStack() },
-            // Each entry keeps its saved state and owns its ViewModels: they live while the screen is on the stack and
-            // are cleared when it is popped.
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator()
             ),
-            // The family's shared-axis motion: forward slides in from the right over a fade, back slides from the
-            // left; switching tabs (a new root) fades through.
-            transitionSpec = { if (navigator.lastChangeWasTabSwitch) fadeThrough() else slide(1) },
-            popTransitionSpec = { slide(-1) },
-            predictivePopTransitionSpec = { slide(-1) },
-            // A route appears on the stack at most once (TrailSenseNavigator.navigate), so the route is the entry's key.
-            entryProvider = { route -> NavEntry(route) { TrailSenseRouteContent(it) } }
+            content = { TrailSenseRouteContent(it) }
         )
     }
 }
-
-private fun fadeThrough(): ContentTransform =
-    fadeIn(tween(220, delayMillis = 60)) togetherWith fadeOut(tween(90))
-
-private fun slide(direction: Int): ContentTransform =
-    (slideInHorizontally(tween(320, easing = EaseOutCubic)) { it / 6 * direction } +
-            fadeIn(tween(220, delayMillis = 40))) togetherWith
-            (slideOutHorizontally(tween(320, easing = EaseOutCubic)) { -it / 10 * direction } +
-                    fadeOut(tween(120)))
 
 /** One screen: its own lifecycle, permission launcher and destination host, then the screen itself. */
 @Composable

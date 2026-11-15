@@ -35,6 +35,7 @@ import com.kylecorry.trail_sense.shared.generated.resources.dialog_leave
 import com.kylecorry.trail_sense.shared.generated.resources.unsaved_changes
 import com.kylecorry.trail_sense.shared.generated.resources.unsaved_changes_message
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.SharedNavigationDisplay
 import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
@@ -107,7 +108,8 @@ fun MainViewController(databasePath: String): UIViewController {
                     }
                 }) { padding ->
                 Box(Modifier.padding(padding)) {
-                when (val route = navigator.currentRoute) {
+                SharedNavigationDisplay(navigator) { route ->
+                when (route) {
                     is Route.NoteEditor -> {
                         var existing by remember(route.editNoteId) { mutableStateOf<Note?>(null) }
                         var hasChanges by remember(route.editNoteId) { mutableStateOf(false) }
@@ -161,6 +163,7 @@ fun MainViewController(databasePath: String): UIViewController {
                             )
                         }
                     )
+                }
                 }
                 }
                 }
