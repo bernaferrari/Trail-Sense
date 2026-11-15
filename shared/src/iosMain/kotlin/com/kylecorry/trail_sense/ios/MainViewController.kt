@@ -30,11 +30,16 @@ import com.mohamedrejeb.calf.ui.navigation.AdaptiveScaffold
 import com.mohamedrejeb.calf.ui.navigation.UIKitTabBarConfiguration
 import com.mohamedrejeb.calf.ui.navigation.UIKitUITabBarItem
 import com.mohamedrejeb.calf.ui.uikit.UIKitImage
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.main.persistence.iosAppDatabase
+import com.kylecorry.trail_sense.main.registerSharedRepositories
+import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.generated.resources.Res
 import com.kylecorry.trail_sense.shared.generated.resources.my_location
 import com.kylecorry.trail_sense.shared.generated.resources.notes
+import com.kylecorry.trail_sense.shared.generated.resources.navigation_nearby_category
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.SharedNavigationDisplay
@@ -50,7 +55,9 @@ import com.kylecorry.trail_sense.shared.views.compose.AppHostDialogs
 import com.kylecorry.trail_sense.shared.views.compose.AppHostOverlays
 import com.kylecorry.trail_sense.shared.views.compose.AppHostSnackbar
 import com.kylecorry.trail_sense.tools.location.ui.LocationContent
-import com.kylecorry.trail_sense.tools.notes.infrastructure.iosNoteRepository
+import com.kylecorry.trail_sense.tools.beacons.BeaconBroadcasts
+import com.kylecorry.trail_sense.tools.paths.PathsBroadcasts
+import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
 import com.kylecorry.trail_sense.tools.notes.ui.NoteEditorToolScreen
 import com.kylecorry.trail_sense.tools.notes.ui.NotesToolScreen
 import com.kylecorry.trail_sense.tools.qr.ui.QRShareScreen
@@ -60,7 +67,7 @@ import platform.UIKit.UIViewController
 /** Entry point for the iOS host. [databasePath] is in the app's documents directory. */
 @OptIn(ExperimentalCalfUiApi::class)
 fun MainViewController(databasePath: String): UIViewController {
-    val notes = iosNoteRepository(databasePath)
+    val database = iosAppDatabase(databasePath)
     val strings = ComposeAppStrings()
     val preferences = Preferences()
     val userPreferences = UserPreferences(preferences, IosDeviceProfile())
@@ -69,6 +76,14 @@ fun MainViewController(databasePath: String): UIViewController {
     DependencyRegistry.addSingleton(preferences)
     DependencyRegistry.addSingleton(userPreferences)
     DependencyRegistry.addSingleton(formatter)
+    registerSharedRepositories(
+        database = database,
+        preferences = preferences,
+        nearbyName = { strings.get(Res.string.navigation_nearby_category) },
+        onPathsChanged = { ToolBroadcasts.broadcast(PathsBroadcasts.PATHS_CHANGED) },
+        onBeaconsChanged = { ToolBroadcasts.broadcast(BeaconBroadcasts.BEACONS_CHANGED) }
+    )
+    val notes = getAppService<INoteRepo>()
     return ComposeUIViewController {
         val navigator = remember { TrailSenseNavigator().apply { setStartRoute(Route.Notes) } }
         val host = remember { AppHost().also(AppHost::attach) }

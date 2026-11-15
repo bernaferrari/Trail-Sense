@@ -119,7 +119,7 @@ object BeaconsToolRegistration : ToolRegistration {
         )
     }
 
-    const val BROADCAST_BEACONS_CHANGED = "beacons-broadcast-beacons-changed"
+    const val BROADCAST_BEACONS_CHANGED = BeaconBroadcasts.BEACONS_CHANGED
     const val WIDGET_NEARBY_BEACONS = "beacons-widget-nearby-beacons"
     const val MAP_LAYER_BEACONS = "beacon"
 }

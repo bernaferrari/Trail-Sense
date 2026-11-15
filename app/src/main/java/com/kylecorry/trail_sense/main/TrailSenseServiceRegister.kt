@@ -159,24 +159,17 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(TonePlayerFactory::class) {
             TonePlayerFactory { frequency -> AudioTrackSoundPlayer(ToneGenerator().getTone(frequency)) }
         }
-        DependencyRegistry.addSingleton(IPathRepo::class) { AndroidAppDatabase.getInstance(appContext).let { database ->
-            PathRepo(database.pathDao(), database.pathGroupDao()) {
-                ToolBroadcasts.broadcast(PathsToolRegistration.BROADCAST_PATHS_CHANGED)
-            }
-        } }
+        registerSharedRepositories(
+            database = AndroidAppDatabase.getInstance(appContext),
+            preferences = getAppService(),
+            nearbyName = { appContext.getString(com.kylecorry.trail_sense.R.string.navigation_nearby_category) },
+            onPathsChanged = { ToolBroadcasts.broadcast(PathsToolRegistration.BROADCAST_PATHS_CHANGED) },
+            onBeaconsChanged = { ToolBroadcasts.broadcast(BeaconsToolRegistration.BROADCAST_BEACONS_CHANGED) }
+        )
         DependencyRegistry.addSingleton(TideHarmonicsSource::class) { AndroidTideHarmonicsSource(appContext) }
         DependencyRegistry.addSingleton(IPathService::class) { PathService.getInstance() }
-        DependencyRegistry.addSingleton(BeaconRepo::class) {
-            AndroidAppDatabase.getInstance(appContext).let { database ->
-                BeaconRepo(database.beaconDao(), database.beaconGroupDao()) {
-                    ToolBroadcasts.broadcast(BeaconsToolRegistration.BROADCAST_BEACONS_CHANGED)
-                }
-            }
-        }
         DependencyRegistry.addSingleton(IBeaconService::class) { BeaconService(getAppService()) }
         DependencyRegistry.addSingleton(IWeatherSubsystem::class) { WeatherSubsystem.getInstance(appContext) }
-        DependencyRegistry.addSingleton(CloudRepo::class) { CloudRepo(AndroidAppDatabase.getInstance(appContext).cloudDao()) }
-        DependencyRegistry.addSingleton(IWeatherRepo::class) { WeatherRepo(AndroidAppDatabase.getInstance(appContext).pressureDao()) }
         DependencyRegistry.addSingleton(AstronomyAlertEnabler::class) {
             AstronomyAlertEnabler { serviceId, effects, scope -> enableAstronomyAlert(appContext, serviceId, effects, scope) }
         }
@@ -189,14 +182,6 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(BatteryRestrictionPrompt::class) {
             BatteryRestrictionPrompt { alerter -> RequestRemoveBatteryRestrictionCommand(appContext, alerter).execute() }
         }
-        DependencyRegistry.addSingleton(ITideTableRepo::class) { TideTableRepo(AndroidAppDatabase.getInstance(appContext).tideTableDao()) {
-            appContext.getString(com.kylecorry.trail_sense.R.string.navigation_nearby_category)
-        } }
-        DependencyRegistry.addSingleton(INoteRepo::class) { NoteRepo(AndroidAppDatabase.getInstance(appContext).noteDao()) }
-        DependencyRegistry.addSingleton(ILightningRepo::class) { LightningRepo(AndroidAppDatabase.getInstance(appContext).lightningDao()) }
-        DependencyRegistry.addSingleton(IBatteryRepo::class) { BatteryRepo(AndroidAppDatabase.getInstance(appContext).batteryDao(), PreferencesSubsystem.getInstance(appContext).preferences) }
-        DependencyRegistry.addSingleton(IPackRepo::class) { AndroidAppDatabase.getInstance(appContext).let { PackRepo(it.packItemDao(), it.packDao()) } }
-        DependencyRegistry.addSingleton(IWaypointRepo::class) { WaypointRepo(AndroidAppDatabase.getInstance(appContext).waypointDao()) }
         DependencyRegistry.addSingleton(IFlashlightSubsystem::class) { FlashlightSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IPedometerSubsystem::class) { PedometerSubsystem.getInstance(appContext) }
         DependencyRegistry.addSingleton(IFieldGuideRepo::class) { AndroidAppDatabase.getInstance(appContext).let { database ->
@@ -211,7 +196,6 @@ object TrailSenseServiceRegister {
         DependencyRegistry.addSingleton(FieldGuideImageCleanup::class) {
             FieldGuideImageCleanup { FieldGuideCleanupCommand(appContext).execute() }
         }
-        DependencyRegistry.addSingleton(NavigationBearingService::class) { NavigationBearingService(AndroidAppDatabase.getInstance(appContext).bearingDao()) }
         DependencyRegistry.addSingleton(INavigator::class) { Navigator.getInstance(appContext) }
         DependencyRegistry.addSingleton<ElevationModel>(DEM)
         DependencyRegistry.addSingleton<WaterPurificationTimer>(AndroidWaterPurificationTimer(appContext))

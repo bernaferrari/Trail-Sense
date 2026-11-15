@@ -1335,3 +1335,4 @@ clock_waiting_for_gps
 no_gps_signal
 pip_button
 reload
+navigation_nearby_category
