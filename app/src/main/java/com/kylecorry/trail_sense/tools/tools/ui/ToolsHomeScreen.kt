@@ -16,8 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.remember
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import com.kylecorry.trail_sense.R
@@ -46,13 +44,7 @@ fun ToolsHomeScreen(
     val context = LocalContext.current
     val appContext = context.applicationContext
     val navigator = LocalNavigator.current
-    val viewModel = viewModel { ToolsHomeViewModel(PinnedToolManager(UserPreferences(appContext))) }
-    // The search field's focus is the composition's; the activity reaches it through this while the tab is shown.
-    val searchFocus = remember { ToolsSearchFocus() }
-    DisposableEffect(searchFocus) {
-        onController(searchFocus)
-        onDispose { onController(null) }
-    }
+    val pinnedTools = remember { PinnedToolManager(UserPreferences(appContext)) }
     // The user's chosen quick actions (Settings > Tools), shown above the tool grid as they were before Compose
     val lifecycleOwner = LocalLifecycleOwner.current
     val quickActionIds = remember { UserPreferences(appContext).toolQuickActions.sorted() }
@@ -65,8 +57,9 @@ fun ToolsHomeScreen(
         onDispose { actions.forEach { it.unbind(lifecycleOwner) } }
     }
     val tools = remember { Tools.getTools(context) }
-    ToolsScreen(
+    ToolsHomeContent(
         tools = tools,
+        pinnedTools = pinnedTools,
         keywordReader = getAppService(),
         onShowLongPressHint = {
             Alerts.oneTimeSnackbar(
@@ -74,40 +67,16 @@ fun ToolsHomeScreen(
                 "tools_long_press_notice_shown", short = false
             )
         },
-        pinnedToolIds = viewModel.pinnedToolIds,
         quickActions = quickActionButtons,
         onToolClick = { tool ->
             navigator.navigate(tool.route)
         },
-        onToolLongClick = { showToolActions(context, navigator, viewModel, it) },
+        onToolLongClick = { tool, model -> showToolActions(context, navigator, model, tool) },
         onSettingsClick = {
             navigator.navigate(Route.Settings)
         },
-        onSearchFocusRequestChanged = {
-            searchFocus.focusSearchRequest = it
-        }
+        onController = onController
     )
-}
-
-private class ToolsSearchFocus : ToolSearchFocusable {
-    var focusSearchRequest: (() -> Boolean)? = null
-
-    override fun focusSearch(): Boolean {
-        return focusSearchRequest?.invoke() == true
-    }
-}
-
-/** The Tools tab's state: which tools are pinned. */
-internal class ToolsHomeViewModel(private val pinnedToolManager: PinnedToolManager) : ViewModel() {
-
-    val pinnedToolIds: List<Long>
-        get() = pinnedToolManager.pinnedIds.value
-
-    fun isPinned(toolId: Long): Boolean = pinnedToolManager.isPinned(toolId)
-
-    fun pin(toolId: Long) = pinnedToolManager.pin(toolId)
-
-    fun unpin(toolId: Long) = pinnedToolManager.unpin(toolId)
 }
 
 private fun showToolActions(
