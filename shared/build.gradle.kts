@@ -291,6 +291,10 @@ val syncSharedRawTexts = tasks.register<Sync>("syncSharedRawTexts") {
         include("raw*/*.txt", "raw*/*.md", "raw*/*.json")
         into("files/trailtext")
     }
+    from(rootProject.layout.projectDirectory.dir("app/src/main/assets")) {
+        include("survival_guide/**", "field_guide/**")
+        into("files/trailimages")
+    }
     into(layout.buildDirectory.dir("generated/sharedRawResources/commonMain"))
 }
 

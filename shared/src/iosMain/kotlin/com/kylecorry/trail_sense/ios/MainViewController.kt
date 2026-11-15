@@ -13,6 +13,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.ParagraphStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.ComposeUIViewController
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelStore
@@ -24,6 +26,7 @@ import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.device.DeviceSensors
 import com.kylecorry.andromeda.device.LocationReading
 import com.kylecorry.andromeda.preferences.Preferences
+import com.kylecorry.andromeda.markdown.MarkdownDelimiter
 import com.mohamedrejeb.calf.sf.symbols.SFSymbol
 import com.mohamedrejeb.calf.ui.ExperimentalCalfUiApi
 import com.mohamedrejeb.calf.ui.navigation.AdaptiveNavigationBar
@@ -36,10 +39,13 @@ import com.kylecorry.trail_sense.main.persistence.iosAppDatabase
 import com.kylecorry.trail_sense.main.registerSharedRepositories
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.FormatService
+import com.kylecorry.trail_sense.shared.images.BundledImages
+import com.kylecorry.trail_sense.shared.images.IosBundledImages
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.generated.resources.Res
 import com.kylecorry.trail_sense.shared.generated.resources.my_location
 import com.kylecorry.trail_sense.shared.generated.resources.tools
+import com.kylecorry.trail_sense.shared.generated.resources.settings
 import com.kylecorry.trail_sense.shared.generated.resources.pin
 import com.kylecorry.trail_sense.shared.generated.resources.unpin
 import com.kylecorry.trail_sense.shared.generated.resources.tool_user_guide_title
@@ -55,6 +61,7 @@ import com.kylecorry.trail_sense.shared.text.ComposeRawTextReader
 import com.kylecorry.trail_sense.shared.text.IosPlatformFormats
 import com.kylecorry.trail_sense.shared.text.LocalAppStrings
 import com.kylecorry.trail_sense.shared.text.RawTextReader
+import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
@@ -76,6 +83,10 @@ import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
 import com.kylecorry.trail_sense.tools.notes.ui.NoteEditorToolScreen
 import com.kylecorry.trail_sense.tools.notes.ui.NotesToolScreen
 import com.kylecorry.trail_sense.tools.qr.ui.QRShareScreen
+import com.kylecorry.trail_sense.tools.survival_guide.ui.SurvivalGuideListToolScreen
+import com.kylecorry.trail_sense.tools.survival_guide.ui.SurvivalGuideReaderContent
+import com.kylecorry.trail_sense.tools.ruler.ui.RulerScreen
+import com.kylecorry.trail_sense.settings.ui.RulerSettingsToolScreen
 import com.kylecorry.trail_sense.tools.tools.infrastructure.sharedTools
 import com.kylecorry.trail_sense.tools.tools.ui.PinnedToolManager
 import com.kylecorry.trail_sense.tools.tools.ui.ToolsHomeContent
@@ -96,6 +107,11 @@ fun MainViewController(databasePath: String): UIViewController {
     val formatter = FormatService(strings, IosPlatformFormats(), userPreferences)
     DependencyRegistry.addSingleton<AppStrings>(strings)
     DependencyRegistry.addSingleton<RawTextReader>(rawTexts)
+    DependencyRegistry.addSingleton<BundledImages>(IosBundledImages())
+    DependencyRegistry.addSingleton(MarkdownService(listOf(
+        MarkdownDelimiter("%%", MarkdownDelimiter.Effect.Hide),
+        MarkdownDelimiter("+", MarkdownDelimiter.Effect.Paragraph(ParagraphStyle(textAlign = TextAlign.Center)))
+    )))
     DependencyRegistry.addSingleton(preferences)
     DependencyRegistry.addSingleton(userPreferences)
     DependencyRegistry.addSingleton(formatter)
@@ -199,12 +215,15 @@ fun MainViewController(databasePath: String): UIViewController {
                                         onToolLongClick = { tool, model ->
                                             val pinLabel = strings.get(if (model.isPinned(tool.id)) Res.string.unpin else Res.string.pin)
                                             val guide = tool.guideId
-                                            val choices = listOfNotNull(pinLabel, guide?.let { strings.get(Res.string.tool_user_guide_title) })
-                                            Pickers.item(host, tool.name, choices) { selected ->
-                                                when (selected) {
-                                                    0 -> if (model.isPinned(tool.id)) model.unpin(tool.id) else model.pin(tool.id)
-                                                    1 -> if (guide != null) navigator.navigate(Route.Guide(tool.name, guide))
+                                            val actions = buildList<Pair<String, () -> Unit>> {
+                                                add(pinLabel to { if (model.isPinned(tool.id)) model.unpin(tool.id) else model.pin(tool.id) })
+                                                if (guide != null) add(strings.get(Res.string.tool_user_guide_title) to { navigator.navigate(Route.Guide(tool.name, guide)) })
+                                                tool.settingsRoute?.let { route ->
+                                                    add(strings.get(Res.string.settings) to { navigator.navigate(route) })
                                                 }
+                                            }
+                                            Pickers.item(host, tool.name, actions.map { it.first }) { selected ->
+                                                selected?.let { actions.getOrNull(it)?.second?.invoke() }
                                             }
                                         },
                                         onSettingsClick = null,
@@ -215,6 +234,10 @@ fun MainViewController(databasePath: String): UIViewController {
                                 Route.Convert -> ConvertScreen()
                                 Route.Ballistics -> BallisticsScreen()
                                 Route.Lightning -> LightningScreen()
+                                Route.Ruler -> RulerScreen()
+                                Route.RulerSettings -> RulerSettingsToolScreen()
+                                is Route.SurvivalGuideList -> SurvivalGuideListToolScreen(route)
+                                is Route.SurvivalGuideReader -> SurvivalGuideReaderContent(route)
                                 Route.Level -> LevelScreen(
                                     gravity = gravity,
                                     threshold = userPreferences.bubbleLevel.threshold,

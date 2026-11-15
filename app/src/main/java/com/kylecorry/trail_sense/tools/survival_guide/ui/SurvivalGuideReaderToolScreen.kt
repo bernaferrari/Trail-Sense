@@ -3,12 +3,8 @@
 
 package com.kylecorry.trail_sense.tools.survival_guide.ui
 
-import androidx.compose.runtime.getValue
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
@@ -25,14 +21,12 @@ import com.kylecorry.trail_sense.shared.dialogs.loading
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.io.DeleteTempFilesCommand
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
-import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.text.RawTextReader
 import com.kylecorry.trail_sense.shared.text.TextUtils
 import com.kylecorry.trail_sense.shared.text.markdown.MarkdownService
 import com.kylecorry.trail_sense.shared.text.toSpanned
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
-import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -43,25 +37,8 @@ import kotlinx.coroutines.withContext
 fun SurvivalGuideReaderToolScreen(route: Route.SurvivalGuideReader) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val chapterResourceId = route.chapter
-    val chapter = remember(chapterResourceId) {
-        Chapters.getChapters().firstOrNull { it.resource == chapterResourceId }
-    }
-    if (chapter == null) {
-        // A chapter that no longer exists (an old shortcut or a stale saved screen): go back instead of crashing.
-        val navigator = LocalNavigator.current
-        LaunchedEffect(Unit) { navigator.popBackStack() }
-        return
-    }
-    val content by produceState<String?>(null, chapterResourceId) {
-        value = withContext(Dispatchers.IO) {
-            getAppService<RawTextReader>().read(chapterResourceId)
-        }
-    }
-    SurvivalGuideReaderScreen(
-        chapter = chapter,
-        content = content,
-        headerIndex = route.headerIndex,
+    SurvivalGuideReaderContent(
+        route = route,
         canPrint = isDebug(),
         onPrint = { printChapter(context, scope, it) }
     )
