@@ -27,13 +27,14 @@ import kotlinx.coroutines.launch
 
 /** The Notes tool: every note, newest first, each with edit, delete and QR share. */
 @Composable
-fun NotesToolScreen(repo: INoteRepo, strings: AppStrings, formatter: FormatService) {
+fun NotesToolScreen(repo: INoteRepo, strings: AppStrings, formatter: FormatService, showBack: Boolean = true) {
     val host = AppHost.current()
     val navigator = LocalNavigator.current
     val scope = rememberCoroutineScope()
     val notes = remember(repo) { repo.getNotes() }
     NotesScreen(
         notes = notes,
+        showBack = showBack,
         lifecycleOwner = LocalLifecycleOwner.current,
         formatNoteTimestamp = { millis ->
             if (millis <= 0L) null else formatter.formatDateTime(kotlin.time.Instant.fromEpochMilliseconds(millis), abbreviateMonth = true)
