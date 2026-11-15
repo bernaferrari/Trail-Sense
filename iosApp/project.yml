@@ -2,7 +2,7 @@ name: TrailSense
 options:
   bundleIdPrefix: com.kylecorry
   deploymentTarget:
-    iOS: '16.0'
+    iOS: '26.0'
 targets:
   TrailSense:
     type: application

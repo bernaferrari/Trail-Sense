@@ -69,6 +69,10 @@ kotlin {
             implementation(libs.multiplatform.settings.test)
         }
 
+        iosMain.dependencies {
+            implementation(libs.calf.ui)
+        }
+
         androidMain.dependencies {
             api(libs.compose.foundation)
             api(libs.compose.material3)

@@ -3,14 +3,7 @@ package com.kylecorry.trail_sense.ios
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Notes
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +23,13 @@ import com.kylecorry.andromeda.core.cache.DependencyRegistry
 import com.kylecorry.andromeda.device.DeviceSensors
 import com.kylecorry.andromeda.device.LocationReading
 import com.kylecorry.andromeda.preferences.Preferences
+import com.mohamedrejeb.calf.sf.symbols.SFSymbol
+import com.mohamedrejeb.calf.ui.ExperimentalCalfUiApi
+import com.mohamedrejeb.calf.ui.navigation.AdaptiveNavigationBar
+import com.mohamedrejeb.calf.ui.navigation.AdaptiveScaffold
+import com.mohamedrejeb.calf.ui.navigation.UIKitTabBarConfiguration
+import com.mohamedrejeb.calf.ui.navigation.UIKitUITabBarItem
+import com.mohamedrejeb.calf.ui.uikit.UIKitImage
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.generated.resources.Res
@@ -58,6 +58,7 @@ import kotlinx.coroutines.CancellationException
 import platform.UIKit.UIViewController
 
 /** Entry point for the iOS host. [databasePath] is in the app's documents directory. */
+@OptIn(ExperimentalCalfUiApi::class)
 fun MainViewController(databasePath: String): UIViewController {
     val notes = iosNoteRepository(databasePath)
     val strings = ComposeAppStrings()
@@ -109,22 +110,29 @@ fun MainViewController(databasePath: String): UIViewController {
         ) {
             TrailSenseTheme {
                 Box(Modifier.fillMaxSize()) {
-                    Scaffold(bottomBar = {
+                    AdaptiveScaffold(bottomBar = {
                         if (navigator.currentRoute == Route.Notes) {
-                            NavigationBar {
-                                NavigationBarItem(
-                                    selected = !showLocation,
-                                    onClick = { showLocation = false },
-                                    icon = { Icon(Icons.Default.Notes, contentDescription = null) },
-                                    label = { Text(appString(Res.string.notes)) }
+                            AdaptiveNavigationBar(
+                                iosItems = listOf(
+                                    UIKitUITabBarItem(
+                                        title = appString(Res.string.notes),
+                                        image = UIKitImage.SystemName(SFSymbol.listBulletRectangle),
+                                        selectedImage = UIKitImage.SystemName(SFSymbol.listBulletRectangleFill)
+                                    ),
+                                    UIKitUITabBarItem(
+                                        title = appString(Res.string.my_location),
+                                        image = UIKitImage.SystemName(SFSymbol.location),
+                                        selectedImage = UIKitImage.SystemName(SFSymbol.locationFill)
+                                    )
+                                ),
+                                iosSelectedIndex = if (showLocation) 1 else 0,
+                                iosOnItemSelected = { index ->
+                                    showLocation = index == 1
+                                },
+                                iosConfiguration = UIKitTabBarConfiguration(
+                                    selectedItemColor = MaterialTheme.colorScheme.primary
                                 )
-                                NavigationBarItem(
-                                    selected = showLocation,
-                                    onClick = { showLocation = true },
-                                    icon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
-                                    label = { Text(appString(Res.string.my_location)) }
-                                )
-                            }
+                            )
                         }
                     }) { padding ->
                         SharedNavigationDisplay(navigator, Modifier.padding(padding)) { route ->
