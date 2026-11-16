@@ -13,7 +13,7 @@ actual fun toggleButtonColors(
     contentColor: Color,
     checkedContainerColor: Color,
     checkedContentColor: Color
-): ToggleButtonColors = ToggleButtonDefaults.toggleButtonColors(
+): ToggleButtonColors = ToggleButtonDefaults.colors(
     containerColor = containerColor,
     contentColor = contentColor,
     checkedContainerColor = checkedContainerColor,

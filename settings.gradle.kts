@@ -39,7 +39,8 @@ includeBuild("libraries/andromeda") {
         listOf(
             "alerts", "background", "battery", "bitmaps", "camera", "canvas", "clipboard",
             "compression", "core", "csv", "device", "exceptions", "files", "forms", "geojson", "gpx",
-            "haptics", "ipc", "json", "list", "markdown", "notify", "pdf", "permissions", "print",
+            "haptics", "ipc", "json", "list", "markdown", "notify", "pdf", "permissions",
+            "permissions-compose", "print",
             "qr", "sense", "signal", "sound", "torch", "views", "widgets", "xml"
         ).forEach { name ->
             substitute(module("com.kylecorry.andromeda:$name")).using(project(":$name"))

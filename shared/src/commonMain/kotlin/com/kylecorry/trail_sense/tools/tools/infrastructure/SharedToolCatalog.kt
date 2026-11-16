@@ -325,5 +325,13 @@ fun sharedTools(
     SharedTool(
         ToolIds.DIAGNOSTICS, strings.get(Res.string.diagnostics), TrailIcons.Sensors,
         Route.Diagnostics, ToolCategory.Other, guideId = RawTexts.guide_tool_diagnostics
+    ),
+    SharedTool(
+        ToolIds.MIRROR_CAMERA, strings.get(Res.string.mirror_camera), TrailIcons.MirrorCamera,
+        Route.MirrorCamera, ToolCategory.Other, guideId = RawTexts.guide_tool_mirror_camera
+    ),
+    SharedTool(
+        ToolIds.QR_CODE_SCANNER, strings.get(Res.string.qr_code_scanner), TrailIcons.QrCode,
+        Route.ScanQr, ToolCategory.Other, guideId = RawTexts.guide_tool_qr_code_scanner
     )
 )

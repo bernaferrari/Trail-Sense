@@ -75,6 +75,10 @@ kotlin {
 
             // Portable expressive theming
             implementation("com.materialkolor:material-kolor-material3:6.0.0")
+            implementation(libs.filekit.core)
+            implementation(libs.filekit.dialogs)
+            implementation(libs.filekit.dialogs.compose)
+            implementation(libs.andromeda.csv)
         }
 
         commonTest.dependencies {
@@ -85,12 +89,20 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.calf.ui)
+            implementation(libs.andromeda.camera)
+            implementation(libs.andromeda.permissions)
+            implementation(libs.andromeda.permissions.compose)
+            implementation(libs.andromeda.clipboard)
         }
 
         androidMain.dependencies {
             api(libs.compose.foundation)
             api(libs.compose.material3)
             api(libs.compose.ui)
+            implementation(libs.andromeda.camera)
+            implementation(libs.andromeda.permissions)
+            implementation(libs.andromeda.permissions.compose)
+            implementation(libs.andromeda.clipboard)
         }
     }
 }

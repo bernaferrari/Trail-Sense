@@ -1355,3 +1355,7 @@ whistle_signal_come_here
 whistle_signal_repeats
 whistle_signal_where_are_you
 whistle_signals
+mirror_camera
+qr_code_scanner
+beacons_imported
+beacons_exported

@@ -3,14 +3,19 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.LifecycleOwner
+import com.kylecorry.trail_sense.shared.camera.SharedCameraCaptureOverlay
+import com.kylecorry.trail_sense.shared.camera.rememberSharedPermissionRequester
+import com.kylecorry.trail_sense.shared.camera.saveCapturedPhotoToCache
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseNavigator
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.ActionSheetContent
+import com.kylecorry.trail_sense.shared.sharing.pickImageFile
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -41,9 +46,14 @@ class SharedComposeDestinationHost(
     internal var activeActionSheet by mutableStateOf<PendingActionSheet?>(null)
         private set
 
+    internal var pendingPhotoCapture by mutableStateOf<CompletableDeferred<String?>?>(null)
+        private set
+
+    internal var permissionRequester: (suspend (AppPermission) -> Boolean)? = null
+
     override suspend fun requestPermission(permission: AppPermission): Boolean {
-        // Shared host defaults to permitted and lets platform sensor calls handle OS authorization prompts.
-        return true
+        val requester = permissionRequester ?: return false
+        return requester(permission)
     }
 
     override fun explainPermissionDenied(permission: AppPermission) {
@@ -93,7 +103,22 @@ class SharedComposeDestinationHost(
         maxHeight: Int?,
         zeroShutterLag: Boolean
     ): String? {
-        return null
+        if (!requestPermission(AppPermission.Camera)) {
+            val picked = runCatching { pickImageFile() }.getOrNull() ?: return null
+            return picked.path ?: saveCapturedPhotoToCache(picked.bytes, "picked")
+        }
+        val result = CompletableDeferred<String?>()
+        pendingPhotoCapture = result
+        return try {
+            result.await()
+        } finally {
+            pendingPhotoCapture = null
+        }
+    }
+
+    internal fun completePhotoCapture(uri: String?) {
+        pendingPhotoCapture?.complete(uri)
+        pendingPhotoCapture = null
     }
 
     override fun openWidgets() {
@@ -108,6 +133,18 @@ class SharedComposeDestinationHost(
 /** Renders any pending action sheet triggered through [ScreenEffects.chooseAction]. */
 @Composable
 fun ActionSheetModal(host: SharedComposeDestinationHost) {
+    val requester = rememberSharedPermissionRequester()
+    SideEffect {
+        host.permissionRequester = requester
+    }
+
+    if (host.pendingPhotoCapture != null) {
+        SharedCameraCaptureOverlay(
+            onCaptured = { uri -> host.completePhotoCapture(uri) },
+            onDismiss = { host.completePhotoCapture(null) }
+        )
+    }
+
     val sheet = host.activeActionSheet ?: return
     TrailSenseSheet(
         onDismissRequest = { sheet.result.complete(null) },

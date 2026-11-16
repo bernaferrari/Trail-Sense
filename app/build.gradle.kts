@@ -11,7 +11,11 @@ plugins {
 
 android {
     namespace = "com.kylecorry.trail_sense"
-    compileSdk = 37
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 2
+        }
+    }
 
     defaultConfig {
         vectorDrawables.useSupportLibrary = true

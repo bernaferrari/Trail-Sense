@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -162,11 +165,23 @@ import com.kylecorry.trail_sense.tools.paths.ui.PathSortMethod
 import com.kylecorry.trail_sense.tools.paths.ui.PathsScreen
 import com.kylecorry.trail_sense.tools.paths.ui.PathsToolbarAction
 import com.kylecorry.trail_sense.tools.paths.ui.PathsViewModel
+import com.kylecorry.trail_sense.shared.io.SharedGpxIOService
+import com.kylecorry.trail_sense.shared.sharing.ActionItem
+import com.kylecorry.trail_sense.shared.sharing.copyToClipboard
+import com.kylecorry.trail_sense.shared.sharing.openEmail
+import com.kylecorry.trail_sense.shared.sharing.openExternalUrl
+import com.kylecorry.trail_sense.shared.sharing.pickImageFile
+import com.kylecorry.trail_sense.shared.sharing.shareText
+import com.kylecorry.trail_sense.tools.mirror.ui.SharedMirrorCameraScreen
+import com.kylecorry.trail_sense.tools.packs.ui.SharedPackingListFiles
+import com.kylecorry.trail_sense.tools.paths.ui.commands.ExportPathCommand
+import com.kylecorry.trail_sense.tools.paths.ui.commands.ImportPathsCommand
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerSettingsScreen
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerSystemStatus
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerToolScreen
 import com.kylecorry.trail_sense.tools.pedometer.ui.StrideLengthEstimationToolScreen
 import com.kylecorry.trail_sense.tools.qr.ui.QRShareScreen
+import com.kylecorry.trail_sense.tools.qr.ui.SharedScanQRScreen
 import com.kylecorry.trail_sense.tools.ruler.ui.RulerScreen
 import com.kylecorry.trail_sense.tools.solarpanel.ui.SolarPanelScreen
 import com.kylecorry.trail_sense.tools.survival_guide.ui.SurvivalGuideListToolScreen
@@ -194,11 +209,6 @@ import kotlinx.coroutines.launch
 private object NoOpTurnBackAlarm : TurnBackAlarm {
     override suspend fun start() {}
     override fun stop() {}
-}
-
-private object NoOpPackingListFiles : PackingListFiles {
-    override fun import() {}
-    override fun export(pack: Pack) {}
 }
 
 private object SharedPedometerStatus : PedometerSystemStatus {
@@ -322,8 +332,20 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
         // --- Notes, Packs, Guides, Field Guide, Clouds, Beacons, Paths ---
         Route.Notes -> NotesToolScreen(getAppService(), strings, formatter)
         is Route.NoteEditor -> NoteEditorToolScreen(r, getAppService())
-        Route.PackList -> PackListToolScreen(NoOpPackingListFiles)
-        is Route.PackItemList -> PackItemListToolScreen(r, NoOpPackingListFiles)
+        Route.PackList -> {
+            val coroutineScope = rememberCoroutineScope()
+            val packingFiles = remember(coroutineScope, navigator, this) {
+                SharedPackingListFiles(coroutineScope, navigator, this)
+            }
+            PackListToolScreen(packingFiles)
+        }
+        is Route.PackItemList -> {
+            val coroutineScope = rememberCoroutineScope()
+            val packingFiles = remember(coroutineScope, navigator, this) {
+                SharedPackingListFiles(coroutineScope, navigator, this)
+            }
+            PackItemListToolScreen(r, packingFiles)
+        }
         is Route.CreatePackItem -> CreateItemToolScreen(r)
         is Route.SurvivalGuideList -> SurvivalGuideListToolScreen(r)
         is Route.SurvivalGuideReader -> SurvivalGuideReaderContent(r)
@@ -335,24 +357,61 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
         Route.GuideList -> GuideListToolScreen()
         is Route.Guide -> GuideScreen(r.name, r.contents)
         is Route.ViewQr -> QRShareScreen(r.title, r.text)
-        is Route.PlaceBeacon -> PlaceBeaconToolScreen(r, modifier)
-        is Route.BeaconDetails -> BeaconDetailsToolScreen(
-            route = r,
-            onShare = { beacon ->
-                val text = "${beacon.name}: ${formatter.formatLocation(beacon.coordinate)}"
-                navigator.navigate(Route.ViewQr(beacon.name, text))
-            }
+        Route.ScanQr -> SharedScanQRScreen(
+            onBack = { navigator.navigateUp() },
+            onOpenBeacon = { navigator.navigate(Route.BeaconDetails(it)) },
+            onOpenNote = { navigator.navigate(Route.NoteEditor(it)) },
+            modifier = modifier
         )
+        Route.MirrorCamera -> SharedMirrorCameraScreen(
+            onBack = { navigator.navigateUp() },
+            modifier = modifier
+        )
+        is Route.PlaceBeacon -> PlaceBeaconToolScreen(r, modifier)
+        is Route.BeaconDetails -> {
+            val coroutineScope = rememberCoroutineScope()
+            BeaconDetailsToolScreen(
+                route = r,
+                onShare = { beacon ->
+                    val text = "${beacon.name}: ${formatter.formatLocation(beacon.coordinate)}"
+                    coroutineScope.launch {
+                        val chosen = chooseAction(
+                            title = beacon.name,
+                            actions = listOf(
+                                ActionItem("Share", Icons.Default.Share) {},
+                                ActionItem("QR Code", Icons.Default.QrCode) {}
+                            )
+                        )
+                        when (chosen?.name) {
+                            "Share" -> shareText(beacon.name, text)
+                            "QR Code" -> navigator.navigate(Route.ViewQr(beacon.name, text))
+                        }
+                    }
+                }
+            )
+        }
         is Route.BeaconList -> SharedBeaconListScreen(r, modifier)
         Route.Paths -> SharedPathsScreen(modifier)
         is Route.Clouds -> SharedCloudsScreen(modifier)
         Route.Diagnostics, Route.SensorDetails -> DiagnosticsToolScreen(exportLogs = null)
         is Route.ErrorHandler -> {
+            val coroutineScope = rememberCoroutineScope()
             val diagnosticsTitle = appString(Res.string.diagnostics)
             ErrorHandlerScreen(
                 toolId = r.toolId,
-                onEmail = {},
-                onCopyError = {},
+                onEmail = {
+                    coroutineScope.launch {
+                        openEmail(
+                            recipient = "trailsense@kylecorry.com",
+                            subject = "Trail Sense Error Report",
+                            body = r.error
+                        )
+                    }
+                },
+                onCopyError = {
+                    copyToClipboard(r.error)
+                    showMessage("Copied error details")
+                },
                 onViewDetails = { Alerts.dialog(host, diagnosticsTitle, r.error, cancelText = null) },
                 onReopenTool = { navigator.navigateUp() },
                 onRestartApp = { navigator.switchTab(Route.Tools) },
@@ -395,12 +454,23 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
                 }
             }
         }
-        Route.About -> AboutScreen(
-            version = "Shared Multiplatform",
-            onOpenUrl = {},
-            onEmailDeveloper = {},
-            onLicenses = { navigator.navigate(Route.Licenses) }
-        )
+        Route.About -> {
+            val coroutineScope = rememberCoroutineScope()
+            AboutScreen(
+                version = "Shared Multiplatform",
+                onOpenUrl = { url -> coroutineScope.launch { openExternalUrl(url) } },
+                onEmailDeveloper = {
+                    coroutineScope.launch {
+                        openEmail(
+                            recipient = "trailsense@kylecorry.com",
+                            subject = "Trail Sense",
+                            body = ""
+                        )
+                    }
+                },
+                onLicenses = { navigator.navigate(Route.Licenses) }
+            )
+        }
         Route.Licenses -> LicensesToolScreen()
 
         // --- Platform-specific or staged routes ---
@@ -679,6 +749,18 @@ private fun SharedBeaconListScreen(
                         if (!cancelled) viewModel.delete(null)
                     }
                 }
+                BeaconToolbarAction.Export -> {
+                    scope.launch {
+                        val gpx = viewModel.getExportGpx()
+                        val exported = SharedGpxIOService().export(
+                            gpx,
+                            "trail-sense-${Clock.System.now().epochSeconds}.gpx"
+                        )
+                        if (exported) {
+                            Alerts.snackbar(host, strings.plural(Res.plurals.beacons_exported, gpx.waypoints.size, gpx.waypoints.size))
+                        }
+                    }
+                }
                 else -> Unit
             }
         },
@@ -699,6 +781,14 @@ private fun SharedBeaconListScreen(
                         }
                     }
                 }
+                BeaconCreateAction.ImportGpx -> {
+                    scope.launch {
+                        val gpx = SharedGpxIOService().import() ?: return@launch
+                        val count = viewModel.import(gpx)
+                        Alerts.snackbar(host, strings.plural(Res.plurals.beacons_imported, count, count))
+                    }
+                }
+                BeaconCreateAction.ImportQr -> navigator.navigate(Route.ScanQr)
                 else -> Unit
             }
         },
@@ -711,9 +801,9 @@ private fun SharedBeaconListScreen(
                     navigator.navigate(Route.Navigation(beacon.id, navigationStarted = true))
                 }
                 BeaconAction.ToggleVisibility -> viewModel.toggleVisibility(beacon)
-                BeaconAction.Share -> navigator.navigate(
-                    Route.ViewQr(beacon.name, "${beacon.name}: ${formatter.formatLocation(beacon.coordinate)}")
-                )
+                BeaconAction.Share -> scope.launch {
+                    shareText(beacon.name, "${beacon.name}: ${formatter.formatLocation(beacon.coordinate)}")
+                }
                 BeaconAction.Delete -> scope.launch {
                     beaconService.delete(beacon)
                     viewModel.refresh()
@@ -813,6 +903,7 @@ private fun SharedPathsScreen(modifier: Modifier = Modifier) {
                 PathAction.ToggleVisibility -> scope.launch {
                     pathService.addPath(path.copy(style = path.style.copy(visible = !path.style.visible)))
                 }
+                PathAction.Export -> ExportPathCommand(host, scope, SharedGpxIOService(), pathService).execute(path)
                 else -> Unit
             }
         },
@@ -822,10 +913,13 @@ private fun SharedPathsScreen(modifier: Modifier = Modifier) {
                 PathGroupAction.ShowAll -> scope.launch { viewModel.setGroupVisibility(group, true) }
                 PathGroupAction.HideAll -> scope.launch { viewModel.setGroupVisibility(group, false) }
                 PathGroupAction.Delete -> scope.launch { pathService.deleteGroup(group) }
+                PathGroupAction.Export -> ExportPathCommand(host, scope, SharedGpxIOService(), pathService).execute(group)
                 else -> Unit
             }
         },
-        onImportPath = {},
+        onImportPath = {
+            ImportPathsCommand(host, scope, SharedGpxIOService(), pathService, prefs.paths).execute(viewModel.rootId)
+        },
         onCreateGroup = {
             Pickers.text(host, strings.get(Res.string.group), null, null, null) { name ->
                 if (!name.isNullOrBlank()) {
@@ -1040,6 +1134,8 @@ private fun SharedWhistleScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun SharedCloudsScreen(modifier: Modifier = Modifier) {
     val navigator = LocalNavigator.current
+    val effects = LocalScreenEffects.current
+    val scope = rememberCoroutineScope()
     val cloudsTitle = appString(Res.string.clouds)
     val repo = remember { getAppService<CloudRepo>() }
     val viewModel = viewModel { CloudViewModel(repo) }
@@ -1051,8 +1147,22 @@ private fun SharedCloudsScreen(modifier: Modifier = Modifier) {
         onGuideClick = {
             navigator.navigate(Route.Guide(cloudsTitle, RawTexts.guide_tool_clouds))
         },
-        onCameraClick = {},
-        onFileClick = {},
+        onCameraClick = {
+            scope.launch {
+                val uri = effects.capturePhoto()
+                if (uri != null) {
+                    effects.showMessage("Photo captured")
+                }
+            }
+        },
+        onFileClick = {
+            scope.launch {
+                val picked = pickImageFile()
+                if (picked != null) {
+                    effects.showMessage("Selected ${picked.name}")
+                }
+            }
+        },
         onManualClick = {},
         onCloudClick = { viewModel.selectedCloudImage = it.value.genus },
         onCloudImageClick = { viewModel.selectedCloudImage = it.value.genus },

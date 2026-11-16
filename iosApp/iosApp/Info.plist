@@ -22,10 +22,14 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Take photos, scan QR codes, and use the mirror or camera sightline in Trail Sense.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Show your current location while using Trail Sense.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>Measure device orientation, steps, and movement in Trail Sense tools.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Import photos and QR codes from your library in Trail Sense.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 </dict>

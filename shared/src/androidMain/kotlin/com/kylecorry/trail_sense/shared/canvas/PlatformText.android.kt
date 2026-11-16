@@ -4,6 +4,7 @@ import android.graphics.Rect
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.nativePaint
 
 internal actual class PlatformText actual constructor() {
     private val measurePaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
@@ -16,7 +17,7 @@ internal actual class PlatformText actual constructor() {
     }
 
     actual fun draw(canvas: Canvas, text: String, x: Float, y: Float, size: Float, paint: Paint) {
-        val framework = paint.asFrameworkPaint()
+        val framework = paint.nativePaint
         framework.textSize = size
         canvas.nativeCanvas.drawText(text, x, y, framework)
     }
