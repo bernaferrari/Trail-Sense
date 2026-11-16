@@ -94,8 +94,7 @@ import kotlin.math.absoluteValue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
@@ -203,7 +202,7 @@ fun SolarPanelScreen(
     LaunchedEffect(alignToRestOfDay, nowDuration, gpsUpdateKey) {
         position = null
         val duration = if (alignToRestOfDay) 1.days else nowDuration
-        position = withContext(Dispatchers.IO) {
+        position = withContext(ioDispatcher) {
             solarPanelService.getBestPosition(
                 gps.location,
                 duration,

@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.tides.infrastructure.persistence
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room3.ColumnInfo
+import androidx.room3.Entity
+import androidx.room3.PrimaryKey
 import com.kylecorry.sol.science.oceanography.TidalHarmonic
 import com.kylecorry.sol.science.oceanography.Tide
 import com.kylecorry.sol.units.Coordinate

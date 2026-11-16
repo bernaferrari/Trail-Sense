@@ -4,7 +4,7 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.SystemString
 import com.kylecorry.trail_sense.shared.text.systemString
@@ -79,7 +79,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.tools.packs.domain.Pack
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -188,7 +187,7 @@ internal class PackListViewModel(private val packRepo: IPackRepo) : ViewModel() 
         summaryJob?.cancel()
         summaryJob = viewModelScope.launch {
             val service = PackService()
-            val result = withContext(Dispatchers.IO) {
+            val result = withContext(ioDispatcher) {
                 packs.associate { pack ->
                     val items = packRepo.getItemsFromPackAsync(pack.id)
                     pack.id to PackSummary(
@@ -204,26 +203,26 @@ internal class PackListViewModel(private val packRepo: IPackRepo) : ViewModel() 
 
     fun renamePack(pack: Pack, name: String) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { packRepo.addPack(pack.copy(name = name)) }
+            withContext(ioDispatcher) { packRepo.addPack(pack.copy(name = name)) }
         }
     }
 
     fun deletePack(pack: Pack) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { packRepo.deletePack(pack) }
+            withContext(ioDispatcher) { packRepo.deletePack(pack) }
         }
     }
 
     fun createPack(name: String) {
         viewModelScope.launch {
-            val packId = withContext(Dispatchers.IO) { packRepo.addPack(Pack(0, name)) }
+            val packId = withContext(ioDispatcher) { packRepo.addPack(Pack(0, name)) }
             _openPack.send(packId)
         }
     }
 
     fun copyPack(oldPack: Pack, name: String) {
         viewModelScope.launch {
-            val packId = withContext(Dispatchers.IO) { packRepo.copyPack(oldPack, Pack(0, name)) }
+            val packId = withContext(ioDispatcher) { packRepo.copyPack(oldPack, Pack(0, name)) }
             _openPack.send(packId)
         }
     }

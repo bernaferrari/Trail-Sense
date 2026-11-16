@@ -15,6 +15,7 @@ targets:
         CFBundleDisplayName: Trail Sense
         CADisableMinimumFrameDurationOnPhone: true
         NSLocationWhenInUseUsageDescription: Show your current location while using Trail Sense.
+        NSMotionUsageDescription: Measure device orientation, steps, and movement in Trail Sense tools.
         UILaunchScreen: {}
     settings:
       base:

@@ -13,7 +13,7 @@ pluginManagement {
     }
 }
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
 //        mavenLocal()
         google {
@@ -31,14 +31,14 @@ dependencyResolutionManagement {
 include(":app")
 include(":shared")
 include(":core")
-rootProject.name = "Trail Sense"
+rootProject.name = "trail-sense"
 
 // Build the shared libraries from this repository so every target uses the same revisions.
 includeBuild("libraries/andromeda") {
     dependencySubstitution {
         listOf(
             "alerts", "background", "battery", "bitmaps", "camera", "canvas", "clipboard",
-            "compression", "core", "csv", "exceptions", "files", "forms", "geojson", "gpx",
+            "compression", "core", "csv", "device", "exceptions", "files", "forms", "geojson", "gpx",
             "haptics", "ipc", "json", "list", "markdown", "notify", "pdf", "permissions", "print",
             "qr", "sense", "signal", "sound", "torch", "views", "widgets", "xml"
         ).forEach { name ->

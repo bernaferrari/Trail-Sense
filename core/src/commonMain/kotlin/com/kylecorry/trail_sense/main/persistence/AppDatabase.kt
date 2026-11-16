@@ -1,10 +1,10 @@
 package com.kylecorry.trail_sense.main.persistence
 
-import androidx.room.ConstructedBy
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import androidx.room.RoomDatabaseConstructor
-import androidx.room.TypeConverters
+import androidx.room3.ColumnTypeConverters
+import androidx.room3.ConstructedBy
+import androidx.room3.Database
+import androidx.room3.RoomDatabase
+import androidx.room3.RoomDatabaseConstructor
 import com.kylecorry.trail_sense.plugins.infrastructure.persistence.PluginDao
 import com.kylecorry.trail_sense.plugins.infrastructure.persistence.PluginEntity
 import com.kylecorry.trail_sense.plugins.infrastructure.persistence.PluginRegistrationDao
@@ -62,7 +62,7 @@ import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.Pressu
     version = 62,
     exportSchema = false
 )
-@TypeConverters(Converters::class)
+@ColumnTypeConverters(Converters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun packItemDao(): PackItemDao

@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.tools.notes.ui
 
 
 import com.kylecorry.trail_sense.shared.generated.resources.*
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.text.SystemString
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
@@ -22,7 +22,6 @@ import androidx.compose.runtime.setValue
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /** The Notes tool: every note, newest first, each with edit, delete and QR share. */
@@ -51,7 +50,7 @@ fun NotesToolScreen(repo: INoteRepo, strings: AppStrings, formatter: FormatServi
                 }
             ) { cancelled ->
                 if (!cancelled) {
-                    scope.launch(Dispatchers.IO) {
+                    scope.launch(ioDispatcher) {
                         repo.deleteNote(note)
                     }
                 }

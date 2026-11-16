@@ -2,7 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.packs.ui
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.main.getAppService
@@ -60,7 +60,6 @@ import com.kylecorry.trail_sense.tools.packs.domain.PackItem
 import com.kylecorry.trail_sense.tools.packs.infrastructure.IPackRepo
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryIconMapper
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryStringMapper
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.floor
@@ -142,7 +141,7 @@ internal class CreateItemViewModel(
     init {
         if (route.editItemId != 0L) {
             viewModelScope.launch {
-                val item = withContext(Dispatchers.IO) { repo.getItem(route.editItemId) } ?: return@launch
+                val item = withContext(ioDispatcher) { repo.getItem(route.editItemId) } ?: return@launch
                 editingItem = item
                 name = item.name
                 amountText = DecimalFormatter.format(item.amount, 4, false)
@@ -183,7 +182,7 @@ internal class CreateItemViewModel(
         )
         val unit = weightUnit
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 preferences.putInt(KEY_LAST_CATEGORY, item.category.id)
                 unit?.let { preferences.putInt(KEY_LAST_WEIGHT_UNIT, it.id) }
                 repo.addItem(item)

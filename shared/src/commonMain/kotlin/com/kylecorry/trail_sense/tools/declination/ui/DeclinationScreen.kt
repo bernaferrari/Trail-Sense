@@ -5,7 +5,7 @@
 package com.kylecorry.trail_sense.tools.declination.ui
 
 import com.kylecorry.sol.math.MathExtensions.toRadians
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.sensors.ISensorSubsystem
 
 import com.kylecorry.trail_sense.shared.text.appString
@@ -93,7 +93,7 @@ fun DeclinationScreen(
     var fromCompass by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
-        location = withContext(Dispatchers.IO) {
+        location = withContext(ioDispatcher) {
             sensors.getLocation(SensorRefreshPolicy.RefreshIfInvalid)
         }
         isLocationUpToDate = true
@@ -310,7 +310,7 @@ private fun CoordinateInput(
                         onClick = {
                             scope.launch {
                                 isLoadingLocation = true
-                                val updated = withContext(Dispatchers.IO) {
+                                val updated = withContext(ioDispatcher) {
                                     sensors.getLocation(SensorRefreshPolicy.Refresh)
                                 }
                                 onLocationChanged(updated)

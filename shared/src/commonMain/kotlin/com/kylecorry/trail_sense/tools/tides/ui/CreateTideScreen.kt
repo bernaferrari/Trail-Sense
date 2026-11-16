@@ -2,7 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.SystemString
 import com.kylecorry.trail_sense.shared.text.systemString
@@ -108,7 +108,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -267,7 +266,7 @@ internal class CreateTideViewModel(
 
     private fun loadEditingTide() {
         viewModelScope.launch {
-            val tide = withContext(Dispatchers.IO) {
+            val tide = withContext(ioDispatcher) {
                 tideRepo.getTideTable(editingId)
             }
             editingTide = tide
@@ -342,7 +341,7 @@ internal class CreateTideViewModel(
     fun saveTide() {
         val tide = getTide() ?: return
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 tideRepo.addTideTable(tide)
             }
             _saved.send(Unit)
@@ -696,7 +695,7 @@ private fun TideLocationInput(
                         when (selection) {
                             0 -> scope.launch {
                                 isLoadingLocation = true
-                                val updated = withContext(Dispatchers.IO) {
+                                val updated = withContext(ioDispatcher) {
                                     sensors.getLocation(SensorRefreshPolicy.Refresh)
                                 }
                                 locationText = formatter.formatLocation(updated)

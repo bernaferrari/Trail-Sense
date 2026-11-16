@@ -2,10 +2,9 @@ package com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence
 
 import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.science.geology.CoordinateBounds
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -18,7 +17,7 @@ class BeaconRepo(
 
     fun getBeacons(): Flow<List<Beacon>> = beaconDao.getAll()
         .map { it.map { it.toBeacon() } }
-        .flowOn(Dispatchers.IO)
+        .flowOn(ioDispatcher)
 
     suspend fun getBeaconsInGroup(groupId: Long?): List<BeaconEntity> =
         beaconDao.getAllInGroup(groupId)

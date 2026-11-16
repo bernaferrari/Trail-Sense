@@ -2,7 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.field_guide.ui
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 
 import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
@@ -55,7 +55,6 @@ import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.beacons.domain.BeaconOwner
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.Sighting
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.kylecorry.trail_sense.shared.time.displayName
@@ -148,7 +147,7 @@ internal class SightingListViewModel(
 
     fun loadPage() {
         viewModelScope.launch {
-            page = withContext(Dispatchers.IO) {
+            page = withContext(ioDispatcher) {
                 repo.getPage(pageId)
             }
             loaded = true
@@ -157,7 +156,7 @@ internal class SightingListViewModel(
 
     fun deleteSighting(sighting: Sighting) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 repo.deleteSighting(sighting)
             }
             loadPage()

@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.text.AppStrings
@@ -12,7 +12,6 @@ import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathPointColoringStyle
 import com.kylecorry.trail_sense.tools.paths.ui.getPointStyleNames
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -30,7 +29,7 @@ class ChangePointStyleCommand(
             if (it != null) {
                 val pointStyle = styles.getOrElse(it) { PathPointColoringStyle.None }
                 scope.launch {
-                    withContext(Dispatchers.IO) {
+                    withContext(ioDispatcher) {
                         pathService.addPath(path.copy(style = path.style.copy(point = pointStyle)))
                     }
                 }

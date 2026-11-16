@@ -3,7 +3,7 @@
 package com.kylecorry.trail_sense.tools.pedometer.ui
 
 import com.kylecorry.sol.math.MathExtensions.toRadians
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.SystemString
 import com.kylecorry.trail_sense.shared.text.systemString
@@ -114,7 +114,6 @@ import com.kylecorry.trail_sense.tools.pedometer.domain.StrideLengthPaceCalculat
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.AveragePaceSpeedometer
 import com.kylecorry.trail_sense.tools.pedometer.infrastructure.CurrentPaceSpeedometer
 import kotlin.time.Instant
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -156,7 +155,7 @@ internal fun PedometerScreen(
     var sessions by remember { mutableStateOf<List<StepTrackingPeriod>>(emptyList()) }
 
     suspend fun reloadOpenPeriod() {
-        openPeriod = withContext(Dispatchers.IO) {
+        openPeriod = withContext(ioDispatcher) {
             stepTracker.getOpenStepTrackingPeriod()
         }
     }
@@ -263,7 +262,7 @@ internal fun PedometerScreen(
             IconButton(
                 onClick = {
                     scope.launch {
-                        sessions = withContext(Dispatchers.IO) {
+                        sessions = withContext(ioDispatcher) {
                             stepTracker.getAllStepTrackingPeriods()
                                 .sortedByDescending { it.startTime }
                         }
@@ -342,10 +341,10 @@ internal fun PedometerScreen(
                 ) { cancelled ->
                     if (!cancelled) {
                         scope.launch {
-                            withContext(Dispatchers.IO) {
+                            withContext(ioDispatcher) {
                                 stepTracker.deleteStepTrackingPeriod(period)
                             }
-                            sessions = withContext(Dispatchers.IO) {
+                            sessions = withContext(ioDispatcher) {
                                 stepTracker.getAllStepTrackingPeriods()
                                     .sortedByDescending { it.startTime }
                             }
@@ -379,7 +378,7 @@ private fun HourlyStepsHistory(
 
     LaunchedEffect(selectedDate, historyTick) {
         val date = selectedDate
-        val updated = withContext(Dispatchers.IO) {
+        val updated = withContext(ioDispatcher) {
             stepTracker.getHourlyStepCounts(date)
         }
         if (date == selectedDate) {

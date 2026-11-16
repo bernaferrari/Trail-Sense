@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui.layers.compass
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import kotlinx.atomicfu.locks.synchronized
 import kotlinx.atomicfu.locks.SynchronizedObject
 import com.kylecorry.andromeda.core.ui.Colors
@@ -14,7 +14,6 @@ import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import com.kylecorry.trail_sense.tools.navigation.ui.IMappableReferencePoint
 import com.kylecorry.trail_sense.tools.navigation.ui.MappableReferencePoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class BeaconCompassLayer(
@@ -30,7 +29,7 @@ class BeaconCompassLayer(
     private val lock = SynchronizedObject()
 
     private val runner = CoroutineQueueRunner()
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(ioDispatcher)
 
     private var _compass: ICompassView? = null
 

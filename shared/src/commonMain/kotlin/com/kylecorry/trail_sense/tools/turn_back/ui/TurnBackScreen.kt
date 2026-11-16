@@ -5,7 +5,7 @@
 package com.kylecorry.trail_sense.tools.turn_back.ui
 
 import kotlin.math.PI
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.text.appString
@@ -185,7 +185,7 @@ class TurnBackViewModel(
     /** Finds tonight's sunset from a fresh location and returns by it; cancel the job to give up. */
     fun setReturnTimeToSunset(): Job {
         return viewModelScope.launch {
-            val sunsetTime = withContext(Dispatchers.IO) {
+            val sunsetTime = withContext(ioDispatcher) {
                 val location = sensorSubsystem.getLocation()
                 astronomy.getNextSunset(location, SunTimesMode.Actual)
             }

@@ -2,7 +2,7 @@ package com.kylecorry.trail_sense.main.persistence
 
 import kotlin.time.Duration.Companion.milliseconds
 
-import androidx.room.TypeConverter
+import androidx.room3.ColumnTypeConverter
 import com.kylecorry.sol.science.meteorology.clouds.CloudGenus
 import com.kylecorry.sol.units.WeightUnits
 import com.kylecorry.trail_sense.shared.colors.AppColor
@@ -17,115 +17,115 @@ import kotlin.time.Duration
 import kotlin.time.Instant
 
 class Converters {
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromItemCategory(value: ItemCategory): Int {
         return value.id
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toItemCategory(value: Int): ItemCategory {
         return ItemCategory.values().first { it.id == value }
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromCloudGenus(value: CloudGenus?): Int? {
         // This was previously the ordinal (zero-indexed), which is why I need to subtract 1
         return value?.id?.toInt()?.minus(1)
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toCloudGenus(value: Int?): CloudGenus? {
         // This was previously the ordinal (zero-indexed), which is why I need to add 1
         return CloudGenus.entries.firstOrNull { it.id == value?.plus(1)?.toLong() }
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromWeightUnit(value: WeightUnits?): Int? {
         return value?.id
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toWeightUnit(value: Int?): WeightUnits? {
         return WeightUnits.values().firstOrNull { it.id == value }
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromInstant(value: Instant): Long {
         return value.toEpochMilliseconds()
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toInstant(value: Long): Instant {
         return Instant.fromEpochMilliseconds(value)
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromDuration(value: Duration): Long {
         return value.inWholeMilliseconds
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toDuration(value: Long): Duration {
         return value.milliseconds
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromBeaconOwner(value: BeaconOwner): Int {
         return value.id
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toBeaconOwner(value: Int): BeaconOwner {
         return BeaconOwner.values().firstOrNull { it.id == value } ?: BeaconOwner.User
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromAppColor(value: AppColor): Long {
         return value.id
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toAppColor(value: Long): AppColor {
         return AppColor.values().withId(value) ?: AppColor.Orange
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromBeaconIcon(value: BeaconIcon?): Long? {
         return value?.id
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toBeaconIcon(value: Long?): BeaconIcon? {
         value ?: return null
         return BeaconIcon.values().withId(value)
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromPathPointColoringStyle(value: PathPointColoringStyle): Long {
         return value.id
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toPathPointColoringStyle(value: Long): PathPointColoringStyle {
         return PathPointColoringStyle.values().withId(value) ?: PathPointColoringStyle.None
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromLineStyle(value: LineStyle): Int {
         return value.id
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toLineStyle(value: Int): LineStyle {
         return LineStyle.values().firstOrNull { it.id == value } ?: LineStyle.Dotted
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromMapProjectionType(mapProjectionType: MapProjectionType): Long {
         return mapProjectionType.id
     }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toMapProjectionType(value: Long): MapProjectionType {
         return MapProjectionType.values().withId(value) ?: MapProjectionType.Mercator
     }

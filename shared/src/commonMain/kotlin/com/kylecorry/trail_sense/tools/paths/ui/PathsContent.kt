@@ -8,7 +8,7 @@ import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.text.appPluralString
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -103,7 +103,6 @@ import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
 import com.kylecorry.trail_sense.tools.tools.infrastructure.getFeatureState
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -223,7 +222,7 @@ class PathsViewModel(
     }
 
     suspend fun setGroupVisibility(group: PathGroup, visible: Boolean) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             pathService.loader().getChildren(group.id, null)
                 .filterIsInstance<Path>()
                 .filter { it.style.visible != visible }

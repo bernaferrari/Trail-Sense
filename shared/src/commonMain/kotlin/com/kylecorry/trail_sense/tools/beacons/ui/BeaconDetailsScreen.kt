@@ -4,7 +4,7 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.text.appString
@@ -250,7 +250,7 @@ internal class BeaconDetailsViewModel(
     val deleted: Flow<Unit> = _deleted.receiveAsFlow()
 
     suspend fun load() {
-        val loaded = withContext(Dispatchers.IO) {
+        val loaded = withContext(ioDispatcher) {
             beacons.getBeacon(beaconId)
         }
         beacon = loaded
@@ -271,7 +271,7 @@ internal class BeaconDetailsViewModel(
 
     fun delete(beacon: Beacon) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 beacons.delete(beacon)
             }
             _deleted.trySend(Unit)

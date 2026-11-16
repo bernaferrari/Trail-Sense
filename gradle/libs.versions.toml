@@ -42,7 +42,7 @@ luna = "3.0.0"
 mockitoKotlin = "6.4.0"
 mapsforge = "32021e8ff7"
 orion = "1.1.0"
-roomVersion = "2.8.5"
+roomVersion = "3.0.3"
 sol = "20.0.0"
 workRuntimeKtx = "2.12.0"
 
@@ -67,6 +67,7 @@ androidx-test-arch-core = { module = "androidx.arch.core:core-testing", version.
 androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "androidXExifinterfaceVersion" }
 androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glance" }
 andromeda-battery = { module = "com.kylecorry.andromeda:battery", version.ref = "andromedaVersion" }
+andromeda-device = { module = "com.kylecorry.andromeda:device", version.ref = "andromedaVersion" }
 andromeda-haptics = { module = "com.kylecorry.andromeda:haptics", version.ref = "andromedaVersion" }
 andromeda-clipboard = { module = "com.kylecorry.andromeda:clipboard", version.ref = "andromedaVersion" }
 andromeda-exceptions = { module = "com.kylecorry.andromeda:exceptions", version.ref = "andromedaVersion" }
@@ -143,9 +144,8 @@ androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runt
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3" }
 multiplatform-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "multiplatform-nav3" }
 orion = { module = "com.kylecorry:orion", version.ref = "orion" }
-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomVersion" }
-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
+room-runtime = { module = "androidx.room3:room3-runtime", version.ref = "roomVersion" }
+room-compiler = { module = "androidx.room3:room3-compiler", version.ref = "roomVersion" }
 sol = { module = "com.kylecorry:sol", version.ref = "sol" }
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 work-testing = { module = "androidx.work:work-testing", version.ref = "workRuntimeKtx" }

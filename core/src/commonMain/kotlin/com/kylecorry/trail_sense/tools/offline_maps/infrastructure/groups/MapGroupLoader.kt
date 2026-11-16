@@ -1,10 +1,6 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.groups
 
-import kotlinx.coroutines.withContext
-
-import kotlinx.coroutines.IO
-
-import kotlinx.coroutines.Dispatchers
+import com.kylecorry.luna.concurrency.onIO
 
 import com.kylecorry.trail_sense.shared.grouping.filter.GroupFilter
 import com.kylecorry.trail_sense.shared.grouping.persistence.IGroupLoader
@@ -27,13 +23,13 @@ class MapGroupLoader(private val loader: IGroupLoader<IMap>) : ISearchableGroupL
         }
     }
 
-    private suspend fun getMapsBySearch(search: String, groupFilter: Long?) = withContext(Dispatchers.IO) {
+    private suspend fun getMapsBySearch(search: String, groupFilter: Long?) = onIO {
         filter.filter(groupFilter) {
             it.name.contains(search, ignoreCase = true)
         }
     }
 
-    private suspend fun getMapsByGroup(group: Long?) = withContext(Dispatchers.IO) {
+    private suspend fun getMapsByGroup(group: Long?) = onIO {
         loader.getChildren(group, 1)
     }
 }

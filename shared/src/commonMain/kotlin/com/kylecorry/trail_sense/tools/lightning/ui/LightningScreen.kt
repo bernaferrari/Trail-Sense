@@ -3,7 +3,7 @@
 
 package com.kylecorry.trail_sense.tools.lightning.ui
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.main.getAppService
 
 import com.kylecorry.trail_sense.tools.lightning.infrastructure.persistence.ILightningRepo
@@ -88,7 +88,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.tools.lightning.domain.LightningStrike
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration
@@ -133,7 +132,7 @@ fun LightningScreen(
 
     LaunchedEffect(Unit) {
         units = prefs.baseDistanceUnits
-        lastStrike = withContext(Dispatchers.IO) {
+        lastStrike = withContext(ioDispatcher) {
             repo.getLast()
         }
     }
@@ -199,7 +198,7 @@ fun LightningScreen(
                 strike = currentStrike
                 lightningTime = null
                 scope.launch {
-                    withContext(Dispatchers.IO) {
+                    withContext(ioDispatcher) {
                         repo.add(currentStrike)
                     }
                 }

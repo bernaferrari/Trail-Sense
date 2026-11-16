@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.main.persistence
 
-import androidx.room.Room
+import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.kylecorry.trail_sense.tools.notes.infrastructure.NoteEntity
 import kotlinx.coroutines.runBlocking

@@ -16,5 +16,8 @@ kotlin {
             api(libs.sol)
             api(project(":shared"))
         }
+        wasmJsMain.dependencies {
+            implementation("org.jetbrains.skiko:skiko:0.150.2")
+        }
     }
 }

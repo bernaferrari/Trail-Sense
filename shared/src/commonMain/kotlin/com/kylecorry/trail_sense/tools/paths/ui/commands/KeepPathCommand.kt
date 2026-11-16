@@ -4,8 +4,7 @@ import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -16,7 +15,7 @@ class KeepPathCommand(
 
     override fun execute(path: Path) {
         scope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 pathService.addPath(path.copy(temporary = false))
             }
         }

@@ -1,10 +1,6 @@
 package com.kylecorry.trail_sense.settings.migrations
 
-import kotlinx.coroutines.withContext
-
-import kotlinx.coroutines.IO
-
-import kotlinx.coroutines.Dispatchers
+import com.kylecorry.luna.concurrency.onIO
 
 import com.kylecorry.trail_sense.shared.time.truncateTo
 
@@ -26,7 +22,7 @@ class PedometerPreferenceMigration(
 ) {
     private val activeTimeCalculator = ActiveTimeCalculator()
 
-    suspend fun migrate(): Unit = withContext(Dispatchers.IO) {
+    suspend fun migrate(): Unit = onIO {
         val steps = prefs.getLong(STEPS_KEY) ?: 0L
         val startTime = prefs.getInstant(LAST_RESET_KEY)
         if (steps > 0 && startTime != null) {

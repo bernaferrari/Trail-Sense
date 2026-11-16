@@ -7,7 +7,7 @@
 package com.kylecorry.trail_sense.tools.climate.ui
 
 import org.jetbrains.compose.resources.StringResource
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.SystemString
 import com.kylecorry.trail_sense.shared.text.systemString
@@ -129,7 +129,6 @@ import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconPickers
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.sort.ClosestBeaconSort
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -963,7 +962,7 @@ private fun CoordinateInput(
         }
         scope.launch {
             isLoadingLocation = true
-            val updated = withContext(Dispatchers.IO) {
+            val updated = withContext(ioDispatcher) {
                 sensors.getLocation(SensorRefreshPolicy.Refresh)
             }
             locationText = formatter.formatLocation(updated)
@@ -1097,7 +1096,7 @@ private fun ElevationInput(
         }
         scope.launch {
             isLoadingElevation = true
-            val updated = withContext(Dispatchers.IO) {
+            val updated = withContext(ioDispatcher) {
                 sensors.getElevation(SensorRefreshPolicy.Refresh)
             }.convertTo(unit)
             elevationText = formatElevationAmount(updated, unit)

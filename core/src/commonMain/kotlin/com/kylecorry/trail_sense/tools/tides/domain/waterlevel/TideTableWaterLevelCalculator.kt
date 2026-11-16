@@ -15,9 +15,9 @@ import com.kylecorry.sol.science.oceanography.waterlevel.RuleOfTwelfthsWaterLeve
 import com.kylecorry.sol.science.oceanography.waterlevel.TideClockWaterLevelCalculator
 import com.kylecorry.sol.time.Time.hours
 import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.trail_sense.shared.coroutines.platformRunBlocking
 import com.kylecorry.trail_sense.tools.tides.domain.TideTable
 import com.kylecorry.trail_sense.tools.tides.domain.range.TideTableRangeCalculator
-import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -38,7 +38,7 @@ class TideTableWaterLevelCalculator(
     var location: Coordinate? = table.location
         private set
 
-    override fun calculate(time: Instant, timeZone: TimeZone): Float = runBlocking {
+    override fun calculate(time: Instant, timeZone: TimeZone): Float = platformRunBlocking {
         calculateSuspend(time, timeZone)
     }
 

@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.main.persistence
 
-import androidx.room.migration.Migration
+import androidx.room3.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 
@@ -8,7 +8,7 @@ import androidx.sqlite.execSQL
  * This is a version 62 snapshot; add a new migration for later schema changes.
  */
 internal object NotesToSharedSchema : Migration(1, 62) {
-    override fun migrate(connection: SQLiteConnection) {
+    override suspend fun migrate(connection: SQLiteConnection) {
         connection.execSQL("CREATE TABLE IF NOT EXISTS `items` (`name` TEXT NOT NULL, `packId` INTEGER NOT NULL, `category` INTEGER NOT NULL, `amount` REAL NOT NULL, `desiredAmount` REAL NOT NULL, `weight` REAL, `weightUnits` INTEGER, `isOptional` INTEGER NOT NULL, `_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
         connection.execSQL("CREATE INDEX IF NOT EXISTS `index_items_packId` ON `items` (`packId`)")
         connection.execSQL("CREATE TABLE IF NOT EXISTS `notes` (`title` TEXT, `contents` TEXT, `created` INTEGER NOT NULL, `_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")

@@ -10,8 +10,16 @@ kotlin {
             api(libs.markdownRenderer.coil3)
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor3)
-            implementation(libs.ktor.client.cio)
             api(libs.compose.foundation)
+        }
+        androidMain.dependencies {
+            implementation(libs.ktor.client.cio)
+        }
+        jvmMain.dependencies {
+            implementation(libs.ktor.client.cio)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.cio)
         }
     }
 }

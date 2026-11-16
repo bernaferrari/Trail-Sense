@@ -5,7 +5,7 @@
 package com.kylecorry.trail_sense.tools.packs.ui
 
 import org.jetbrains.compose.resources.StringResource
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.text.appString
@@ -101,7 +101,6 @@ import com.kylecorry.trail_sense.tools.packs.domain.sort.WeightPackItemSort
 import com.kylecorry.trail_sense.tools.packs.ui.mappers.ItemCategoryStringMapper
 import kotlin.math.max
 import kotlin.math.floor
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -272,7 +271,7 @@ internal class PackItemListViewModel(
 
     init {
         viewModelScope.launch {
-            pack = withContext(Dispatchers.IO) { itemRepo.getPack(packId) }
+            pack = withContext(ioDispatcher) { itemRepo.getPack(packId) }
         }
         viewModelScope.launch {
             itemRepo.getItemsFromPack(packId).collect {
@@ -292,21 +291,21 @@ internal class PackItemListViewModel(
     fun renamePack(pack: Pack, name: String) {
         viewModelScope.launch {
             val renamed = pack.copy(name = name)
-            withContext(Dispatchers.IO) { itemRepo.addPack(renamed) }
+            withContext(ioDispatcher) { itemRepo.addPack(renamed) }
             this@PackItemListViewModel.pack = renamed
         }
     }
 
     fun deletePack(pack: Pack) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { itemRepo.deletePack(pack) }
+            withContext(ioDispatcher) { itemRepo.deletePack(pack) }
             _packDeleted.send(Unit)
         }
     }
 
     fun clearAmounts() {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { itemRepo.clearPackedAmounts(packId) }
+            withContext(ioDispatcher) { itemRepo.clearPackedAmounts(packId) }
         }
     }
 
@@ -325,7 +324,7 @@ internal class PackItemListViewModel(
 
     fun deleteItem(item: PackItem) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { itemRepo.deleteItem(item) }
+            withContext(ioDispatcher) { itemRepo.deleteItem(item) }
         }
     }
 
@@ -336,7 +335,7 @@ internal class PackItemListViewModel(
 
     private fun setAmount(item: PackItem, amount: Double) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { itemRepo.addItem(item.copy(amount = amount)) }
+            withContext(ioDispatcher) { itemRepo.addItem(item.copy(amount = amount)) }
         }
     }
 

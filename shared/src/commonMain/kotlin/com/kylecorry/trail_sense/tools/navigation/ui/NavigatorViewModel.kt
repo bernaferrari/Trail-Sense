@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.navigation.ui
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -354,7 +354,7 @@ class NavigatorViewModel(
 
     private fun updateNearbyBeacons() {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 loadBeaconsRunner.skipIfRunning {
                     val destinationBeacon = (currentDestination as? Destination.Beacon)?.beacon
                     if (!isNearbyEnabled) {
@@ -386,7 +386,7 @@ class NavigatorViewModel(
 
                 val smoothed = DataUtils.smoothTemporal(readings, 0.3f)
 
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     debugElevations(readings, smoothed)
                 }
 

@@ -51,6 +51,21 @@ class AndromedaLibraryPlugin : Plugin<Project> {
             jvm()
             iosArm64()
             iosSimulatorArm64()
+            val wasmModules = setOf(
+                "shared", "core", "csv", "xml", "gpx", "geojson", "markdown",
+                "storage", "bitmaps", "qr", "sound", "signal", "torch", "haptics",
+                "device", "sense", "battery"
+            )
+            if (target.name in wasmModules) {
+                @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+                wasmJs {
+                    browser {
+                        testTask {
+                            enabled = false
+                        }
+                    }
+                }
+            }
 
             sourceSets.commonTest.dependencies { implementation(kotlin("test")) }
 

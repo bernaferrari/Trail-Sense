@@ -41,8 +41,7 @@ import com.kylecorry.trail_sense.shared.text.appPluralString
 import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -58,7 +57,7 @@ fun GuideScreen(name: String, resource: RawText) {
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(resource) {
-        sections = withContext(Dispatchers.IO) {
+        sections = withContext(ioDispatcher) {
             val content = getAppService<RawTextReader>().read(resource)
             TextUtils.groupSections(TextUtils.getSections(content), null).flatten()
         }

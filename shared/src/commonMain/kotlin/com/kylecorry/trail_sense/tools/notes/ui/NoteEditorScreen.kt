@@ -2,7 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.notes.ui
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 
 import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
 
@@ -39,7 +39,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.notes.domain.Note
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.kylecorry.trail_sense.shared.navigation.Route
 
@@ -65,7 +64,7 @@ fun NoteEditorScreen(
 
     LaunchedEffect(noteId) {
         if (noteId != 0L) {
-            editingNote = withContext(Dispatchers.IO) {
+            editingNote = withContext(ioDispatcher) {
                 loadNote(noteId)
             }
             title = editingNote?.title.orEmpty()
@@ -174,7 +173,7 @@ internal class NoteEditorViewModel(private val repo: INoteRepo) : ViewModel() {
         val existingNote = editingNote
         val note = existingNote?.copy(title = title, contents = content)
             ?: Note(title, content, Clock.System.now().toEpochMilliseconds())
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             repo.addNote(note)
         }
         _saved.send(Unit)

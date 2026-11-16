@@ -10,7 +10,7 @@ import com.kylecorry.trail_sense.shared.text.AppStrings
 
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,7 +28,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideNameDisplay
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -75,14 +74,14 @@ fun FieldGuideSettingsToolScreen() {
                     label = appString(Res.string.built_in_pages),
                     onClick = {
                         scope.launch {
-                            val pages = withContext(Dispatchers.IO) {
+                            val pages = withContext(ioDispatcher) {
                                 repo.getAllPages()
                                     .filter { it.isReadOnly }
                                     .sortedBy { formatter.formatName(it).lowercase() }
                             }
                             showBuiltInPagesPicker(host, formatter, pages) { changed ->
                                 scope.launch {
-                                    withContext(Dispatchers.IO) {
+                                    withContext(ioDispatcher) {
                                         changed.forEach { (page, hidden) ->
                                             repo.setPageHidden(page.id, hidden)
                                         }

@@ -9,7 +9,7 @@ import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.text.AppStrings
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 
 import com.kylecorry.trail_sense.shared.views.compose.chartHeight
 
@@ -281,13 +281,13 @@ class PathOverviewViewModel(
     private fun updateParent(path: Path?) {
         path ?: return
         viewModelScope.launch {
-            parentName = withContext(Dispatchers.IO) { pathService.getGroup(path.parentId) }?.name
+            parentName = withContext(ioDispatcher) { pathService.getGroup(path.parentId) }?.name
         }
     }
 
     private fun updateDeclination() {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 compass.declination = declinationProvider.getDeclination()
             }
         }
@@ -297,7 +297,7 @@ class PathOverviewViewModel(
         val corrected = withContext(Dispatchers.Default) {
             hikingService.correctElevations(raw.sortedBy { it.id }).reversed()
         }
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             debugElevations(raw, corrected)
         }
 

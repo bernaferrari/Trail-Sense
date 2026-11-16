@@ -1,10 +1,6 @@
 package com.kylecorry.trail_sense.shared.grouping.persistence
 
-import kotlinx.coroutines.withContext
-
-import kotlinx.coroutines.IO
-
-import kotlinx.coroutines.Dispatchers
+import com.kylecorry.luna.concurrency.onIO
 
 import com.kylecorry.trail_sense.shared.grouping.Groupable
 
@@ -21,9 +17,9 @@ class GroupLoader<T : Groupable>(
         return groupLoader.invoke(id)
     }
 
-    private suspend fun loadChildren(id: Long?, maxDepth: Int?): List<T> = withContext(Dispatchers.IO) {
+    private suspend fun loadChildren(id: Long?, maxDepth: Int?): List<T> = onIO {
         if (maxDepth != null && maxDepth <= 0) {
-            return@withContext emptyList()
+            return@onIO emptyList()
         }
 
         val children = childLoader.invoke(id)

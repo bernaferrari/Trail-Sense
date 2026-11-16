@@ -4,7 +4,7 @@
 
 package com.kylecorry.trail_sense.tools.tides.ui
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.SystemString
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
@@ -157,7 +157,7 @@ internal class TideListViewModel(
 
     fun delete(tide: TideTable) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 tideRepo.deleteTideTable(tide)
             }
             refreshTides()
@@ -166,7 +166,7 @@ internal class TideListViewModel(
 
     fun toggleVisibility(tide: TideTable) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 toggleVisibilityCommand.execute(tide)
             }
             refreshTides()
@@ -181,7 +181,7 @@ internal class TideListViewModel(
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
             val location = currentLocation()
-            val tables = withContext(Dispatchers.IO) {
+            val tables = withContext(ioDispatcher) {
                 tideRepo.getTideTables().sortedWith(compareBy({ it.isEditable }, { tide ->
                     tide.location?.distanceTo(location) ?: Float.POSITIVE_INFINITY
                 }))
@@ -190,7 +190,7 @@ internal class TideListViewModel(
             loaded = true
 
             tables.forEach { table ->
-                launch(Dispatchers.IO) {
+                launch(ioDispatcher) {
                     val type = tideTypeCommand.execute(table)
                     withContext(Dispatchers.Main) {
                         val index = tides.indexOfFirst { it.first.id == table.id }

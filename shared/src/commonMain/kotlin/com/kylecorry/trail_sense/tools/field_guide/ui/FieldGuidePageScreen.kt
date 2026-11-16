@@ -9,7 +9,7 @@ import com.kylecorry.trail_sense.shared.text.appPluralString
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.text.AppStrings
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.text.withWebLinks
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
 import androidx.lifecycle.viewModelScope
@@ -66,7 +66,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTagType
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -112,7 +111,7 @@ class FieldGuidePageViewModel(
 
     fun loadPage() {
         viewModelScope.launch {
-            page = withContext(Dispatchers.IO) {
+            page = withContext(ioDispatcher) {
                 pageId?.let { repo.getPage(it) }
             }
         }

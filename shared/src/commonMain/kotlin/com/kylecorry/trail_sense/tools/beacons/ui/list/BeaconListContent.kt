@@ -8,7 +8,7 @@ import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.text.appPluralString
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -103,7 +103,6 @@ import com.kylecorry.trail_sense.tools.beacons.ui.places.placesGroup
 import com.kylecorry.trail_sense.tools.beacons.ui.polygon
 import com.kylecorry.trail_sense.tools.navigation.domain.NavigationService
 import kotlin.time.Clock
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -230,7 +229,7 @@ class BeaconListViewModel(
 
     fun toggleVisibility(beacon: Beacon) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 beaconService.add(beacon.copy(visible = !beacon.visible))
             }
             refresh()
@@ -238,7 +237,7 @@ class BeaconListViewModel(
     }
 
     suspend fun setGroupVisibility(group: BeaconGroup, visible: Boolean) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             beaconService.loader.getChildren(group.id, null)
                 .filterIsInstance<Beacon>()
                 .filter { it.visible != visible }
@@ -250,7 +249,7 @@ class BeaconListViewModel(
     /** Deletes [group] (every beacon when null), leaving it first if it is the one open. */
     fun delete(group: BeaconGroup?) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 beaconService.delete(group)
             }
             if (group == manager.root) {
@@ -262,14 +261,14 @@ class BeaconListViewModel(
 
     /** Imports the waypoints into the open group and returns how many beacons were added. */
     suspend fun import(gpx: GPXData): Int {
-        val count = withContext(Dispatchers.IO) {
+        val count = withContext(ioDispatcher) {
             importer.import(gpx, manager.root?.id)
         }
         refresh()
         return count
     }
 
-    suspend fun getExportGpx(): GPXData = withContext(Dispatchers.IO) {
+    suspend fun getExportGpx(): GPXData = withContext(ioDispatcher) {
         val all = beaconService.getBeacons(
             manager.root?.id,
             includeGroups = true,

@@ -2,7 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.beacons.ui
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.appString
 
@@ -104,7 +104,6 @@ import com.kylecorry.trail_sense.tools.beacons.ui.form.IsBeaconFormDataComplete
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBearingField
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -320,7 +319,7 @@ internal class PlaceBeaconViewModel(
     fun save() {
         val beacon = data.toBeacon() ?: return
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 beaconService.add(beacon)
             }
             _saved.trySend(Unit)
@@ -329,7 +328,7 @@ internal class PlaceBeaconViewModel(
 
     private fun loadExistingBeacon(beaconId: Long) {
         viewModelScope.launch {
-            val beacon = withContext(Dispatchers.IO) {
+            val beacon = withContext(ioDispatcher) {
                 beaconService.getBeacon(beaconId)
             }
             beacon?.let {
@@ -343,7 +342,7 @@ internal class PlaceBeaconViewModel(
     private fun updateGroupName() {
         val parent = data.groupId
         viewModelScope.launch {
-            groupName = withContext(Dispatchers.IO) {
+            groupName = withContext(ioDispatcher) {
                 if (parent == null) {
                     ""
                 } else {
@@ -671,7 +670,7 @@ private fun CoordinateInput(
         }
         scope.launch {
             isLoadingLocation = true
-            val updated = withContext(Dispatchers.IO) {
+            val updated = withContext(ioDispatcher) {
                 sensors.getLocation(SensorRefreshPolicy.Refresh)
             }
             coordinateText = formatter.formatLocation(updated)
@@ -808,7 +807,7 @@ private fun ElevationInput(
     fun autofillFromAltimeter() {
         scope.launch {
             isLoadingElevation = true
-            val updated = withContext(Dispatchers.IO) {
+            val updated = withContext(ioDispatcher) {
                 sensors.getElevation(SensorRefreshPolicy.Refresh)
             }.convertTo(unit)
             elevationText = formatDistanceAmount(updated, unit)

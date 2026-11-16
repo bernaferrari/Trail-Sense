@@ -25,6 +25,18 @@ kotlin {
             isStatic = true
         }
     }
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        browser {
+            binaries.executable()
+            testTask {
+                enabled = false
+            }
+        }
+    }
+    sourceSets.wasmJsMain.dependencies {
+        implementation("org.jetbrains.kotlinx:kotlinx-browser:0.5.0")
+    }
 
     sourceSets {
         commonMain.dependencies {
@@ -42,6 +54,8 @@ kotlin {
             implementation(libs.cmp.lifecycle.viewmodel.navigation3)
             implementation(libs.andromeda.qr)
             implementation(libs.andromeda.bitmaps)
+            implementation(libs.andromeda.device)
+            implementation(libs.andromeda.haptics)
             api(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.atomicfu)
@@ -292,7 +306,16 @@ val syncSharedRawTexts = tasks.register<Sync>("syncSharedRawTexts") {
         into("files/trailtext")
     }
     from(rootProject.layout.projectDirectory.dir("app/src/main/assets")) {
-        include("survival_guide/**", "field_guide/**")
+        include(
+            "survival_guide/**",
+            "field_guide/**",
+            "dem/**",
+            "tides/**",
+            "precipitation/**",
+            "temperatures/**",
+            "geoids.webp",
+            "land.webp"
+        )
         into("files/trailimages")
     }
     into(layout.buildDirectory.dir("generated/sharedRawResources/commonMain"))

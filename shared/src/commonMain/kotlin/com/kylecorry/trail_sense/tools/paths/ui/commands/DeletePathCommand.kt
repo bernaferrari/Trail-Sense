@@ -8,8 +8,7 @@ import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -30,7 +29,7 @@ class DeletePathCommand(
         ) { cancelled ->
             if (!cancelled) {
                 scope.launch {
-                    withContext(Dispatchers.IO) {
+                    withContext(ioDispatcher) {
                         pathService.deletePath(path)
                     }
                 }

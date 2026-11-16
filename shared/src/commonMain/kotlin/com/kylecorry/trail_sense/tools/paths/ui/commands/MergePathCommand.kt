@@ -1,6 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.shared.views.compose.AppHost
@@ -34,7 +34,7 @@ class MergePathCommand(
             val loading = withContext(Dispatchers.Main) {
                 Alerts.loading(host, strings.get(Res.string.merging))
             }
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 pathService.mergePaths(other.id, path.id)
             }
             withContext(Dispatchers.Main) {

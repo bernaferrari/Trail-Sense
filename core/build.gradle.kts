@@ -28,6 +28,14 @@ kotlin {
 
     iosArm64()
     iosSimulatorArm64()
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    wasmJs {
+        browser {
+            testTask {
+                enabled = false
+            }
+        }
+    }
 
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
@@ -57,6 +65,10 @@ kotlin {
             implementation(libs.kotlinx.serialization.core)
         }
         iosMain.dependencies { implementation("androidx.sqlite:sqlite-bundled:2.7.1") }
+        wasmJsMain.dependencies {
+            implementation("androidx.sqlite:sqlite-web:2.7.1")
+            implementation("org.jetbrains.kotlinx:kotlinx-browser:0.5.0")
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
@@ -71,4 +83,5 @@ dependencies {
     add("kspJvm", libs.room.compiler)
     add("kspIosArm64", libs.room.compiler)
     add("kspIosSimulatorArm64", libs.room.compiler)
+    add("kspWasmJs", libs.room.compiler)
 }

@@ -18,7 +18,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Andromeda"
+rootProject.name = "andromeda"
 include(":haptics")
 include(":notify")
 include(":sense")

@@ -11,8 +11,7 @@ import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.text.RawTextReader
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapter
 import com.kylecorry.trail_sense.tools.survival_guide.domain.Chapters
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -28,7 +27,7 @@ fun SurvivalGuideReaderContent(
         return
     }
     val content by produceState<String?>(null, route.chapter) {
-        value = withContext(Dispatchers.IO) { getAppService<RawTextReader>().read(route.chapter) }
+        value = withContext(ioDispatcher) { getAppService<RawTextReader>().read(route.chapter) }
     }
     SurvivalGuideReaderScreen(chapter, content, route.headerIndex, canPrint, onPrint)
 }

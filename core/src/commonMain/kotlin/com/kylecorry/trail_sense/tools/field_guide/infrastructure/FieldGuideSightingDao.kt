@@ -1,9 +1,9 @@
 package com.kylecorry.trail_sense.tools.field_guide.infrastructure
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Query
-import androidx.room.Upsert
+import androidx.room3.Dao
+import androidx.room3.Delete
+import androidx.room3.Query
+import androidx.room3.Upsert
 
 @Dao
 interface FieldGuideSightingDao {

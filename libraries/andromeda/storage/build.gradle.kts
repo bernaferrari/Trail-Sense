@@ -13,4 +13,7 @@ kotlin {
     sourceSets.jvmTest.dependencies {
         implementation(libs.multiplatformSettings.test)
     }
+    sourceSets.wasmJsMain.dependencies {
+        implementation("com.squareup.okio:okio-fakefilesystem:3.18.2")
+    }
 }

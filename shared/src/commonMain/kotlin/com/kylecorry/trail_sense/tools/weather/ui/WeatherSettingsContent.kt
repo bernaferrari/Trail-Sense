@@ -2,7 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.weather.ui
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.appString
 
@@ -386,7 +386,7 @@ fun WeatherSettingsScreen(
                         onClick = {
                             scope.launch {
                                 val csv = viewModel.exportCsv()
-                                val exported = withContext(Dispatchers.IO) {
+                                val exported = withContext(ioDispatcher) {
                                     csvExporter.export(csv, "weather-${Clock.System.now().toEpochMilliseconds()}.csv")
                                 }
                                 if (exported) {
@@ -597,7 +597,7 @@ internal class WeatherSettingsViewModel(
     }
 
     /** Every reading, newest first, as CSV rows. */
-    suspend fun exportCsv(): List<List<String>> = withContext(Dispatchers.IO) {
+    suspend fun exportCsv(): List<List<String>> = withContext(ioDispatcher) {
         val readings = repo.getAll().sortedByDescending { it.time }
         WeatherCsvConverter().toCSV(readings)
     }

@@ -16,7 +16,7 @@ import com.kylecorry.trail_sense.tools.field_guide.infrastructure.FieldGuideImag
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 
-import kotlinx.coroutines.IO
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.tools.field_guide.infrastructure.IFieldGuideRepo
 
 import androidx.lifecycle.viewModelScope
@@ -77,7 +77,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePage
 import com.kylecorry.trail_sense.tools.field_guide.domain.FieldGuidePageTag
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -241,7 +240,7 @@ class FieldGuideListViewModel(
 
     fun reloadPages() {
         viewModelScope.launch {
-            pages = withContext(Dispatchers.IO) {
+            pages = withContext(ioDispatcher) {
                 cleanup()
                 repo.getAllPages().sortedBy(sortName)
             }
@@ -251,7 +250,7 @@ class FieldGuideListViewModel(
 
     fun hidePage(page: FieldGuidePage) {
         viewModelScope.launch {
-            val hidden = withContext(Dispatchers.IO) {
+            val hidden = withContext(ioDispatcher) {
                 repo.setPageHidden(page.id, true)
             }
             if (hidden) {
@@ -262,7 +261,7 @@ class FieldGuideListViewModel(
 
     fun deletePage(page: FieldGuidePage) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 repo.delete(page)
             }
             reloadPages()

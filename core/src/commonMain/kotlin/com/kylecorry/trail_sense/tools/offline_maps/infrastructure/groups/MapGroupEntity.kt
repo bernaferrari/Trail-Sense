@@ -1,8 +1,8 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.groups
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room3.ColumnInfo
+import androidx.room3.Entity
+import androidx.room3.PrimaryKey
 import com.kylecorry.trail_sense.tools.offline_maps.domain.groups.MapGroup
 
 @Entity(tableName = "map_groups")
