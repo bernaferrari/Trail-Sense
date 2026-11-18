@@ -122,6 +122,7 @@ fun TrailSensePage(
         bottom = TrailSenseSpacing.xxxl
     ),
     compactHeader: Boolean = false,
+    emptyContent: (@Composable () -> Unit)? = null,
     content: LazyListScope.() -> Unit
 ) {
     val appBarState = rememberTopAppBarState()
@@ -198,15 +199,18 @@ fun TrailSensePage(
                 .padding(padding),
             contentAlignment = Alignment.TopCenter
         ) {
-            LazyColumn(
-                state = state,
-                modifier = Modifier
-                    .widthIn(max = TrailSenseSize.maximumContentWidth)
-                    .fillMaxSize(),
-                contentPadding = contentPadding,
-                verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg),
-                content = content
-            )
+            val bodyModifier = Modifier.widthIn(max = TrailSenseSize.maximumContentWidth).fillMaxSize()
+            if (emptyContent != null) {
+                Box(bodyModifier.padding(contentPadding)) { emptyContent() }
+            } else {
+                LazyColumn(
+                    state = state,
+                    modifier = bodyModifier,
+                    contentPadding = contentPadding,
+                    verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg),
+                    content = content
+                )
+            }
         }
     }
 }

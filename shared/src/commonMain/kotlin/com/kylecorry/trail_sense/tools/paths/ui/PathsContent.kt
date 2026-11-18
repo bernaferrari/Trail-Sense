@@ -10,12 +10,17 @@ import com.kylecorry.trail_sense.shared.text.appPluralString
 
 import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
@@ -23,21 +28,15 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButtonMenu
-import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.ToggleFloatingActionButton
-import androidx.compose.material3.ToggleFloatingActionButtonDefaults
-import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,9 +53,6 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -73,7 +69,6 @@ import com.kylecorry.trail_sense.shared.events.EventData
 import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -269,12 +264,35 @@ fun PathsScreen(
     // What trails have I walked, and is Backtrack saving this one? A quiet Backtrack group, then one grouped list.
     val listState = rememberLazyListState()
     LaunchedEffect(resetKey) {
-        listState.scrollToItem(0)
+        listState.requestScrollToItem(0)
     }
 
     // Folders first: groups read as places to go, paths as things to look at.
     val groups = remember(items) { items.filterIsInstance<PathGroup>() }
     val paths = remember(items) { items.filterIsInstance<Path>() }
+
+    val isSearching = searchText.isNotBlank()
+    val showEmpty = isLoaded && items.isEmpty()
+    val recordingControl: (@Composable () -> Unit)? = onBacktrackToggleClick?.let { toggle ->
+        {
+            BacktrackRow(
+                state = backtrackState,
+                frequency = backtrackFrequency,
+                formatService = formatService,
+                onFrequencyClick = onBacktrackFrequencyClick,
+                onToggleClick = toggle
+            )
+        }
+    }
+    val search: @Composable () -> Unit = {
+        TrailSenseSearchBar(
+            value = searchText,
+            onValueChange = onSearchChange,
+            placeholder = appString(Res.string.search),
+            clearContentDescription = appString(Res.string.paths_clear_search),
+            modifier = Modifier.fillMaxWidth().testTag("searchbox")
+        )
+    }
 
     Box(modifier = modifier.testTag("paths_list")) {
         TrailSensePage(
@@ -285,56 +303,53 @@ fun PathsScreen(
             compactHeader = true,
             modifier = Modifier.testTag("paths_title"),
             actions = {
-                PathsOverflowMenu(sortMenuText = sortMenuText, onMenuAction = onMenuAction)
-            },
-            floatingActionButton = {
                 PathsCreateMenu(
                     onImportPath = onImportPath,
                     onCreateGroup = onCreateGroup,
                     onCreatePath = onCreatePath,
                     onCreatePathOnMap = onCreatePathOnMap
                 )
-            }
-        ) {
-            if (onBacktrackToggleClick != null) item(key = "backtrack") {
-                BacktrackRow(
-                    state = backtrackState,
-                    frequency = backtrackFrequency,
-                    formatService = formatService,
-                    onFrequencyClick = onBacktrackFrequencyClick,
-                    onToggleClick = onBacktrackToggleClick
-                )
-            }
-
-            // Nothing to search until there is a path: the bar only appears once the list has something in it.
-            if (searchText.isNotBlank() || !isLoaded || items.isNotEmpty()) item(key = "search") {
-                TrailSenseSearchBar(
-                    value = searchText,
-                    onValueChange = onSearchChange,
-                    placeholder = appString(Res.string.search),
-                    clearContentDescription = appString(Res.string.paths_clear_search),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("searchbox")
-                )
-            }
-
-            if (isLoaded && items.isEmpty()) {
-                item(key = "empty") {
-                    val isSearching = searchText.isNotBlank()
-                    TrailSenseEmptyState(
-                        icon = if (isSearching) TrailIcons.Search else TrailIcons.Trail,
-                        compact = true,
-                        title = appString(if (isSearching) Res.string.no_results else Res.string.no_paths),
-                        description = if (isSearching) null else appString(Res.string.paths_empty_description),
-                        // No button here: Backtrack's switch above and the add FAB are the actions.
-                        // Centred in the room between Backtrack and the add button, so its copy never sits under it.
-                        modifier = Modifier
-                            .fillParentMaxHeight(0.5f)
-                            .testTag("waypoints_empty_text")
-                    )
+                PathsOverflowMenu(sortMenuText = sortMenuText, onMenuAction = onMenuAction)
+            },
+            contentPadding = PaddingValues(
+                start = TrailSenseSpacing.lg,
+                end = TrailSenseSpacing.lg,
+                top = TrailSenseSpacing.sm,
+                bottom = TrailSenseSpacing.sm
+            ),
+            emptyContent = if (showEmpty) {
+                {
+                    Column(
+                        Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)
+                    ) {
+                        recordingControl?.invoke()
+                        if (isSearching) search()
+                        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                            val availableHeight = maxHeight
+                            Column(
+                                Modifier.fillMaxWidth()
+                                    .verticalScroll(rememberScrollState())
+                                    .heightIn(min = availableHeight),
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                TrailSenseEmptyState(
+                                    icon = if (isSearching) TrailIcons.Search else TrailIcons.Trail,
+                                    compact = true,
+                                    title = appString(if (isSearching) Res.string.no_results else Res.string.no_paths),
+                                    description = if (isSearching) null else appString(Res.string.paths_empty_description),
+                                    modifier = Modifier.testTag("waypoints_empty_text")
+                                )
+                            }
+                        }
+                    }
                 }
+            } else null
+        ) {
+            recordingControl?.let { content ->
+                item(key = "backtrack") { content() }
             }
+            item(key = "search") { search() }
 
             groupedRows(
                 rows = groups,
@@ -360,8 +375,6 @@ fun PathsScreen(
                 )
             }
 
-            // Room for the floating button over the last row.
-            item(key = "fab_spacer") { Spacer(Modifier.height(56.dp)) }
         }
     }
 }
@@ -423,8 +436,6 @@ private fun PathsOverflowMenu(
     }
 }
 
-/** The add button opens the family's floating action menu: import a GPX file, a group, or an empty path. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PathsCreateMenu(
     onImportPath: () -> Unit,
@@ -433,74 +444,28 @@ private fun PathsCreateMenu(
     onCreatePathOnMap: (() -> Unit)?
 ) {
     var isOpen by rememberSaveable { mutableStateOf(false) }
-    SystemBackHandler(enabled = isOpen) { isOpen = false }
-    val addLabel = appString(Res.string.add)
-
-    FloatingActionButtonMenu(
-        expanded = isOpen,
-        button = {
-            ToggleFloatingActionButton(
-                containerColor = ToggleFloatingActionButtonDefaults.containerColor(
-                    initialColor = MaterialTheme.colorScheme.primary,
-                    finalColor = MaterialTheme.colorScheme.primary
-                ),
-                checked = isOpen,
-                onCheckedChange = { isOpen = !isOpen },
-                modifier = Modifier
-                    .testTag("add_btn")
-                    .semantics {
-                        traversalIndex = -1f
-                        contentDescription = addLabel
+    Box {
+        IconButton(onClick = { isOpen = true }, modifier = Modifier.testTag("add_btn")) {
+            Icon(Icons.Rounded.Add, contentDescription = appString(Res.string.add))
+        }
+        DropdownMenu(expanded = isOpen, onDismissRequest = { isOpen = false }) {
+            val entries = listOfNotNull(
+                Triple(Res.string.import_gpx, TrailIcons.File, onImportPath),
+                Triple(Res.string.group, TrailIcons.PathGroup, onCreateGroup),
+                Triple(Res.string.path, TrailIcons.PathSolid, onCreatePath),
+                onCreatePathOnMap?.let { Triple(Res.string.create_path_on_map, TrailIcons.Maps, it) }
+            )
+            for ((label, icon, action) in entries) {
+                DropdownMenuItem(
+                    text = { Text(appString(label)) },
+                    leadingIcon = { Icon(rememberVectorPainter(icon), contentDescription = null) },
+                    onClick = {
+                        isOpen = false
+                        action()
                     }
-            ) {
-                val icon = if (checkedProgress > 0.5f) Icons.Rounded.Close else Icons.Rounded.Add
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.animateIcon(
-                        { checkedProgress },
-                        color = ToggleFloatingActionButtonDefaults.iconColor(
-                            initialColor = MaterialTheme.colorScheme.onPrimary,
-                            finalColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                    )
                 )
             }
         }
-    ) {
-        FloatingActionButtonMenuItem(
-            onClick = {
-                isOpen = false
-                onImportPath()
-            },
-            icon = { Icon(rememberVectorPainter(TrailIcons.File), contentDescription = null) },
-            text = { Text(appString(Res.string.import_gpx)) }
-        )
-        FloatingActionButtonMenuItem(
-            onClick = {
-                isOpen = false
-                onCreateGroup()
-            },
-            icon = { Icon(rememberVectorPainter(TrailIcons.PathGroup), contentDescription = null) },
-            text = { Text(appString(Res.string.group)) }
-        )
-        FloatingActionButtonMenuItem(
-            onClick = {
-                isOpen = false
-                onCreatePath()
-            },
-            icon = { Icon(rememberVectorPainter(TrailIcons.PathSolid), contentDescription = null) },
-            text = { Text(appString(Res.string.path)) }
-        )
-        if (onCreatePathOnMap != null) FloatingActionButtonMenuItem(
-            onClick = {
-                isOpen = false
-                onCreatePathOnMap()
-            },
-            icon = { Icon(rememberVectorPainter(TrailIcons.Maps), contentDescription = null) },
-            text = { Text(appString(Res.string.create_path_on_map)) }
-        )
     }
 }
 
