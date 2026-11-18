@@ -1,6 +1,7 @@
 package com.kylecorry.trail_sense.settings.backup
 
 import androidx.room3.PooledConnection
+import androidx.room3.Transactor
 import androidx.room3.immediateTransaction
 import androidx.room3.useWriterConnection
 import com.kylecorry.andromeda.files.FileStorage
@@ -23,12 +24,7 @@ class FilePortableBackup(private val database: AppDatabase, private val files: F
     override suspend fun export(): ByteArray = withWorkspace { workspace ->
         val snapshot = "$workspace/$DATABASE"
         val archive = "$workspace/backup.zip"
-        database.useWriterConnection { connection ->
-            connection.usePrepared("VACUUM main INTO ?") {
-                it.bindText(1, files.root.resolve(snapshot).toString())
-                it.step()
-            }
-        }
+        exportDatabase(files.root.resolve(snapshot).toString())
         files.writeText("$workspace/$MANIFEST", VERSION)
         val sources = listOf(snapshot, "$workspace/$MANIFEST") + mediaFolders.filter(files::exists)
         files.zip(archive, sources)
@@ -99,41 +95,59 @@ class FilePortableBackup(private val database: AppDatabase, private val files: F
         return paths
     }
 
-    private suspend fun restoreDatabase(snapshot: String) = database.useWriterConnection { connection ->
-        connection.usePrepared("ATTACH DATABASE ? AS portable_backup") {
-            it.bindText(1, snapshot)
-            it.step()
-        }
-        try {
-            val identity = connection.queryStrings("SELECT identity_hash FROM main.room_master_table WHERE id = 42")
-            require(identity.isNotEmpty() && identity == connection.queryStrings(
-                "SELECT identity_hash FROM portable_backup.room_master_table WHERE id = 42"
-            ))
-            require(connection.queryStrings("PRAGMA portable_backup.quick_check(1)") == listOf("ok"))
-
-            val tables = connection.queryStrings(
-                "SELECT name FROM main.sqlite_schema WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
-            ).filter { it !in deviceTables }
-            val backupTables = connection.queryStrings(
-                "SELECT name FROM portable_backup.sqlite_schema WHERE type = 'table' AND sql LIKE 'CREATE TABLE%'"
-            )
-            require(tables.all { it in backupTables })
-            connection.immediateTransaction {
-                connection.execute("PRAGMA defer_foreign_keys = ON")
-                tables.forEach { connection.execute("DELETE FROM main.${it.sqlIdentifier()}") }
-                for (name in tables) {
-                    val table = name.sqlIdentifier()
-                    // Match by column name even if a platform migration changed the original column order.
-                    val columns = connection.queryStrings("PRAGMA main.table_info($table)", 1)
-                        .joinToString(", ") { it.sqlIdentifier() }
-                    connection.execute("INSERT INTO main.$table ($columns) SELECT $columns FROM portable_backup.$table")
-                }
-                connection.execute("UPDATE main.paths SET temporary = 0 WHERE temporary = 1")
+    private suspend fun exportDatabase(snapshot: String) = withSnapshot(snapshot) { connection ->
+        connection.immediateTransaction {
+            val tables = connection.portableTables() + "room_master_table"
+            for (name in tables) {
+                val table = name.sqlIdentifier()
+                connection.execute("CREATE TABLE portable_backup.$table AS SELECT * FROM main.$table")
             }
-        } finally {
-            withContext(NonCancellable) { connection.execute("DETACH DATABASE portable_backup") }
         }
     }
+
+    private suspend fun restoreDatabase(snapshot: String) = withSnapshot(snapshot) { connection ->
+        val identity = connection.queryStrings("SELECT identity_hash FROM main.room_master_table WHERE id = 42")
+        require(identity.isNotEmpty() && identity == connection.queryStrings(
+            "SELECT identity_hash FROM portable_backup.room_master_table WHERE id = 42"
+        ))
+        require(connection.queryStrings("PRAGMA portable_backup.quick_check(1)") == listOf("ok"))
+
+        val tables = connection.portableTables()
+        val backupTables = connection.queryStrings(
+            "SELECT name FROM portable_backup.sqlite_master WHERE type = 'table' AND sql LIKE 'CREATE TABLE%'"
+        )
+        require(tables.all { it in backupTables })
+        connection.immediateTransaction {
+            connection.execute("PRAGMA defer_foreign_keys = ON")
+            tables.forEach { connection.execute("DELETE FROM main.${it.sqlIdentifier()}") }
+            for (name in tables) {
+                val table = name.sqlIdentifier()
+                // Match by column name even if a platform migration changed the original column order.
+                val columns = connection.queryStrings("PRAGMA main.table_info($table)", 1)
+                    .joinToString(", ") { it.sqlIdentifier() }
+                connection.execute("INSERT INTO main.$table ($columns) SELECT $columns FROM portable_backup.$table")
+            }
+            connection.execute("UPDATE main.paths SET temporary = 0 WHERE temporary = 1")
+        }
+    }
+
+    private suspend fun <T> withSnapshot(snapshot: String, block: suspend (Transactor) -> T): T =
+        database.useWriterConnection { connection ->
+            connection.usePrepared("ATTACH DATABASE ? AS portable_backup") {
+                it.bindText(1, snapshot)
+                it.step()
+            }
+            try {
+                block(connection)
+            } finally {
+                withContext(NonCancellable) { connection.execute("DETACH DATABASE portable_backup") }
+            }
+        }
+
+    private suspend fun PooledConnection.portableTables(): List<String> =
+        queryStrings(
+            "SELECT name FROM main.sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+        ).filter { it !in deviceTables }
 
     private suspend fun <T> withWorkspace(block: suspend (String) -> T): T = withContext(ioDispatcher) {
         operation.withLock {
