@@ -82,7 +82,6 @@ object PreferenceKeys {
     const val gpsAccuracyWaitSeconds = "pref_gps_accuracy_wait_seconds"
     const val gpsPowerUsage = "pref_gps_power_usage"
     const val gpsSmoothing = "pref_gps_smoothing"
-    const val historicTemperaturesDisclaimerShown = "pref_historic_temperatures_disclaimer_shown"
     const val includeLeadingZero = "pref_leading_zero"
     const val includeMapsforgeBackups = "pref_include_mapsforge_backups"
     const val increaseArExposureAtNight = "pref_increase_ar_exposure_at_night"

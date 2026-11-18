@@ -119,7 +119,6 @@ import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherLogger
 import com.kylecorry.trail_sense.tools.weather.infrastructure.commands.ChangeWeatherFrequencyCommand
 import com.kylecorry.trail_sense.tools.weather.infrastructure.subsystem.IWeatherSubsystem
 import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHighLowTemperatureDialogCommand
-import com.kylecorry.trail_sense.tools.weather.ui.dialogs.ShowHistoricTemperatureDisclaimerCommand
 import com.kylecorry.trail_sense.tools.weather.ui.fields.AlertWeatherField
 import com.kylecorry.trail_sense.tools.clouds.ui.CloudDetailsModal
 import com.kylecorry.trail_sense.tools.weather.ui.fields.CloudWeatherField
@@ -182,11 +181,7 @@ fun WeatherToolScreen(
     DisposableEffect(viewModel, lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> {
-                    viewModel.start()
-                    ShowHistoricTemperatureDisclaimerCommand().execute()
-                }
-
+                Lifecycle.Event.ON_RESUME -> viewModel.start()
                 Lifecycle.Event.ON_PAUSE -> viewModel.stop()
                 else -> {}
             }
