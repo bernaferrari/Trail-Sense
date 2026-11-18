@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.tools.navigation.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
@@ -25,6 +26,8 @@ import com.kylecorry.sol.math.trigonometry.Trigonometry
 import com.kylecorry.trail_sense.shared.icons.trail.ArrowTarget
 import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
 import kotlin.math.ceil
+
+internal val LocalLinearCompassAvailable = staticCompositionLocalOf { true }
 
 /** The localized letters for the four cardinal directions, resolved by the caller. */
 data class CardinalLabels(

@@ -20,6 +20,7 @@ import androidx.compose.ui.window.ComposeViewport
 import com.kylecorry.trail_sense.main.SharedApp
 import com.kylecorry.trail_sense.main.persistence.openWasmDatabase
 import com.kylecorry.trail_sense.main.registerSharedApp
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.SharedMapFiles
 import com.kylecorry.trail_sense.shared.images.ComposeAssetImages
 import com.kylecorry.trail_sense.shared.images.ComposeBundledImages
 import com.kylecorry.trail_sense.shared.text.WebAppStrings
@@ -47,7 +48,8 @@ fun main() {
                     strings = loaded,
                     bundledImages = ComposeBundledImages(),
                     images = ComposeAssetImages(),
-                    formats = PortablePlatformFormats()
+                    formats = PortablePlatformFormats(),
+                    mapFiles = SharedMapFiles(BrowserOfflineMapStorage(), ::renderBrowserMapPdf)
                 )
                 strings = loaded
                 root.setAttribute("aria-busy", "false")

@@ -6,6 +6,9 @@ import androidx.compose.ui.window.application
 import com.kylecorry.trail_sense.main.SharedApp
 import com.kylecorry.trail_sense.main.persistence.jvmAppDatabase
 import com.kylecorry.trail_sense.main.registerSharedApp
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.SharedMapFiles
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.diskOfflineMapStorage
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.renderNativeMapPdf
 import com.kylecorry.trail_sense.settings.backup.FilePortableBackup
 import com.kylecorry.trail_sense.shared.device.DeviceProfile
 import com.kylecorry.trail_sense.shared.images.ComposeAssetImages
@@ -30,7 +33,7 @@ fun main() {
         bundledImages = ComposeBundledImages(),
         images = ComposeAssetImages(),
         formats = PortablePlatformFormats(),
-        fileStorage = files,
+        mapFiles = SharedMapFiles(diskOfflineMapStorage(files), ::renderNativeMapPdf),
         portableBackup = FilePortableBackup(database, files)
     )
 

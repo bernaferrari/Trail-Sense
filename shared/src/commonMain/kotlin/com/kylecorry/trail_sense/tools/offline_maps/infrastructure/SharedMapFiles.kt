@@ -1,22 +1,115 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure
 
-import com.kylecorry.andromeda.files.FileStorage
+import androidx.compose.ui.graphics.ImageBitmap
 import com.kylecorry.andromeda.geojson.*
+import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
 import com.kylecorry.trail_sense.shared.extensions.normalize
-import com.kylecorry.trail_sense.shared.sharing.PickedFile
+import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMapEntity
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMapGeoreference
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMapFileType
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.mapsforge.MapsforgeReader
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.persistence.MapFileAccess
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.extension
+import io.github.vinceglb.filekit.nameWithoutExtension
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.decodeToImageBitmap
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
-internal class SharedMapFiles(private val storage: FileStorage) : MapFileAccess {
-    suspend fun import(file: PickedFile, maps: MapService): Long? = withContext(ioDispatcher) {
-        val geoJson = GeoJsonConvert.fromJson(file.decodeToString()) ?: return@withContext null
+internal const val MAX_MAP_PDF_EDGE = 3072f
+
+internal class SharedMapFiles(
+    private val storage: OfflineMapStorage,
+    private val renderPdf: (suspend (ByteArray) -> ByteArray)? = null
+) : MapFileAccess {
+    val extensions: List<String> get() =
+        listOf("geojson", "json", "map", "jpg", "jpeg", "png", "webp") + listOfNotNull("pdf".takeIf { renderPdf != null })
+
+    suspend fun import(file: PlatformFile, maps: MapService): IMap = withContext(ioDispatcher) {
+        val extension = file.extension.lowercase()
+        require(extension in extensions)
+        val name = file.nameWithoutExtension
+        val id = Uuid.random().toString()
+        val createdOn = Clock.System.now()
+        val paths = mutableListOf<String>()
+        suspend fun copy(path: String): OfflineMapBlob {
+            paths.add(path)
+            storage.copy(path, file)
+            return requireNotNull(storage.open(path))
+        }
+        try {
+            when (extension) {
+                "map", "geojson", "json" -> {
+                    val path = "offline_maps/$id.$extension"
+                    val blob = copy(path)
+                    val type = if (extension == "map") VectorMapFileType.Mapsforge else VectorMapFileType.GeoJson
+                    val bounds = if (type == VectorMapFileType.Mapsforge) MapsforgeReader.open(blob).bounds
+                    else geoJsonBounds(requireNotNull(readGeoJson(blob)))
+                    val map = VectorMap(0, name, type, path, blob.size, createdOn, bounds,
+                        if (type == VectorMapFileType.Mapsforge) "OpenStreetMap contributors" else null,
+                        visible = true)
+                    withContext(NonCancellable) { map.copy(id = maps.add(map)) }
+                }
+                else -> {
+                    val path = "maps/$id.${if (extension == "pdf") "png" else extension}"
+                    val blob = copy(if (extension == "pdf") "$path.pdf" else path)
+                    val bytes = if (extension == "pdf") {
+                        requireNotNull(renderPdf)(blob.readAll(MAX_PDF_BYTES)).also {
+                            paths.add(path)
+                            storage.write(path, it)
+                        }
+                    } else blob.readAll(MAX_IMAGE_BYTES)
+                    val image = bytes.decodeToImageBitmap()
+                    val size = Size(image.width.toFloat(), image.height.toFloat())
+                    val map = PhotoMap(0, name, path, blob.size, PhotoMapGeoreference(size), createdOn = createdOn)
+                    withContext(NonCancellable) { map.copy(id = maps.add(map)) }
+                }
+            }
+        } catch (exception: Exception) {
+            withContext(NonCancellable) { paths.forEach { runCatching { storage.delete(it) } } }
+            throw exception
+        }
+    }
+
+    suspend fun openVector(map: VectorMap): OfflineVectorMap? = withContext(ioDispatcher) {
+        val blob = open(map.path) ?: return@withContext null
+        when (map.type) {
+            VectorMapFileType.GeoJson -> {
+                val features = readGeoJson(blob)?.normalize() ?: return@withContext null
+                OfflineVectorMap { _, _ -> features }
+            }
+            VectorMapFileType.Mapsforge -> {
+                val reader = MapsforgeReader.open(blob)
+                OfflineVectorMap(reader::read)
+            }
+        }
+    }
+
+    suspend fun openPhoto(map: PhotoMap): Pair<PhotoMap, ImageBitmap>? = withContext(ioDispatcher) {
+        val blob = open(map.filename)
+        val bytes = when {
+            blob != null -> blob.readAll(MAX_IMAGE_BYTES)
+            renderPdf != null -> open(map.pdfFileName)?.readAll(MAX_PDF_BYTES)?.let { renderPdf.invoke(it) }
+            else -> null
+        } ?: return@withContext null
+        val image = bytes.decodeToImageBitmap()
+        val size = Size(image.width.toFloat(), image.height.toFloat())
+        map.copy(georeference = map.georeference.copy(size = size, imageSize = size)) to image
+    }
+
+    private suspend fun open(path: String) = if (MANAGED_PATH.matches(path)) storage.open(path) else null
+
+    private suspend fun readGeoJson(blob: OfflineMapBlob): GeoJsonObject? =
+        GeoJsonConvert.fromJson(blob.readAll(MAX_GEOJSON_BYTES).decodeToString())
+
+    private fun geoJsonBounds(geoJson: GeoJsonObject): CoordinateBounds {
         val positions = geoJson.normalize().flatMap { feature ->
             when (val geometry = feature.geometry) {
                 is GeoJsonPoint -> listOfNotNull(geometry.point)
@@ -25,49 +118,29 @@ internal class SharedMapFiles(private val storage: FileStorage) : MapFileAccess 
                 else -> emptyList()
             }
         }
-        if (positions.isEmpty() || positions.any { it.x !in -180.0..180.0 || it.y !in -90.0..90.0 }) {
-            return@withContext null
-        }
-        val path = "offline_maps/${Uuid.random()}.geojson"
-        storage.write(path, file.bytes)
-        try {
-            maps.add(
-                VectorMap(
-                    id = 0,
-                    name = file.name.substringBeforeLast('.'),
-                    type = VectorMapFileType.GeoJson,
-                    path = path,
-                    sizeBytes = file.bytes.size.toLong(),
-                    createdOn = Clock.System.now(),
-                    bounds = CoordinateBounds.from(positions.map { it.coordinate }),
-                    attribution = null,
-                    visible = true
-                )
-            )
-        } catch (exception: Exception) {
-            runCatching { storage.delete(path) }
-            throw exception
-        }
+        require(positions.isNotEmpty() && positions.all { it.x in -180.0..180.0 && it.y in -90.0..90.0 })
+        return requireNotNull(CoordinateBounds.from(positions.map { it.coordinate }))
     }
 
-    suspend fun read(map: VectorMap): GeoJsonObject? = withContext(ioDispatcher) {
-        if (map.type == VectorMapFileType.GeoJson && canRead(map.path)) {
-            GeoJsonConvert.fromJson(storage.readText(map.path))
-        } else null
-    }
+    // Only Android's repository can resolve persistent external content URIs.
+    override fun canRead(path: String) = false
 
-    override fun canRead(path: String) = isManagedPath(path) && storage.exists(path)
-    override fun delete(path: String) {
-        if (isManagedPath(path)) storage.delete(path)
+    override suspend fun delete(path: String) {
+        if (MANAGED_PATH.matches(path)) storage.delete(path)
     }
 
     override fun releaseExternal(path: String) = Unit
     override suspend fun copyToAppStorage(map: VectorMap): VectorMap? = null
     override fun populatePhotoMap(map: PhotoMapEntity) = map.toMap()
 
-    private fun isManagedPath(path: String) = MANAGED_PATH.matches(path)
-
     companion object {
-        private val MANAGED_PATH = Regex("offline_maps/[0-9a-f-]+\\.geojson")
+        private val MANAGED_PATH = Regex("(?:offline_maps|maps)/[A-Za-z0-9_-][A-Za-z0-9_ .-]*")
+        private const val MAX_GEOJSON_BYTES = 16 * 1024 * 1024
+        private const val MAX_IMAGE_BYTES = 48 * 1024 * 1024
+        private const val MAX_PDF_BYTES = 64 * 1024 * 1024
     }
+}
+
+internal fun interface OfflineVectorMap {
+    suspend fun features(bounds: CoordinateBounds, zoom: Int): List<GeoJsonFeature>
 }

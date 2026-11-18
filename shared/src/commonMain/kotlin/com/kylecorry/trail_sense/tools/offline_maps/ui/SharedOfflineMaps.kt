@@ -10,21 +10,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import com.kylecorry.andromeda.files.FileStorage
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
 import com.kylecorry.sol.science.geology.CoordinateBounds
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.extensions.lineString
-import com.kylecorry.trail_sense.shared.extensions.normalize
 import com.kylecorry.trail_sense.shared.extensions.point
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.ConfigurableGeoJsonLayer
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.sensors.ISensorSubsystem
-import com.kylecorry.trail_sense.shared.sharing.pickFile
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.openFilePicker
+import com.kylecorry.trail_sense.tools.offline_maps.domain.IMap
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.MapLayerValues
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.GeoJsonLayer
+import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.sources.GeoJsonSource
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.OfflineVectorMap
+import kotlinx.coroutines.flow.MutableStateFlow
 import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.views.compose.*
@@ -47,9 +54,12 @@ internal fun SharedOfflineMapList() {
     val maps = remember { getAppService<MapService>() }
     val files = remember { getAppService<SharedMapFiles>() }
     val scope = rememberCoroutineScope()
-    var items by remember { mutableStateOf<List<VectorMap>?>(null) }
+    var items by remember { mutableStateOf<List<IMap>?>(null) }
     var busy by remember { mutableStateOf(false) }
-    LaunchedEffect(maps) { items = maps.getAllVectorMaps() }
+    suspend fun load() {
+        items = (maps.getAllPhotoMaps() + maps.getAllVectorMaps()).sortedBy { it.name.lowercase() }
+    }
+    LaunchedEffect(maps) { load() }
 
     TrailSensePage(
         title = appString(Res.string.offline_maps),
@@ -59,13 +69,10 @@ internal fun SharedOfflineMapList() {
                 busy = true
                 scope.launch {
                     try {
-                        val file = pickFile(listOf("geojson", "json")) ?: return@launch
-                        val id = files.import(file, maps)
-                        if (id == null) effects.showMessage(strings.get(Res.string.shared_map_invalid))
-                        else {
-                            items = maps.getAllVectorMaps()
-                            navigator.navigate(Route.VectorMapView(id))
-                        }
+                        val file = FileKit.openFilePicker(type = FileKitType.File(files.extensions.toSet())) ?: return@launch
+                        val map = files.import(file, maps)
+                        load()
+                        navigator.navigate(map.destination())
                     } catch (exception: CancellationException) {
                         throw exception
                     } catch (_: Exception) {
@@ -84,21 +91,38 @@ internal fun SharedOfflineMapList() {
                 Text(appString(Res.string.shared_map_empty))
             }
         }
-        items(current.orEmpty(), key = { it.id }) { map ->
+        items(current.orEmpty(), key = { "${it is PhotoMap}-${it.id}" }) { map ->
             TrailSenseListItem(
                 title = map.name,
-                subtitle = if (files.canRead(map.path)) null else appString(Res.string.shared_map_unavailable),
+                subtitle = when (map) {
+                    is VectorMap -> if (map.isAvailable) null else appString(Res.string.shared_map_unavailable)
+                    else -> null
+                },
                 modifier = Modifier.padding(bottom = 4.dp),
-                onClick = { navigator.navigate(Route.VectorMapView(map.id)) }
+                onClick = { navigator.navigate(map.destination()) }
             )
         }
     }
 }
 
-@Composable
-fun PortableVectorMapScreen(mapId: Long, fileStorage: FileStorage) {
-    val files = remember(fileStorage) { SharedMapFiles(fileStorage) }
-    SharedOfflineMap(mapId, files)
+private fun IMap.destination(): Route = when (this) {
+    is PhotoMap -> Route.PhotoMaps(id)
+    else -> Route.VectorMapView(id)
+}
+
+private class OfflineVectorSource : GeoJsonSource {
+    val maps = MutableStateFlow(emptyList<OfflineVectorMap>())
+    override suspend fun load(bounds: CoordinateBounds, zoom: Int, params: MapLayerValues): GeoJsonFeatureCollection {
+        return GeoJsonFeatureCollection(maps.value.flatMap { it.features(bounds, zoom) })
+    }
+}
+
+private class OfflineVectorLayer(private val files: OfflineVectorSource = OfflineVectorSource()) :
+    GeoJsonLayer<OfflineVectorSource>(files, "offline", useFastPathRendering = true) {
+    fun setMaps(maps: List<OfflineVectorMap>) {
+        files.maps.value = maps
+        refresh()
+    }
 }
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -114,12 +138,13 @@ internal fun SharedOfflineMap(mapId: Long? = null, mapFiles: SharedMapFiles? = n
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val view = remember(density, mapId) { SharedMapView(density.density, density.fontScale) }
-    val offline = remember(view) { ConfigurableGeoJsonLayer(true, layerId = "offline") }
+    val offline = remember(view) { OfflineVectorLayer() }
     val track = remember(view) { ConfigurableGeoJsonLayer(true, layerId = "backtrack") }
     val position = remember(view) { ConfigurableGeoJsonLayer(false, layerId = "position") }
     val positionColor = MaterialTheme.colorScheme.primary.toArgb()
     val trackColor = MaterialTheme.colorScheme.tertiary.toArgb()
     var mapName by remember(mapId) { mutableStateOf<String?>(null) }
+    var attribution by remember(mapId) { mutableStateOf<String?>(null) }
     var canDelete by remember(mapId) { mutableStateOf(false) }
     var confirmDelete by remember(mapId) { mutableStateOf(false) }
     var unavailable by remember(mapId) { mutableStateOf(false) }
@@ -136,17 +161,18 @@ internal fun SharedOfflineMap(mapId: Long? = null, mapFiles: SharedMapFiles? = n
         mapName = selected?.name
         canDelete = selected != null
         val displayed = if (mapId == null) maps.getAllVectorMaps().filter { it.visible } else listOfNotNull(selected)
-        val features = displayed.flatMap { map ->
+        val sources = displayed.mapNotNull { map ->
             try {
-                files.read(map)?.let { it.normalize() }.orEmpty()
+                files.openVector(map)?.let { map to it }
             } catch (exception: CancellationException) {
                 throw exception
             } catch (_: Exception) {
-                emptyList()
+                null
             }
         }
-        unavailable = mapId != null && features.isEmpty()
-        offline.setData(GeoJsonFeatureCollection(features))
+        unavailable = mapId != null && sources.isEmpty()
+        attribution = sources.mapNotNull { it.first.attribution }.distinct().joinToString(" · ").ifBlank { null }
+        offline.setMaps(sources.map { it.second })
         displayed.firstNotNullOfOrNull { it.bounds }?.let { bounds ->
             view.doOnLayout { view.fitIntoView(bounds) }
         }
@@ -229,5 +255,6 @@ internal fun SharedOfflineMap(mapId: Long? = null, mapFiles: SharedMapFiles? = n
         )
         if (unavailable) Text(appString(Res.string.shared_map_unavailable), Modifier.padding(16.dp))
         view.Content(Modifier.weight(1f).fillMaxWidth())
+        attribution?.let { Text(it, Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall) }
     }
 }

@@ -1,6 +1,5 @@
 package com.kylecorry.trail_sense.main
 
-import com.kylecorry.andromeda.files.FileStorage
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.style.TextAlign
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -101,7 +100,7 @@ internal fun registerSharedApp(
     formats: PlatformFormats,
     hasMotion: Boolean = false,
     hasCamera: Boolean = false,
-    fileStorage: FileStorage? = null,
+    mapFiles: SharedMapFiles? = null,
     portableBackup: PortableBackup? = null,
     turnBackAlarm: TurnBackAlarm? = null,
     createSunAlerts: ((UserPreferences, ISensorSubsystem) -> List<ToolService>)? = null,
@@ -233,14 +232,13 @@ internal fun registerSharedApp(
     DependencyRegistry.addSingleton(FieldGuideImageCleanup {})
 
     portableBackup?.let { DependencyRegistry.addSingleton<PortableBackup>(it) }
-    val mapFiles = fileStorage?.let(::SharedMapFiles)
     mapFiles?.let { DependencyRegistry.addSingleton(it) }
     val mapRepo: IMapRepo = MapRepo(
         offlineMapFileDao = database.vectorMapDao(),
         photoMapDao = database.photoMapDao(),
         mapGroupDao = database.mapGroupDao(),
         files = mapFiles ?: object : MapFileAccess {
-            override fun delete(path: String) {}
+            override suspend fun delete(path: String) {}
             override fun canRead(path: String): Boolean = false
             override fun releaseExternal(path: String) {}
             override suspend fun copyToAppStorage(map: VectorMap): VectorMap? = map

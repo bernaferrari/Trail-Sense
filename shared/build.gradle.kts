@@ -51,7 +51,10 @@ kotlin {
         val desktopAndIosMain = create("desktopAndIosMain") { dependsOn(portableMain) }
         val filePickerMain = create("filePickerMain") {
             dependsOn(commonMain.get())
-            dependencies { implementation(libs.andromeda.files) }
+            dependencies {
+                implementation(libs.andromeda.files)
+                implementation(libs.andromeda.pdf)
+            }
         }
         val mobileSharingMain = create("mobileSharingMain") { dependsOn(filePickerMain) }
         androidMain.get().dependsOn(mobileSharingMain)
@@ -69,6 +72,7 @@ kotlin {
     }
     sourceSets.wasmJsMain.dependencies {
         implementation("org.jetbrains.kotlinx:kotlinx-browser:0.5.0")
+        implementation(npm("pdfjs-dist", "6.5.438"))
     }
 
     sourceSets {

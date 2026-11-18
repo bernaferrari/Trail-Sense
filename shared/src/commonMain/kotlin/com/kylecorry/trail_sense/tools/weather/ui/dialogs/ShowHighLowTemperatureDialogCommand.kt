@@ -58,8 +58,11 @@ class ShowHighLowTemperatureDialogCommand(
         showComposeContentDialog(
             host = host,
             title = strings.get(Res.string.next_24_hours),
-            content = strings.get(Res.string.historic_temperatures_full_disclaimer, 30) +
-                    "\n\n" + strings.get(Res.string.now_value, now)
+            content = listOf(
+                strings.get(Res.string.historic_temperatures_full_disclaimer, 30),
+                strings.get(Res.string.data_source, "NASA Global Modeling and Assimilation Office - MERRA-2"),
+                strings.get(Res.string.now_value, now)
+            ).joinToString("\n\n")
         ) {
             TrailSenseLineChart(
                 readings = readings,

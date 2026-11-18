@@ -14,7 +14,7 @@ import java.util.UUID
 class AndroidMapFileAccess(context: Context) : MapFileAccess {
     private val files = FileSubsystem.getInstance(context)
 
-    override fun delete(path: String) = files.delete(path)
+    override suspend fun delete(path: String) = files.delete(path)
     override fun canRead(path: String): Boolean = files.canRead(path)
     override fun releaseExternal(path: String) = files.releasePersistentAccess(path.toUri())
 

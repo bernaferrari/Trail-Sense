@@ -314,6 +314,7 @@ private fun NavigationSettingsContent(
     val host = AppHost.current()
     val strings = LocalAppStrings.current
     val hasCompass = viewModel.hasCompass
+    val linearCompassAvailable = LocalLinearCompassAvailable.current
     val speedometerOptions = rememberSettingsOptions(Res.array.speedometer_entries, Res.array.speedometer_values)
     val sunMoonOptions = rememberSettingsOptions(Res.array.sun_moon_compass_entries, Res.array.sun_moon_compass_values)
 
@@ -458,7 +459,7 @@ private fun NavigationSettingsContent(
         }
 
         trailSenseSection("compass", title = compassTitle) {
-            if (hasCompass) {
+            if (hasCompass && linearCompassAvailable) {
                 row { position ->
                     SettingsSwitchRow(
                         label = appString(Res.string.pref_show_linear_compass_title),
@@ -468,7 +469,7 @@ private fun NavigationSettingsContent(
                         position = position
                     )
                 }
-            } else {
+            } else if (!hasCompass) {
                 row { position ->
                     SettingsSwitchRow(
                         label = appString(Res.string.show_dial_ticks_on_nearby_radar),

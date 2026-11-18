@@ -15,7 +15,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.p
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.vector_maps.persistence.VectorMapEntity
 
 interface MapFileAccess {
-    fun delete(path: String)
+    suspend fun delete(path: String)
     fun canRead(path: String): Boolean
     fun releaseExternal(path: String)
     suspend fun copyToAppStorage(map: VectorMap): VectorMap?

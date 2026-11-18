@@ -145,6 +145,8 @@ import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
 import com.kylecorry.trail_sense.tools.navigation.ui.CardinalLabels
 import com.kylecorry.trail_sense.tools.navigation.ui.CompassBearingIndicator
 import com.kylecorry.trail_sense.tools.navigation.ui.CompassMarker
+import com.kylecorry.trail_sense.tools.navigation.ui.LocalLinearCompassAvailable
+import com.kylecorry.trail_sense.tools.navigation.ui.RadarCompassItem
 import com.kylecorry.trail_sense.tools.navigation.ui.LinearCompass
 import com.kylecorry.trail_sense.tools.navigation.ui.NavigationSettingsScreen
 import com.kylecorry.trail_sense.tools.navigation.ui.NavigatorSensors
@@ -164,6 +166,7 @@ import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackToolScreen
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.offline_maps.ui.SharedOfflineMap
 import com.kylecorry.trail_sense.tools.offline_maps.ui.SharedOfflineMapList
+import com.kylecorry.trail_sense.tools.offline_maps.ui.SharedPhotoMapScreen
 import com.kylecorry.trail_sense.tools.paths.PathsToolServices
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
@@ -407,6 +410,9 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
         is Route.VectorMapView -> if (getAppService<ToolCatalog>().isToolAvailable(ToolIds.OFFLINE_MAPS)) {
             SharedOfflineMap(r.offlineMapFileId)
         } else UnsupportedSharedToolScreen(appString(Res.string.offline_maps))
+        is Route.PhotoMaps -> if (getAppService<ToolCatalog>().isToolAvailable(ToolIds.OFFLINE_MAPS)) {
+            SharedPhotoMapScreen(r.mapId)
+        } else UnsupportedSharedToolScreen(appString(Res.string.photo_maps))
         is Route.Clouds -> SharedCloudsScreen(modifier)
         Route.Diagnostics, Route.SensorDetails -> DiagnosticsToolScreen(exportLogs = null)
         is Route.ErrorHandler -> {
@@ -607,6 +613,12 @@ private fun SharedNavigationScreen(
         }
     }
 
+    val showLinearCompass = LocalLinearCompassAvailable.current
+    val radarItems = remember(markers, bearings, showLinearCompass) {
+        if (showLinearCompass) emptyList()
+        else markers.map { RadarCompassItem.Mark(it) } + bearings.map { RadarCompassItem.Turn(it.bearing, false) }
+    }
+
     TrailSensePage(
         title = appString(Res.string.navigation),
         onBack = if (route == Route.Navigation()) null else ({ navigator.navigateUp() }),
@@ -640,17 +652,20 @@ private fun SharedNavigationScreen(
             }
         }
         if (heading != null) item("compass") {
-            LinearCompass(
-                azimuth = heading,
-                labels = cardinalLabels,
-                markers = markers,
-                bearings = bearings,
-                modifier = Modifier.fillMaxWidth().height(72.dp)
-            )
-            Spacer(Modifier.height(TrailSenseSpacing.md))
+            if (showLinearCompass) {
+                LinearCompass(
+                    azimuth = heading,
+                    labels = cardinalLabels,
+                    markers = markers,
+                    bearings = bearings,
+                    modifier = Modifier.fillMaxWidth().height(72.dp)
+                )
+                Spacer(Modifier.height(TrailSenseSpacing.md))
+            }
             RadarCompass(
                 azimuth = heading,
                 labels = cardinalLabels,
+                items = radarItems,
                 modifier = Modifier.fillMaxWidth().height(280.dp)
             )
         }

@@ -646,9 +646,12 @@
     <string name="pedometer_disclaimer">The accuracy and battery usage of the pedometer is dependent on your device\'s manufacturer and the step length entered. Try it out at home for a bit to verify battery drain and accuracy before using on the trail.</string>
     <string name="rename">Rename</string>
     <string name="no_maps">No maps</string>
-    <string name="shared_map_empty">Import a GeoJSON map to view it offline.</string>
-    <string name="shared_map_invalid">Could not import this GeoJSON map.</string>
+    <string name="shared_map_empty">Import a map file, photo, or PDF to use it offline.</string>
+    <string name="shared_map_invalid">Could not import this map file.</string>
     <string name="shared_map_unavailable">This map file is unavailable or uses an unsupported format.</string>
+    <string name="shared_map_latitude">Latitude</string>
+    <string name="shared_map_longitude">Longitude</string>
+    <string name="shared_map_calibration_hint">Tap two landmarks on the map and enter their coordinates.</string>
     <string name="shared_map_location_unavailable">Could not find your current location.</string>
     <string name="on_map">On map</string>
     <string name="previous">Previous</string>
