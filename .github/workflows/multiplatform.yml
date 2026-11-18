@@ -69,7 +69,8 @@ jobs:
         env:
           CHROME_BIN: /usr/bin/google-chrome
         run: |
-          ./gradlew :shared:wasmJsBrowserTest :shared:wasmJsBrowserDistribution
+          ./gradlew --refresh-dependencies --max-workers=1 -Dorg.gradle.jvmargs=-Xmx8g -Pkotlin.compiler.execution.strategy=in-process \
+            :shared:wasmJsBrowserTest :shared:wasmJsBrowserDistribution
           python3 scripts/package-web.py shared/build/dist/wasmJs/productionExecutable
       - name: Launch the browser app and reload offline
         env:
