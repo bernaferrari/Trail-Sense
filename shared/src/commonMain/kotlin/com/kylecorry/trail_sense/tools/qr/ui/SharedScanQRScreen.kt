@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.PhotoLibrary
@@ -31,11 +30,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.andromeda.core.system.GeoUri
 import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.toBeacon
 import com.kylecorry.trail_sense.shared.camera.SharedCameraController
 import com.kylecorry.trail_sense.shared.camera.SharedCameraPreview
-import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.generated.resources.Res
 import com.kylecorry.trail_sense.shared.generated.resources.qr_code_scanner
 import com.kylecorry.trail_sense.shared.sharing.copyToClipboard
@@ -47,7 +46,6 @@ import com.kylecorry.trail_sense.shared.text.systemString
 import com.kylecorry.trail_sense.shared.views.compose.AppPermission
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseInstrumentScaffold
-import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
 import com.kylecorry.trail_sense.tools.notes.infrastructure.INoteRepo
 import com.kylecorry.trail_sense.tools.qr.infrastructure.NoteQREncoder
@@ -183,11 +181,17 @@ fun SharedScanQRScreen(
     val activeScan = scannedValue
     if (activeScan != null) {
         val noteEncoder = remember { NoteQREncoder() }
-        val parsedBeacon = remember(activeScan) { parseGeoBeacon(activeScan) }
-        val parsedNote = remember(activeScan) { runCatching { noteEncoder.decode(activeScan) }.getOrNull() }
+        val parsedBeacon = remember(activeScan) {
+            if (activeScan.startsWith("geo:", ignoreCase = true)) {
+                runCatching { GeoUri.parse("geo:" + activeScan.substringAfter(':'))?.toBeacon() }.getOrNull()
+            } else null
+        }
         val isUrl = remember(activeScan) {
             activeScan.startsWith("http://", ignoreCase = true) ||
                 activeScan.startsWith("https://", ignoreCase = true)
+        }
+        val parsedNote = remember(activeScan, isUrl) {
+            if (isUrl) null else noteEncoder.decodeTitledNote(activeScan)
         }
 
         AlertDialog(
@@ -233,8 +237,8 @@ fun SharedScanQRScreen(
                                     openExternalUrl(value)
                                 }
                                 else -> {
-                                    copyToClipboard(value)
-                                    effects.showMessage("Copied to clipboard")
+                                    val copied = copyToClipboard(value)
+                                    effects.showMessage(if (copied) "Copied to clipboard" else "Could not copy")
                                 }
                             }
                         }
@@ -244,21 +248,24 @@ fun SharedScanQRScreen(
                         when {
                             parsedBeacon != null || parsedNote != null -> "Import"
                             isUrl -> "Open"
-                            else -> systemString(SystemString.Ok)
+                            else -> "Copy"
                         }
                     )
                 }
             },
             dismissButton = {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    TextButton(
-                        onClick = {
-                            copyToClipboard(activeScan)
-                            scanMessage = "Copied: $activeScan"
+                    if (parsedBeacon == null && parsedNote == null) {
+                        TextButton(onClick = {
                             scannedValue = null
+                            scope.launch {
+                                val id = getAppService<INoteRepo>().addNote(noteEncoder.decode(activeScan))
+                                effects.showMessage("Note imported")
+                                onOpenNote(id)
+                            }
+                        }) {
+                            Text("Save as note")
                         }
-                    ) {
-                        Icon(Icons.Default.ContentCopy, contentDescription = null)
                     }
                     TextButton(onClick = { scannedValue = null }) {
                         Text(systemString(SystemString.Cancel))
@@ -267,23 +274,4 @@ fun SharedScanQRScreen(
             }
         )
     }
-}
-
-private fun parseGeoBeacon(value: String): Beacon? {
-    if (!value.startsWith("geo:", ignoreCase = true)) return null
-    val body = value.substringAfter(":")
-    val coordsPart = body.substringBefore("?").split(",")
-    if (coordsPart.size < 2) return null
-    val lat = coordsPart[0].toDoubleOrNull() ?: return null
-    val lon = coordsPart[1].toDoubleOrNull() ?: return null
-    val name = body.substringAfter("?q=", "")
-        .substringAfter("(", "")
-        .substringBefore(")")
-        .ifBlank { "${lat}, $lon" }
-    return Beacon(
-        id = 0,
-        name = name,
-        coordinate = Coordinate(lat, lon),
-        color = AppColor.Orange.color
-    )
 }

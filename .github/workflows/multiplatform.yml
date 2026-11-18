@@ -1,0 +1,84 @@
+name: Multiplatform CI
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: multiplatform-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6.4.0
+      - name: Test shared code and assemble the desktop app
+        shell: bash
+        run: ./gradlew :core:jvmTest :shared:jvmTest :shared:createDistributable
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6.4.0
+      - name: Test shared code on the iOS simulator target
+        run: ./gradlew :core:iosSimulatorArm64Test :shared:iosSimulatorArm64Test
+      - name: Build the iOS app
+        run: xcodebuild -project iosApp/TrailSense.xcodeproj -scheme TrailSense -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' ARCHS=arm64 CODE_SIGNING_ALLOWED=NO build
+      - name: Verify camera and photo usage descriptions
+        run: |
+          for key in NSCameraUsageDescription NSPhotoLibraryUsageDescription; do
+            /usr/libexec/PlistBuddy -c "Print :$key" iosApp/iosApp/Info.plist
+            test "$(rg -c "$key" iosApp/project.yml)" = 1
+          done
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6.4.0
+      - name: Test WebAssembly and package the offline browser app
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: |
+          ./gradlew :shared:wasmJsBrowserTest :shared:wasmJsBrowserDistribution
+          python3 scripts/package-web.py shared/build/dist/wasmJs/productionExecutable
+      - name: Launch the browser app and reload offline
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: |
+          npm install --prefix "$RUNNER_TEMP/trail-sense-web-test" playwright@1.65.1
+          export TRAIL_SENSE_WEB_TEST_PACKAGE="$RUNNER_TEMP/trail-sense-web-test/package.json"
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory shared/build/dist/wasmJs/productionExecutable &
+          server=$!
+          trap 'kill "$server"' EXIT
+          curl --retry 10 --retry-connrefused --fail http://127.0.0.1:8765/ -o /dev/null
+          node scripts/smoke-web.mjs http://127.0.0.1:8765/

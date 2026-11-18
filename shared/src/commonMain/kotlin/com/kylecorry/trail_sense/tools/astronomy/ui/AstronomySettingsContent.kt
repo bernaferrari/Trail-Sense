@@ -99,6 +99,7 @@ fun AstronomySettingsScreen(quickActionOptions: List<SettingsOption>) {
     }
 
     val generalTitle = appString(Res.string.general)
+    val alertServicesAvailable = viewModel.alertServicesAvailable
     val sunsetTitle = appString(Res.string.sunset)
     val sunriseTitle = appString(Res.string.sunrise)
     val eventsTitle = appString(Res.string.alerts)
@@ -183,7 +184,7 @@ fun AstronomySettingsScreen(quickActionOptions: List<SettingsOption>) {
             }
         }
 
-        trailSenseSection("sunset", title = sunsetTitle) {
+        if (alertServicesAvailable) trailSenseSection("sunset", title = sunsetTitle) {
             row { position ->
                 SettingsSwitchRow(
                     label = appString(Res.string.sunset_alerts),
@@ -226,7 +227,7 @@ fun AstronomySettingsScreen(quickActionOptions: List<SettingsOption>) {
             }
         }
 
-        trailSenseSection("sunrise", title = sunriseTitle) {
+        if (alertServicesAvailable) trailSenseSection("sunrise", title = sunriseTitle) {
             row { position ->
                 SettingsSwitchRow(
                     label = appString(Res.string.sunrise_alerts),
@@ -268,7 +269,7 @@ fun AstronomySettingsScreen(quickActionOptions: List<SettingsOption>) {
             }
         }
 
-        trailSenseSection("events", title = eventsTitle) {
+        if (alertServicesAvailable) trailSenseSection("events", title = eventsTitle) {
             row { position ->
                 SettingsSwitchRow(
                     label = appString(Res.string.pref_meteor_showers_title),
@@ -385,6 +386,9 @@ internal class AstronomySettingsViewModel(
         startCameraIn3D = value
         cache.putBoolean(keys.startCameraIn3D, value)
     }
+
+    val alertServicesAvailable: Boolean
+        get() = sunsetService.isSupported || sunriseService.isSupported
 
     /** Saves the switch; turning alerts off disables the service here, turning them on is the screen's to do. */
     fun changeSunsetAlerts(enabled: Boolean) {

@@ -58,4 +58,4 @@ expect suspend fun openEmail(
     body: String
 ): Boolean
 
-expect fun copyToClipboard(text: String)
+expect suspend fun copyToClipboard(text: String): Boolean

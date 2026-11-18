@@ -18,14 +18,14 @@ class NoteQREncoder : IQREncoder<Note> {
         return "$title$contents"
     }
 
-    override fun decode(qr: String): Note {
+    /** Older untitled notes use plain text. They can be imported through the explicit Save as note action. */
+    fun decodeTitledNote(qr: String): Note? {
         val split = qr.split("\n\n\n", limit = 2)
-        return if (split.size > 1 && !split[0].contains("\n")) {
-            val title = split.first()
-            val body = split.takeLast(split.size - 1).joinToString("\n\n\n")
-            Note(title, body, Clock.System.now().toEpochMilliseconds())
-        } else {
-            Note(null, qr, Clock.System.now().toEpochMilliseconds())
-        }
+        if (split.size != 2 || split[0].contains('\n')) return null
+        return Note(split[0], split[1], Clock.System.now().toEpochMilliseconds())
+    }
+
+    override fun decode(qr: String): Note {
+        return decodeTitledNote(qr) ?: Note(null, qr, Clock.System.now().toEpochMilliseconds())
     }
 }

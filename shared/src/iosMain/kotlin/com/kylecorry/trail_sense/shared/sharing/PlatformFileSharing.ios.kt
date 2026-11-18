@@ -1,13 +1,8 @@
 package com.kylecorry.trail_sense.shared.sharing
 
 import com.kylecorry.andromeda.clipboard.clipboardWriter
-import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.cacheDir
-import io.github.vinceglb.filekit.dialogs.openFileSaver
-import io.github.vinceglb.filekit.dialogs.shareFile
 import io.github.vinceglb.filekit.path
-import io.github.vinceglb.filekit.write
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSURL
 import platform.Foundation.NSCharacterSet
@@ -25,19 +20,6 @@ actual fun platformFileUri(file: PlatformFile): String? {
     return file.nsUrl.absoluteString ?: file.path
 }
 
-actual suspend fun saveExportFile(
-    suggestedName: String,
-    extension: String,
-    bytes: ByteArray
-): Boolean {
-    val file = FileKit.openFileSaver(
-        suggestedName = suggestedName,
-        extension = extension
-    ) ?: return false
-    file.write(bytes)
-    return true
-}
-
 @OptIn(ExperimentalForeignApi::class)
 actual suspend fun shareText(title: String, text: String): Boolean {
     val root = topViewController() ?: return false
@@ -49,14 +31,6 @@ actual suspend fun shareText(title: String, text: String): Boolean {
         popover.sourceView = root.view
     }
     root.presentViewController(activityController, animated = true, completion = null)
-    return true
-}
-
-actual suspend fun shareFile(suggestedName: String, bytes: ByteArray): Boolean {
-    val sanitizedName = suggestedName.substringAfterLast('/').ifBlank { "export.dat" }
-    val tempFile = PlatformFile(FileKit.cacheDir, sanitizedName)
-    tempFile.write(bytes)
-    FileKit.shareFile(tempFile)
     return true
 }
 
@@ -77,8 +51,9 @@ actual suspend fun openEmail(
     return openExternalUrl("mailto:$recipient?subject=$encodedSubject&body=$encodedBody")
 }
 
-actual fun copyToClipboard(text: String) {
+actual suspend fun copyToClipboard(text: String): Boolean {
     clipboardWriter().copy(text)
+    return true
 }
 
 @Suppress("CAST_NEVER_SUCCEEDS")

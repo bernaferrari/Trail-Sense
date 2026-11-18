@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.canvas
 
+import kotlin.test.BeforeTest
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
 import kotlin.test.Test
@@ -7,6 +8,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class PathExtensionsTest {
+    @BeforeTest
+    fun setUpGraphics() {
+        prepareTestGraphics()
+    }
+
 
     @Test
     fun straightSegmentsCoverEveryPoint() {

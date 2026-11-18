@@ -59,8 +59,8 @@ fun TrailSenseScreenScaffold(
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
                     .widthIn(max = contentMaxWidth)
+                    .fillMaxSize()
             ) {
                 content()
             }
@@ -91,8 +91,8 @@ fun TrailSenseScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
                     .widthIn(max = TrailSenseSize.maximumContentWidth)
+                    .fillMaxWidth()
                     .padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xl),
                 content = content

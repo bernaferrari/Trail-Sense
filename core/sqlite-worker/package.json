@@ -1,0 +1,10 @@
+{
+  "name": "trail-sense-sqlite-worker",
+  "version": "1.0.1",
+  "private": true,
+  "type": "module",
+  "exports": "./worker.js",
+  "dependencies": {
+    "@sqlite.org/sqlite-wasm": "3.54.1-build1"
+  }
+}

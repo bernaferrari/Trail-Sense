@@ -18,6 +18,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -50,6 +52,10 @@ import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.math.Vector2
 import com.kylecorry.sol.units.Reading
 import com.kylecorry.trail_sense.shared.icons.trail.*
+import com.kylecorry.trail_sense.shared.views.compose.inspectChart
+import com.kylecorry.trail_sense.shared.generated.resources.astronomy
+import com.kylecorry.trail_sense.shared.generated.resources.next
+import com.kylecorry.trail_sense.shared.generated.resources.previous
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartFrame
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartGutter
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartInset
@@ -97,6 +103,13 @@ fun AstroChart(
 
     val sunPosition = state.sunPosition?.toVector(state.startTime)
     val moonPosition = state.moonPosition?.toVector(state.startTime)
+    var selectedHour by remember(state.startTime) { mutableStateOf<Float?>(null) }
+
+    fun select(hour: Float?) {
+        selectedHour = hour
+        onClick(hour?.let { state.startTime + Time.hours(it.toDouble()) })
+    }
+    val selectedTime = selectedHour?.let { (state.startTime + Time.hours(it.toDouble())).toLocalTime() }
 
     Column(modifier) {
         TrailSenseChartFrame(
@@ -112,6 +125,18 @@ fun AstroChart(
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
+                    .inspectChart(
+                        label = stringResource(Res.string.astronomy),
+                        selected = selectedTime?.toString(),
+                        previousLabel = stringResource(Res.string.previous),
+                        nextLabel = stringResource(Res.string.next)
+                    ) { direction ->
+                        val next = (selectedHour ?: 12f) + direction
+                        if (next in 0f..24f) {
+                            select(next)
+                            true
+                        } else false
+                    }
                     .pointerInput(state) {
                         detectTapGestures { offset ->
                             val inset = TrailSenseChartInset.toPx()
@@ -124,11 +149,11 @@ fun AstroChart(
                                     (screen.y - offset.y).absoluteValue <= reach
                             }
                             if (tappedBody) {
-                                onClick(null)
+                                select(null)
                                 return@detectTapGestures
                             }
                             val hour = (((offset.x - inset) / (width - 2 * inset)) * 24f).coerceIn(0f, 24f)
-                            onClick(state.startTime + Time.hours(hour.toDouble()))
+                            select(hour)
                         }
                     }
             ) {

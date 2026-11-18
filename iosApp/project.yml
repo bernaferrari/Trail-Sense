@@ -15,6 +15,8 @@ targets:
         CFBundleDisplayName: Trail Sense
         CADisableMinimumFrameDurationOnPhone: true
         NSLocationWhenInUseUsageDescription: Show your current location while using Trail Sense.
+        NSCameraUsageDescription: Take photos, scan QR codes, and use the mirror or camera sightline in Trail Sense.
+        NSPhotoLibraryUsageDescription: Import photos and QR codes from your library in Trail Sense.
         NSMotionUsageDescription: Measure device orientation, steps, and movement in Trail Sense tools.
         UILaunchScreen: {}
     settings:

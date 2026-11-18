@@ -1,71 +1,40 @@
 package com.kylecorry.trail_sense.tools.tools.infrastructure
 
-import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.trail_sense.shared.device.DeviceProfile
-import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.text.AppStrings
 import com.kylecorry.trail_sense.shared.text.RawTexts
 import com.kylecorry.trail_sense.tools.astronomy.AstronomyBroadcasts
-import com.kylecorry.trail_sense.tools.paths.PathsBroadcasts
 import com.kylecorry.trail_sense.tools.paths.PathsToolServices
 import com.kylecorry.trail_sense.tools.weather.WeatherBroadcasts
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
 
-/**
- * Shared in-process [ToolService] state tracker so ViewModels calling `ToolCatalog.getService(...)`
- * can inspect, toggle, and persist foreground/background tool switches across non-Android platforms.
- */
-class SharedInProcessToolService(
+/** A tool service a shared screen can describe before the host has an implementation. */
+private class UnavailableToolService(
     override val id: String,
-    override val name: String,
-    private val prefs: Preferences,
-    private val prefKey: String,
-    private val defaultFrequency: Duration = 15.minutes,
-    private val frequencyProvider: () -> Duration = { defaultFrequency },
-    private val stateChangedBroadcast: String? = null
+    override val name: String
 ) : ToolService {
-
-    override fun getFrequency(): Duration = frequencyProvider()
-
-    override fun isRunning(): Boolean = isEnabled()
-
-    override fun isEnabled(): Boolean = prefs.getBoolean(prefKey) ?: false
-
-    override fun isBlocked(): Boolean = false
-
-    override suspend fun enable() {
-        prefs.putBoolean(prefKey, true)
-        stateChangedBroadcast?.let { ToolBroadcasts.broadcast(it) }
-    }
-
-    override suspend fun disable() {
-        prefs.putBoolean(prefKey, false)
-        stateChangedBroadcast?.let { ToolBroadcasts.broadcast(it) }
-    }
-
-    override suspend fun restart() {
-        if (isEnabled()) {
-            stateChangedBroadcast?.let { ToolBroadcasts.broadcast(it) }
-        }
-    }
-
-    override suspend fun stop() {
-        prefs.putBoolean(prefKey, false)
-        stateChangedBroadcast?.let { ToolBroadcasts.broadcast(it) }
-    }
+    override val isSupported = false
+    override fun getFrequency(): Duration = Duration.ZERO
+    override fun isRunning(): Boolean = false
+    override fun isEnabled(): Boolean = false
+    override fun isBlocked(): Boolean = true
+    override suspend fun enable() = Unit
+    override suspend fun disable() = Unit
+    override suspend fun restart() = Unit
+    override suspend fun stop() = Unit
 }
 
-/** Shared [ToolCatalog] implementation registering all multiplatform tools and in-process services. */
+/** Shared catalog for hosts that supply their platform capabilities. */
 class SharedToolCatalogImpl(
     private val strings: AppStrings,
     private val device: DeviceProfile,
-    private val prefs: Preferences,
     private val hasMotion: Boolean = false,
-    private val hasTorch: Boolean = true
+    private val hasTorch: Boolean = false,
+    private val hasScreenLight: Boolean = false,
+    private val hasCamera: Boolean = false
 ) : ToolCatalog {
 
     private val tools: List<SharedTool> by lazy {
@@ -73,44 +42,19 @@ class SharedToolCatalogImpl(
             strings = strings,
             hasMotion = hasMotion,
             hasCompass = device.hasCompass,
-            hasBarometer = device.hasBarometer,
-            hasTorch = hasTorch
+            hasTorch = hasTorch,
+            hasScreenLight = hasScreenLight,
+            hasCamera = hasCamera
         )
     }
 
     private val services: Map<String, ToolService> by lazy {
         mapOf(
-            WeatherBroadcasts.SERVICE_WEATHER_MONITOR to SharedInProcessToolService(
-                id = WeatherBroadcasts.SERVICE_WEATHER_MONITOR,
-                name = strings.get(Res.string.weather_monitor),
-                prefs = prefs,
-                prefKey = "pref_monitor_weather",
-                defaultFrequency = 15.minutes,
-                stateChangedBroadcast = WeatherBroadcasts.MONITOR_STATE_CHANGED
-            ),
-            AstronomyBroadcasts.SERVICE_SUNSET_ALERTS to SharedInProcessToolService(
-                id = AstronomyBroadcasts.SERVICE_SUNSET_ALERTS,
-                name = strings.get(Res.string.astronomy),
-                prefs = prefs,
-                prefKey = "pref_sunset_alerts",
-                stateChangedBroadcast = AstronomyBroadcasts.SUNSET_ALERTS_STATE_CHANGED
-            ),
-            AstronomyBroadcasts.SERVICE_SUNRISE_ALERTS to SharedInProcessToolService(
-                id = AstronomyBroadcasts.SERVICE_SUNRISE_ALERTS,
-                name = strings.get(Res.string.astronomy),
-                prefs = prefs,
-                prefKey = "pref_sunrise_alerts",
-                stateChangedBroadcast = AstronomyBroadcasts.SUNRISE_ALERTS_STATE_CHANGED
-            ),
-            PathsToolServices.BACKTRACK to SharedInProcessToolService(
-                id = PathsToolServices.BACKTRACK,
-                name = strings.get(Res.string.paths),
-                prefs = prefs,
-                prefKey = "pref_backtrack_enabled",
-                defaultFrequency = 15.minutes,
-                stateChangedBroadcast = PathsBroadcasts.BACKTRACK_STATE_CHANGED
-            )
-        )
+            WeatherBroadcasts.SERVICE_WEATHER_MONITOR to Res.string.weather_monitor,
+            AstronomyBroadcasts.SERVICE_SUNSET_ALERTS to Res.string.sunset,
+            AstronomyBroadcasts.SERVICE_SUNRISE_ALERTS to Res.string.sunrise,
+            PathsToolServices.BACKTRACK to Res.string.paths
+        ).mapValues { (id, label) -> UnavailableToolService(id, strings.get(label)) }
     }
 
     override fun getTools(availableOnly: Boolean): List<ToolDescriptor> {
@@ -135,8 +79,9 @@ fun sharedTools(
     strings: AppStrings,
     hasMotion: Boolean = false,
     hasCompass: Boolean = true,
-    hasBarometer: Boolean = true,
-    hasTorch: Boolean = true
+    hasTorch: Boolean = false,
+    hasScreenLight: Boolean = false,
+    hasCamera: Boolean = false
 ): List<SharedTool> = listOfNotNull(
     // Navigation & Location
     SharedTool(
@@ -162,11 +107,7 @@ fun sharedTools(
     ),
 
     // Weather & Nature
-    if (hasBarometer) SharedTool(
-        ToolIds.WEATHER, strings.get(Res.string.weather), TrailIcons.Weather,
-        Route.Weather, ToolCategory.Weather, guideId = RawTexts.guide_tool_weather,
-        settingsRoute = Route.WeatherSettings
-    ) else SharedTool(
+    SharedTool(
         ToolIds.WEATHER, strings.get(Res.string.weather), TrailIcons.Weather,
         Route.Weather, ToolCategory.Weather, guideId = RawTexts.guide_tool_weather,
         settingsRoute = Route.WeatherSettings
@@ -213,13 +154,6 @@ fun sharedTools(
         settingsRoute = Route.WaterBoilSettings
     ),
     SharedTool(
-        ToolIds.TURN_BACK, strings.get(Res.string.tool_turn_back), TrailIcons.Prev,
-        Route.TurnBack, ToolCategory.Time, guideId = RawTexts.guide_tool_turn_back,
-        settingsRoute = Route.TurnBackSettings
-    ),
-
-    // Distance & Angles
-    SharedTool(
         ToolIds.PEDOMETER, strings.get(Res.string.pedometer), TrailIcons.Steps,
         Route.Pedometer, ToolCategory.Distance, guideId = RawTexts.guide_tool_pedometer,
         settingsRoute = Route.PedometerSettings,
@@ -259,11 +193,11 @@ fun sharedTools(
         Route.Flashlight, ToolCategory.Signaling, guideId = RawTexts.guide_tool_flashlight,
         settingsRoute = Route.FlashlightSettings,
         additionalRoutes = listOf(Route.ScreenFlashlight::class)
-    ) else SharedTool(
+    ) else if (hasScreenLight) SharedTool(
         ToolIds.FLASHLIGHT, strings.get(Res.string.flashlight_title), TrailIcons.ScreenFlashlight,
         Route.ScreenFlashlight, ToolCategory.Signaling, guideId = RawTexts.guide_tool_flashlight,
         settingsRoute = Route.FlashlightSettings
-    ),
+    ) else null,
     SharedTool(
         ToolIds.WHISTLE, strings.get(Res.string.tool_whistle_title), TrailIcons.ToolWhistle,
         Route.Whistle, ToolCategory.Signaling, guideId = RawTexts.guide_tool_whistle
@@ -326,10 +260,10 @@ fun sharedTools(
         ToolIds.DIAGNOSTICS, strings.get(Res.string.diagnostics), TrailIcons.Sensors,
         Route.Diagnostics, ToolCategory.Other, guideId = RawTexts.guide_tool_diagnostics
     ),
-    SharedTool(
+    if (hasCamera) SharedTool(
         ToolIds.MIRROR_CAMERA, strings.get(Res.string.mirror_camera), TrailIcons.MirrorCamera,
         Route.MirrorCamera, ToolCategory.Other, guideId = RawTexts.guide_tool_mirror_camera
-    ),
+    ) else null,
     SharedTool(
         ToolIds.QR_CODE_SCANNER, strings.get(Res.string.qr_code_scanner), TrailIcons.QrCode,
         Route.ScanQr, ToolCategory.Other, guideId = RawTexts.guide_tool_qr_code_scanner

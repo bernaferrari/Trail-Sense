@@ -1,5 +1,7 @@
 package com.kylecorry.trail_sense.tools.astronomy.ui
 
+import kotlin.test.BeforeTest
+import com.kylecorry.trail_sense.shared.canvas.prepareTestGraphics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
@@ -7,6 +9,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class MoonPhaseImageMapperTest {
+    @BeforeTest
+    fun setUpGraphics() {
+        prepareTestGraphics()
+    }
+
 
     private val mapper = MoonPhaseImageMapper()
 

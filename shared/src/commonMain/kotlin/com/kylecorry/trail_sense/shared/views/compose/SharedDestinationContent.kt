@@ -48,6 +48,8 @@ import com.kylecorry.andromeda.sense.clinometer.Clinometer
 import com.kylecorry.andromeda.torch.ScreenTorch
 import com.kylecorry.andromeda.torch.screenBrightness
 import com.kylecorry.sol.units.CompassDirection
+import com.kylecorry.andromeda.core.system.GeoUri
+import com.kylecorry.trail_sense.shared.from
 import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
 import com.kylecorry.trail_sense.main.errors.ErrorHandlerScreen
@@ -195,8 +197,6 @@ import com.kylecorry.trail_sense.tools.tools.ui.PinnedToolManager
 import com.kylecorry.trail_sense.tools.tools.ui.ToolSearchFocusable
 import com.kylecorry.trail_sense.tools.tools.ui.ToolsHomeContent
 import com.kylecorry.trail_sense.tools.triangulate.ui.TriangulateToolScreen
-import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackAlarm
-import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackToolScreen
 import com.kylecorry.trail_sense.tools.waterpurification.ui.WaterPurificationToolScreen
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
 import com.kylecorry.trail_sense.tools.weather.ui.WeatherSettingsScreen
@@ -205,11 +205,6 @@ import com.kylecorry.trail_sense.tools.whitenoise.ui.WhiteNoiseScreen
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.launch
-
-private object NoOpTurnBackAlarm : TurnBackAlarm {
-    override suspend fun start() {}
-    override fun stop() {}
-}
 
 private object SharedPedometerStatus : PedometerSystemStatus {
     override fun canRecognizeActivity(): Boolean = true
@@ -302,7 +297,7 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
             )
         }
         Route.WaterPurification -> WaterPurificationToolScreen()
-        Route.TurnBack -> TurnBackToolScreen(alarm = NoOpTurnBackAlarm)
+        Route.TurnBack -> UnsupportedSharedToolScreen(appString(Res.string.tool_turn_back))
         Route.WhiteNoise -> WhiteNoiseScreen(modifier)
         Route.Flashlight -> FlashlightToolScreen(offerController = { ScreenControllerEffect(this, it) })
         Route.ScreenFlashlight -> {
@@ -384,7 +379,7 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
                         )
                         when (chosen?.name) {
                             "Share" -> shareText(beacon.name, text)
-                            "QR Code" -> navigator.navigate(Route.ViewQr(beacon.name, text))
+                            "QR Code" -> navigator.navigate(Route.ViewQr(beacon.name, GeoUri.from(beacon).toString()))
                         }
                     }
                 }
@@ -409,8 +404,10 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
                     }
                 },
                 onCopyError = {
-                    copyToClipboard(r.error)
-                    showMessage("Copied error details")
+                    coroutineScope.launch {
+                        val copied = copyToClipboard(r.error)
+                        showMessage(if (copied) "Copied error details" else "Could not copy error details")
+                    }
                 },
                 onViewDetails = { Alerts.dialog(host, diagnosticsTitle, r.error, cancelText = null) },
                 onReopenTool = { navigator.navigateUp() },
@@ -521,22 +518,29 @@ private fun SharedNavigationScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    var azimuth by remember { mutableFloatStateOf(0f) }
-    var location by remember { mutableStateOf(viewModel.sensors.gps.location) }
-    var altitude by remember { mutableFloatStateOf(viewModel.sensors.altimeter.altitude) }
+    val sensors = viewModel.sensors
+    var azimuth by remember(viewModel) {
+        mutableStateOf(sensors.compass.bearing.value.takeIf { sensors.compass.hasValidReading })
+    }
+    var location by remember(viewModel) {
+        mutableStateOf(sensors.gps.location.takeIf { sensors.gps.hasValidReading })
+    }
+    var altitude by remember(viewModel) {
+        mutableStateOf(sensors.altimeter.altitude.takeIf { sensors.altimeter.hasValidReading })
+    }
     val destination by viewModel.destination.collectAsStateWithLifecycle(initialValue = null)
 
     DisposableEffect(viewModel) {
         val compassListener = {
-            azimuth = viewModel.sensors.compass.bearing.value
+            azimuth = sensors.compass.bearing.value.takeIf { sensors.compass.hasValidReading }
             true
         }
         val gpsListener = {
-            location = viewModel.sensors.gps.location
+            location = sensors.gps.location.takeIf { sensors.gps.hasValidReading }
             true
         }
         val altListener = {
-            altitude = viewModel.sensors.altimeter.altitude
+            altitude = sensors.altimeter.altitude.takeIf { sensors.altimeter.hasValidReading }
             true
         }
         viewModel.sensors.compass.start(compassListener)
@@ -555,10 +559,12 @@ private fun SharedNavigationScreen(
         south = formatter.formatDirection(CompassDirection.South),
         west = formatter.formatDirection(CompassDirection.West)
     )
-    val markers = remember(viewModel.nearbyBeacons, location) {
-        viewModel.nearbyBeacons.map {
+    val position = location
+    val heading = azimuth
+    val markers = remember(viewModel.nearbyBeacons, position) {
+        if (position == null) emptyList() else viewModel.nearbyBeacons.map {
             CompassMarker(
-                bearing = location.bearingTo(it.coordinate).value,
+                bearing = position.bearingTo(it.coordinate).value,
                 icon = TrailIcons.Location
             )
         }
@@ -566,9 +572,9 @@ private fun SharedNavigationScreen(
     val primaryColor = MaterialTheme.colorScheme.primary
     val bearings = remember(destination, location, primaryColor) {
         when (val d = destination) {
-            is Destination.Beacon -> listOf(
-                CompassBearingIndicator(location.bearingTo(d.beacon.coordinate).value, color = primaryColor)
-            )
+            is Destination.Beacon -> position?.let {
+                listOf(CompassBearingIndicator(it.bearingTo(d.beacon.coordinate).value, color = primaryColor))
+            }.orEmpty()
             is Destination.Bearing -> listOf(
                 CompassBearingIndicator(d.trueBearing.value, color = primaryColor)
             )
@@ -578,7 +584,7 @@ private fun SharedNavigationScreen(
 
     TrailSensePage(
         title = appString(Res.string.navigation),
-        onBack = null,
+        onBack = if (route == Route.Navigation()) null else ({ navigator.navigateUp() }),
         modifier = modifier,
         actions = {
             FilledTonalButton(onClick = { navigator.navigate(Route.BeaconList()) }) {
@@ -592,25 +598,25 @@ private fun SharedNavigationScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = formatter.formatDegrees(azimuth),
+                    text = heading?.let { formatter.formatDegrees(it) } ?: appString(Res.string.compass_unavailable),
                     style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = formatter.formatLocation(location),
+                    text = position?.let { formatter.formatLocation(it) } ?: appString(Res.string.gps_unavailable),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = formatter.formatDistance(Distance.meters(altitude)),
+                    text = altitude?.let { formatter.formatDistance(Distance.meters(it)) } ?: appString(Res.string.unavailable),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
-        item("compass") {
+        if (heading != null) item("compass") {
             LinearCompass(
-                azimuth = azimuth,
+                azimuth = heading,
                 labels = cardinalLabels,
                 markers = markers,
                 bearings = bearings,
@@ -618,7 +624,7 @@ private fun SharedNavigationScreen(
             )
             Spacer(Modifier.height(TrailSenseSpacing.md))
             RadarCompass(
-                azimuth = azimuth,
+                azimuth = heading,
                 labels = cardinalLabels,
                 modifier = Modifier.fillMaxWidth().height(280.dp)
             )
@@ -631,7 +637,9 @@ private fun SharedNavigationScreen(
                     is Destination.Path -> active.path.name ?: appString(Res.string.paths)
                 }
                 val destSubtitle = when (active) {
-                    is Destination.Beacon -> formatter.formatDistance(Distance.meters(location.distanceTo(active.beacon.coordinate)))
+                    is Destination.Beacon -> position?.let {
+                        formatter.formatDistance(Distance.meters(it.distanceTo(active.beacon.coordinate)))
+                    } ?: appString(Res.string.gps_unavailable)
                     is Destination.Bearing -> formatter.formatDegrees(active.trueBearing.value)
                     is Destination.Path -> formatter.formatDistance(active.path.metadata.distance)
                 }
@@ -654,7 +662,7 @@ private fun SharedNavigationScreen(
             ) {
                 Button(
                     onClick = {
-                        val loc = if (location != Coordinate.zero) RouteLocation(location.latitude, location.longitude) else null
+                        val loc = position?.let { RouteLocation(it.latitude, it.longitude) }
                         navigator.navigate(Route.PlaceBeacon(initialLocation = loc))
                     },
                     modifier = Modifier.weight(1f)
@@ -948,15 +956,9 @@ private fun SharedPathsScreen(modifier: Modifier = Modifier) {
                 }
             }
         },
-        onCreatePathOnMap = {},
-        onBacktrackFrequencyClick = {},
-        onBacktrackToggleClick = {
-            scope.launch {
-                val service = backtrack ?: return@launch
-                if (service.isEnabled()) service.disable() else service.enable()
-                viewModel.updateBacktrackStatus()
-            }
-        },
+        onCreatePathOnMap = null,
+        onBacktrackFrequencyClick = null,
+        onBacktrackToggleClick = null,
         modifier = modifier.fillMaxSize()
     )
 }

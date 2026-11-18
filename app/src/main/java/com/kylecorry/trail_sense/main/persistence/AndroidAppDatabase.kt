@@ -53,7 +53,7 @@ object AndroidAppDatabase {
         }.toTypedArray()
     }
 
-    private fun buildDatabase(context: Context): AppDatabase {
+    internal fun buildDatabase(context: Context, name: String = "trail_sense"): AppDatabase {
 
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override suspend fun migrate(db: SQLiteConnection) {
@@ -527,7 +527,7 @@ object AndroidAppDatabase {
             }
         }
 
-        return Room.databaseBuilder(context, AppDatabase::class.java, "trail_sense")
+        return Room.databaseBuilder(context, AppDatabase::class.java, name)
             .addMigrations(*withLogging(
                 MIGRATION_1_2,
                 MIGRATION_2_3,

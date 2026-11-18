@@ -1,34 +1,27 @@
-# Trail Sense Shared
+# Shared Trail Sense app
 
-This is a **real** Kotlin Multiplatform (KMP) + Compose Multiplatform (CMP) module.
+`:core` holds domain logic, Room entities, DAOs, and repositories. `:shared` holds
+Compose screens, navigation, and the design system. The Android app consumes
+both modules and supplies its own sensors, services, and system integrations.
+iOS, desktop, and web use the shared app shell and register their platform
+dependencies in their launchers.
 
-## Current Status
+| Target | Local entry point |
+| --- | --- |
+| Android | `scripts/build.sh` |
+| iOS | Open `iosApp/TrailSense.xcodeproj` in Xcode and run the TrailSense scheme |
+| Desktop | `./gradlew :shared:run` |
+| Web development | `./gradlew :shared:wasmJsBrowserDevelopmentRun` |
+| Web distribution | `./gradlew :shared:wasmJsBrowserDistribution` then `python3 scripts/package-web.py shared/build/dist/wasmJs/productionExecutable` |
 
-- **Real KMP module**: Uses `org.jetbrains.kotlin.multiplatform` + `org.jetbrains.compose`.
-- **Targets**:
-  - `androidTarget` (consumed by the main Trail Sense Android app)
-  - `iosArm64` + `iosSimulatorArm64` (real iOS targets — the honest foundation)
-- **Source sets**: `commonMain`, `androidMain`, `iosMain`.
-- **What is actually shared today**:
-  - The full Trail Sense design system (theme, tokens, `TrailSense*` components, buttons, cards, etc.).
-  - `TrailSenseTheme` with proper `expect`/`actual` for Android dynamic (Material You) color support.
-- **Android-only** (correctly in `androidMain`):
-  - `ThemeRepository` (uses DataStore + Context for persisting color scheme choice).
+Set `ANDROID_HOME` to the Android SDK for Gradle's included builds. Serve the
+web distribution over HTTPS or localhost so the browser can use its service
+worker and SQLite storage. Browser data stays in that origin. Close the other
+Trail Sense tab if the browser reports that storage is busy.
 
-## What This Enables
+Start a desktop or browser smoke check with Notes, Convert, and Survival
+Guide. Tool capabilities depend on the host. Background Backtrack, scheduled
+alerts, and offline vector maps are currently supplied by Android.
 
-- Any new pure UI components or design system work can be written once in `commonMain` and will work on Android today and iOS (and future targets) tomorrow.
-- Platform-specific implementations (sensors, persistence, files, dynamic color, etc.) live behind `expect`/`actual` in the appropriate `...Main` source set.
-
-## Rules (No Fake KMP)
-
-- Pure Kotlin + Compose UI that does not touch platform APIs → `commonMain`.
-- Android-only (DataStore, `LocalContext`, sensors via Andromeda, Room, etc.) → `androidMain`.
-- iOS-specific implementations → `iosMain`.
-- Never put `import android.*` or `LocalContext` directly in `commonMain`.
-
-The previous "Android library pretending to have a commonMain" setup has been removed.
-
-## Next Steps Toward More Sharing
-
-See the project beads issues / epics for the roadmap (domain models, repository interfaces, sensor abstractions, etc.).
+Shared strings are generated from the Android translation resources listed in
+`shared-strings.txt`. The checked-in English guides live in `guides/en-US`.

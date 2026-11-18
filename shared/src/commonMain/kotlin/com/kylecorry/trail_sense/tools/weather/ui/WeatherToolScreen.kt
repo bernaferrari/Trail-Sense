@@ -6,6 +6,7 @@ import com.kylecorry.sol.math.MathExtensions.toRadians
 import com.kylecorry.trail_sense.shared.generated.resources.*
 import com.kylecorry.trail_sense.shared.text.appString
 
+import com.kylecorry.trail_sense.shared.views.compose.inspectChart
 import com.kylecorry.trail_sense.shared.views.compose.chartHeight
 
 import androidx.compose.animation.AnimatedVisibility
@@ -789,6 +790,7 @@ private fun WeatherPressureSection(
                 data = data.data,
                 raw = data.raw,
                 forecast = data.forecast,
+                selectedDescription = markerText,
                 onMarkerSelected = onMarkerSelected,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -854,6 +856,7 @@ private fun WeatherPressureChart(
     data: List<Reading<Pressure>>,
     raw: List<Reading<Pressure>>,
     forecast: List<Reading<Pressure>>,
+    selectedDescription: String?,
     onMarkerSelected: (Duration?, Float?) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -874,7 +877,12 @@ private fun WeatherPressureChart(
             return@Box
         }
 
-        val chartPoints = weatherPressureChartPoints(data, raw, forecast)
+        val chartPoints = remember(data, raw, forecast) { weatherPressureChartPoints(data, raw, forecast) }
+        fun select(point: WeatherPressureChartPoint?) {
+            selected = point
+            val timeAgo = point?.let { Clock.System.now() - (chartPoints.startTime + (it.x * 3600).toLong().seconds) }
+            onMarkerSelected(timeAgo, point?.pressure)
+        }
         // Word axes (High, Normal, Low for this window) live in the frame's gutter, so no line ever crosses them.
         com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartFrame(
             yLabels = listOf(
@@ -889,26 +897,25 @@ private fun WeatherPressureChart(
                     .fillMaxSize()
                     .padding(horizontal = com.kylecorry.trail_sense.shared.views.compose.TrailSenseChartInset)
                     .onSizeChanged { chartSize = it }
-                    .pointerInput(data, chartSize) {
+                    .inspectChart(
+                        label = appString(Res.string.pressure),
+                        selected = selectedDescription,
+                        previousLabel = appString(Res.string.previous),
+                        nextLabel = appString(Res.string.next)
+                    ) { direction ->
+                        val points = chartPoints.data
+                        if (points.isEmpty()) false else {
+                            val index = points.indexOfFirst { it == selected }
+                            val next = if (index < 0) points.lastIndex else index + direction
+                            points.getOrNull(next)?.let { select(it) } != null
+                        }
+                    }
+                    .pointerInput(chartPoints, chartSize) {
                         detectTapGestures { tap ->
-                            val points = weatherPressureChartPoints(data, raw, forecast)
-                            val primaryPoints = points.data
-                            if (primaryPoints.isEmpty() || chartSize.width <= 0) {
-                                selected = null
-                                onMarkerSelected(null, null)
-                                return@detectTapGestures
+                            val point = chartPoints.data.minByOrNull {
+                                abs(chartPoints.x(it.x, chartSize.width.toFloat()) - tap.x)
                             }
-
-                            val selectedPoint = primaryPoints.minByOrNull {
-                                abs(points.x(it.x, chartSize.width.toFloat()) - tap.x)
-                            }
-                            selected = selectedPoint
-                            if (selectedPoint == null) {
-                                onMarkerSelected(null, null)
-                            } else {
-                                val timeAgo = (Clock.System.now() - (points.startTime.plus(((selectedPoint.x * 60 * 60).toLong()).seconds)))
-                                onMarkerSelected(timeAgo, selectedPoint.pressure)
-                            }
+                            select(point)
                         }
                     }
             ) {

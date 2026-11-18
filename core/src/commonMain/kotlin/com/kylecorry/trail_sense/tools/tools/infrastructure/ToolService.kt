@@ -4,6 +4,9 @@ import kotlin.time.Duration
 
 interface ToolService {
 
+    /** Whether this host implements the service, independent of permission or power restrictions. */
+    val isSupported: Boolean get() = true
+
     /**
      * The unique ID of the service
      */

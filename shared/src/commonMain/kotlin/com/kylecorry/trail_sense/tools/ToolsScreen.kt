@@ -42,12 +42,10 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolDescriptor
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTile
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTileGrid
-import com.kylecorry.trail_sense.shared.views.compose.rememberTileTitleSize
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolKeywordLoader
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolSearch
 import com.kylecorry.trail_sense.tools.tools.ui.sort.CategoricalToolSort
@@ -102,13 +100,6 @@ fun <T : ToolDescriptor> ToolsScreen(
     val pinned = remember(allTools, pinnedToolIds) {
         pinnedToolIds.mapNotNull { id -> allTools.firstOrNull { it.id == id } }
     }
-
-    // One title size for every tile on the page, decided once from the longest tool name.
-    val screenWidth = with(androidx.compose.ui.platform.LocalDensity.current) {
-        androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width.toDp()
-    }
-    val gridWidth = minOf(screenWidth, TrailSenseSize.maximumContentWidth) - TrailSenseSpacing.lg * 2
-    val titleSize = rememberTileTitleSize(allTools.map { it.name }, gridWidth, if (gridWidth >= 600.dp) 3 else 2)
 
     // The tab's page: the family's large title that collapses as the grid scrolls, settings as its one action.
     com.kylecorry.trail_sense.shared.views.compose.TrailSensePage(
@@ -179,7 +170,7 @@ fun <T : ToolDescriptor> ToolsScreen(
                         TrailSenseGroupHeader(appString(Res.string.pinned))
                         TrailSenseTileGrid(
                             pinned.map { it.tile(onToolClick, onToolLongClick) },
-                            titleSize = titleSize
+                            titlesForSizing = allTools.map { it.name }
                         )
                     }
                 }
@@ -189,7 +180,7 @@ fun <T : ToolDescriptor> ToolsScreen(
                     group.categoryName?.let { TrailSenseGroupHeader(it) }
                     TrailSenseTileGrid(
                         group.tools.map { it.tile(onToolClick, onToolLongClick) },
-                        titleSize = titleSize
+                        titlesForSizing = allTools.map { it.name }
                     )
                 }
             }

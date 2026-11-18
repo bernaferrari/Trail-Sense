@@ -19,6 +19,12 @@ kotlin {
         }
     }
 
+    jvm {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
+    }
+
     listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
         target.binaries.framework {
             baseName = "TrailSenseShared"
@@ -30,8 +36,32 @@ kotlin {
         browser {
             binaries.executable()
             testTask {
-                enabled = false
+                useKarma { useChromeHeadless() }
             }
+        }
+    }
+    applyDefaultHierarchyTemplate()
+    sourceSets {
+        val portableMain = create("portableMain") { dependsOn(commonMain.get()) }
+        val portableTest = create("portableTest") { dependsOn(commonTest.get()) }
+        iosTest.get().dependsOn(portableTest)
+        jvmTest.get().dependsOn(portableTest)
+        wasmJsTest.get().dependsOn(portableTest)
+        val desktopAndWebMain = create("desktopAndWebMain") { dependsOn(portableMain) }
+        val desktopAndIosMain = create("desktopAndIosMain") { dependsOn(portableMain) }
+        val filePickerMain = create("filePickerMain") { dependsOn(commonMain.get()) }
+        val mobileSharingMain = create("mobileSharingMain") { dependsOn(filePickerMain) }
+        androidMain.get().dependsOn(mobileSharingMain)
+        iosMain.get().dependsOn(mobileSharingMain)
+        jvmMain.get().dependsOn(filePickerMain)
+        iosMain.get().dependsOn(desktopAndIosMain)
+        wasmJsMain.get().dependsOn(desktopAndWebMain)
+        jvmMain.get().dependsOn(desktopAndIosMain)
+        jvmMain.get().dependsOn(desktopAndWebMain)
+
+        jvmMain.dependencies {
+            implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutines.swing)
         }
     }
     sourceSets.wasmJsMain.dependencies {
@@ -387,4 +417,20 @@ val generateRawTexts = tasks.register<GenerateRawTextsTask>("generateRawTexts") 
 
 kotlin.sourceSets.commonMain {
     kotlin.srcDir(generateRawTexts.map { it.outputDir })
+}
+
+compose.desktop {
+    application {
+        mainClass = "com.kylecorry.trail_sense.desktop.MainKt"
+        nativeDistributions {
+            packageName = "Trail Sense"
+            packageVersion = "1.0.0"
+            modules("java.sql", "java.logging", "java.prefs")
+            targetFormats(
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg,
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi,
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb
+            )
+        }
+    }
 }

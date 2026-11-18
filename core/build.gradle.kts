@@ -64,9 +64,11 @@ kotlin {
             // Persisted state (e.g. GPSKalmanState) goes through Andromeda's kotlinx.serialization JsonConvert
             implementation(libs.kotlinx.serialization.core)
         }
+        jvmMain.dependencies { implementation("androidx.sqlite:sqlite-bundled:2.7.1") }
         iosMain.dependencies { implementation("androidx.sqlite:sqlite-bundled:2.7.1") }
         wasmJsMain.dependencies {
             implementation("androidx.sqlite:sqlite-web:2.7.1")
+            implementation(npm("trail-sense-sqlite-worker", layout.projectDirectory.dir("sqlite-worker").asFile))
             implementation("org.jetbrains.kotlinx:kotlinx-browser:0.5.0")
         }
         commonTest.dependencies {

@@ -142,11 +142,20 @@ fun trailSenseGridCellShape(column: Int, columns: Int, row: Int, rows: Int): Rou
  * size, the largest that keeps the longest title on one line beside its icon.
  */
 @Composable
-fun TrailSenseTileGrid(tiles: List<TrailSenseTile>, modifier: Modifier = Modifier, titleSize: TextUnit? = null) {
+fun TrailSenseTileGrid(
+    tiles: List<TrailSenseTile>,
+    modifier: Modifier = Modifier,
+    titlesForSizing: List<String> = tiles.map { it.title }
+) {
     if (tiles.isEmpty()) return
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        val columns = if (maxWidth >= 600.dp) 3 else 2
-        val size = titleSize ?: rememberTileTitleSize(tiles.map { it.title }, maxWidth, columns)
+        val fontScale = LocalDensity.current.fontScale
+        val columns = when {
+            maxWidth < 320.dp || fontScale >= 1.5f -> 1
+            maxWidth >= 600.dp -> 3
+            else -> 2
+        }
+        val size = rememberTileTitleSize(titlesForSizing, maxWidth, columns)
         val rows = tiles.chunked(columns)
         Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.xxs)) {
             rows.forEachIndexed { rowIndex, row ->
@@ -183,7 +192,7 @@ fun rememberTileTitleSize(titles: List<String>, width: Dp, columns: Int = 2): Te
     val style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
     val cell = (width - TrailSenseSpacing.xxs * (columns - 1)) / columns
     val besideIcon = cell - TrailSenseSpacing.lg * 2 - 40.dp - TrailSenseSpacing.md
-    val widest = remember(titles, style) {
+    val widest = remember(titles, style, density, measurer) {
         titles.maxOfOrNull { with(density) { measurer.measure(it, style, maxLines = 1).size.width.toDp() } }
     }
     if (widest == null || widest <= besideIcon) return style.fontSize

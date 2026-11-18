@@ -263,9 +263,9 @@ fun PathsScreen(
     onImportPath: () -> Unit,
     onCreateGroup: () -> Unit,
     onCreatePath: () -> Unit,
-    onCreatePathOnMap: () -> Unit,
-    onBacktrackFrequencyClick: () -> Unit,
-    onBacktrackToggleClick: () -> Unit,
+    onCreatePathOnMap: (() -> Unit)?,
+    onBacktrackFrequencyClick: (() -> Unit)?,
+    onBacktrackToggleClick: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     // What trails have I walked, and is Backtrack saving this one? A quiet Backtrack group, then one grouped list.
@@ -297,7 +297,7 @@ fun PathsScreen(
                 )
             }
         ) {
-            item(key = "backtrack") {
+            if (onBacktrackToggleClick != null) item(key = "backtrack") {
                 BacktrackRow(
                     state = backtrackState,
                     frequency = backtrackFrequency,
@@ -432,7 +432,7 @@ private fun PathsCreateMenu(
     onImportPath: () -> Unit,
     onCreateGroup: () -> Unit,
     onCreatePath: () -> Unit,
-    onCreatePathOnMap: () -> Unit
+    onCreatePathOnMap: (() -> Unit)?
 ) {
     var isOpen by rememberSaveable { mutableStateOf(false) }
     SystemBackHandler(enabled = isOpen) { isOpen = false }
@@ -495,7 +495,7 @@ private fun PathsCreateMenu(
             icon = { Icon(rememberVectorPainter(TrailIcons.PathSolid), contentDescription = null) },
             text = { Text(appString(Res.string.path)) }
         )
-        FloatingActionButtonMenuItem(
+        if (onCreatePathOnMap != null) FloatingActionButtonMenuItem(
             onClick = {
                 isOpen = false
                 onCreatePathOnMap()
@@ -513,7 +513,7 @@ private fun BacktrackRow(
     state: FeatureState,
     frequency: Duration?,
     formatService: FormatService,
-    onFrequencyClick: () -> Unit,
+    onFrequencyClick: (() -> Unit)?,
     onToggleClick: () -> Unit
 ) {
     val isOn = state == FeatureState.On
@@ -541,7 +541,7 @@ private fun BacktrackRow(
             }
         }
         // How often it records only matters while it records.
-        if (isOn) row { position ->
+        if (isOn && onFrequencyClick != null) row { position ->
             TrailSenseListItem(
                 title = appString(Res.string.frequency),
                 position = position,

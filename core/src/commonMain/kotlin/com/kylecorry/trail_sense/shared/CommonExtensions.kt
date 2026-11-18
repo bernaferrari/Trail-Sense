@@ -11,6 +11,7 @@ import com.kylecorry.sol.math.geometry.Size
 import com.kylecorry.sol.units.DistanceUnits
 import com.kylecorry.sol.units.Speed
 import com.kylecorry.sol.units.TimeUnits
+import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.data.Identifiable
 import com.kylecorry.trail_sense.tools.beacons.domain.Beacon
 import kotlin.math.roundToInt
@@ -33,6 +34,15 @@ fun GeoUri.Companion.from(beacon: Beacon): GeoUri {
 
     return GeoUri(beacon.coordinate, null, params)
 }
+
+
+fun GeoUri.toBeacon(): Beacon = Beacon(
+    id = 0,
+    name = queryParameters["label"].orEmpty(),
+    coordinate = coordinate,
+    elevation = altitude ?: queryParameters["ele"]?.toFloatOrNull(),
+    color = AppColor.Orange.color
+)
 
 
 val ZERO_SPEED = Speed.from(0f, DistanceUnits.Meters, TimeUnits.Seconds)

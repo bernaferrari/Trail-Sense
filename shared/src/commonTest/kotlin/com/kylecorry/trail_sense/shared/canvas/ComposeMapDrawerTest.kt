@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.shared.canvas
 
+import kotlin.test.BeforeTest
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -17,6 +18,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ComposeMapDrawerTest {
+    @BeforeTest
+    fun setUpGraphics() {
+        prepareTestGraphics()
+    }
+
 
     private val red = 0xFFFF0000.toInt()
     private val blue = 0xFF0000FF.toInt()

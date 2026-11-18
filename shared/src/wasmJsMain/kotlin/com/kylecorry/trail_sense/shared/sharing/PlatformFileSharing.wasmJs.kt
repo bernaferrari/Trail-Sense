@@ -4,6 +4,9 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.download
 import kotlinx.browser.window
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.await
+import kotlin.js.ExperimentalWasmJsInterop
 
 actual fun platformFileUri(file: PlatformFile): String? {
     return null
@@ -23,10 +26,7 @@ actual suspend fun saveExportFile(
     return true
 }
 
-actual suspend fun shareText(title: String, text: String): Boolean {
-    copyToClipboard(text)
-    return true
-}
+actual suspend fun shareText(title: String, text: String): Boolean = copyToClipboard(text)
 
 actual suspend fun shareFile(suggestedName: String, bytes: ByteArray): Boolean {
     FileKit.download(bytes = bytes, fileName = suggestedName.ifBlank { "export.dat" })
@@ -48,9 +48,15 @@ actual suspend fun openEmail(
     return true
 }
 
-actual fun copyToClipboard(text: String) {
-    runCatching {
-        window.navigator.clipboard.writeText(text)
+@OptIn(ExperimentalWasmJsInterop::class)
+actual suspend fun copyToClipboard(text: String): Boolean {
+    return try {
+        window.navigator.clipboard.writeText(text).await()
+        true
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (_: Exception) {
+        false
     }
 }
 
