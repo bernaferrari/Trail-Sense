@@ -1,38 +1,32 @@
 package com.kylecorry.trail_sense.tools.offline_maps.infrastructure.create
 
-import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateMapResult
-import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
-import kotlin.time.Clock
-
 import android.content.Context
 import android.net.Uri
-import com.kylecorry.luna.concurrency.onIO
+import android.util.Log
 import com.kylecorry.andromeda.core.tryOrDefault
-import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.pdf.GeospatialPDFParser
 import com.kylecorry.andromeda.pdf.PDFRenderer
 import com.kylecorry.andromeda.pdf.PDFRenderer2
+import com.kylecorry.luna.concurrency.onIO
 import com.kylecorry.sol.math.geometry.Size
-import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.io.FileSubsystem
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateMapResult
+import com.kylecorry.trail_sense.tools.offline_maps.domain.CreateOfflineMapError
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapCalibrationPoint
-import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMapGeoreference
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.MapProjectionType
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PercentCoordinate
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
+import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMapGeoreference
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.GeoPdfMap
-import okio.buffer
-import okio.source
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import java.io.IOException
 import java.util.UUID
+import kotlin.time.Clock
+import okio.buffer
+import okio.source
 
-class CreateMapFromPDFCommand(
-    private val context: Context,
-    private val name: String,
-    private val shouldCopyAsPdf: Boolean = true
-) {
+class CreateMapFromPDFCommand(private val context: Context, private val name: String) {
 
     private val files = FileSubsystem.getInstance(context)
     private val service = getAppService<MapService>()
@@ -40,85 +34,70 @@ class CreateMapFromPDFCommand(
     suspend fun execute(uri: Uri, pageIndex: Int, allowLegacyMetadata: Boolean): CreateMapResult = onIO {
         val uuid = "${UUID.randomUUID()}-page-${pageIndex + 1}"
         val filename = "maps/$uuid.webp"
-        val calibrationPoints = mutableListOf<MapCalibrationPoint>()
-
-        val maxSize = 2048
-        val (bp, scale) = PDFRenderer().toBitmap(context, uri, page = pageIndex, maxSize = maxSize)
+        val (bitmap, scale) = PDFRenderer().toBitmap(context, uri, page = pageIndex, maxSize = PREVIEW_EDGE)
             ?: return@onIO CreateMapResult.Failed(CreateOfflineMapError.InvalidMapFile)
-
-        val previewSize = Size(bp.width.toFloat(), bp.height.toFloat())
-        val shared = tryOrDefault(null) {
-            files.stream(uri)?.source()?.buffer()?.use { source ->
-                if (source.request(64L * 1024 * 1024 + 1)) null else {
-                    GeoPdfMap(name, source.readByteArray()).georeference(pageIndex, previewSize)
-                }
-            }
-        }
-        // The legacy parser cannot associate a viewport with a particular page.
-        val metadata = if (shared?.calibrationPoints.isNullOrEmpty() && allowLegacyMetadata) {
-            tryOrDefault(null) { files.stream(uri)?.use { GeospatialPDFParser().parse(it) } }
-        } else null
-
-        if (metadata != null && metadata.points.size >= 4) {
-
-            val first = metadata.points[0]
-            val second = metadata.points.maxBy { it.first.distanceTo(first.first) }
-
-            val points = listOf(first, second).map {
-                MapCalibrationPoint(
-                    Coordinate(it.second.latitude, it.second.longitude),
-                    PercentCoordinate(scale * it.first.x / bp.width, scale * it.first.y / bp.height)
-                )
-            }
-            calibrationPoints.addAll(points)
-        }
-
-        val projectionName = metadata?.projection?.projection
-        val projection = if (projectionName == null || projectionName.contains("mercator", true)) MapProjectionType.Mercator
-        else MapProjectionType.CylindricalEquidistant
+        val previewSize = Size(bitmap.width.toFloat(), bitmap.height.toFloat())
+        val georeference = readGeoreference(uri, pageIndex, previewSize, scale, allowLegacyMetadata)
 
         try {
-            files.save(filename, bp, recycleOnSave = true)
-        } catch (e: IOException) {
+            files.save(filename, bitmap, recycleOnSave = true)
+        } catch (exception: IOException) {
+            Log.w(TAG, "Could not save the PDF map preview", exception)
             return@onIO CreateMapResult.Failed(CreateOfflineMapError.UnableToCopy)
         }
 
-        if (shouldCopyAsPdf) {
-            tryOrNothing {
-                files.copyToLocal(uri, "maps", "$uuid.pdf")
-            }
-        }
-
-        val imageSize = files.imageSize(filename)
-        val fileSize = files.size(filename)
-
-        val pdfSize = if (shouldCopyAsPdf) {
-            tryOrDefault(null) {
-                PDFRenderer2(context, uri).use {
-                    it.getSize(pageIndex)
+        val pdfSize = tryOrDefault(null) {
+            files.copyToLocal(uri, "maps", "$uuid.pdf")?.let {
+                PDFRenderer2(context, uri).use { pdf ->
+                    val size = pdf.getSize(pageIndex)
+                    Size(size.width.toFloat(), size.height.toFloat())
                 }
             }
-        } else {
-            null
         }
-
         val map = PhotoMap(
-            0,
-            name,
-            filename,
-            fileSize,
-            PhotoMapGeoreference(
-                Size(imageSize.width.toFloat(), imageSize.height.toFloat()),
-                pdfSize?.let { Size(it.width.toFloat(), it.height.toFloat()) },
-                projectionType = shared?.takeIf { it.calibrationPoints.isNotEmpty() }?.projectionType ?: projection,
-                isWarpingCompleted = !shared?.calibrationPoints.isNullOrEmpty() || calibrationPoints.isNotEmpty(),
-                calibrationPoints = shared?.calibrationPoints?.takeIf { it.isNotEmpty() } ?: calibrationPoints
-            ),
+            0, name, filename, files.size(filename),
+            georeference.copy(unscaledPdfSize = pdfSize),
             createdOn = Clock.System.now()
         )
-
-        val id = service.add(map)
-        CreateMapResult.Created(map.copy(id = id))
+        CreateMapResult.Created(map.copy(id = service.add(map)))
     }
 
+    private suspend fun readGeoreference(
+        uri: Uri, pageIndex: Int, size: Size, scale: Float, allowLegacyMetadata: Boolean
+    ): PhotoMapGeoreference {
+        val shared = tryOrDefault(null) {
+            files.stream(uri)?.source()?.buffer()?.use { source ->
+                if (source.request(MAX_METADATA_FILE_BYTES + 1)) null else {
+                    GeoPdfMap(name, source.readByteArray()).georeference(pageIndex, size)
+                }
+            }
+        }
+        if (shared?.calibrationPoints?.isNotEmpty() == true) return shared
+        // The legacy parser cannot associate a viewport with a particular page.
+        val legacy = if (allowLegacyMetadata) {
+            tryOrDefault(null) { files.stream(uri)?.use { GeospatialPDFParser().parse(it) } }
+        } else null
+        val points = legacy?.points?.takeIf { it.size >= 4 }?.let { landmarks ->
+            val first = landmarks.first()
+            val second = landmarks.maxBy { it.first.distanceTo(first.first) }
+            listOf(first, second).map { (pixel, coordinate) ->
+                MapCalibrationPoint(coordinate, PercentCoordinate(scale * pixel.x / size.width, scale * pixel.y / size.height))
+            }
+        }.orEmpty()
+        val projectionName = legacy?.projection?.projection
+        val projection = if (projectionName == null || projectionName.contains("mercator", true)) {
+            MapProjectionType.Mercator
+        } else {
+            MapProjectionType.CylindricalEquidistant
+        }
+        return PhotoMapGeoreference(
+            size, projectionType = projection, isWarpingCompleted = points.isNotEmpty(), calibrationPoints = points
+        )
+    }
+
+    private companion object {
+        const val TAG = "CreateMapFromPDF"
+        const val PREVIEW_EDGE = 2048
+        const val MAX_METADATA_FILE_BYTES = 64L * 1024 * 1024
+    }
 }
