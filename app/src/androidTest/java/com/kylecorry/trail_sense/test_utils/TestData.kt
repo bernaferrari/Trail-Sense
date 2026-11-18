@@ -37,7 +37,7 @@ object TestData {
     /**
      * Removes all seeded and recorded data (paths, beacons, readings, etc.)
      */
-    fun clear() {
+    fun clear() = runBlocking {
         AndroidAppDatabase.getInstance(context).clearAllTables()
     }
 

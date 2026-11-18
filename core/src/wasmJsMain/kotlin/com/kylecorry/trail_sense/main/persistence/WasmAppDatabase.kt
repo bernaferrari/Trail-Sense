@@ -9,10 +9,10 @@ import org.w3c.dom.Worker
 import kotlin.js.ExperimentalWasmJsInterop
 
 /** Open the database before exposing tools that read or write user data. */
-suspend fun openWasmDatabase(name: String = "trail-sense.db"): OpenWasmDatabase {
+suspend fun openWasmDatabase(): AppDatabase {
     val worker = createWorker()
     val database = Room.databaseBuilder<AppDatabase>(
-        name = name,
+        name = "trail-sense.db",
         factory = AppDatabaseConstructor::initialize
     )
         .setDriver(WebWorkerSQLiteDriver(worker))
@@ -27,14 +27,7 @@ suspend fun openWasmDatabase(name: String = "trail-sense.db"): OpenWasmDatabase 
         worker.terminate()
         throw failure
     }
-    return OpenWasmDatabase(database, worker)
-}
-
-class OpenWasmDatabase internal constructor(val database: AppDatabase, private val worker: Worker) {
-    fun close() {
-        database.close()
-        worker.terminate()
-    }
+    return database
 }
 
 @OptIn(ExperimentalWasmJsInterop::class)

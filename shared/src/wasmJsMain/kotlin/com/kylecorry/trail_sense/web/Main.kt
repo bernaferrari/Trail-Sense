@@ -42,7 +42,7 @@ fun main() {
             try {
                 val loaded = WebAppStrings().apply { preload() }
                 registerSharedApp(
-                    database = openWasmDatabase().database,
+                    database = openWasmDatabase(),
                     deviceProfile = WebDeviceProfile(),
                     strings = loaded,
                     bundledImages = ComposeBundledImages(),
