@@ -61,14 +61,18 @@ fun TrailSenseEmptyState(
      * The boiler principle for empty screens: a living object in place of the static cookie (a page being written,
      * a map unfolding). Drawn in a 160 dp box; [icon] still names the screen for accessibility tooling.
      */
-    illustration: (@Composable () -> Unit)? = null
+    illustration: (@Composable () -> Unit)? = null,
+    compact: Boolean = false
 ) {
     val scheme = MaterialTheme.colorScheme
     val colors = trailSenseToneColors(tone)
     Layout(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = TrailSenseSpacing.xl, vertical = TrailSenseSpacing.xxl),
+            .padding(
+                horizontal = TrailSenseSpacing.xl,
+                vertical = if (compact) TrailSenseSpacing.lg else TrailSenseSpacing.xxl
+            ),
         content = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -77,17 +81,17 @@ fun TrailSenseEmptyState(
                     Box(Modifier.size(160.dp), contentAlignment = Alignment.Center) { illustration() }
                 } else {
                     Surface(
-                        modifier = Modifier.size(120.dp),
-                        shape = MaterialShapes.Cookie9Sided.toShape(),
-                        color = colors.container,
-                        contentColor = colors.content
+                        modifier = Modifier.size(if (compact) 60.dp else 120.dp),
+                        shape = if (compact) MaterialTheme.shapes.large else MaterialShapes.Cookie9Sided.toShape(),
+                        color = if (compact) scheme.surfaceContainer else colors.container,
+                        contentColor = if (compact) scheme.onSurfaceVariant else colors.content
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Icon(icon, contentDescription = null, modifier = Modifier.size(48.dp))
+                            Icon(icon, contentDescription = null, modifier = Modifier.size(if (compact) 28.dp else 48.dp))
                         }
                     }
                 }
-                Spacer(Modifier.height(TrailSenseSpacing.xl))
+                Spacer(Modifier.height(if (compact) TrailSenseSpacing.md else TrailSenseSpacing.xl))
                 Column(
                     Modifier.widthIn(max = 360.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -95,7 +99,7 @@ fun TrailSenseEmptyState(
                 ) {
                     Text(
                         title,
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = if (compact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = scheme.onSurface,
                         textAlign = TextAlign.Center
@@ -103,7 +107,7 @@ fun TrailSenseEmptyState(
                     if (description != null) {
                         Text(
                             description,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = if (compact) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
                             color = scheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )

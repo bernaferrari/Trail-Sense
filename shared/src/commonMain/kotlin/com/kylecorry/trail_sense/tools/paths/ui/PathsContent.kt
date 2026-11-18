@@ -74,7 +74,6 @@ import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
 import com.kylecorry.trail_sense.shared.grouping.lists.GroupListManager
 import com.kylecorry.trail_sense.shared.icons.trail.*
 import com.kylecorry.trail_sense.shared.navigation.SystemBackHandler
-import com.kylecorry.trail_sense.shared.views.PathsEmptyIllustration
 import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseEmptyState
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
@@ -84,7 +83,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseRowGroup
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSearchBar
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSwitchRow
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesBadge
 import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesRow
 import com.kylecorry.trail_sense.tools.paths.domain.IPath
@@ -284,6 +282,7 @@ fun PathsScreen(
             onBack = onBack,
             backLabel = appString(Res.string.back),
             state = listState,
+            compactHeader = true,
             modifier = Modifier.testTag("paths_title"),
             actions = {
                 PathsOverflowMenu(sortMenuText = sortMenuText, onMenuAction = onMenuAction)
@@ -325,14 +324,13 @@ fun PathsScreen(
                     val isSearching = searchText.isNotBlank()
                     TrailSenseEmptyState(
                         icon = if (isSearching) TrailIcons.Search else TrailIcons.Trail,
-                        illustration = if (isSearching) null else ({ PathsEmptyIllustration() }),
+                        compact = true,
                         title = appString(if (isSearching) Res.string.no_results else Res.string.no_paths),
                         description = if (isSearching) null else appString(Res.string.paths_empty_description),
                         // No button here: Backtrack's switch above and the add FAB are the actions.
-                        tone = if (isSearching) TrailSenseTone.Secondary else TrailSenseTone.Primary,
                         // Centred in the room between Backtrack and the add button, so its copy never sits under it.
                         modifier = Modifier
-                            .fillParentMaxHeight(0.6f)
+                            .fillParentMaxHeight(0.5f)
                             .testTag("waypoints_empty_text")
                     )
                 }

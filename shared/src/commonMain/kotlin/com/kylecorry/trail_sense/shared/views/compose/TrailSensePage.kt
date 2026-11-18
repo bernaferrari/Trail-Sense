@@ -121,9 +121,15 @@ fun TrailSensePage(
         top = TrailSenseSpacing.sm,
         bottom = TrailSenseSpacing.xxxl
     ),
+    compactHeader: Boolean = false,
     content: LazyListScope.() -> Unit
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+    val appBarState = rememberTopAppBarState()
+    val scrollBehavior = if (compactHeader) {
+        TopAppBarDefaults.pinnedScrollBehavior(appBarState)
+    } else {
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(appBarState)
+    }
     Scaffold(
         modifier = modifier
             .fillMaxSize()
@@ -155,7 +161,15 @@ fun TrailSensePage(
             )
             // Like QuietGuard: a tab's own screen gets the large title; a screen opened from another one (every
             // tool) gets the medium bar, so the content starts higher and the title doesn't shout.
-            if (onBack == null) {
+            if (compactHeader) {
+                androidx.compose.material3.TopAppBar(
+                    title = titleContent,
+                    navigationIcon = navigation,
+                    actions = actions,
+                    colors = barColors,
+                    scrollBehavior = scrollBehavior
+                )
+            } else if (onBack == null) {
                 LargeFlexibleTopAppBar(
                     title = titleContent,
                     subtitle = subtitleContent,
