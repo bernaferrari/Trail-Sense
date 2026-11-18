@@ -1,17 +1,17 @@
 package com.kylecorry.trail_sense.main
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -36,6 +36,7 @@ import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.AppHostDialogs
 import com.kylecorry.trail_sense.shared.views.compose.AppHostOverlays
 import com.kylecorry.trail_sense.shared.views.compose.AppHostSnackbar
+import com.kylecorry.trail_sense.shared.views.compose.LocalAppBarInsets
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
 import com.kylecorry.trail_sense.shared.views.compose.SharedComposeDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.SharedDestinationContent
@@ -54,11 +55,7 @@ private val appTabs = listOf(
 internal fun SharedApp(
     strings: AppStrings,
     tabs: List<SharedAppTab> = appTabs,
-    bindNavigation: @Composable (TrailSenseNavigator) -> Unit = {},
-    chrome: @Composable (List<SharedAppTab>, Int, (Int) -> Unit, @Composable (PaddingValues) -> Unit) -> Unit =
-        { visibleTabs, selected, select, content ->
-            SharedAdaptiveNavigation(strings, visibleTabs, selected, select, content)
-        }
+    bindNavigation: @Composable (TrailSenseNavigator) -> Unit = {}
 ) {
     val navigator = remember { TrailSenseNavigator().apply { setStartRoute(Route.Tools) } }
     val host = remember { AppHost().also(AppHost::attach) }
@@ -83,15 +80,16 @@ internal fun SharedApp(
         LocalAppStrings provides strings,
         LocalNavigator provides navigator,
         LocalViewModelStoreOwner provides viewModelOwner,
-        LocalErrorBanner provides errorBanner
+        LocalErrorBanner provides errorBanner,
+        LocalAppBarInsets provides WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
     ) {
         TrailSenseTheme {
-            chrome(tabs, selectedIndex, { index ->
+            SharedAdaptiveNavigation(strings, tabs, selectedIndex, { index ->
                 tabs.getOrNull(index)?.route?.let { target ->
                     if (navigator.currentRoute != target) navigator.switchTab(target)
                 }
-            }) { padding ->
-                Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
+            }) {
+                Box(Modifier.fillMaxSize()) {
                     SharedNavigationDisplay(navigator, Modifier.fillMaxSize()) { route ->
                         val destinationHost = remember(route, navigator, lifecycleOwner, host, scope) {
                             SharedComposeDestinationHost(navigator, lifecycleOwner, route, host, scope)
@@ -116,7 +114,7 @@ private fun SharedAdaptiveNavigation(
     tabs: List<SharedAppTab>,
     selected: Int,
     select: (Int) -> Unit,
-    content: @Composable (PaddingValues) -> Unit
+    content: @Composable () -> Unit
 ) {
     val state = remember(strings, tabs, selected) {
         MainBottomNavigationState().apply {
@@ -137,8 +135,8 @@ private fun SharedAdaptiveNavigation(
         state = state,
         onItemClick = { route -> select(tabs.indexOfFirst { it.route == route }) },
         onItemLongClick = {},
-        showBar = selected >= 0
-    ) {
-        content(PaddingValues(0.dp))
-    }
+        showBar = selected >= 0,
+        contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+        content = content
+    )
 }

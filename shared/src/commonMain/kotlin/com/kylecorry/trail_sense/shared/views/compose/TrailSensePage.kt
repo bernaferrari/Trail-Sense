@@ -39,6 +39,7 @@ import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -57,6 +58,9 @@ import com.kylecorry.trail_sense.shared.icons.TrailSenseIcons
 
 /** Goes back from the current screen, when there is somewhere to go back to (null on a tab's first screen). */
 val LocalTrailSenseBack = androidx.compose.runtime.staticCompositionLocalOf<(() -> Unit)?> { null }
+
+/** Insets owned by standalone app bars when the navigation host draws behind the status bar. */
+internal val LocalAppBarInsets = staticCompositionLocalOf { WindowInsets(0) }
 
 /**
  * A screen's title bar for screens that don't scroll as a page (instruments, maps, lists with their own scrolling):
@@ -95,7 +99,7 @@ fun TrailSenseTopBar(
             }
         },
         actions = actions,
-        windowInsets = WindowInsets(0),
+        windowInsets = LocalAppBarInsets.current,
         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
     )
 }

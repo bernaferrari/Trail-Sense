@@ -126,7 +126,6 @@ kotlin {
         }
 
         iosMain.dependencies {
-            implementation(libs.calf.ui)
             implementation(libs.andromeda.camera)
             implementation(libs.andromeda.permissions)
             implementation(libs.andromeda.permissions.compose)

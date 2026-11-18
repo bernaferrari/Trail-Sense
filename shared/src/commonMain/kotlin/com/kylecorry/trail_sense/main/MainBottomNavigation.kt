@@ -12,8 +12,12 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShortNavigationBar
@@ -82,6 +86,7 @@ fun MainAdaptiveNavigation(
     onItemLongClick: (Route) -> Unit,
     modifier: Modifier = Modifier,
     showBar: Boolean = true,
+    contentWindowInsets: WindowInsets = WindowInsets(0),
     content: @Composable () -> Unit
 ) {
     val visibleItems = state.items.filter { it.visible }
@@ -133,7 +138,8 @@ fun MainAdaptiveNavigation(
     BoxWithConstraints(modifier = modifier.background(MaterialTheme.colorScheme.surface)) {
         if (maxWidth < 600.dp) {
             Column(modifier = Modifier.fillMaxSize()) {
-                Box(modifier = Modifier.weight(1f)) { movable() }
+                val insets = if (showBar) contentWindowInsets.only(WindowInsetsSides.Horizontal) else contentWindowInsets
+                Box(modifier = Modifier.weight(1f).windowInsetsPadding(insets)) { movable() }
                 // As in ChangeDetection: screens opened from a tab get the whole canvas; the bar slides away and
                 // their back arrow takes over, and it slides back on the tab's first screen.
                 AnimatedVisibility(
@@ -183,7 +189,8 @@ fun MainAdaptiveNavigation(
                 }
                 Box(modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight()) { movable() }
+                    .fillMaxHeight()
+                    .windowInsetsPadding(contentWindowInsets)) { movable() }
             }
         }
     }

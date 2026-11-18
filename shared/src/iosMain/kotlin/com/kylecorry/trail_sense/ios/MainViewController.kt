@@ -1,11 +1,6 @@
 package com.kylecorry.trail_sense.ios
 
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.only
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.material3.MaterialTheme
 import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.files.appFiles
 import androidx.compose.ui.window.ComposeUIViewController
@@ -21,14 +16,6 @@ import com.kylecorry.trail_sense.shared.images.IosAppImages
 import com.kylecorry.trail_sense.shared.images.ComposeBundledImages
 import com.kylecorry.trail_sense.shared.text.ComposeAppStrings
 import com.kylecorry.trail_sense.shared.text.IosPlatformFormats
-import com.kylecorry.trail_sense.shared.text.appString
-import com.mohamedrejeb.calf.sf.symbols.SFSymbol
-import com.mohamedrejeb.calf.ui.ExperimentalCalfUiApi
-import com.mohamedrejeb.calf.ui.navigation.AdaptiveNavigationBar
-import com.mohamedrejeb.calf.ui.navigation.AdaptiveScaffold
-import com.mohamedrejeb.calf.ui.navigation.UIKitTabBarConfiguration
-import com.mohamedrejeb.calf.ui.navigation.UIKitUITabBarItem
-import com.mohamedrejeb.calf.ui.uikit.UIKitImage
 import com.kylecorry.trail_sense.shared.generated.resources.Res
 import com.kylecorry.trail_sense.shared.generated.resources.backtrack
 import com.kylecorry.trail_sense.shared.generated.resources.sunrise
@@ -52,7 +39,7 @@ interface IosBacktrackActivity {
     fun end()
 }
 
-@OptIn(ExperimentalCalfUiApi::class, ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class)
 fun MainViewController(
     databasePath: String,
     turnBackScheduler: IosTurnBackScheduler?,
@@ -99,42 +86,7 @@ fun MainViewController(
 
     return ComposeUIViewController {
         CompositionLocalProvider(LocalLinearCompassAvailable provides false) {
-            SharedApp(strings, bindNavigation = { BindSharedAppActions(it, iosAppActions) }) { tabs, selectedIndex, select, content ->
-                AdaptiveScaffold(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    // The main tabs' app bars paint the status area as they collapse.
-                    contentWindowInsets = if (selectedIndex >= 0) {
-                        WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
-                    } else WindowInsets.safeDrawing,
-                    bottomBar = {
-                        if (selectedIndex >= 0) {
-                            AdaptiveNavigationBar(
-                                iosItems = tabs.mapIndexed { index, tab ->
-                                    val (icon, selectedIcon) = tabSymbols[index]
-                                    UIKitUITabBarItem(
-                                        title = appString(tab.label),
-                                        image = UIKitImage.SystemName(icon),
-                                        selectedImage = UIKitImage.SystemName(selectedIcon)
-                                    )
-                                },
-                                iosSelectedIndex = selectedIndex,
-                                iosOnItemSelected = select,
-                                iosConfiguration = UIKitTabBarConfiguration(
-                                    selectedItemColor = MaterialTheme.colorScheme.primary
-                                )
-                            )
-                        }
-                    },
-                    content = content
-                )
-            }
+            SharedApp(strings, bindNavigation = { BindSharedAppActions(it, iosAppActions) })
         }
     }
 }
-
-private val tabSymbols = listOf(
-    SFSymbol.location to SFSymbol.locationFill,
-    SFSymbol.wrenchAndScrewdriver to SFSymbol.wrenchAndScrewdriverFill,
-    SFSymbol.cloudSun to SFSymbol.cloudSunFill,
-    SFSymbol.gearshape to SFSymbol.gearshape
-)

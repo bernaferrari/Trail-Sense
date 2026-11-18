@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -110,8 +109,7 @@ fun TrailSenseInstrumentTopBar(
             title = titleContent,
             navigationIcon = navigation,
             actions = actions,
-            // The activity already pads the status bar.
-            windowInsets = WindowInsets(0),
+            windowInsets = LocalAppBarInsets.current,
             colors = colors
         )
     } else {
@@ -120,8 +118,7 @@ fun TrailSenseInstrumentTopBar(
             title = titleContent,
             navigationIcon = navigation,
             actions = actions,
-            // The activity already pads the status bar.
-            windowInsets = WindowInsets(0),
+            windowInsets = LocalAppBarInsets.current,
             colors = colors
         )
     }
