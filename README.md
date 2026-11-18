@@ -127,7 +127,7 @@ Trail Sense does not require an Internet connection. All app data, including loc
 
 Sol, Andromeda, and Luna live in `libraries/` and are included in the Gradle build automatically. With the Android SDK installed, run `scripts/build.sh` to build the debug app. Their individual licenses and build files are in each library directory.
 
-The [iOS host](iosApp/README.md) currently runs the shared notes feature.
+The [iOS host](iosApp/README.md) runs the shared Compose Multiplatform app and tool catalog.
 
 ## Contributing
 See the [CONTRIBUTING.md](https://github.com/kylecorry31/Trail-Sense/blob/main/CONTRIBUTING.md) file for details on contributing to Trail Sense.
