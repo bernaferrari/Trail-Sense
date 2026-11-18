@@ -61,7 +61,10 @@ import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.tools.map.ui.MapView
+import com.kylecorry.andromeda.files.appFiles
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
+import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMapFileType
+import com.kylecorry.trail_sense.tools.offline_maps.ui.PortableVectorMapScreen
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
 import com.kylecorry.trail_sense.tools.offline_maps.map_layers.TrailMapsTileSource
 import com.kylecorry.trail_sense.tools.offline_maps.ui.commands.DeleteMapCommand
@@ -78,6 +81,10 @@ fun ViewVectorMapToolScreen(route: Route.VectorMapView) {
     val navigator = LocalNavigator.current
     val scope = rememberCoroutineScope()
     val viewModel = viewModel { ViewVectorMapViewModel(getAppService(), route.offlineMapFileId) }
+    if (viewModel.map?.type == VectorMapFileType.GeoJson) {
+        PortableVectorMapScreen(route.offlineMapFileId, remember { appFiles() })
+        return
+    }
     val effects = LocalScreenEffects.current
     val lifecycleOwner = LocalLifecycleOwner.current
     // Picking the destination file needs the activity's result launcher (an Activity-only API)

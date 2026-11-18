@@ -646,6 +646,7 @@ class FormatService(
     fun formatOfflineMapFileTypeName(type: VectorMapFileType): String {
         return when (type) {
             VectorMapFileType.Mapsforge -> strings.get(Res.string.mapsforge)
+            VectorMapFileType.GeoJson -> "GeoJSON"
         }
     }
 

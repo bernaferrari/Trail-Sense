@@ -49,7 +49,10 @@ kotlin {
         wasmJsTest.get().dependsOn(portableTest)
         val desktopAndWebMain = create("desktopAndWebMain") { dependsOn(portableMain) }
         val desktopAndIosMain = create("desktopAndIosMain") { dependsOn(portableMain) }
-        val filePickerMain = create("filePickerMain") { dependsOn(commonMain.get()) }
+        val filePickerMain = create("filePickerMain") {
+            dependsOn(commonMain.get())
+            dependencies { implementation(libs.andromeda.files) }
+        }
         val mobileSharingMain = create("mobileSharingMain") { dependsOn(filePickerMain) }
         androidMain.get().dependsOn(mobileSharingMain)
         iosMain.get().dependsOn(mobileSharingMain)

@@ -646,6 +646,10 @@
     <string name="pedometer_disclaimer">The accuracy and battery usage of the pedometer is dependent on your device\'s manufacturer and the step length entered. Try it out at home for a bit to verify battery drain and accuracy before using on the trail.</string>
     <string name="rename">Rename</string>
     <string name="no_maps">No maps</string>
+    <string name="shared_map_empty">Import a GeoJSON map to view it offline.</string>
+    <string name="shared_map_invalid">Could not import this GeoJSON map.</string>
+    <string name="shared_map_unavailable">This map file is unavailable or uses an unsupported format.</string>
+    <string name="shared_map_location_unavailable">Could not find your current location.</string>
     <string name="on_map">On map</string>
     <string name="previous">Previous</string>
     <string name="next">Next</string>
@@ -1248,6 +1252,11 @@
     <string name="restore_complete_message">Restore successful, restarting to apply changes</string>
     <string name="invalid_backup_file">Invalid backup file</string>
     <string name="humidity_must_be_between_0_and_100">Humidity must be between 0 and 100</string>
+    <string name="portable_backup">Portable backup</string>
+    <string name="portable_backup_description">Save a ZIP with your places, paths, notes, and offline files. The ZIP is unencrypted. Keep it somewhere private.</string>
+    <string name="portable_backup_restore_description">Restoring replaces the app’s current records. Create a backup first if you want to keep them.</string>
+    <string name="portable_backup_stop_backtrack">Stop Backtrack before restoring a backup.</string>
+    <string name="portable_backup_restored">Backup restored</string>
     <string name="backup_restore">Backup / restore</string>
     <!--    %s is the app name (Trail Sense)-->
     <string name="restore_failure_newer_version">This backup was created with a newer version of %s. Please update the app and try again.</string>
@@ -1395,6 +1404,8 @@
     <string name="turn_back_notification_description">Turn back now to return at %s</string>
     <string name="return_before_dark">Return before dark</string>
     <string name="turn_back_alert_set">Turn back alert set</string>
+    <string name="sun_alert_schedule_failed">Could not schedule this alert. Check your location and notification permissions.</string>
+    <string name="turn_back_alert_failed">Could not schedule the alarms. Check that Trail Sense can schedule alarms in Settings.</string>
     <!--    As in a process running in the background-->
     <string name="background">Background</string>
     <string name="local_messaging">Local Messaging</string>

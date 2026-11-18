@@ -1,10 +1,16 @@
 package com.kylecorry.trail_sense.ios
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.MaterialTheme
+import com.kylecorry.andromeda.preferences.Preferences
+import com.kylecorry.andromeda.files.appFiles
 import androidx.compose.ui.window.ComposeUIViewController
+import com.kylecorry.trail_sense.main.BindSharedAppActions
 import com.kylecorry.trail_sense.main.SharedApp
 import com.kylecorry.trail_sense.main.persistence.iosAppDatabase
 import com.kylecorry.trail_sense.main.registerSharedApp
+import com.kylecorry.trail_sense.settings.backup.FilePortableBackup
 import com.kylecorry.trail_sense.shared.images.IosAppImages
 import com.kylecorry.trail_sense.shared.images.ComposeBundledImages
 import com.kylecorry.trail_sense.shared.text.ComposeAppStrings
@@ -17,46 +23,99 @@ import com.mohamedrejeb.calf.ui.navigation.AdaptiveScaffold
 import com.mohamedrejeb.calf.ui.navigation.UIKitTabBarConfiguration
 import com.mohamedrejeb.calf.ui.navigation.UIKitUITabBarItem
 import com.mohamedrejeb.calf.ui.uikit.UIKitImage
+import com.kylecorry.trail_sense.shared.generated.resources.Res
+import com.kylecorry.trail_sense.shared.generated.resources.backtrack
+import com.kylecorry.trail_sense.shared.generated.resources.sunrise
+import com.kylecorry.trail_sense.shared.generated.resources.sunset
+import com.kylecorry.sol.units.Coordinate
+import com.kylecorry.trail_sense.tools.astronomy.ui.ScheduledSunAlerts
+import com.kylecorry.trail_sense.tools.paths.domain.BacktrackRecorder
+import com.kylecorry.trail_sense.tools.paths.infrastructure.LocationBacktrackService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.AVFoundation.*
 import platform.CoreMotion.CMMotionManager
 import platform.UIKit.UIViewController
 
+interface IosBacktrackActivity {
+    fun start()
+    fun end()
+}
+
 @OptIn(ExperimentalCalfUiApi::class, ExperimentalForeignApi::class)
-fun MainViewController(databasePath: String): UIViewController {
+fun MainViewController(
+    databasePath: String,
+    turnBackScheduler: IosTurnBackScheduler?,
+    backtrackActivity: IosBacktrackActivity
+): UIViewController {
     val strings = ComposeAppStrings()
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    val database = iosAppDatabase(databasePath)
+    val files = appFiles()
     registerSharedApp(
-        database = iosAppDatabase(databasePath),
+        database = database,
         deviceProfile = IosDeviceProfile(),
         strings = strings,
         bundledImages = ComposeBundledImages(),
         images = IosAppImages(),
         formats = IosPlatformFormats(),
         hasMotion = CMMotionManager().deviceMotionAvailable,
-        hasCamera = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo) != null
+        hasCamera = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo) != null,
+        fileStorage = files,
+        portableBackup = FilePortableBackup(database, files),
+        createSunAlerts = { preferences, sensors ->
+            listOf(true, false).map { sunrise ->
+                ScheduledSunAlerts(
+                    name = strings.get(if (sunrise) Res.string.sunrise else Res.string.sunset),
+                    isSunrise = sunrise,
+                    preferences = preferences.astronomy,
+                    location = {
+                        val coordinate = sensors.getLocation()
+                        coordinate.takeIf { it != Coordinate.zero || sensors.lastKnownLocationAccuracy != null }
+                    },
+                    replaceNotifications = ::replaceSunNotifications
+                ).also { service -> scope.launch { service.restart() } }
+            }
+        },
+        turnBackAlarm = turnBackScheduler?.let { IosTurnBackAlarm(it, Preferences(), strings) },
+        createBacktrack = { preferences, paths, logger ->
+            LocationBacktrackService(
+                strings.get(Res.string.backtrack), preferences.paths, BacktrackRecorder(paths), paths::endBacktrackPath,
+                scope, logger, ::backtrackLocations, ::isBacktrackLocationBlocked,
+                recordingChanged = { active -> if (active) backtrackActivity.start() else backtrackActivity.end() }
+            ).also { backtrack -> scope.launch { backtrack.restart() } }
+        }
     )
 
     return ComposeUIViewController {
-        SharedApp(strings) { tabs, selectedIndex, select, content ->
-            AdaptiveScaffold(bottomBar = {
-                if (selectedIndex >= 0) {
-                    AdaptiveNavigationBar(
-                        iosItems = tabs.mapIndexed { index, tab ->
-                            val (icon, selectedIcon) = tabSymbols[index]
-                            UIKitUITabBarItem(
-                                title = appString(tab.label),
-                                image = UIKitImage.SystemName(icon),
-                                selectedImage = UIKitImage.SystemName(selectedIcon)
+        SharedApp(strings, bindNavigation = { BindSharedAppActions(it, iosAppActions) }) { tabs, selectedIndex, select, content ->
+            AdaptiveScaffold(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentWindowInsets = WindowInsets.safeDrawing,
+                bottomBar = {
+                    if (selectedIndex >= 0) {
+                        AdaptiveNavigationBar(
+                            iosItems = tabs.mapIndexed { index, tab ->
+                                val (icon, selectedIcon) = tabSymbols[index]
+                                UIKitUITabBarItem(
+                                    title = appString(tab.label),
+                                    image = UIKitImage.SystemName(icon),
+                                    selectedImage = UIKitImage.SystemName(selectedIcon)
+                                )
+                            },
+                            iosSelectedIndex = selectedIndex,
+                            iosOnItemSelected = select,
+                            iosConfiguration = UIKitTabBarConfiguration(
+                                selectedItemColor = MaterialTheme.colorScheme.primary
                             )
-                        },
-                        iosSelectedIndex = selectedIndex,
-                        iosOnItemSelected = select,
-                        iosConfiguration = UIKitTabBarConfiguration(
-                            selectedItemColor = MaterialTheme.colorScheme.primary
                         )
-                    )
-                }
-            }, content = content)
+                    }
+                },
+                content = content
+            )
         }
     }
 }

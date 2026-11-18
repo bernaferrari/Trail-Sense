@@ -18,6 +18,8 @@ import com.kylecorry.trail_sense.settings.backup.ChangeAutomaticBackupDirectoryC
 import com.kylecorry.trail_sense.settings.backup.RestoreCommand
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.io.IntentUriPicker
+import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
+import com.kylecorry.trail_sense.shared.navigation.Route
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 import com.kylecorry.trail_sense.settings.backup.userFriendlyAutoBackupPathName
 import kotlinx.coroutines.launch
@@ -25,6 +27,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun BackupSettingsToolScreen() {
     val context = LocalContext.current
+    val navigator = LocalNavigator.current
     val scope = rememberCoroutineScope()
     // The activity implements the Activity-only IntentResultRetriever the file pickers need.
     val resultRetriever = context as IntentResultRetriever
@@ -52,6 +55,15 @@ fun BackupSettingsToolScreen() {
                 SettingsActionRow(
                     label = stringResource(R.string.restore),
                     onClick = { scope.launch { restore(context, resultRetriever) } },
+                    position = position
+                )
+            }
+        }
+        trailSenseSection("portableBackup") {
+            row { position ->
+                SettingsActionRow(
+                    label = stringResource(R.string.portable_backup),
+                    onClick = { navigator.navigate(Route.PortableBackup) },
                     position = position
                 )
             }

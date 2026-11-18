@@ -46,7 +46,7 @@ import kotlinx.coroutines.launch
 
 /** The astronomy settings page; [quickActionOptions] are the platform's quick actions. */
 @Composable
-fun AstronomySettingsScreen(quickActionOptions: List<SettingsOption>) {
+fun AstronomySettingsScreen(quickActionOptions: List<SettingsOption>, showNativeAlarmOptions: Boolean = true) {
     val strings = LocalAppStrings.current
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
@@ -215,7 +215,7 @@ fun AstronomySettingsScreen(quickActionOptions: List<SettingsOption>) {
                         position = position
                     )
                 }
-                row { position ->
+                if (showNativeAlarmOptions) row { position ->
                     SettingsSwitchRow(
                         label = appString(Res.string.use_alarm_for_sunset_alert),
                         summary = appString(Res.string.alarm_description),
@@ -257,7 +257,7 @@ fun AstronomySettingsScreen(quickActionOptions: List<SettingsOption>) {
                         position = position
                     )
                 }
-                row { position ->
+                if (showNativeAlarmOptions) row { position ->
                     SettingsSwitchRow(
                         label = appString(Res.string.use_alarm_for_sunrise_alert),
                         summary = appString(Res.string.alarm_description),

@@ -67,6 +67,8 @@ import com.kylecorry.trail_sense.settings.ui.CompassCalibrationContent
 import com.kylecorry.trail_sense.settings.ui.ErrorSettingsToolScreen
 import com.kylecorry.trail_sense.settings.ui.FlashlightSettingsToolScreen
 import com.kylecorry.trail_sense.settings.ui.LicensesToolScreen
+import com.kylecorry.trail_sense.settings.backup.PortableBackup
+import com.kylecorry.trail_sense.settings.backup.PortableBackupScreen
 import com.kylecorry.trail_sense.settings.ui.PathsSettingsScreen
 import com.kylecorry.trail_sense.settings.ui.PhotoMapSettingsScreen
 import com.kylecorry.trail_sense.settings.ui.RulerSettingsToolScreen
@@ -155,6 +157,13 @@ import com.kylecorry.trail_sense.tools.packs.ui.CreateItemToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackItemListToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackListToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackingListFiles
+import com.kylecorry.trail_sense.tools.paths.ui.commands.ToggleBacktrackCommand
+import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangeBacktrackFrequencyCommand
+import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
+import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackToolScreen
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
+import com.kylecorry.trail_sense.tools.offline_maps.ui.SharedOfflineMap
+import com.kylecorry.trail_sense.tools.offline_maps.ui.SharedOfflineMapList
 import com.kylecorry.trail_sense.tools.paths.PathsToolServices
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
@@ -297,7 +306,9 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
             )
         }
         Route.WaterPurification -> WaterPurificationToolScreen()
-        Route.TurnBack -> UnsupportedSharedToolScreen(appString(Res.string.tool_turn_back))
+        Route.TurnBack -> if (getAppService<ToolCatalog>().isToolAvailable(ToolIds.TURN_BACK)) {
+            TurnBackToolScreen(remember { getAppService() })
+        } else UnsupportedSharedToolScreen(appString(Res.string.tool_turn_back))
         Route.WhiteNoise -> WhiteNoiseScreen(modifier)
         Route.Flashlight -> FlashlightToolScreen(offerController = { ScreenControllerEffect(this, it) })
         Route.ScreenFlashlight -> {
@@ -387,6 +398,15 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
         }
         is Route.BeaconList -> SharedBeaconListScreen(r, modifier)
         Route.Paths -> SharedPathsScreen(modifier)
+        is Route.Map -> if (getAppService<ToolCatalog>().isToolAvailable(ToolIds.MAP)) {
+            SharedOfflineMap()
+        } else UnsupportedSharedToolScreen(appString(Res.string.map))
+        is Route.OfflineMapList -> if (getAppService<ToolCatalog>().isToolAvailable(ToolIds.OFFLINE_MAPS)) {
+            SharedOfflineMapList()
+        } else UnsupportedSharedToolScreen(appString(Res.string.offline_maps))
+        is Route.VectorMapView -> if (getAppService<ToolCatalog>().isToolAvailable(ToolIds.OFFLINE_MAPS)) {
+            SharedOfflineMap(r.offlineMapFileId)
+        } else UnsupportedSharedToolScreen(appString(Res.string.offline_maps))
         is Route.Clouds -> SharedCloudsScreen(modifier)
         Route.Diagnostics, Route.SensorDetails -> DiagnosticsToolScreen(exportLogs = null)
         is Route.ErrorHandler -> {
@@ -418,11 +438,16 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
 
         // --- Settings & Calibration ---
         Route.Settings -> SharedSettingsHubScreen(modifier)
+        Route.PortableBackup -> {
+            val backup = remember { runCatching { getAppService<PortableBackup>() }.getOrNull() }
+            if (backup != null) PortableBackupScreen(backup)
+            else UnsupportedSharedToolScreen(appString(Res.string.portable_backup))
+        }
         Route.UnitSettings -> UnitSettingsToolScreen()
         Route.SensorSettings -> SensorSettingsToolScreen()
         Route.NavigationSettings -> NavigationSettingsScreen(emptyList()) {}
         Route.WeatherSettings -> WeatherSettingsScreen(emptyList(), null, null)
-        Route.AstronomySettings -> AstronomySettingsScreen(emptyList())
+        Route.AstronomySettings -> AstronomySettingsScreen(emptyList(), showNativeAlarmOptions = false)
         Route.PathsSettings -> PathsSettingsScreen(null)
         Route.BeaconSettings -> BeaconSettingsToolScreen()
         Route.PedometerSettings -> PedometerSettingsScreen(SharedPedometerStatus, null, null)
@@ -843,7 +868,10 @@ private fun SharedPathsScreen(modifier: Modifier = Modifier) {
     val catalog = remember { getAppService<ToolCatalog>() }
     val backtrack = remember(catalog) { catalog.getService(PathsToolServices.BACKTRACK) }
     val gps = remember { getAppService<SensorService>().getGPS() }
+    val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
+
+    var showBacktrackFrequency by remember { mutableStateOf(false) }
 
     val viewModel = viewModel {
         PathsViewModel(
@@ -957,10 +985,34 @@ private fun SharedPathsScreen(modifier: Modifier = Modifier) {
             }
         },
         onCreatePathOnMap = null,
-        onBacktrackFrequencyClick = null,
-        onBacktrackToggleClick = null,
+        onBacktrackFrequencyClick = if (backtrack?.isSupported == true) {
+            { showBacktrackFrequency = true }
+        } else null,
+        onBacktrackToggleClick = if (backtrack?.isSupported == true) {
+            { ToggleBacktrackCommand(effects, scope) {
+                effects.showMessage(strings.get(Res.string.backtrack_no_permission))
+            }.execute() }
+        } else null,
         modifier = modifier.fillMaxSize()
     )
+
+    if (showBacktrackFrequency) {
+        DurationPickerDialog(
+            title = appString(Res.string.pref_backtrack_frequency_title),
+            duration = prefs.paths.backtrackRecordFrequency,
+            message = appString(Res.string.actual_frequency_disclaimer),
+            hint = appString(Res.string.frequency),
+            showSeconds = true,
+            onDurationPicked = { frequency ->
+                if (frequency != null) {
+                    ChangeBacktrackFrequencyCommand(host, scope, onChange = { viewModel.updateBacktrackStatus() })
+                        .execute(frequency)
+                }
+                showBacktrackFrequency = false
+            },
+            onDismiss = { showBacktrackFrequency = false }
+        )
+    }
 }
 
 @Composable
@@ -1183,7 +1235,9 @@ private fun SharedSettingsHubScreen(modifier: Modifier = Modifier) {
     val barometerLabel = appString(Res.string.barometer)
     val compassPainter = rememberVectorPainter(TrailIcons.CompassIcon)
     val barometerPainter = rememberVectorPainter(TrailIcons.Barometer)
-    val entries = listOf(
+    val hasPortableBackup = remember { runCatching { getAppService<PortableBackup>() }.isSuccess }
+    val entries = listOfNotNull(
+        if (hasPortableBackup) appString(Res.string.portable_backup) to Route.PortableBackup else null,
         appString(Res.string.settings_section_measurements) to Route.UnitSettings,
         appString(Res.string.sensors) to Route.SensorSettings,
         appString(Res.string.navigation) to Route.NavigationSettings,

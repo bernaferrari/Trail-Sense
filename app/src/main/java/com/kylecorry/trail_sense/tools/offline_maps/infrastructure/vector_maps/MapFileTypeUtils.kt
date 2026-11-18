@@ -21,6 +21,7 @@ object MapFileTypeUtils {
     fun getExtension(type: VectorMapFileType): String {
         return when (type) {
             VectorMapFileType.Mapsforge -> "map"
+            VectorMapFileType.GeoJson -> "geojson"
         }
     }
 }

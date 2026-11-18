@@ -1,10 +1,15 @@
 package com.kylecorry.trail_sense.shared.views.compose
 
 import com.kylecorry.trail_sense.tools.turn_back.infrastructure.rememberTurnBackAlarm
+import com.kylecorry.trail_sense.settings.backup.FilePortableBackup
+import com.kylecorry.trail_sense.settings.backup.PortableBackupScreen
+import com.kylecorry.trail_sense.main.persistence.AndroidAppDatabase
+import com.kylecorry.andromeda.files.appFiles
 import com.kylecorry.trail_sense.tools.packs.ui.commands.rememberPackingListFiles
 import com.kylecorry.trail_sense.tools.astronomy.quickactions.bindAstronomyQuickActions
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.share.rememberBeaconShare
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.trail_sense.main.errors.ErrorHandlerToolScreen
@@ -180,6 +185,11 @@ fun DestinationContent(
             Route.MapSettings -> MapSettingsToolScreen()
             Route.PhotoMapSettings -> PhotoMapSettingsToolScreen()
             Route.BackupSettings -> BackupSettingsToolScreen()
+            Route.PortableBackup -> {
+                val database = remember(host.context) { AndroidAppDatabase.getInstance(host.context) }
+                val backup = remember(database) { FilePortableBackup(database, appFiles()) }
+                PortableBackupScreen(backup)
+            }
             Route.ExperimentalSettings -> ExperimentalSettingsToolScreen()
             Route.UnitSettings -> UnitSettingsToolScreen()
             Route.AugmentedRealitySettings -> AugmentedRealitySettingsToolScreen()

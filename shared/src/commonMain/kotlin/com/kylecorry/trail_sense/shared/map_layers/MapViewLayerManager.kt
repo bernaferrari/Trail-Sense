@@ -15,6 +15,7 @@ import com.kylecorry.trail_sense.shared.canvas.getBounds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
@@ -105,6 +106,12 @@ class MapViewLayerManager(private val invalidateView: () -> Unit) {
         }
     }
 
+
+    fun dispose() {
+        scope.cancel()
+        stop()
+        setLayers(emptyList())
+    }
 
     fun drawOverlay(drawer: MapDrawer, map: IMapView) {
         layers.forEach {

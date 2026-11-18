@@ -2,6 +2,7 @@ package com.kylecorry.trail_sense.main
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -90,7 +91,7 @@ internal fun SharedApp(
                     if (navigator.currentRoute != target) navigator.switchTab(target)
                 }
             }) { padding ->
-                Box(Modifier.fillMaxSize().padding(padding)) {
+                Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
                     SharedNavigationDisplay(navigator, Modifier.fillMaxSize()) { route ->
                         val destinationHost = remember(route, navigator, lifecycleOwner, host, scope) {
                             SharedComposeDestinationHost(navigator, lifecycleOwner, route, host, scope)

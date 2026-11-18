@@ -139,6 +139,7 @@ sealed interface Route : NavKey {
     @Serializable data object ClockSettings : Route
     @Serializable data object PrivacySettings : Route
     @Serializable data object BackupSettings : Route
+    @Serializable data object PortableBackup : Route
     @Serializable data object PowerSettings : Route
     @Serializable data object UnitSettings : Route
     @Serializable data object ExperimentalSettings : Route

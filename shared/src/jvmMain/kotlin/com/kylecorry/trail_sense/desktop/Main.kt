@@ -1,10 +1,12 @@
 package com.kylecorry.trail_sense.desktop
 
+import com.kylecorry.andromeda.files.appFiles
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.kylecorry.trail_sense.main.SharedApp
 import com.kylecorry.trail_sense.main.persistence.jvmAppDatabase
 import com.kylecorry.trail_sense.main.registerSharedApp
+import com.kylecorry.trail_sense.settings.backup.FilePortableBackup
 import com.kylecorry.trail_sense.shared.device.DeviceProfile
 import com.kylecorry.trail_sense.shared.images.ComposeAssetImages
 import com.kylecorry.trail_sense.shared.images.ComposeBundledImages
@@ -20,13 +22,16 @@ fun main() {
     FileKit.init(appId = "com.kylecorry.trail_sense")
     val strings = ComposeAppStrings(::portableSystemString)
     val database = jvmAppDatabase(FileKit.filesDir.path + "/trail-sense.db")
+    val files = appFiles()
     registerSharedApp(
         database = database,
         deviceProfile = DesktopDeviceProfile(),
         strings = strings,
         bundledImages = ComposeBundledImages(),
         images = ComposeAssetImages(),
-        formats = PortablePlatformFormats()
+        formats = PortablePlatformFormats(),
+        fileStorage = files,
+        portableBackup = FilePortableBackup(database, files)
     )
 
     application {

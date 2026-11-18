@@ -34,7 +34,10 @@ class SharedToolCatalogImpl(
     private val hasMotion: Boolean = false,
     private val hasTorch: Boolean = false,
     private val hasScreenLight: Boolean = false,
-    private val hasCamera: Boolean = false
+    private val hasCamera: Boolean = false,
+    private val platformServices: List<ToolService> = emptyList(),
+    private val hasTurnBack: Boolean = false,
+    private val hasOfflineMaps: Boolean = false
 ) : ToolCatalog {
 
     private val tools: List<SharedTool> by lazy {
@@ -44,7 +47,9 @@ class SharedToolCatalogImpl(
             hasCompass = device.hasCompass,
             hasTorch = hasTorch,
             hasScreenLight = hasScreenLight,
-            hasCamera = hasCamera
+            hasCamera = hasCamera,
+            hasTurnBack = hasTurnBack,
+            hasOfflineMaps = hasOfflineMaps
         )
     }
 
@@ -54,7 +59,8 @@ class SharedToolCatalogImpl(
             AstronomyBroadcasts.SERVICE_SUNSET_ALERTS to Res.string.sunset,
             AstronomyBroadcasts.SERVICE_SUNRISE_ALERTS to Res.string.sunrise,
             PathsToolServices.BACKTRACK to Res.string.paths
-        ).mapValues { (id, label) -> UnavailableToolService(id, strings.get(label)) }
+        ).mapValues { (id, label) -> UnavailableToolService(id, strings.get(label)) } +
+            platformServices.associateBy(ToolService::id)
     }
 
     override fun getTools(availableOnly: Boolean): List<ToolDescriptor> {
@@ -81,9 +87,19 @@ fun sharedTools(
     hasCompass: Boolean = true,
     hasTorch: Boolean = false,
     hasScreenLight: Boolean = false,
-    hasCamera: Boolean = false
+    hasCamera: Boolean = false,
+    hasTurnBack: Boolean = false,
+    hasOfflineMaps: Boolean = false
 ): List<SharedTool> = listOfNotNull(
     // Navigation & Location
+    if (hasOfflineMaps) SharedTool(
+        ToolIds.OFFLINE_MAPS, strings.get(Res.string.offline_maps), TrailIcons.PhotoMaps,
+        Route.OfflineMapList(), ToolCategory.Location, additionalRoutes = listOf(Route.VectorMapView::class)
+    ) else null,
+    if (hasOfflineMaps) SharedTool(
+        ToolIds.MAP, strings.get(Res.string.map), TrailIcons.Maps,
+        Route.Map(), ToolCategory.Location
+    ) else null,
     SharedTool(
         ToolIds.NAVIGATION, strings.get(Res.string.navigation), TrailIcons.NavigationArrow,
         Route.Navigation(), ToolCategory.Location, guideId = RawTexts.guide_tool_navigation,
@@ -132,6 +148,10 @@ fun sharedTools(
     ),
 
     // Time & Astronomy
+    if (hasTurnBack) SharedTool(
+        ToolIds.TURN_BACK, strings.get(Res.string.tool_turn_back), TrailIcons.ToolClock,
+        Route.TurnBack, ToolCategory.Time, guideId = RawTexts.guide_tool_turn_back
+    ) else null,
     SharedTool(
         ToolIds.ASTRONOMY, strings.get(Res.string.astronomy), TrailIcons.Astronomy,
         Route.Astronomy, ToolCategory.Time, guideId = RawTexts.guide_tool_astronomy,

@@ -1,5 +1,6 @@
 package com.kylecorry.trail_sense.main
 
+import com.kylecorry.andromeda.files.FileStorage
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.style.TextAlign
 import com.kylecorry.andromeda.core.cache.DependencyRegistry
@@ -8,6 +9,7 @@ import com.kylecorry.andromeda.preferences.Preferences
 import com.kylecorry.andromeda.torch.deviceTorch
 import com.kylecorry.andromeda.torch.screenBrightness
 import com.kylecorry.trail_sense.main.persistence.AppDatabase
+import com.kylecorry.trail_sense.settings.backup.PortableBackup
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.GeoidService
 import com.kylecorry.trail_sense.shared.SharedGeoidService
@@ -63,6 +65,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMap
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.PhotoMapEntity
 import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.SharedMapFiles
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.persistence.IMapRepo
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.persistence.MapFileAccess
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.persistence.MapRepo
@@ -80,6 +83,8 @@ import com.kylecorry.trail_sense.tools.tides.domain.waterlevel.TideHarmonicsSour
 import com.kylecorry.trail_sense.tools.tides.infrastructure.model.SharedTideHarmonicsSource
 import com.kylecorry.trail_sense.tools.tools.infrastructure.SharedToolCatalogImpl
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
+import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolService
+import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackAlarm
 import com.kylecorry.trail_sense.tools.waterpurification.infrastructure.WaterPurificationTimer
 import com.kylecorry.trail_sense.tools.weather.infrastructure.WeatherMonitorRestarter
 import com.kylecorry.trail_sense.tools.weather.infrastructure.persistence.IWeatherRepo
@@ -95,7 +100,12 @@ internal fun registerSharedApp(
     images: AppImages,
     formats: PlatformFormats,
     hasMotion: Boolean = false,
-    hasCamera: Boolean = false
+    hasCamera: Boolean = false,
+    fileStorage: FileStorage? = null,
+    portableBackup: PortableBackup? = null,
+    turnBackAlarm: TurnBackAlarm? = null,
+    createSunAlerts: ((UserPreferences, ISensorSubsystem) -> List<ToolService>)? = null,
+    createBacktrack: ((UserPreferences, IPathService, Logger) -> ToolService)? = null
 ) {
     val rawTexts = ComposeRawTextReader()
     val preferences = Preferences()
@@ -107,7 +117,8 @@ internal fun registerSharedApp(
     DependencyRegistry.addSingleton<RawTextReader>(rawTexts)
     DependencyRegistry.addSingleton<BundledImages>(bundledImages)
     DependencyRegistry.addSingleton<AppImages>(images)
-    DependencyRegistry.addSingleton<Logger>(ConsoleLogger())
+    val logger = ConsoleLogger()
+    DependencyRegistry.addSingleton<Logger>(logger)
     DependencyRegistry.addSingleton(MarkdownService(listOf(
         MarkdownDelimiter("%%", MarkdownDelimiter.Effect.Hide),
         MarkdownDelimiter("+", MarkdownDelimiter.Effect.Paragraph(ParagraphStyle(textAlign = TextAlign.Center)))
@@ -195,8 +206,15 @@ internal fun registerSharedApp(
     DependencyRegistry.addSingleton<TonePlayerFactory>(SharedTonePlayerFactory())
     DependencyRegistry.addSingleton<WhiteNoisePlayer>(SharedWhiteNoisePlayer(preferences))
     DependencyRegistry.addSingleton<WaterPurificationTimer>(SharedWaterPurificationTimer(preferences))
-    DependencyRegistry.addSingleton(AstronomyAlertEnabler { _, _, _ -> })
-    DependencyRegistry.addSingleton(BacktrackRestarter {})
+    val sunAlerts = createSunAlerts?.invoke(userPreferences, sensorSubsystem).orEmpty()
+    DependencyRegistry.addSingleton(AstronomyAlertEnabler { id, effects, _ ->
+        sunAlerts.firstOrNull { it.id == id }?.let { service ->
+            service.enable()
+            if (!service.isEnabled()) effects?.showMessage(strings.get(Res.string.sun_alert_schedule_failed))
+        }
+    })
+    val backtrack = createBacktrack?.invoke(userPreferences, pathService, logger)
+    DependencyRegistry.addSingleton(BacktrackRestarter { backtrack?.restart() })
     DependencyRegistry.addSingleton(WeatherMonitorRestarter {})
     DependencyRegistry.addSingleton(BatteryRestrictionPrompt { _ -> })
 
@@ -214,11 +232,14 @@ internal fun registerSharedApp(
     )
     DependencyRegistry.addSingleton(FieldGuideImageCleanup {})
 
+    portableBackup?.let { DependencyRegistry.addSingleton<PortableBackup>(it) }
+    val mapFiles = fileStorage?.let(::SharedMapFiles)
+    mapFiles?.let { DependencyRegistry.addSingleton(it) }
     val mapRepo: IMapRepo = MapRepo(
         offlineMapFileDao = database.vectorMapDao(),
         photoMapDao = database.photoMapDao(),
         mapGroupDao = database.mapGroupDao(),
-        files = object : MapFileAccess {
+        files = mapFiles ?: object : MapFileAccess {
             override fun delete(path: String) {}
             override fun canRead(path: String): Boolean = false
             override fun releaseExternal(path: String) {}
@@ -229,6 +250,8 @@ internal fun registerSharedApp(
     )
     DependencyRegistry.addSingleton(MapService(mapRepo))
 
+    turnBackAlarm?.let { DependencyRegistry.addSingleton<TurnBackAlarm>(it) }
+
     // Tool catalog (registered after sensor dependencies are ready)
     DependencyRegistry.addSingleton<ToolCatalog>(
         SharedToolCatalogImpl(
@@ -237,7 +260,10 @@ internal fun registerSharedApp(
             hasMotion = hasMotion,
             hasTorch = deviceTorch().isAvailable(),
             hasScreenLight = screenBrightness() != null,
-            hasCamera = hasCamera
+            hasCamera = hasCamera,
+            platformServices = sunAlerts + listOfNotNull(backtrack),
+            hasTurnBack = turnBackAlarm != null,
+            hasOfflineMaps = mapFiles != null
         )
     )
 }

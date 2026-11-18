@@ -28,7 +28,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -91,7 +90,6 @@ object TurnBackKeys {
 fun TurnBackToolScreen(alarm: TurnBackAlarm) {
     val host = AppHost.current()
     val effects = LocalScreenEffects.current
-    val scope = rememberCoroutineScope()
     val viewModel = viewModel {
         TurnBackViewModel(
             preferences = getAppService<Preferences>(),
@@ -104,10 +102,13 @@ fun TurnBackToolScreen(alarm: TurnBackAlarm) {
 
     LaunchedEffect(viewModel) {
         viewModel.alertSet.collect {
-            scope.launch {
-                alarm.start()
-            }
-            effects.showMessage(getAppService<AppStrings>().get(Res.string.turn_back_alert_set))
+            val scheduled = alarm.start()
+            if (!scheduled) viewModel.cancelTurnBack()
+            effects.showMessage(
+                getAppService<AppStrings>().get(
+                    if (scheduled) Res.string.turn_back_alert_set else Res.string.turn_back_alert_failed
+                )
+            )
         }
     }
 

@@ -5,6 +5,7 @@ import com.kylecorry.trail_sense.tools.offline_maps.domain.vector_maps.VectorMap
 class OfflineMapBoundsCalculatorFactory {
     fun getBoundsCalculator(type: VectorMapFileType): OfflineMapBoundsCalculator {
         return when (type) {
+            VectorMapFileType.GeoJson -> error("GeoJSON import uses the shared map reader")
             VectorMapFileType.Mapsforge -> MapsforgeOfflineMapBoundsCalculator()
         }
     }

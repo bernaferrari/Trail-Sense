@@ -9,12 +9,22 @@ targets:
     platform: iOS
     sources:
       - iosApp
+      - BacktrackActivity
+    dependencies:
+      - target: BacktrackWidget
     info:
       path: iosApp/Info.plist
       properties:
         CFBundleDisplayName: Trail Sense
         CADisableMinimumFrameDurationOnPhone: true
-        NSLocationWhenInUseUsageDescription: Show your current location while using Trail Sense.
+        NSLocationWhenInUseUsageDescription: Show your location and record your route while Backtrack is on, even when the screen is locked.
+        NSSupportsLiveActivities: true
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - trailsense
+        NSAlarmKitUsageDescription: Schedule the Turn Back and return alarms you set in Trail Sense.
+        UIBackgroundModes:
+          - location
         NSCameraUsageDescription: Take photos, scan QR codes, and use the mirror or camera sightline in Trail Sense.
         NSPhotoLibraryUsageDescription: Import photos and QR codes from your library in Trail Sense.
         NSMotionUsageDescription: Measure device orientation, steps, and movement in Trail Sense tools.
@@ -31,3 +41,19 @@ targets:
           cd "$SRCROOT/.."
           ./gradlew :shared:embedAndSignAppleFrameworkForXcode
         basedOnDependencyAnalysis: false
+  BacktrackWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - BacktrackWidget
+      - BacktrackActivity
+    info:
+      path: BacktrackWidget/Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kylecorry.trailsense.ios.backtrack
+        SWIFT_VERSION: '5.0'
+        APPLICATION_EXTENSION_API_ONLY: YES

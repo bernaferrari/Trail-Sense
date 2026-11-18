@@ -8,35 +8,96 @@
 
 /* Begin PBXBuildFile section */
 		16EA4047AD29FB8C8A9863CC /* TrailSenseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB9FF8CEC103B6DAE0581846 /* TrailSenseApp.swift */; };
+		3526943761F4DF249B3E713F /* BacktrackWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1F8ABE495DD20FBB0DCFC745 /* BacktrackWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7452149B9185B304468BD2AC /* BacktrackLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3AFCBDBD746AA597F236FEB /* BacktrackLiveActivity.swift */; };
+		7DA34DD480B91EC347D9880A /* BacktrackAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9452D6A70C8B241707A7DC /* BacktrackAttributes.swift */; };
+		A515D264A9138AF5851BFE91 /* BacktrackWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 321DCA9AB88E16C63F91B15A /* BacktrackWidget.swift */; };
+		B7DC73345595AF3BBAA5BA02 /* TrailSenseShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BA30231FC1E166E45179A18 /* TrailSenseShortcuts.swift */; };
+		C9045C36469EBEF0EFE9EEBE /* BacktrackAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC9452D6A70C8B241707A7DC /* BacktrackAttributes.swift */; };
+		E688D4D674730F33CE9694E9 /* TurnBackScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7FB82D076AE0AE3D0738A43 /* TurnBackScheduler.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9E9A73035F4BE78A5FDE5596 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0891C8CC6F9A3FB9BD733F84 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6317319C6C1AD27AB5436203;
+			remoteInfo = BacktrackWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8F908151867769875834160C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				3526943761F4DF249B3E713F /* BacktrackWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		123CB8E4A6CB37500A6E9A20 /* TrailSense.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TrailSense.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1F8ABE495DD20FBB0DCFC745 /* BacktrackWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = BacktrackWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		25D9C979C59971A7F889F273 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		321DCA9AB88E16C63F91B15A /* BacktrackWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacktrackWidget.swift; sourceTree = "<group>"; };
+		5BA30231FC1E166E45179A18 /* TrailSenseShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailSenseShortcuts.swift; sourceTree = "<group>"; };
 		68AF8EB9FFF5125C3EFBADC4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		AC9452D6A70C8B241707A7DC /* BacktrackAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacktrackAttributes.swift; sourceTree = "<group>"; };
+		D7FB82D076AE0AE3D0738A43 /* TurnBackScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnBackScheduler.swift; sourceTree = "<group>"; };
 		DB9FF8CEC103B6DAE0581846 /* TrailSenseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailSenseApp.swift; sourceTree = "<group>"; };
+		E3AFCBDBD746AA597F236FEB /* BacktrackLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacktrackLiveActivity.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		1201DAA744E835E51EAE5471 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				1F8ABE495DD20FBB0DCFC745 /* BacktrackWidget.appex */,
 				123CB8E4A6CB37500A6E9A20 /* TrailSense.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
+		496007A96B0B22FD50C92710 /* BacktrackWidget */ = {
+			isa = PBXGroup;
+			children = (
+				321DCA9AB88E16C63F91B15A /* BacktrackWidget.swift */,
+				25D9C979C59971A7F889F273 /* Info.plist */,
+			);
+			path = BacktrackWidget;
+			sourceTree = "<group>";
+		};
 		C87605EA6B14AC6E908880F1 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
+				E3AFCBDBD746AA597F236FEB /* BacktrackLiveActivity.swift */,
 				68AF8EB9FFF5125C3EFBADC4 /* Info.plist */,
 				DB9FF8CEC103B6DAE0581846 /* TrailSenseApp.swift */,
+				5BA30231FC1E166E45179A18 /* TrailSenseShortcuts.swift */,
+				D7FB82D076AE0AE3D0738A43 /* TurnBackScheduler.swift */,
 			);
 			path = iosApp;
+			sourceTree = "<group>";
+		};
+		DAA143FF51325E58E8092E3A /* BacktrackActivity */ = {
+			isa = PBXGroup;
+			children = (
+				AC9452D6A70C8B241707A7DC /* BacktrackAttributes.swift */,
+			);
+			path = BacktrackActivity;
 			sourceTree = "<group>";
 		};
 		E2BCBAE5381681E28F6EB2DC = {
 			isa = PBXGroup;
 			children = (
+				DAA143FF51325E58E8092E3A /* BacktrackActivity */,
+				496007A96B0B22FD50C92710 /* BacktrackWidget */,
 				C87605EA6B14AC6E908880F1 /* iosApp */,
 				1201DAA744E835E51EAE5471 /* Products */,
 			);
@@ -45,16 +106,35 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		6317319C6C1AD27AB5436203 /* BacktrackWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3E76DD49F80635D6981056AB /* Build configuration list for PBXNativeTarget "BacktrackWidget" */;
+			buildPhases = (
+				C9FAFD62147C55DC55690342 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BacktrackWidget;
+			packageProductDependencies = (
+			);
+			productName = BacktrackWidget;
+			productReference = 1F8ABE495DD20FBB0DCFC745 /* BacktrackWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		7225B73FD8093BD5B520BBA6 /* TrailSense */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7DA5B45182D0873E05C9B8EF /* Build configuration list for PBXNativeTarget "TrailSense" */;
 			buildPhases = (
 				09EE27D782A9274009C58D0A /* Build shared Kotlin framework */,
 				CBDFCE8BABA0D3A2084AD846 /* Sources */,
+				8F908151867769875834160C /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				74B29226F9801C7E87D9AAC0 /* PBXTargetDependency */,
 			);
 			name = TrailSense;
 			packageProductDependencies = (
@@ -89,6 +169,7 @@
 			projectRoot = "";
 			targets = (
 				7225B73FD8093BD5B520BBA6 /* TrailSense */,
+				6317319C6C1AD27AB5436203 /* BacktrackWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -116,15 +197,36 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		C9FAFD62147C55DC55690342 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9045C36469EBEF0EFE9EEBE /* BacktrackAttributes.swift in Sources */,
+				A515D264A9138AF5851BFE91 /* BacktrackWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CBDFCE8BABA0D3A2084AD846 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7DA34DD480B91EC347D9880A /* BacktrackAttributes.swift in Sources */,
+				7452149B9185B304468BD2AC /* BacktrackLiveActivity.swift in Sources */,
 				16EA4047AD29FB8C8A9863CC /* TrailSenseApp.swift in Sources */,
+				B7DC73345595AF3BBAA5BA02 /* TrailSenseShortcuts.swift in Sources */,
+				E688D4D674730F33CE9694E9 /* TurnBackScheduler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		74B29226F9801C7E87D9AAC0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6317319C6C1AD27AB5436203 /* BacktrackWidget */;
+			targetProxy = 9E9A73035F4BE78A5FDE5596 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		384CCB083726D17BB1AC07C8 /* Debug */ = {
@@ -164,6 +266,23 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
+		};
+		59D3DCA85422094D02F76B49 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				INFOPLIST_FILE = BacktrackWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kylecorry.trailsense.ios.backtrack;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 		6147AFFA19D288EFBDD4477C /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -284,9 +403,35 @@
 			};
 			name = Debug;
 		};
+		CA0575B5D5C22CD11390A243 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				INFOPLIST_FILE = BacktrackWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kylecorry.trailsense.ios.backtrack;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3E76DD49F80635D6981056AB /* Build configuration list for PBXNativeTarget "BacktrackWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				59D3DCA85422094D02F76B49 /* Debug */,
+				CA0575B5D5C22CD11390A243 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		3F2B71BBF0CCD59C6715E610 /* Build configuration list for PBXProject "TrailSense" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -29,11 +29,12 @@ fun rememberTurnBackAlarm(): TurnBackAlarm {
     val effects = LocalScreenEffects.current
     return remember(context, effects) {
         object : TurnBackAlarm {
-            override suspend fun start() {
+            override suspend fun start(): Boolean {
                 // Exact alarms first; the alarm starts whether or not they were granted, as it always has.
                 effects.requestPermission(AppPermission.ExactAlarms)
                 TurnBackAlarmReceiver.start(context)
                 requestBackgroundLocation(context, getAppService<Preferences>(), effects)
+                return true
             }
 
             override fun stop() {
