@@ -308,82 +308,96 @@ internal fun SharedOfflineMap(
         )
     }
 
-    Column(Modifier.fillMaxSize()) {
-        val back = rememberTrailSenseBack()
-        TopAppBar(
-            title = { Text(if (drawPath) appString(Res.string.create_path_on_map) else mapName ?: appString(Res.string.map)) },
-            navigationIcon = {
-                if (back != null) TextButton(enabled = !savingPath, onClick = {
-                    if (points.isNotEmpty()) confirmDiscard = true else back()
-                }) { Text(appString(Res.string.back)) }
-            },
-            actions = {
-                if (mapId == null && !drawPath) {
-                    TextButton(onClick = { navigator.navigate(Route.OfflineMapList()) }) { Text(appString(Res.string.maps)) }
-                } else if (canDelete) {
-                    TextButton(onClick = { confirmDelete = true }) { Text(appString(Res.string.delete)) }
-                }
-                TextButton(enabled = !located, onClick = {
-                    located = true
-                    scope.launch {
-                        try {
-                            val coordinate = sensors.getLocation()
-                            position.setData(GeoJsonFeature.point(coordinate, color = positionColor))
-                            centerOn(coordinate)
-                        } catch (exception: CancellationException) {
-                            throw exception
-                        } catch (_: Exception) {
-                            effects.showMessage(strings.get(Res.string.shared_map_location_unavailable))
-                        } finally {
-                            located = false
+    Scaffold(
+        contentWindowInsets = WindowInsets(0),
+        topBar = {
+            Column {
+                val back = rememberTrailSenseBack()
+                TopAppBar(
+                    title = { Text(if (drawPath) appString(Res.string.create_path_on_map) else mapName ?: appString(Res.string.map)) },
+                    navigationIcon = {
+                        if (back != null) TextButton(enabled = !savingPath, onClick = {
+                            if (points.isNotEmpty()) confirmDiscard = true else back()
+                        }) { Text(appString(Res.string.back)) }
+                    },
+                    actions = {
+                        if (mapId == null && !drawPath) {
+                            TextButton(onClick = { navigator.navigate(Route.OfflineMapList()) }) { Text(appString(Res.string.maps)) }
+                        } else if (canDelete) {
+                            TextButton(onClick = { confirmDelete = true }) { Text(appString(Res.string.delete)) }
                         }
-                    }
-                }) { Text(appString(Res.string.my_location)) }
-            }
-        )
-        if (unavailable) Text(appString(Res.string.shared_map_unavailable), Modifier.padding(16.dp))
-        view.Content(Modifier.weight(1f).fillMaxWidth())
-        if (editor != null) {
-            Row(Modifier.fillMaxWidth().windowInsetsPadding(LocalScreenBottomInsets.current)) {
-                TextButton(enabled = !savingPath && editState?.canUndo == true, onClick = editor::undo) {
-                    Text(appString(Res.string.undo))
-                }
-                TextButton(enabled = !savingPath && editState?.canRedo == true, onClick = editor::redo) {
-                    Text(appString(Res.string.redo))
-                }
-                Spacer(Modifier.weight(1f))
-                TextButton(enabled = !savingPath && points.size >= 2, onClick = {
-                    val coordinates = points
-                    savingPath = true
-                    view.isInteractive = false
-                    scope.launch {
-                        try {
-                            val host = AppHost.current()
-                            val name = CoroutinePickers.text(host, strings.get(Res.string.path), hint = strings.get(Res.string.name))
-                                ?: return@launch
-                            val id = Alerts.withLoading(host, strings.get(Res.string.loading)) {
-                                CreatePathCommand(paths, prefs, name.trim().ifBlank { null }, parentId = pathGroupId)
-                                    .execute(coordinates)
+                        TextButton(enabled = !located, onClick = {
+                            located = true
+                            scope.launch {
+                                try {
+                                    val coordinate = sensors.getLocation()
+                                    position.setData(GeoJsonFeature.point(coordinate, color = positionColor))
+                                    centerOn(coordinate)
+                                } catch (exception: CancellationException) {
+                                    throw exception
+                                } catch (_: Exception) {
+                                    effects.showMessage(strings.get(Res.string.shared_map_location_unavailable))
+                                } finally {
+                                    located = false
+                                }
                             }
-                            navigator.replace(Route.PathOverview(id))
-                        } catch (exception: CancellationException) {
-                            throw exception
-                        } catch (_: Exception) {
-                            effects.showMessage(strings.get(Res.string.unavailable))
-                        } finally {
-                            savingPath = false
-                            view.isInteractive = true
-                        }
+                        }) { Text(appString(Res.string.my_location)) }
                     }
-                }) { Text(appString(Res.string.save)) }
+                )
+                if (editor != null) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+                        TextButton(enabled = !savingPath && editState?.canUndo == true, onClick = editor::undo) {
+                            Text(appString(Res.string.undo))
+                        }
+                        TextButton(enabled = !savingPath && editState?.canRedo == true, onClick = editor::redo) {
+                            Text(appString(Res.string.redo))
+                        }
+                        Spacer(Modifier.weight(1f))
+                        TextButton(enabled = !savingPath && points.size >= 2, onClick = {
+                            val coordinates = points
+                            savingPath = true
+                            view.isInteractive = false
+                            scope.launch {
+                                try {
+                                    val host = AppHost.current()
+                                    val name = CoroutinePickers.text(host, strings.get(Res.string.path), hint = strings.get(Res.string.name))
+                                        ?: return@launch
+                                    val id = Alerts.withLoading(host, strings.get(Res.string.loading)) {
+                                        CreatePathCommand(paths, prefs, name.trim().ifBlank { null }, parentId = pathGroupId)
+                                            .execute(coordinates)
+                                    }
+                                    navigator.replace(Route.PathOverview(id))
+                                } catch (exception: CancellationException) {
+                                    throw exception
+                                } catch (_: Exception) {
+                                    effects.showMessage(strings.get(Res.string.unavailable))
+                                } finally {
+                                    savingPath = false
+                                    view.isInteractive = true
+                                }
+                            }
+                        }) { Text(appString(Res.string.save)) }
+                    }
+                }
+            }
+        },
+        bottomBar = {
+            Column {
+                attribution?.let {
+                    Text(
+                        it,
+                        Modifier.windowInsetsPadding(LocalScreenBottomInsets.current).padding(horizontal = 16.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
         }
-        attribution?.let {
-            Text(
-                it,
-                Modifier.windowInsetsPadding(LocalScreenBottomInsets.current).padding(horizontal = 16.dp, vertical = 4.dp),
-                style = MaterialTheme.typography.labelSmall
-            )
+    ) { contentPadding ->
+        Column(Modifier.fillMaxSize().padding(contentPadding)) {
+            if (unavailable) Text(appString(Res.string.shared_map_unavailable), Modifier.padding(16.dp))
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                view.Content(Modifier.matchParentSize())
+            }
         }
     }
 }
