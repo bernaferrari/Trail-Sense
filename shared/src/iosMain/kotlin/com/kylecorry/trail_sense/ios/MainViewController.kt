@@ -22,7 +22,6 @@ import com.kylecorry.trail_sense.shared.images.ComposeBundledImages
 import com.kylecorry.trail_sense.shared.text.ComposeAppStrings
 import com.kylecorry.trail_sense.shared.text.IosPlatformFormats
 import com.kylecorry.trail_sense.shared.text.appString
-import com.kylecorry.trail_sense.shared.navigation.Route
 import com.mohamedrejeb.calf.sf.symbols.SFSymbol
 import com.mohamedrejeb.calf.ui.ExperimentalCalfUiApi
 import com.mohamedrejeb.calf.ui.navigation.AdaptiveNavigationBar
@@ -103,8 +102,8 @@ fun MainViewController(
             SharedApp(strings, bindNavigation = { BindSharedAppActions(it, iosAppActions) }) { tabs, selectedIndex, select, content ->
                 AdaptiveScaffold(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    // The Navigation toolbar paints the status area as it collapses.
-                    contentWindowInsets = if (tabs.getOrNull(selectedIndex)?.route is Route.Navigation) {
+                    // The main tabs' app bars paint the status area as they collapse.
+                    contentWindowInsets = if (selectedIndex >= 0) {
                         WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
                     } else WindowInsets.safeDrawing,
                     bottomBar = {
