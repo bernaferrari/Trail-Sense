@@ -14,7 +14,7 @@ import com.kylecorry.trail_sense.shared.canvas.tiles.RegionDecoder
  * A large image to show in tiles: where it is and whether it is a PDF (rendered page regions) or a bitmap image
  * (decoded regions).
  */
-data class ImageTileSourceSpec(val uri: Uri, val isPdf: Boolean)
+data class ImageTileSourceSpec(val uri: Uri, val isPdf: Boolean, val pdfPageIndex: Int = 0)
 
 /** An opened image: its full size in pixels (as stored, before any orientation) and a decoder for its regions. */
 internal class ImageTileSource(
@@ -36,7 +36,7 @@ internal class ImageTileSource(
         suspend fun open(context: Context, spec: ImageTileSourceSpec): ImageTileSource = onIO {
             if (spec.isPdf) {
                 val decoder = PdfImageRegionDecoder(bitmapConfig)
-                val size = decoder.init(context, spec.uri)
+                val size = decoder.init(context, spec.uri, spec.pdfPageIndex)
                 ImageTileSource(size.x, size.y, decoder)
             } else {
                 val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }

@@ -11,12 +11,12 @@ import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.Promise
 
 @OptIn(ExperimentalWasmJsInterop::class)
-internal suspend fun renderBrowserMapPdf(bytes: ByteArray): ByteArray {
+internal suspend fun renderBrowserMapPdf(bytes: ByteArray, pageIndex: Int): ByteArray {
     val data = Uint8Array(bytes.size)
     for (index in bytes.indices) data[index] = bytes[index]
     val task = startPdf(pdfOptions(data)).await()
     return try {
-        val image = renderPdfPage(task.promise.await(), MAX_MAP_PDF_EDGE.toInt()).await()
+        val image = renderPdfPage(task.promise.await(), pageIndex + 1, MAX_MAP_PDF_EDGE.toInt()).await()
         ByteArray(image.length) { image[it] }
     } finally {
         withContext(NonCancellable) { task.destroy().await() }
@@ -35,8 +35,8 @@ private external fun startPdf(options: JsAny): Promise<PdfLoadingTask>
 private external fun pdfOptions(data: Uint8Array): JsAny
 
 @JsFun("""
-    async (pdf, maxEdge) => {
-        const page = await pdf.getPage(1);
+    async (pdf, pageNumber, maxEdge) => {
+        const page = await pdf.getPage(pageNumber);
         const original = page.getViewport({scale: 1});
         const viewport = page.getViewport({scale: maxEdge / Math.max(original.width, original.height)});
         const canvas = document.createElement('canvas');
@@ -54,4 +54,4 @@ private external fun pdfOptions(data: Uint8Array): JsAny
         }
     }
 """)
-private external fun renderPdfPage(pdf: JsAny, maxEdge: Int): Promise<Uint8Array>
+private external fun renderPdfPage(pdf: JsAny, pageNumber: Int, maxEdge: Int): Promise<Uint8Array>

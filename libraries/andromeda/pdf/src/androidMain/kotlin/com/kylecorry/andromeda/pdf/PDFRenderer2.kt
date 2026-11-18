@@ -61,8 +61,10 @@ public class PDFRenderer2(
         }
     }
 
-    public fun getSize(): Size {
-        val pdfPage = open(0)
+    public fun getSize(): Size = getSize(0)
+
+    public fun getSize(page: Int): Size {
+        val pdfPage = open(page)
         return Size(pdfPage.width, pdfPage.height)
     }
 

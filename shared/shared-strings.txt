@@ -1387,3 +1387,11 @@ map_calibration_error_implausible_scale
 shared_map_latitude
 shared_map_longitude
 shared_map_calibration_hint
+
+path_color
+point_added
+quality
+simplifying
+waypoints_deleted
+offline_map_pdf_page_title
+offline_map_pdf_page_number

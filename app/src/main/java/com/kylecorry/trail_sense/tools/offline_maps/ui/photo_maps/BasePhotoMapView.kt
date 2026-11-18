@@ -279,7 +279,7 @@ abstract class BasePhotoMapView : EnhancedImageView, IMapView {
         }
 
         if (files.get(map.pdfFileName).exists()) {
-            setImage(map.pdfFileName, rotation)
+            setImage(map.pdfFileName, rotation, map.pdfPageIndex)
         } else {
             setImage(map.filename, rotation)
         }

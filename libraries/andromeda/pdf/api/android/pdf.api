@@ -71,6 +71,7 @@ public final class com/kylecorry/andromeda/pdf/PDFRenderer2 : java/io/Closeable 
 	public synthetic fun <init> (Landroid/content/Context;Landroid/net/Uri;Ljava/lang/Float;Landroid/graphics/Bitmap$Config;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun close ()V
 	public final fun getSize ()Landroid/util/Size;
+	public final fun getSize (I)Landroid/util/Size;
 	public final fun toBitmap (Landroid/util/Size;IILandroid/graphics/RectF;)Landroid/graphics/Bitmap;
 	public static synthetic fun toBitmap$default (Lcom/kylecorry/andromeda/pdf/PDFRenderer2;Landroid/util/Size;IILandroid/graphics/RectF;ILjava/lang/Object;)Landroid/graphics/Bitmap;
 }

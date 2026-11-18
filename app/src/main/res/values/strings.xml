@@ -2181,4 +2181,6 @@
     <string name="light_meter_scale_bright">Sun</string>
     <string name="select_a_note">Select a note to read or edit it.</string>
     <string name="select_a_chapter">Select a chapter to read it.</string>
+    <string name="offline_map_pdf_page_title">Choose PDF page</string>
+    <string name="offline_map_pdf_page_number">Page number (1–%d)</string>
 </resources>

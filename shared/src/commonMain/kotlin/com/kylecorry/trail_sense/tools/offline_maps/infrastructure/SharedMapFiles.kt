@@ -27,14 +27,14 @@ internal const val MAX_MAP_PDF_EDGE = 3072f
 
 internal class SharedMapFiles(
     private val storage: OfflineMapStorage,
-    private val renderPdf: (suspend (ByteArray) -> ByteArray)? = null
+    private val renderPdf: (suspend (ByteArray, Int) -> ByteArray)? = null
 ) : MapFileAccess {
     val extensions: List<String> get() =
         listOf("geojson", "json", "map", "jpg", "jpeg", "png", "webp") + listOfNotNull("pdf".takeIf { renderPdf != null })
 
     suspend fun import(file: PlatformFile, maps: MapService): IMap = withContext(ioDispatcher) {
         val extension = file.extension.lowercase()
-        require(extension in extensions)
+        require(extension in extensions && extension != "pdf")
         val name = file.nameWithoutExtension
         val id = Uuid.random().toString()
         val createdOn = Clock.System.now()
@@ -58,15 +58,9 @@ internal class SharedMapFiles(
                     withContext(NonCancellable) { map.copy(id = maps.add(map)) }
                 }
                 else -> {
-                    val path = "maps/$id.${if (extension == "pdf") "png" else extension}"
-                    val blob = copy(if (extension == "pdf") "$path.pdf" else path)
-                    val bytes = if (extension == "pdf") {
-                        requireNotNull(renderPdf)(blob.readAll(MAX_PDF_BYTES)).also {
-                            paths.add(path)
-                            storage.write(path, it)
-                        }
-                    } else blob.readAll(MAX_IMAGE_BYTES)
-                    val image = bytes.decodeToImageBitmap()
+                    val path = "maps/$id.$extension"
+                    val blob = copy(path)
+                    val image = blob.readAll(MAX_IMAGE_BYTES).decodeToImageBitmap()
                     val size = Size(image.width.toFloat(), image.height.toFloat())
                     val map = PhotoMap(0, name, path, blob.size, PhotoMapGeoreference(size), createdOn = createdOn)
                     withContext(NonCancellable) { map.copy(id = maps.add(map)) }
@@ -74,6 +68,40 @@ internal class SharedMapFiles(
             }
         } catch (exception: Exception) {
             withContext(NonCancellable) { paths.forEach { runCatching { storage.delete(it) } } }
+            throw exception
+        }
+    }
+
+    suspend fun preparePdf(file: PlatformFile): GeoPdfMap = withContext(ioDispatcher) {
+        requireNotNull(renderPdf)
+        val path = "maps/${Uuid.random()}.pdf"
+        try {
+            storage.copy(path, file)
+            val bytes = requireNotNull(storage.open(path)).readAll(MAX_PDF_BYTES)
+            GeoPdfMap(file.nameWithoutExtension, bytes).also { require(it.pageCount > 0) }
+        } finally {
+            withContext(NonCancellable) { storage.delete(path) }
+        }
+    }
+
+    suspend fun importPdf(document: GeoPdfMap, pageIndex: Int, maps: MapService): PhotoMap = withContext(ioDispatcher) {
+        require(pageIndex in 0 until document.pageCount)
+        val preview = requireNotNull(renderPdf)(document.bytes, pageIndex)
+        val image = preview.decodeToImageBitmap()
+        val size = Size(image.width.toFloat(), image.height.toFloat())
+        val georeference = runCatching { document.georeference(pageIndex, size) }.getOrElse { PhotoMapGeoreference(size) }
+        val path = "maps/${Uuid.random()}-page-${pageIndex + 1}.png"
+        val candidate = PhotoMap(0, document.name, path, document.bytes.size.toLong(), georeference, createdOn = Clock.System.now())
+        val map = if (candidate.isCalibrated) candidate else candidate.copy(georeference = PhotoMapGeoreference(size))
+        try {
+            storage.write(map.pdfFileName, document.bytes)
+            storage.write(path, preview)
+            withContext(NonCancellable) { map.copy(id = maps.add(map)) }
+        } catch (exception: Exception) {
+            withContext(NonCancellable) {
+                runCatching { storage.delete(path) }
+                runCatching { storage.delete(map.pdfFileName) }
+            }
             throw exception
         }
     }
@@ -96,7 +124,9 @@ internal class SharedMapFiles(
         val blob = open(map.filename)
         val bytes = when {
             blob != null -> blob.readAll(MAX_IMAGE_BYTES)
-            renderPdf != null -> open(map.pdfFileName)?.readAll(MAX_PDF_BYTES)?.let { renderPdf.invoke(it) }
+            renderPdf != null -> open(map.pdfFileName)?.readAll(MAX_PDF_BYTES)?.let {
+                renderPdf(it, map.pdfPageIndex)
+            }
             else -> null
         } ?: return@withContext null
         val image = bytes.decodeToImageBitmap()

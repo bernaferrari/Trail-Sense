@@ -159,26 +159,16 @@ import com.kylecorry.trail_sense.tools.packs.ui.CreateItemToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackItemListToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackListToolScreen
 import com.kylecorry.trail_sense.tools.packs.ui.PackingListFiles
-import com.kylecorry.trail_sense.tools.paths.ui.commands.ToggleBacktrackCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangeBacktrackFrequencyCommand
+import com.kylecorry.trail_sense.tools.paths.ui.PathOverviewToolScreen
+import com.kylecorry.trail_sense.tools.paths.ui.PathsToolScreen
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackToolScreen
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.offline_maps.ui.SharedOfflineMap
 import com.kylecorry.trail_sense.tools.offline_maps.ui.SharedOfflineMapList
 import com.kylecorry.trail_sense.tools.offline_maps.ui.SharedPhotoMapScreen
-import com.kylecorry.trail_sense.tools.paths.PathsToolServices
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
-import com.kylecorry.trail_sense.tools.paths.domain.PathGroup
-import com.kylecorry.trail_sense.tools.paths.domain.PathMetadata
-import com.kylecorry.trail_sense.tools.paths.domain.PathStyle
-import com.kylecorry.trail_sense.tools.paths.ui.PathAction
-import com.kylecorry.trail_sense.tools.paths.ui.PathGroupAction
-import com.kylecorry.trail_sense.tools.paths.ui.PathSortMethod
-import com.kylecorry.trail_sense.tools.paths.ui.PathsScreen
-import com.kylecorry.trail_sense.tools.paths.ui.PathsToolbarAction
-import com.kylecorry.trail_sense.tools.paths.ui.PathsViewModel
 import com.kylecorry.trail_sense.shared.io.SharedGpxIOService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
 import com.kylecorry.trail_sense.shared.sharing.copyToClipboard
@@ -188,8 +178,6 @@ import com.kylecorry.trail_sense.shared.sharing.pickImageFile
 import com.kylecorry.trail_sense.shared.sharing.shareText
 import com.kylecorry.trail_sense.tools.mirror.ui.SharedMirrorCameraScreen
 import com.kylecorry.trail_sense.tools.packs.ui.SharedPackingListFiles
-import com.kylecorry.trail_sense.tools.paths.ui.commands.ExportPathCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.ImportPathsCommand
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerSettingsScreen
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerSystemStatus
 import com.kylecorry.trail_sense.tools.pedometer.ui.PedometerToolScreen
@@ -400,9 +388,10 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
             )
         }
         is Route.BeaconList -> SharedBeaconListScreen(r, modifier)
-        Route.Paths -> SharedPathsScreen(modifier)
+        Route.Paths -> PathsToolScreen(modifier)
+        is Route.PathOverview -> PathOverviewToolScreen(r, modifier)
         is Route.Map -> if (getAppService<ToolCatalog>().isToolAvailable(ToolIds.MAP)) {
-            SharedOfflineMap()
+            SharedOfflineMap(drawPath = r.startPathCreation, pathGroupId = r.pathGroupId)
         } else UnsupportedSharedToolScreen(appString(Res.string.map))
         is Route.OfflineMapList -> if (getAppService<ToolCatalog>().isToolAvailable(ToolIds.OFFLINE_MAPS)) {
             SharedOfflineMapList()
@@ -870,164 +859,6 @@ private fun SharedBeaconListScreen(
         },
         modifier = modifier.fillMaxSize()
     )
-}
-
-@Composable
-private fun SharedPathsScreen(modifier: Modifier = Modifier) {
-    val navigator = LocalNavigator.current
-    val host = AppHost.current()
-    val strings = LocalAppStrings.current
-    val formatter = remember { FormatService.getInstance() }
-    val prefs = remember { getAppService<UserPreferences>() }
-    val pathService = remember { getAppService<IPathService>() }
-    val catalog = remember { getAppService<ToolCatalog>() }
-    val backtrack = remember(catalog) { catalog.getService(PathsToolServices.BACKTRACK) }
-    val gps = remember { getAppService<SensorService>().getGPS() }
-    val effects = LocalScreenEffects.current
-    val scope = rememberCoroutineScope()
-
-    var showBacktrackFrequency by remember { mutableStateOf(false) }
-
-    val viewModel = viewModel {
-        PathsViewModel(
-            pathService = pathService,
-            preferences = prefs.paths,
-            backtrack = backtrack,
-            gps = gps
-        )
-    }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner, viewModel) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> viewModel.onResume()
-                Lifecycle.Event.ON_PAUSE -> viewModel.onPause()
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
-
-    val sortOptions = remember { PathSortMethod.entries }
-    val sortName = when (viewModel.sort) {
-        PathSortMethod.MostRecent -> appString(Res.string.most_recent)
-        PathSortMethod.Longest -> appString(Res.string.longest)
-        PathSortMethod.Shortest -> appString(Res.string.shortest)
-        PathSortMethod.Closest -> appString(Res.string.closest)
-        PathSortMethod.Name -> appString(Res.string.name)
-    }
-
-    PathsScreen(
-        title = viewModel.groupName ?: appString(Res.string.paths),
-        sortMenuText = strings.get(Res.string.sort_by, sortName),
-        searchText = viewModel.searchText,
-        items = viewModel.items,
-        isLoaded = viewModel.isLoaded,
-        resetKey = viewModel.resetKey,
-        backtrackState = viewModel.backtrackState,
-        backtrackFrequency = viewModel.backtrackFrequency,
-        formatService = formatter,
-        baseDistanceUnits = prefs.baseDistanceUnits,
-        onBack = { if (!viewModel.up()) navigator.navigateUp() },
-        onSearchChange = viewModel::search,
-        onMenuAction = { action ->
-            if (action == PathsToolbarAction.Sort) {
-                val labels = sortOptions.map {
-                    when (it) {
-                        PathSortMethod.MostRecent -> strings.get(Res.string.most_recent)
-                        PathSortMethod.Longest -> strings.get(Res.string.longest)
-                        PathSortMethod.Shortest -> strings.get(Res.string.shortest)
-                        PathSortMethod.Closest -> strings.get(Res.string.closest)
-                        PathSortMethod.Name -> strings.get(Res.string.name)
-                    }
-                }
-                Pickers.item(host, strings.get(Res.string.sort_by, sortName), labels, sortOptions.indexOf(viewModel.sort)) { idx ->
-                    idx?.let { viewModel.changeSort(sortOptions[it]) }
-                }
-            }
-        },
-        onPathAction = { path: Path, action: PathAction ->
-            when (action) {
-                PathAction.Delete -> scope.launch { pathService.deletePath(path) }
-                PathAction.ToggleVisibility -> scope.launch {
-                    pathService.addPath(path.copy(style = path.style.copy(visible = !path.style.visible)))
-                }
-                PathAction.Export -> ExportPathCommand(host, scope, SharedGpxIOService(), pathService).execute(path)
-                else -> Unit
-            }
-        },
-        onGroupAction = { group: PathGroup, action: PathGroupAction ->
-            when (action) {
-                PathGroupAction.Open -> viewModel.open(group.id)
-                PathGroupAction.ShowAll -> scope.launch { viewModel.setGroupVisibility(group, true) }
-                PathGroupAction.HideAll -> scope.launch { viewModel.setGroupVisibility(group, false) }
-                PathGroupAction.Delete -> scope.launch { pathService.deleteGroup(group) }
-                PathGroupAction.Export -> ExportPathCommand(host, scope, SharedGpxIOService(), pathService).execute(group)
-                else -> Unit
-            }
-        },
-        onImportPath = {
-            ImportPathsCommand(host, scope, SharedGpxIOService(), pathService, prefs.paths).execute(viewModel.rootId)
-        },
-        onCreateGroup = {
-            Pickers.text(host, strings.get(Res.string.group), null, null, null) { name ->
-                if (!name.isNullOrBlank()) {
-                    scope.launch {
-                        pathService.addGroup(PathGroup(0, name.trim(), parentId = viewModel.rootId))
-                        viewModel.refresh()
-                    }
-                }
-            }
-        },
-        onCreatePath = {
-            Pickers.text(host, strings.get(Res.string.paths), null, null, null) { name ->
-                if (!name.isNullOrBlank()) {
-                    scope.launch {
-                        pathService.addPath(
-                            Path(
-                                id = 0,
-                                name = name.trim(),
-                                style = PathStyle.default(),
-                                metadata = PathMetadata.empty,
-                                parentId = viewModel.rootId
-                            )
-                        )
-                        viewModel.refresh()
-                    }
-                }
-            }
-        },
-        onCreatePathOnMap = null,
-        onBacktrackFrequencyClick = if (backtrack?.isSupported == true) {
-            { showBacktrackFrequency = true }
-        } else null,
-        onBacktrackToggleClick = if (backtrack?.isSupported == true) {
-            { ToggleBacktrackCommand(effects, scope) {
-                effects.showMessage(strings.get(Res.string.backtrack_no_permission))
-            }.execute() }
-        } else null,
-        modifier = modifier.fillMaxSize()
-    )
-
-    if (showBacktrackFrequency) {
-        DurationPickerDialog(
-            title = appString(Res.string.pref_backtrack_frequency_title),
-            duration = prefs.paths.backtrackRecordFrequency,
-            message = appString(Res.string.actual_frequency_disclaimer),
-            hint = appString(Res.string.frequency),
-            showSeconds = true,
-            onDurationPicked = { frequency ->
-                if (frequency != null) {
-                    ChangeBacktrackFrequencyCommand(host, scope, onChange = { viewModel.updateBacktrackStatus() })
-                        .execute(frequency)
-                }
-                showBacktrackFrequency = false
-            },
-            onDismiss = { showBacktrackFrequency = false }
-        )
-    }
 }
 
 @Composable

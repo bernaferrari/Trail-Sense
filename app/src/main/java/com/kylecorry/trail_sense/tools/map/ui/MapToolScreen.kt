@@ -110,7 +110,7 @@ import kotlinx.coroutines.withContext
 
 /** The map tool: the map with its controls and sheets, or a prompt to add one when no visible map can be drawn. */
 @Composable
-fun MapToolScreen(startPathCreation: Boolean = false, modifier: Modifier = Modifier) {
+fun MapToolScreen(startPathCreation: Boolean = false, pathGroupId: Long? = null, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val appContext = context.applicationContext
     val navigator = LocalNavigator.current
@@ -129,7 +129,7 @@ fun MapToolScreen(startPathCreation: Boolean = false, modifier: Modifier = Modif
     LaunchedEffect(viewModel.hasRenderableMap, pendingPathCreation) {
         if (pendingPathCreation && viewModel.hasRenderableMap == true) {
             pendingPathCreation = false
-            controller.startPathCreation()
+            controller.startPathCreation(pathGroupId)
         }
     }
     controller.Content(
@@ -468,11 +468,11 @@ private class MapController(
     }
 
     /** Starts drawing a new path from no points, as the map menu's Create path does. */
-    fun startPathCreation() {
-        startDistanceMeasurement(null, false)
+    fun startPathCreation(parentId: Long?) {
+        startDistanceMeasurement(null, false, parentId)
     }
 
-    private fun startDistanceMeasurement(location: Coordinate?, startWithUserLocation: Boolean) {
+    private fun startDistanceMeasurement(location: Coordinate?, startWithUserLocation: Boolean, pathGroupId: Long? = null) {
         val distanceSheet = views.distanceSheet
         val initialPoints = listOfNotNull(
             if (startWithUserLocation) userLocation else null,
@@ -504,7 +504,8 @@ private class MapController(
                         prefs.paths,
                         null,
                         manager.getDistanceMeasurementElevations(),
-                        skipElevations::get
+                        skipElevations::get,
+                        parentId = pathGroupId
                     ).execute(manager.getDistanceMeasurementPoints())
                 }
 

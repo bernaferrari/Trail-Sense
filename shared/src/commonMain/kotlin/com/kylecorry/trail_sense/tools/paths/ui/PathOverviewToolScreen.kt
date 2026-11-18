@@ -2,16 +2,7 @@
 
 package com.kylecorry.trail_sense.tools.paths.ui
 
-import com.kylecorry.trail_sense.shared.views.compose.AppHost
-import com.kylecorry.trail_sense.shared.views.compose.from
-
-import com.kylecorry.trail_sense.shared.views.compose.chartHeight
-
-import android.content.Context
-import android.content.ContextWrapper
-import android.content.res.ColorStateList
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -22,30 +13,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -59,100 +35,69 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kylecorry.andromeda.core.tryOrNothing
 import com.kylecorry.andromeda.core.ui.Colors
 import com.kylecorry.andromeda.geojson.GeoJsonFeature
 import com.kylecorry.andromeda.geojson.GeoJsonFeatureCollection
-import com.kylecorry.andromeda.sense.compass.CompassSensor
-import com.kylecorry.andromeda.sense.location.GpsSensor
-import com.kylecorry.luna.concurrency.onIO
-import com.kylecorry.sol.math.MathExtensions.roundPlaces
-import com.kylecorry.sol.math.Range
-import com.kylecorry.sol.math.statistics.Statistics
 import com.kylecorry.sol.science.geography.Geography
-import com.kylecorry.sol.units.Bearing
+import com.kylecorry.sol.units.Coordinate
 import com.kylecorry.sol.units.Distance
-import com.kylecorry.sol.units.DistanceUnits
-import com.kylecorry.trail_sense.R
-import com.kylecorry.trail_sense.main.MainActivity
 import com.kylecorry.trail_sense.main.getAppService
 import com.kylecorry.trail_sense.shared.FormatService
 import com.kylecorry.trail_sense.shared.Units
 import com.kylecorry.trail_sense.shared.UserPreferences
 import com.kylecorry.trail_sense.shared.colors.AppColor
 import com.kylecorry.trail_sense.shared.colors.ColorInts
-import com.kylecorry.trail_sense.shared.debugging.DebugPathElevationsCommand
 import com.kylecorry.trail_sense.shared.debugging.isDebug
 import com.kylecorry.trail_sense.shared.declination.DeclinationFactory
-import com.kylecorry.trail_sense.shared.declination.IDeclinationStrategy
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.events.EventData
-import com.kylecorry.trail_sense.shared.events.ToolBroadcasts
+import com.kylecorry.trail_sense.shared.dialogs.withCancelableLoading
 import com.kylecorry.trail_sense.shared.extensions.lineString
 import com.kylecorry.trail_sense.shared.extensions.point
-import com.kylecorry.trail_sense.shared.extensions.range
-import com.kylecorry.trail_sense.shared.extensions.withCancelableLoading
-import com.kylecorry.trail_sense.shared.getInstance
-import com.kylecorry.trail_sense.shared.icons.trail.*
-import com.kylecorry.trail_sense.shared.icons.trail.BaselineStop24
-import com.kylecorry.trail_sense.shared.io.IOFactory
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.icons.trail.FullscreenExit
+import com.kylecorry.trail_sense.shared.icons.trail.MenuDots
+import com.kylecorry.trail_sense.shared.icons.trail.Recenter
+import com.kylecorry.trail_sense.shared.icons.trail.TrailIcons
+import com.kylecorry.trail_sense.shared.io.SharedGpxIOService
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.ConfigurableGeoJsonLayer
-import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.GeoJsonLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.stop
 import com.kylecorry.trail_sense.shared.navigation.LocalNavigator
 import com.kylecorry.trail_sense.shared.navigation.Route
+import com.kylecorry.trail_sense.shared.navigation.RouteLocation
 import com.kylecorry.trail_sense.shared.navigation.TrailSenseAppNavigation
-import com.kylecorry.trail_sense.shared.navigation.rememberSystemBack
 import com.kylecorry.trail_sense.shared.sensors.SensorService
 import com.kylecorry.trail_sense.shared.sharing.ActionItem
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.text.appString
 import com.kylecorry.trail_sense.shared.toRelativeDistance
 import com.kylecorry.trail_sense.shared.views.ColorPickerDialog
 import com.kylecorry.trail_sense.shared.views.ColorScaleContent
 import com.kylecorry.trail_sense.shared.views.ColorScaleState
-import com.kylecorry.trail_sense.shared.views.TrailSenseTheme
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupCard
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupHeader
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseGroupPosition
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
-import com.kylecorry.trail_sense.shared.views.compose.TrailSensePage
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSheet
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSize
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStat
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseStatGrid
-import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTone
-import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
+import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.BeaconNavigator
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.IBeaconNavigator
 import com.kylecorry.trail_sense.tools.beacons.infrastructure.persistence.IBeaconService
-import com.kylecorry.trail_sense.tools.beacons.ui.places.PlacesKeyValue
-import com.kylecorry.trail_sense.tools.map.map_layers.MyLocationGeoJsonSource
 import com.kylecorry.trail_sense.tools.map.map_layers.ScaleBarLayer
-import com.kylecorry.trail_sense.tools.map.ui.MapView
+import com.kylecorry.trail_sense.tools.map.ui.SharedMapView
 import com.kylecorry.trail_sense.tools.navigation.domain.paths.PathFollow
-import com.kylecorry.trail_sense.tools.navigation.infrastructure.Navigator
-import com.kylecorry.trail_sense.tools.paths.PathsToolRegistration
+import com.kylecorry.trail_sense.tools.navigation.infrastructure.INavigator
+import com.kylecorry.trail_sense.tools.paths.PathsToolServices
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathDirection
@@ -160,14 +105,10 @@ import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
 import com.kylecorry.trail_sense.tools.paths.domain.PathPointColoringStyle
 import com.kylecorry.trail_sense.tools.paths.domain.beacon.IPathPointBeaconConverter
 import com.kylecorry.trail_sense.tools.paths.domain.beacon.TemporaryPathPointBeaconConverter
-import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingDifficulty
-import com.kylecorry.trail_sense.tools.paths.domain.hiking.HikingService
-import com.kylecorry.trail_sense.tools.paths.infrastructure.BacktrackScheduler
 import com.kylecorry.trail_sense.tools.paths.infrastructure.commands.AddPathPointCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangePathColorCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangePathLineStyleCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ChangePointStyleCommand
-import com.kylecorry.trail_sense.tools.paths.ui.commands.CreateBeaconFromPointCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.DeletePointCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.ExportPathCommand
 import com.kylecorry.trail_sense.tools.paths.ui.commands.KeepPathCommand
@@ -180,49 +121,44 @@ import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathDialog
 import com.kylecorry.trail_sense.tools.paths.ui.commands.SimplifyPathRequest
 import com.kylecorry.trail_sense.tools.paths.ui.commands.TogglePathVisibilityCommand
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolCatalog
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PathOverviewToolScreen(
     route: Route.PathOverview,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    debugElevations: suspend (List<PathPoint>, List<PathPoint>) -> Unit = { _, _ -> }
 ) {
-    val context = LocalContext.current
-    val appContext = context.applicationContext
+    val host = AppHost.current()
+    val strings = remember { getAppService<AppStrings>() }
     val appNavigator = LocalNavigator.current
     val effects = LocalScreenEffects.current
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
+    val prefs = remember { getAppService<UserPreferences>() }
+    val backtrack = remember { getAppService<ToolCatalog>().getService(PathsToolServices.BACKTRACK) }
+    val navigation = remember { getAppService<INavigator>() }
     val viewModel = viewModel {
-        val userPrefs = UserPreferences(appContext)
         val sensorService = getAppService<SensorService>()
         val gps = sensorService.getGPS()
         PathOverviewViewModel(
             pathId = route.pathId,
             pathService = getAppService<IPathService>(),
-            navigator = Navigator.getInstance(appContext),
+            navigator = navigation,
             gps = gps,
             compass = sensorService.getCompass(),
-            declinationProvider = DeclinationFactory().getDeclinationStrategy(userPrefs, gps),
-            baseDistanceUnits = userPrefs.baseDistanceUnits,
+            declinationProvider = DeclinationFactory().getDeclinationStrategy(prefs, gps),
+            baseDistanceUnits = prefs.baseDistanceUnits,
             isDebug = isDebug(),
-            debugElevations = { raw, smoothed -> DebugPathElevationsCommand(appContext, raw, smoothed).execute() },
-            isBacktrackOn = { BacktrackScheduler.isOn(appContext) },
-            stopBacktrack = { getAppService<ToolCatalog>().getService(PathsToolRegistration.SERVICE_BACKTRACK)?.disable() }
+            debugElevations = debugElevations,
+            isBacktrackOn = { backtrack?.isEnabled() == true },
+            stopBacktrack = { backtrack?.disable() }
         )
     }
-    val prefs = remember(appContext) { UserPreferences(appContext) }
-    val formatService = remember(appContext) { FormatService.getInstance(appContext) }
+    val formatService = remember { FormatService.getInstance() }
     val pathService = viewModel.pathService
     val path = viewModel.path
     val waypoints = viewModel.waypoints
@@ -230,40 +166,33 @@ fun PathOverviewToolScreen(
     var showPathPointsSheet by remember { mutableStateOf(false) }
     var pathColorPickerTarget by remember { mutableStateOf<Path?>(null) }
     var simplifyRequest by remember { mutableStateOf<SimplifyPathRequest?>(null) }
-    val simplifyCommand = remember(context, scope) {
-        SimplifyPathCommand(context, scope, pathService) { simplifyRequest = it }
+    val simplifyCommand = remember(host, scope) {
+        SimplifyPathCommand(host, scope, pathService) { simplifyRequest = it }
     }
 
     // The map and its layers are rendering objects, so they live with the composition.
     val layer = remember { ConfigurableGeoJsonLayer(prefs.paths.useFastPathRendering) }
-    val map = remember(context) {
-        MapView(context).apply {
-            id = R.id.path_image
-            backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.colorSecondary))
+    val locationLayer = remember { ConfigurableGeoJsonLayer(false, layerId = "path_location") }
+    val locationColor = MaterialTheme.colorScheme.primary.toArgb()
+    val map = remember(density) {
+        SharedMapView(density.density, density.fontScale).apply {
             keepScreenOn = true
-            isInteractive = true
-            setLayers(
-                listOf(
-                    layer,
-                    GeoJsonLayer(MyLocationGeoJsonSource(), MyLocationGeoJsonSource.SOURCE_ID, prefs.paths.useFastPathRendering),
-                    ScaleBarLayer(prefs.baseDistanceUnits, formatService)
-                )
-            )
+            setLayers(listOf(layer, locationLayer, ScaleBarLayer(prefs.baseDistanceUnits, formatService)))
         }
     }
     val legend = remember { ColorScaleState() }
-    val pointFactory = remember(context, path?.style?.point) {
+    val pointFactory = remember(path?.style?.point) {
         getPointFactory(path?.style?.point ?: PathPointColoringStyle.None)
     }
     val bounds = remember(waypoints) { Geography.getBounds(waypoints.map { it.coordinate }) }
-    val converter: IPathPointBeaconConverter = remember(context) {
-        TemporaryPathPointBeaconConverter(context.getString(R.string.waypoint))
+    val converter: IPathPointBeaconConverter = remember(strings) {
+        TemporaryPathPointBeaconConverter(strings.get(Res.string.waypoint))
     }
-    val beaconNavigator: IBeaconNavigator = remember(appContext, appNavigator) {
+    val beaconNavigator: IBeaconNavigator = remember(appNavigator, navigation) {
         BeaconNavigator(
             getAppService<IBeaconService>(),
             TrailSenseAppNavigation(appNavigator),
-            Navigator.getInstance(appContext)
+            navigation
         )
     }
 
@@ -307,12 +236,19 @@ fun PathOverviewToolScreen(
     }
 
     // The map follows where you are and which way you face.
-    LaunchedEffect(map) {
+    LaunchedEffect(map, locationColor) {
         snapshotFlow { Triple(viewModel.userLocation, viewModel.userLocationAccuracy, viewModel.userAzimuth) }
             .collect { (location, accuracy, azimuth) ->
                 map.userLocation = location
                 map.userLocationAccuracy = accuracy
                 azimuth?.let { map.userAzimuth = it }
+                val features = if (location != Coordinate.zero || accuracy != null) {
+                    listOf(
+                        GeoJsonFeature.point(location, color = locationColor, opacity = 25, moveWithUserLocation = true, scaleToLocationAccuracy = true),
+                        GeoJsonFeature.point(location, color = locationColor, strokeColor = ColorInts.White, strokeWeight = 2f, size = 16f, moveWithUserLocation = true)
+                    )
+                } else emptyList()
+                locationLayer.setData(GeoJsonFeatureCollection(features))
             }
     }
     LaunchedEffect(bounds) {
@@ -367,7 +303,7 @@ fun PathOverviewToolScreen(
     fun movePath() {
         val current = viewModel.path ?: return
         scope.launch {
-            MoveIPathCommand(AppHost.from(context), pathService).execute(current)
+            MoveIPathCommand(host, pathService).execute(current)
         }
     }
 
@@ -385,7 +321,13 @@ fun PathOverviewToolScreen(
 
     fun createBeacon(point: PathPoint) {
         val current = viewModel.path ?: return
-        CreateBeaconFromPointCommand(context).execute(current, point)
+        val coordinate = point.coordinate
+        appNavigator.navigate(Route.PlaceBeacon(initialLocation = RouteLocation(
+            coordinate.latitude,
+            coordinate.longitude,
+            point.elevation,
+            mapOf("label" to (current.name ?: strings.get(Res.string.waypoint)))
+        )))
     }
 
     fun showPathMenu() {
@@ -403,32 +345,28 @@ fun PathOverviewToolScreen(
 
         val actionItems = actions.mapNotNull { action ->
             val name = when (action) {
-                PathAction.Rename -> context.getString(R.string.rename)
-                PathAction.Keep -> if (current.temporary) context.getString(R.string.keep_forever) else null
+                PathAction.Rename -> strings.get(Res.string.rename)
+                PathAction.Keep -> if (current.temporary) strings.get(Res.string.keep_forever) else null
                 PathAction.ToggleVisibility -> if (current.style.visible) {
-                    context.getString(R.string.hide)
+                    strings.get(Res.string.hide)
                 } else {
-                    context.getString(R.string.show)
+                    strings.get(Res.string.show)
                 }
 
-                PathAction.Export -> context.getString(R.string.export)
-                PathAction.Simplify -> context.getString(R.string.simplify)
-                PathAction.ReplaceElevations -> context.getString(R.string.replace_elevations)
-                PathAction.ViewPoints -> context.getString(R.string.points)
-                PathAction.Move -> context.getString(R.string.move_to)
+                PathAction.Export -> strings.get(Res.string.export)
+                PathAction.Simplify -> strings.get(Res.string.simplify)
+                PathAction.ReplaceElevations -> strings.get(Res.string.replace_elevations)
+                PathAction.ViewPoints -> strings.get(Res.string.points)
+                PathAction.Move -> strings.get(Res.string.move_to)
                 else -> null
             }
             name?.let {
                 ActionItem(it, TrailIcons.MenuDots) {
                     when (action) {
                         PathAction.Export -> ExportPathCommand(
-                            AppHost.from(context),
+                            host,
                             scope,
-                            IOFactory().createGpxService(
-                                context,
-                                // File pickers need the activity's result launcher, an Activity-only API.
-                                requireNotNull(context.findMainActivity())
-                            ),
+                            SharedGpxIOService(),
                             pathService
                         ).execute(current)
 
@@ -451,26 +389,23 @@ fun PathOverviewToolScreen(
         }
 
         scope.launch {
-            effects.chooseAction(current.name ?: context.getString(R.string.path), null, actionItems)?.action?.invoke()
+            effects.chooseAction(current.name ?: strings.get(Res.string.path), null, actionItems)?.action?.invoke()
         }
     }
 
     fun addPoint() {
+        if (viewModel.path == null) return
         scope.launch {
-            var wasSuccessful = false
             val job = launch {
-                AddPathPointCommand(viewModel.pathId).execute()
-                wasSuccessful = true
+                val added = AddPathPointCommand(viewModel.pathId).execute()
+                effects.showMessage(strings.get(if (added) Res.string.point_added else Res.string.gps_unavailable))
             }
 
             Alerts.withCancelableLoading(
-                context,
-                context.getString(R.string.loading),
+                host,
+                strings.get(Res.string.loading),
                 onCancel = { job.cancel() }) {
                 job.join()
-                if (wasSuccessful) {
-                    effects.showMessage(context.getString(R.string.point_added))
-                }
             }
         }
     }
@@ -511,11 +446,11 @@ fun PathOverviewToolScreen(
             lineStyle = getLineStyleNames()[current.style.line] ?: "",
             pointStyle = getPointStyleNames()[current.style.point] ?: ""
         )
-    } ?: PathOverviewModel.empty(ContextCompat.getColor(context, R.color.blue))
+    } ?: PathOverviewModel.empty(MaterialTheme.colorScheme.primary.toArgb())
 
     val mapHeight = if (viewModel.isFullscreen) {
         val legendHeight = with(density) { 72.dp.roundToPx() }
-        listState.layoutInfo.viewportSize.height - legendHeight
+        (listState.layoutInfo.viewportSize.height - legendHeight).coerceAtLeast(with(density) { 250.dp.roundToPx() })
     } else {
         with(density) { 250.dp.roundToPx() }
     }
@@ -523,7 +458,7 @@ fun PathOverviewToolScreen(
     PathOverviewHost(
         model = model,
         listState = listState,
-        onBack = rememberSystemBack(),
+        onBack = rememberTrailSenseBack(),
         onMenuClick = ::showPathMenu,
         onAddPoint = ::addPoint,
         mapPreview = {
@@ -623,7 +558,7 @@ fun PathOverviewToolScreen(
     val colorPickerPath = pathColorPickerTarget
     if (colorPickerPath != null) {
         ColorPickerDialog(
-            title = stringResource(R.string.path_color),
+            title = appString(Res.string.path_color),
             selectedColor = AppColor.values().firstOrNull {
                 it.color == colorPickerPath.style.color
             } ?: AppColor.Gray,
@@ -651,7 +586,7 @@ fun PathOverviewToolScreen(
 /** The map preview, with its color legend tucked under it when points are colored. */
 @Composable
 private fun PathMapPreview(
-    map: MapView,
+    map: SharedMapView,
     mapHeightPx: Int,
     isFullscreen: Boolean,
     onFullscreenClick: () -> Unit,
@@ -665,7 +600,7 @@ private fun PathMapPreview(
     )
     val mapBackground = MaterialTheme.colorScheme.surfaceContainerHigh.toArgb()
     SideEffect {
-        map.backgroundTintList = ColorStateList.valueOf(mapBackground)
+        map.setBackgroundColor(mapBackground)
     }
     Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.sm)) {
         Box(
@@ -675,10 +610,10 @@ private fun PathMapPreview(
                 .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
                 .background(MaterialTheme.colorScheme.surfaceContainerLow)
         ) {
-            map.Content(Modifier.fillMaxSize())
+            map.Content(Modifier.fillMaxSize().testTag("path_image"))
             PathIconButton(
                 icon = if (isFullscreen) TrailIcons.FullscreenExit else TrailIcons.Recenter,
-                contentDescription = stringResource(R.string.center),
+                contentDescription = appString(Res.string.center),
                 onClick = onFullscreenClick,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -700,10 +635,4 @@ private fun PathMapPreview(
             )
         }
     }
-}
-
-private tailrec fun Context.findMainActivity(): MainActivity? = when (this) {
-    is MainActivity -> this
-    is ContextWrapper -> baseContext.findMainActivity()
-    else -> null
 }

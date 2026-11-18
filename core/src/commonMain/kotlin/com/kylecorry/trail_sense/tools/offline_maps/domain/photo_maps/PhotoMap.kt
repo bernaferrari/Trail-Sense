@@ -26,6 +26,8 @@ data class PhotoMap(
     override val count: Int? = null
 
     val pdfFileName = filename.replace(".webp", "") + ".pdf"
+    val pdfPageIndex: Int
+        get() = (PDF_PAGE_NUMBER.find(filename)?.groupValues?.get(1)?.toIntOrNull() ?: 1) - 1
 
     private val hooks = Hooks()
 
@@ -107,6 +109,8 @@ data class PhotoMap(
     }
 
     companion object {
+        private val PDF_PAGE_NUMBER = Regex("-page-([1-9][0-9]*)\\.(?:png|webp)$")
+
         // TODO: Make this based on meters per pixel
         const val DESIRED_PDF_SIZE = 20000
     }

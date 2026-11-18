@@ -12,14 +12,14 @@ import kotlin.math.roundToInt
 internal fun diskOfflineMapStorage(files: FileStorage) =
     DiskOfflineMapStorage(files) { file, path -> file.copyTo(PlatformFile(path)) }
 
-internal suspend fun renderNativeMapPdf(bytes: ByteArray): ByteArray = withContext(ioDispatcher) {
+internal suspend fun renderNativeMapPdf(bytes: ByteArray, pageIndex: Int): ByteArray = withContext(ioDispatcher) {
     PdfPages(bytes).use { pdf ->
-        require(pdf.pageCount > 0)
-        val page = pdf.pageSize(0)
+        require(pageIndex in 0 until pdf.pageCount)
+        val page = pdf.pageSize(pageIndex)
         require(page.widthPoints > 0 && page.heightPoints > 0)
         val scale = MAX_MAP_PDF_EDGE / maxOf(page.widthPoints, page.heightPoints)
         pdf.render(
-            0,
+            pageIndex,
             (page.widthPoints * scale).roundToInt().coerceAtLeast(1),
             (page.heightPoints * scale).roundToInt().coerceAtLeast(1)
         ).encodePng()

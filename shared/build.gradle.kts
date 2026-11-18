@@ -57,6 +57,13 @@ kotlin {
             }
         }
         val mobileSharingMain = create("mobileSharingMain") { dependsOn(filePickerMain) }
+        val kitePdfMain = create("kitePdfMain") {
+            dependsOn(commonMain.get())
+            dependencies { implementation(libs.kitepdf.pdf) }
+        }
+        androidMain.get().dependsOn(kitePdfMain)
+        iosMain.get().dependsOn(kitePdfMain)
+        wasmJsMain.get().dependsOn(kitePdfMain)
         androidMain.get().dependsOn(mobileSharingMain)
         iosMain.get().dependsOn(mobileSharingMain)
         jvmMain.get().dependsOn(filePickerMain)
@@ -67,6 +74,7 @@ kotlin {
 
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
+            implementation(libs.pdfbox)
             implementation(libs.kotlinx.coroutines.swing)
         }
     }

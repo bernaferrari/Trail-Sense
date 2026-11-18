@@ -1,7 +1,6 @@
 package com.kylecorry.trail_sense.tools.paths.ui.commands
 
 import com.kylecorry.trail_sense.shared.UserPreferences
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,18 +22,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kylecorry.sol.science.geology.CoordinateBounds
-import com.kylecorry.trail_sense.R
 import com.kylecorry.trail_sense.shared.colors.ColorInts
 import com.kylecorry.trail_sense.shared.dialogs.Alerts
-import com.kylecorry.trail_sense.shared.dialogs.loading
-import com.kylecorry.trail_sense.shared.dialogs.snackbar
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.geojson.GeoJsonLayer
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.setLayers
 import com.kylecorry.trail_sense.shared.map_layers.ui.layers.start
@@ -43,7 +34,6 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseChip
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseDialog
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseLoadingIndicator
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
-import com.kylecorry.trail_sense.tools.map.ui.MapView
 import com.kylecorry.trail_sense.tools.paths.domain.IPathService
 import com.kylecorry.trail_sense.tools.paths.domain.Path
 import com.kylecorry.trail_sense.tools.paths.domain.PathPoint
@@ -54,6 +44,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.kylecorry.trail_sense.main.getAppService
+import com.kylecorry.trail_sense.shared.generated.resources.*
+import com.kylecorry.trail_sense.shared.coroutines.ioDispatcher
+import com.kylecorry.trail_sense.shared.text.AppStrings
+import com.kylecorry.trail_sense.shared.text.appString
+import com.kylecorry.trail_sense.shared.text.appPluralString
+import com.kylecorry.trail_sense.shared.text.SystemString
+import com.kylecorry.trail_sense.shared.text.systemString
+import com.kylecorry.trail_sense.shared.views.compose.AppHost
+import com.kylecorry.trail_sense.shared.views.compose.TrailSenseShape
+import com.kylecorry.trail_sense.tools.map.ui.SharedMapView
+import androidx.compose.ui.platform.LocalDensity
 
 /** A path and its points, ready for the simplify preview. */
 class SimplifyPathRequest(val path: Path, val points: List<PathPoint>)
@@ -63,38 +65,29 @@ class SimplifyPathRequest(val path: Path, val points: List<PathPoint>)
  * [apply] removes the points for the quality picked there.
  */
 class SimplifyPathCommand(
-    private val context: Context,
+    private val host: AppHost,
     private val scope: CoroutineScope,
     private val pathService: IPathService,
     private val onPreview: (SimplifyPathRequest) -> Unit
 ) : IPathCommand {
 
+    private val strings = getAppService<AppStrings>()
+
     override fun execute(path: Path) {
         scope.launch {
-            val loading = Alerts.loading(context, context.getString(R.string.loading))
-            val points = withContext(Dispatchers.Default) {
-                pathService.getWaypoints(path.id).sortedBy { it.id }
+            val points = Alerts.withLoading(host, strings.get(Res.string.loading)) {
+                withContext(ioDispatcher) { pathService.getWaypoints(path.id).sortedBy { it.id } }
             }
-            loading.dismiss()
             onPreview(SimplifyPathRequest(path, points))
         }
     }
 
     fun apply(path: Path, quality: PathSimplificationQuality) {
         scope.launch {
-            val loading = Alerts.loading(context, context.getString(R.string.simplifying))
-            val deleted = withContext(Dispatchers.IO) {
-                pathService.simplifyPath(path.id, quality)
+            val deleted = Alerts.withLoading(host, strings.get(Res.string.simplifying)) {
+                withContext(ioDispatcher) { pathService.simplifyPath(path.id, quality) }
             }
-            loading.dismiss()
-            Alerts.snackbar(
-                context,
-                context.resources.getQuantityString(
-                    R.plurals.waypoints_deleted,
-                    deleted,
-                    deleted
-                )
-            )
+            Alerts.snackbar(host, strings.plural(Res.plurals.waypoints_deleted, deleted, deleted))
         }
     }
 }
@@ -109,8 +102,8 @@ fun SimplifyPathDialog(
     onApply: (PathSimplificationQuality) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val context = LocalContext.current
-    val useFastPathRendering = remember(context, request) { UserPreferences(context).paths.useFastPathRendering }
+    val density = LocalDensity.current
+    val useFastPathRendering = remember { getAppService<UserPreferences>().paths.useFastPathRendering }
     val path = request.path
     val points = request.points
     val originalCoordinates = remember(request) { points.map { it.coordinate } }
@@ -119,8 +112,8 @@ fun SimplifyPathDialog(
     }
     val simplifiedLayer = remember(request) { GeoJsonLayer(simplifiedSource, SIMPLIFIED_LAYER_ID, useFastPathRendering) }
     // The preview map is a rendering object, so it lives with the dialog.
-    val map = remember(request) {
-        MapView(context).apply {
+    val map = remember(request, density) {
+        SharedMapView(density.density, density.fontScale).apply {
             val originalLayer = GeoJsonLayer(
                 StaticLineGeoJsonSource(originalCoordinates, ColorInts.Gray, thicknessScale = 1.5f),
                 ORIGINAL_LAYER_ID,
@@ -161,24 +154,24 @@ fun SimplifyPathDialog(
 
     TrailSenseDialog(
         onDismissRequest = onDismiss,
-        title = stringResource(R.string.simplify),
-        confirmText = stringResource(android.R.string.ok),
+        title = appString(Res.string.simplify),
+        confirmText = systemString(SystemString.Ok),
         onConfirm = {
             onDismiss()
             onApply(selectedQuality())
         },
-        dismissText = stringResource(android.R.string.cancel)
+        dismissText = systemString(SystemString.Cancel)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg)) {
             Text(
-                text = stringResource(R.string.quality),
+                text = appString(Res.string.quality),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(modifier = Modifier.fillMaxWidth()) {
                 QUALITIES.forEachIndexed { index, (_, label) ->
                     TrailSenseChip(
-                        text = stringResource(label),
+                        text = appString(label),
                         selected = selectedIndex == index,
                         onClick = {
                             if (selectedIndex != index) {
@@ -192,8 +185,8 @@ fun SimplifyPathDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(250.dp)
-                    .clip(RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_size)))
-                    .background(colorResource(R.color.colorSecondary))
+                    .clip(RoundedCornerShape(TrailSenseShape.groupOuter))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             ) {
                 map.Content(Modifier.fillMaxSize())
                 if (isLoading) {
@@ -201,7 +194,7 @@ fun SimplifyPathDialog(
                 }
             }
             Text(
-                text = removed?.let { pluralStringResource(R.plurals.waypoints_to_be_deleted, it, it) } ?: "",
+                text = removed?.let { appPluralString(Res.plurals.waypoints_to_be_deleted, it, it) } ?: "",
                 style = MaterialTheme.typography.bodyMedium
             )
         }
@@ -209,9 +202,9 @@ fun SimplifyPathDialog(
 }
 
 private val QUALITIES = listOf(
-    PathSimplificationQuality.High to R.string.high,
-    PathSimplificationQuality.Medium to R.string.moderate,
-    PathSimplificationQuality.Low to R.string.low
+    PathSimplificationQuality.High to Res.string.high,
+    PathSimplificationQuality.Medium to Res.string.moderate,
+    PathSimplificationQuality.Low to Res.string.low
 )
 private const val ORIGINAL_PATH_OPACITY = 50 / 255f
 private const val ORIGINAL_LAYER_ID = "simplify_preview_original"

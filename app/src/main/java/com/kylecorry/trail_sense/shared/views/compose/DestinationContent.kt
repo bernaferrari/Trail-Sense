@@ -83,6 +83,8 @@ import com.kylecorry.trail_sense.tools.light.ui.LightMeterScreen
 import com.kylecorry.trail_sense.tools.lightning.ui.LightningScreen
 import com.kylecorry.trail_sense.tools.magnifier.ui.MagnifierToolScreen
 import com.kylecorry.trail_sense.tools.map.ui.MapToolScreen
+import com.kylecorry.trail_sense.shared.debugging.DebugPathElevationsCommand
+import androidx.compose.ui.platform.LocalContext
 import com.kylecorry.trail_sense.tools.metaldetector.ui.MetalDetectorToolScreen
 import com.kylecorry.trail_sense.tools.mirror.ui.MirrorCameraToolScreen
 import com.kylecorry.trail_sense.tools.navigation.ui.NavigationSettingsToolScreen
@@ -200,7 +202,7 @@ fun DestinationContent(
             Route.PathsSettings -> PathsSettingsToolScreen()
             Route.AstronomySettings -> AstronomySettingsToolScreen()
 
-            is Route.Map -> MapToolScreen(startPathCreation = route.startPathCreation)
+            is Route.Map -> MapToolScreen(startPathCreation = route.startPathCreation, pathGroupId = route.pathGroupId)
 
             // --- Tools with a disclaimer, camera permission or plugin details ---
             Route.CliffHeight -> CliffHeightToolScreen()
@@ -257,7 +259,12 @@ fun DestinationContent(
             )
             is Route.VectorMapView -> ViewVectorMapToolScreen(route)
             is Route.Navigation -> NavigatorToolScreen(route, quickActionHost = this)
-            is Route.PathOverview -> PathOverviewToolScreen(route)
+            is Route.PathOverview -> {
+                val context = LocalContext.current.applicationContext
+                PathOverviewToolScreen(route, debugElevations = { raw, smoothed ->
+                    DebugPathElevationsCommand(context, raw, smoothed).execute()
+                })
+            }
             Route.Paths -> PathsToolScreen()
             Route.CalibrateAltimeter -> CalibrateAltimeterToolScreen()
             Route.CalibrateBarometer -> CalibrateBarometerToolScreen()

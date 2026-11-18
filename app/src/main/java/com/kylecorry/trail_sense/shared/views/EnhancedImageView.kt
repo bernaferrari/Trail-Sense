@@ -197,7 +197,7 @@ open class EnhancedImageView(
         // Do nothing
     }
 
-    fun setImage(filename: String, rotation: Float = 0f) {
+    fun setImage(filename: String, rotation: Float = 0f, pdfPageIndex: Int = 0) {
         val baseRotation = getBaseRotation(rotation)
         rotationOffset = Trigonometry.deltaAngle(
             baseRotation.toFloat(),
@@ -220,7 +220,8 @@ open class EnhancedImageView(
             image.setSource(
                 ImageTileSourceSpec(
                     files.uri(filename),
-                    isPdf = filename.lowercase().endsWith(".pdf")
+                    isPdf = filename.lowercase().endsWith(".pdf"),
+                    pdfPageIndex = pdfPageIndex
                 )
             )
             lastImage = filename

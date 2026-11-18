@@ -32,7 +32,7 @@ class PhotoMapDecoderCache {
         return getLock(map).withLock {
             loaders[map]?.let { return it }
             val decoder = PdfImageRegionDecoder(Bitmap.Config.ARGB_8888)
-            decoder.init(context, files.uri(map.pdfFileName))
+            decoder.init(context, files.uri(map.pdfFileName), map.pdfPageIndex)
             loaders[map] = decoder
             decoder
         }

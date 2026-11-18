@@ -21,7 +21,7 @@ sealed interface Route : NavKey {
     @Serializable data object Tools : Route
     @Serializable data object Weather : Route
     /** The map tool; [startPathCreation] opens it drawing a new path (Paths > Add > Draw on map). */
-    @Serializable data class Map(val startPathCreation: Boolean = false) : Route
+    @Serializable data class Map(val startPathCreation: Boolean = false, val pathGroupId: Long? = null) : Route
     @Serializable data object Settings : Route
     @Serializable data object Experimentation : Route
     @Serializable data object SignalFinder : Route
