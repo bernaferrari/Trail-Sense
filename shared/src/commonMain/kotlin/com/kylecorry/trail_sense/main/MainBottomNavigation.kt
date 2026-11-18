@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -45,6 +46,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenBottomInsets
 
 class MainBottomNavigationState {
     val items = mutableStateListOf<MainBottomNavigationItem>()
@@ -135,11 +137,16 @@ fun MainAdaptiveNavigation(
             }
         }
 
+    val horizontalInsets = contentWindowInsets.only(WindowInsetsSides.Horizontal)
+    val bottomInsets = contentWindowInsets.only(WindowInsetsSides.Bottom)
     BoxWithConstraints(modifier = modifier.background(MaterialTheme.colorScheme.surface)) {
         if (maxWidth < 600.dp) {
             Column(modifier = Modifier.fillMaxSize()) {
-                val insets = if (showBar) contentWindowInsets.only(WindowInsetsSides.Horizontal) else contentWindowInsets
-                Box(modifier = Modifier.weight(1f).windowInsetsPadding(insets)) { movable() }
+                Box(modifier = Modifier.weight(1f).windowInsetsPadding(horizontalInsets)) {
+                    CompositionLocalProvider(LocalScreenBottomInsets provides if (showBar) WindowInsets(0) else bottomInsets) {
+                        movable()
+                    }
+                }
                 // As in ChangeDetection: screens opened from a tab get the whole canvas; the bar slides away and
                 // their back arrow takes over, and it slides back on the tab's first screen.
                 AnimatedVisibility(
@@ -190,7 +197,9 @@ fun MainAdaptiveNavigation(
                 Box(modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .windowInsetsPadding(contentWindowInsets)) { movable() }
+                    .windowInsetsPadding(horizontalInsets)) {
+                    CompositionLocalProvider(LocalScreenBottomInsets provides bottomInsets) { movable() }
+                }
             }
         }
     }

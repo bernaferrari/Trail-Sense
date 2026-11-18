@@ -4,13 +4,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
@@ -38,6 +43,8 @@ import com.kylecorry.trail_sense.shared.views.compose.AppHostOverlays
 import com.kylecorry.trail_sense.shared.views.compose.AppHostSnackbar
 import com.kylecorry.trail_sense.shared.views.compose.LocalAppBarInsets
 import com.kylecorry.trail_sense.shared.views.compose.LocalScreenEffects
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenBottomInsets
+import com.kylecorry.trail_sense.shared.views.compose.LocalTrailSenseBack
 import com.kylecorry.trail_sense.shared.views.compose.SharedComposeDestinationHost
 import com.kylecorry.trail_sense.shared.views.compose.SharedDestinationContent
 import org.jetbrains.compose.resources.StringResource
@@ -51,13 +58,20 @@ private val appTabs = listOf(
     SharedAppTab(Route.Settings, Res.string.settings)
 )
 
+private val navigatorSaver = Saver<TrailSenseNavigator, String>(
+    save = { it.saveState() },
+    restore = { state -> TrailSenseNavigator().takeIf { it.restoreState(state) } }
+)
+
 @Composable
 internal fun SharedApp(
     strings: AppStrings,
     tabs: List<SharedAppTab> = appTabs,
     bindNavigation: @Composable (TrailSenseNavigator) -> Unit = {}
 ) {
-    val navigator = remember { TrailSenseNavigator().apply { setStartRoute(Route.Tools) } }
+    val navigator = rememberSaveable(saver = navigatorSaver) {
+        TrailSenseNavigator().apply { setStartRoute(Route.Tools) }
+    }
     val host = remember { AppHost().also(AppHost::attach) }
     val errorBanner = remember { ErrorBannerState() }
     val scope = rememberCoroutineScope()
@@ -94,13 +108,19 @@ internal fun SharedApp(
                         val destinationHost = remember(route, navigator, lifecycleOwner, host, scope) {
                             SharedComposeDestinationHost(navigator, lifecycleOwner, route, host, scope)
                         }
-                        CompositionLocalProvider(LocalScreenEffects provides destinationHost) {
+                        val back: (() -> Unit)? = if (route != navigator.startRoute && tabs.none { it.route == route }) {
+                            { if (navigator.currentRoute == route) navigator.navigateUp() }
+                        } else null
+                        CompositionLocalProvider(
+                            LocalScreenEffects provides destinationHost,
+                            LocalTrailSenseBack provides back
+                        ) {
                             destinationHost.SharedDestinationContent(Modifier.fillMaxSize())
                             ActionSheetModal(destinationHost)
                         }
                     }
                     AppHostOverlays(host)
-                    AppHostSnackbar(host)
+                    AppHostSnackbar(host, Modifier.windowInsetsPadding(LocalScreenBottomInsets.current))
                     AppHostDialogs(host)
                 }
             }
@@ -136,7 +156,8 @@ private fun SharedAdaptiveNavigation(
         onItemClick = { route -> select(tabs.indexOfFirst { it.route == route }) },
         onItemLongClick = {},
         showBar = selected >= 0,
-        contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+        contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+            .union(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)),
         content = content
     )
 }

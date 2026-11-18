@@ -44,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -61,6 +62,9 @@ val LocalTrailSenseBack = androidx.compose.runtime.staticCompositionLocalOf<(() 
 
 /** Insets owned by standalone app bars when the navigation host draws behind the status bar. */
 internal val LocalAppBarInsets = staticCompositionLocalOf { WindowInsets(0) }
+
+/** The screen's bottom safe area when no navigation bar holds the content above it. */
+internal val LocalScreenBottomInsets = staticCompositionLocalOf { WindowInsets(0) }
 
 /**
  * A screen's title bar for screens that don't scroll as a page (instruments, maps, lists with their own scrolling):
@@ -140,14 +144,8 @@ fun TrailSensePage(
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.surface,
-        contentWindowInsets = WindowInsets(0),
-        // The page draws edge to edge with no window insets; a screen opened from a tab has no bottom bar under it,
-        // so its FAB clears the gesture/navigation bar itself.
-        floatingActionButton = {
-            androidx.compose.foundation.layout.Box(
-                androidx.compose.ui.Modifier
-            ) { floatingActionButton() }
-        },
+        contentWindowInsets = LocalScreenBottomInsets.current,
+        floatingActionButton = floatingActionButton,
         topBar = {
             val titleContent: @Composable () -> Unit = {
                 Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
@@ -200,17 +198,24 @@ fun TrailSensePage(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(top = padding.calculateTopPadding()),
             contentAlignment = Alignment.TopCenter
         ) {
             val bodyModifier = Modifier.widthIn(max = TrailSenseSize.maximumContentWidth).fillMaxSize()
+            val direction = LocalLayoutDirection.current
+            val scrollPadding = PaddingValues.Absolute(
+                left = contentPadding.calculateLeftPadding(direction),
+                top = contentPadding.calculateTopPadding(),
+                right = contentPadding.calculateRightPadding(direction),
+                bottom = contentPadding.calculateBottomPadding() + padding.calculateBottomPadding()
+            )
             if (emptyContent != null) {
-                Box(bodyModifier.padding(contentPadding)) { emptyContent() }
+                Box(bodyModifier.padding(scrollPadding)) { emptyContent() }
             } else {
                 LazyColumn(
                     state = state,
                     modifier = bodyModifier,
-                    contentPadding = contentPadding,
+                    contentPadding = scrollPadding,
                     verticalArrangement = Arrangement.spacedBy(TrailSenseSpacing.lg),
                     content = content
                 )

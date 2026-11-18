@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.kylecorry.trail_sense.shared.views.compose.LocalAppBarInsets
+import com.kylecorry.trail_sense.shared.views.compose.LocalScreenBottomInsets
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseSpacing
 import com.kylecorry.trail_sense.shared.views.compose.TrailSenseButton
 import com.kylecorry.trail_sense.main.getAppService
@@ -58,6 +59,7 @@ fun ErrorHandlerScreen(
         modifier = Modifier
             .fillMaxSize()
             .windowInsetsPadding(LocalAppBarInsets.current)
+            .windowInsetsPadding(LocalScreenBottomInsets.current)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = TrailSenseSpacing.screen, vertical = TrailSenseSpacing.xxl),
         horizontalAlignment = Alignment.CenterHorizontally,

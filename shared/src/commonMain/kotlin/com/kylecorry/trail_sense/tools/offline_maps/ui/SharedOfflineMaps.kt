@@ -255,6 +255,12 @@ internal fun SharedOfflineMap(mapId: Long? = null, mapFiles: SharedMapFiles? = n
         )
         if (unavailable) Text(appString(Res.string.shared_map_unavailable), Modifier.padding(16.dp))
         view.Content(Modifier.weight(1f).fillMaxWidth())
-        attribution?.let { Text(it, Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall) }
+        attribution?.let {
+            Text(
+                it,
+                Modifier.windowInsetsPadding(LocalScreenBottomInsets.current).padding(horizontal = 16.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
     }
 }
