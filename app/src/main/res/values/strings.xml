@@ -2165,4 +2165,6 @@
     <string name="light_meter_flashlight_summary">Measure a beam\'s brightness and reach</string>
     <string name="light_meter_scale_dark">Dark</string>
     <string name="light_meter_scale_bright">Sun</string>
+    <string name="select_a_note">Select a note to read or edit it.</string>
+    <string name="select_a_chapter">Select a chapter to read it.</string>
 </resources>

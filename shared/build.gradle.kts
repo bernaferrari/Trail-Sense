@@ -76,6 +76,7 @@ kotlin {
             // Navigation 3 keys and the app's back stack
             api(libs.androidx.navigation3.runtime)
             implementation(libs.multiplatform.navigation3.ui)
+            implementation(libs.cmp.adaptive.navigation3)
             // System back (gesture, button) as common navigation events
             implementation(libs.cmp.navigationevent.compose)
             // Screen view models and lifecycle effects

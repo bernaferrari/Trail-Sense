@@ -1359,3 +1359,5 @@ mirror_camera
 qr_code_scanner
 beacons_imported
 beacons_exported
+select_a_note
+select_a_chapter
