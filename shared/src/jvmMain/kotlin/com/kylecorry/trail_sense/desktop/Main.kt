@@ -8,7 +8,7 @@ import com.kylecorry.trail_sense.main.persistence.jvmAppDatabase
 import com.kylecorry.trail_sense.main.registerSharedApp
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.SharedMapFiles
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.diskOfflineMapStorage
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.renderNativeMapPdf
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.openNativeMapPdf
 import com.kylecorry.trail_sense.settings.backup.FilePortableBackup
 import com.kylecorry.trail_sense.shared.device.DeviceProfile
 import com.kylecorry.trail_sense.shared.images.ComposeAssetImages
@@ -33,7 +33,7 @@ fun main() {
         bundledImages = ComposeBundledImages(),
         images = ComposeAssetImages(),
         formats = PortablePlatformFormats(),
-        mapFiles = SharedMapFiles(diskOfflineMapStorage(files), ::renderNativeMapPdf),
+        mapFiles = SharedMapFiles(diskOfflineMapStorage(files), ::openNativeMapPdf),
         portableBackup = FilePortableBackup(database, files)
     )
 

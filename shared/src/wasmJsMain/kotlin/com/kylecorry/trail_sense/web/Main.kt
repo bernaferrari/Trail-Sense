@@ -49,7 +49,7 @@ fun main() {
                     bundledImages = ComposeBundledImages(),
                     images = ComposeAssetImages(),
                     formats = PortablePlatformFormats(),
-                    mapFiles = SharedMapFiles(BrowserOfflineMapStorage(), ::renderBrowserMapPdf)
+                    mapFiles = SharedMapFiles(BrowserOfflineMapStorage(), ::openBrowserMapPdf)
                 )
                 strings = loaded
                 root.setAttribute("aria-busy", "false")

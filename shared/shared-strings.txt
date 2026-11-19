@@ -1147,6 +1147,7 @@ weather_empty_description
 weather_empty_recording
 weather_empty_title
 weather_monitor
+weather_monitor_unavailable
 weather_monitoring_disabled
 alarm_time_range
 forecast_sensitivity_values

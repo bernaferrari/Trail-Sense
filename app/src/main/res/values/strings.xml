@@ -2025,6 +2025,7 @@
     <string name="tides_rising_until">Rising until %1$s</string>
     <string name="tides_falling_until">Falling until %1$s</string>
     <string name="tides_next_tide">Next: %1$s at %2$s</string>
+    <string name="weather_monitor_unavailable">Background weather monitoring is unavailable on this device.</string>
     <string name="weather_empty_title">No forecast yet</string>
     <string name="weather_empty_description">Start the weather monitor. It reads the air pressure in the background, and the forecast appears here after a few readings.</string>
     <string name="weather_empty_recording">The weather monitor is reading the air pressure. The forecast appears here after a few readings.</string>

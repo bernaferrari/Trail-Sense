@@ -16,8 +16,10 @@ class ComposeRawTextReader : RawTextReader {
         ).distinct()
         for (directory in directories) {
             for (extension in listOf("txt", "md", "json")) {
+                val path = "$directory/${text.name}.$extension"
+                if (path !in bundledRawTextPaths) continue
                 try {
-                    return Res.readBytes("files/trailtext/$directory/${text.name}.$extension").decodeToString()
+                    return Res.readBytes("files/trailtext/$path").decodeToString()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Exception) {

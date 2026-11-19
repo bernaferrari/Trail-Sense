@@ -260,6 +260,12 @@ internal fun SharedOfflineMap(
             }
     }
 
+    for (overlay in raster.maps) {
+        key(overlay) {
+            LaunchedEffect(overlay, files) { overlay.tiles.load(files, overlay.map, view::invalidate) }
+        }
+    }
+
     LaunchedEffect(view, trackColor) {
         paths.getPaths().collectLatest { allPaths ->
             val backtrackId = paths.getBacktrackPathId()

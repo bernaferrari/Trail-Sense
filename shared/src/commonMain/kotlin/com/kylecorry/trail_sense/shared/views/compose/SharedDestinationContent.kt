@@ -163,6 +163,7 @@ import com.kylecorry.trail_sense.tools.paths.ui.PathOverviewToolScreen
 import com.kylecorry.trail_sense.tools.paths.ui.PathsToolScreen
 import com.kylecorry.trail_sense.shared.views.DurationPickerDialog
 import com.kylecorry.trail_sense.tools.turn_back.ui.TurnBackToolScreen
+import com.kylecorry.trail_sense.shared.device.DeviceProfile
 import com.kylecorry.trail_sense.tools.tools.infrastructure.ToolIds
 import com.kylecorry.trail_sense.tools.offline_maps.ui.SharedOfflineMap
 import com.kylecorry.trail_sense.tools.offline_maps.ui.SharedOfflineMapList
@@ -222,10 +223,33 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
     val strings = LocalAppStrings.current
     val host = AppHost.current()
 
+    val catalog = remember { getAppService<ToolCatalog>() }
+    val device = remember { getAppService<DeviceProfile>() }
+    val unavailableTitle = when (route) {
+        Route.CalibrateCompass -> Res.string.pref_compass_sensor_title.takeUnless { device.hasCompass }
+        Route.CalibrateBarometer -> Res.string.barometer.takeUnless { device.hasBarometer }
+        Route.Level, Route.BubbleLevelSettings ->
+            Res.string.tool_bubble_level_title.takeUnless { catalog.isToolAvailable(ToolIds.BUBBLE_LEVEL) }
+        Route.Clinometer, Route.ClinometerSettings ->
+            Res.string.clinometer_title.takeUnless { catalog.isToolAvailable(ToolIds.CLINOMETER) }
+        Route.Declination ->
+            Res.string.declination.takeUnless { catalog.isToolAvailable(ToolIds.DECLINATION) }
+        Route.SolarPanel ->
+            Res.string.tool_solar_panel_title.takeUnless { catalog.isToolAvailable(ToolIds.SOLAR_PANEL_ALIGNER) }
+        Route.TurnBack, Route.TurnBackSettings ->
+            Res.string.tool_turn_back.takeUnless { catalog.isToolAvailable(ToolIds.TURN_BACK) }
+        Route.FlashlightSettings ->
+            Res.string.flashlight_title.takeUnless { catalog.isToolAvailable(ToolIds.FLASHLIGHT) }
+        else -> null
+    }
+    if (unavailableTitle != null) {
+        UnsupportedSharedToolScreen(appString(unavailableTitle))
+        return
+    }
+
     when (val r = route) {
         // --- Tools hub ---
         Route.Tools -> {
-            val catalog = remember { getAppService<ToolCatalog>() }
             val pinnedTools = remember(userPrefs) { PinnedToolManager(userPrefs) }
             val rawTexts = remember { getAppService<RawTextReader>() }
             val tools = remember(catalog) { catalog.getTools() }
@@ -297,9 +321,7 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
             )
         }
         Route.WaterPurification -> WaterPurificationToolScreen()
-        Route.TurnBack -> if (getAppService<ToolCatalog>().isToolAvailable(ToolIds.TURN_BACK)) {
-            TurnBackToolScreen(remember { getAppService() })
-        } else UnsupportedSharedToolScreen(appString(Res.string.tool_turn_back))
+        Route.TurnBack -> TurnBackToolScreen(remember { getAppService() })
         Route.WhiteNoise -> WhiteNoiseScreen(modifier)
         Route.Flashlight -> FlashlightToolScreen(offerController = { ScreenControllerEffect(this, it) })
         Route.ScreenFlashlight -> {
@@ -439,7 +461,7 @@ fun TrailSenseDestinationHost.SharedDestinationContent(
             else UnsupportedSharedToolScreen(appString(Res.string.portable_backup))
         }
         Route.UnitSettings -> UnitSettingsToolScreen()
-        Route.SensorSettings -> SensorSettingsToolScreen()
+        Route.SensorSettings -> SensorSettingsToolScreen(showCompass = device.hasCompass)
         Route.NavigationSettings -> NavigationSettingsScreen(emptyList()) {}
         Route.WeatherSettings -> WeatherSettingsScreen(emptyList(), null, null)
         Route.AstronomySettings -> AstronomySettingsScreen(emptyList(), showNativeAlarmOptions = false)
@@ -1077,10 +1099,12 @@ private fun SharedCloudsScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun SharedSettingsHubScreen(modifier: Modifier = Modifier) {
     val navigator = LocalNavigator.current
-    val compassLabel = appString(Res.string.pref_compass_sensor_title)
-    val barometerLabel = appString(Res.string.barometer)
-    val compassPainter = rememberVectorPainter(TrailIcons.CompassIcon)
-    val barometerPainter = rememberVectorPainter(TrailIcons.Barometer)
+    val catalog = remember { getAppService<ToolCatalog>() }
+    val device = remember { getAppService<DeviceProfile>() }
+    val calibration = listOfNotNull(
+        if (device.hasCompass) Triple(Route.CalibrateCompass, TrailIcons.CompassIcon, Res.string.pref_compass_sensor_title) else null,
+        if (device.hasBarometer) Triple(Route.CalibrateBarometer, TrailIcons.Barometer, Res.string.barometer) else null
+    )
     val hasPortableBackup = remember { runCatching { getAppService<PortableBackup>() }.isSuccess }
     val entries = listOfNotNull(
         if (hasPortableBackup) appString(Res.string.portable_backup) to Route.PortableBackup else null,
@@ -1092,13 +1116,13 @@ private fun SharedSettingsHubScreen(modifier: Modifier = Modifier) {
         appString(Res.string.weather) to Route.WeatherSettings,
         appString(Res.string.astronomy) to Route.AstronomySettings,
         appString(Res.string.pedometer) to Route.PedometerSettings,
-        appString(Res.string.flashlight_title) to Route.FlashlightSettings,
+        if (catalog.isToolAvailable(ToolIds.FLASHLIGHT)) appString(Res.string.flashlight_title) to Route.FlashlightSettings else null,
         appString(Res.string.tides) to Route.TideSettings,
-        appString(Res.string.clinometer_title) to Route.ClinometerSettings,
-        appString(Res.string.tool_bubble_level_title) to Route.BubbleLevelSettings,
+        if (catalog.isToolAvailable(ToolIds.CLINOMETER)) appString(Res.string.clinometer_title) to Route.ClinometerSettings else null,
+        if (catalog.isToolAvailable(ToolIds.BUBBLE_LEVEL)) appString(Res.string.tool_bubble_level_title) to Route.BubbleLevelSettings else null,
         appString(Res.string.tool_ruler_title) to Route.RulerSettings,
         appString(Res.string.tool_clock_title) to Route.ClockSettings,
-        appString(Res.string.tool_turn_back) to Route.TurnBackSettings,
+        if (catalog.isToolAvailable(ToolIds.TURN_BACK)) appString(Res.string.tool_turn_back) to Route.TurnBackSettings else null,
         appString(Res.string.water_boil_timer) to Route.WaterBoilSettings,
         appString(Res.string.tool_thermometer_title) to Route.ThermometerSettings,
         appString(Res.string.field_guide) to Route.FieldGuideSettings,
@@ -1112,23 +1136,19 @@ private fun SharedSettingsHubScreen(modifier: Modifier = Modifier) {
         onBack = null,
         modifier = modifier
     ) {
-        item("calibration") {
-            TrailSenseRowGroup {
-                row { position ->
-                    TrailSenseListItem(
-                        title = compassLabel,
-                        icon = compassPainter,
-                        position = position,
-                        modifier = Modifier.clickable { navigator.navigate(Route.CalibrateCompass) }
-                    )
-                }
-                row { position ->
-                    TrailSenseListItem(
-                        title = barometerLabel,
-                        icon = barometerPainter,
-                        position = position,
-                        modifier = Modifier.clickable { navigator.navigate(Route.CalibrateBarometer) }
-                    )
+        if (calibration.isNotEmpty()) {
+            item("calibration") {
+                TrailSenseRowGroup {
+                    calibration.forEach { (route, icon, title) ->
+                        row { position ->
+                            TrailSenseListItem(
+                                title = appString(title),
+                                icon = rememberVectorPainter(icon),
+                                position = position,
+                                onClick = { navigator.navigate(route) }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1157,7 +1177,7 @@ private fun UnsupportedSharedToolScreen(title: String) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = appString(Res.string.no_data),
+                    text = appString(Res.string.unavailable),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center

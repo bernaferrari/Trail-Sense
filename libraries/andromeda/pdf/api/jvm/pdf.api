@@ -209,6 +209,8 @@ public final class com/kylecorry/andromeda/pdf/PdfPages : java/lang/AutoCloseabl
 	public final fun pageSize (I)Lcom/kylecorry/andromeda/pdf/PdfPageSize;
 	public final fun render (IIII)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
 	public static synthetic fun render$default (Lcom/kylecorry/andromeda/pdf/PdfPages;IIIIILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public final fun renderRegion (IIIDDDDI)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
+	public static synthetic fun renderRegion$default (Lcom/kylecorry/andromeda/pdf/PdfPages;IIIDDDDIILjava/lang/Object;)Lcom/kylecorry/andromeda/bitmaps/PixelImage;
 }
 
 public final class com/kylecorry/andromeda/pdf/PortablePDFKt {

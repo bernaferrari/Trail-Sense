@@ -12,9 +12,18 @@ public expect class PdfPages(bytes: ByteArray) : AutoCloseable {
     public fun pageSize(page: Int): PdfPageSize
     /** Renders a page to the exact pixel dimensions, filling empty areas with [background]. */
     public fun render(page: Int, width: Int, height: Int, background: Int = -1): PixelImage
+    /** Renders a rectangle in displayed-page fractions measured from the top left. */
+    public fun renderRegion(
+        page: Int, width: Int, height: Int,
+        left: Double, top: Double, right: Double, bottom: Double, background: Int = -1
+    ): PixelImage
     override fun close()
 }
 
 internal fun requireRenderSize(width: Int, height: Int) {
     require(width > 0 && height > 0 && width.toLong() * height <= Int.MAX_VALUE / 4) { "Invalid PDF render size" }
+}
+
+internal fun requirePageRegion(left: Double, top: Double, right: Double, bottom: Double) {
+    require(left >= 0 && top >= 0 && right <= 1 && bottom <= 1 && right > left && bottom > top)
 }

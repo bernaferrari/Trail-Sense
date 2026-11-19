@@ -359,6 +359,7 @@ fun WeatherToolScreen(
         pressureMarkerText = pressureMarkerText,
         isWeatherUpdating = viewModel.isWeatherUpdating,
         monitorState = viewModel.monitorState,
+        monitorSupported = viewModel.monitorSupported,
         monitorFrequency = viewModel.monitorFrequency,
         formatService = formatService,
         onChangeMonitorFrequency = {
@@ -427,6 +428,7 @@ internal class WeatherViewModel(
         private set
     var isWeatherUpdating by mutableStateOf(false)
         private set
+    val monitorSupported = monitorService.isSupported
     var monitorState by mutableStateOf(FeatureState.Off)
         private set
     var monitorFrequency by mutableStateOf<Duration?>(null)
@@ -560,6 +562,7 @@ private fun WeatherHost(
     pressureMarkerText: String?,
     isWeatherUpdating: Boolean,
     monitorState: FeatureState,
+    monitorSupported: Boolean = true,
     monitorFrequency: Duration?,
     formatService: FormatService,
     onChangeMonitorFrequency: () -> Unit,
@@ -603,10 +606,14 @@ private fun WeatherHost(
                         icon = TrailIcons.Weather,
                         title = appString(Res.string.weather_empty_title),
                         description = appString(
-                            if (isOn) Res.string.weather_empty_recording else Res.string.weather_empty_description
+                            when {
+                                !monitorSupported -> Res.string.weather_monitor_unavailable
+                                isOn -> Res.string.weather_empty_recording
+                                else -> Res.string.weather_empty_description
+                            }
                         ),
-                        actionLabel = if (isOn) null else appString(Res.string.weather_empty_action),
-                        onAction = if (isOn) null else onToggleMonitor,
+                        actionLabel = if (monitorSupported && !isOn) appString(Res.string.weather_empty_action) else null,
+                        onAction = onToggleMonitor.takeIf { monitorSupported && !isOn },
                         actionModifier = Modifier.testTag("play_btn"),
                         modifier = Modifier.testTag("chart")
                     )
@@ -650,7 +657,7 @@ private fun WeatherHost(
             }
 
             // The monitor is a setting, not weather: one row after the pressure it records, not above it.
-            if (!isEmpty || monitorState == FeatureState.On) {
+            if (monitorSupported && (!isEmpty || monitorState == FeatureState.On)) {
                 item(key = "weather_monitor") {
                     WeatherMonitorRow(
                         state = monitorState,

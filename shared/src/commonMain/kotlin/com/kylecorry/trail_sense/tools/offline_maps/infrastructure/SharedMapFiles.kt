@@ -20,6 +20,7 @@ import io.github.vinceglb.filekit.nameWithoutExtension
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.decodeToImageBitmap
+import kotlin.math.roundToInt
 import kotlin.time.Clock
 import kotlin.uuid.Uuid
 
@@ -27,10 +28,10 @@ internal const val MAX_MAP_PDF_EDGE = 3072f
 
 internal class SharedMapFiles(
     private val storage: OfflineMapStorage,
-    private val renderPdf: (suspend (ByteArray, Int) -> ByteArray)? = null
+    private val openPdf: OpenOfflinePdfPage? = null
 ) : MapFileAccess {
     val extensions: List<String> get() =
-        listOf("geojson", "json", "map", "jpg", "jpeg", "png", "webp") + listOfNotNull("pdf".takeIf { renderPdf != null })
+        listOf("geojson", "json", "map", "jpg", "jpeg", "png", "webp") + listOfNotNull("pdf".takeIf { openPdf != null })
 
     suspend fun import(file: PlatformFile, maps: MapService): IMap = withContext(ioDispatcher) {
         val extension = file.extension.lowercase()
@@ -73,7 +74,7 @@ internal class SharedMapFiles(
     }
 
     suspend fun preparePdf(file: PlatformFile): GeoPdfMap = withContext(ioDispatcher) {
-        requireNotNull(renderPdf)
+        requireNotNull(openPdf)
         val path = "maps/${Uuid.random()}.pdf"
         try {
             storage.copy(path, file)
@@ -86,7 +87,7 @@ internal class SharedMapFiles(
 
     suspend fun importPdf(document: GeoPdfMap, pageIndex: Int, maps: MapService): PhotoMap = withContext(ioDispatcher) {
         require(pageIndex in 0 until document.pageCount)
-        val preview = requireNotNull(renderPdf)(document.bytes, pageIndex)
+        val preview = renderPdfPreview(document.bytes, pageIndex)
         val image = preview.decodeToImageBitmap()
         val size = Size(image.width.toFloat(), image.height.toFloat())
         val georeference = runCatching { document.georeference(pageIndex, size) }.getOrElse { PhotoMapGeoreference(size) }
@@ -124,14 +125,39 @@ internal class SharedMapFiles(
         val blob = open(map.filename)
         val bytes = when {
             blob != null -> blob.readAll(MAX_IMAGE_BYTES)
-            renderPdf != null -> open(map.pdfFileName)?.readAll(MAX_PDF_BYTES)?.let {
-                renderPdf(it, map.pdfPageIndex)
+            openPdf != null -> open(map.pdfFileName)?.readAll(MAX_PDF_BYTES)?.let {
+                renderPdfPreview(it, map.pdfPageIndex)
             }
             else -> null
         } ?: return@withContext null
         val image = bytes.decodeToImageBitmap()
         val size = Size(image.width.toFloat(), image.height.toFloat())
         map.copy(georeference = map.georeference.copy(size = size, imageSize = size)) to image
+    }
+
+    suspend fun <T> withPdfPage(map: PhotoMap, use: suspend (OfflinePdfPage) -> T): T? {
+        if (openPdf == null) return null
+        val bytes = withContext(ioDispatcher) { open(map.pdfFileName)?.readAll(MAX_PDF_BYTES) } ?: return null
+        return usePdf(bytes, map.pdfPageIndex, use)
+    }
+
+    private suspend fun renderPdfPreview(bytes: ByteArray, index: Int): ByteArray = usePdf(bytes, index) { page ->
+        val scale = MAX_MAP_PDF_EDGE / maxOf(page.width, page.height)
+        page.render(
+            PdfRegion(),
+            (page.width * scale).roundToInt().coerceAtLeast(1),
+            (page.height * scale).roundToInt().coerceAtLeast(1)
+        )
+    }
+
+    private suspend fun <T> usePdf(bytes: ByteArray, index: Int, use: suspend (OfflinePdfPage) -> T): T {
+        // Opening transfers a document handle. Always take ownership before observing cancellation.
+        val page = withContext(NonCancellable) { requireNotNull(openPdf)(bytes, index) }
+        return try {
+            use(page)
+        } finally {
+            withContext(NonCancellable) { page.close() }
+        }
     }
 
     private suspend fun open(path: String) = if (MANAGED_PATH.matches(path)) storage.open(path) else null

@@ -32,14 +32,26 @@ public actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseabl
         check(!closed)
         renderer.openPage(page).use { PdfPageSize(it.width.toFloat(), it.height.toFloat()) }
     }
-    public actual fun render(page: Int, width: Int, height: Int, background: Int): PixelImage = synchronized(lock) {
+    public actual fun render(page: Int, width: Int, height: Int, background: Int): PixelImage =
+        renderRegion(page, width, height, 0.0, 0.0, 1.0, 1.0, background)
+
+    public actual fun renderRegion(
+        page: Int, width: Int, height: Int,
+        left: Double, top: Double, right: Double, bottom: Double, background: Int
+    ): PixelImage = synchronized(lock) {
         check(!closed)
+        requirePageRegion(left, top, right, bottom)
+        val pageWidth = width / (right - left)
+        val pageHeight = height / (bottom - top)
         requireRenderSize(width, height)
         renderer.openPage(page).use { source ->
             val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             try {
                 bitmap.eraseColor(background)
-                val matrix = Matrix().apply { setScale(width.toFloat() / source.width, height.toFloat() / source.height) }
+                val matrix = Matrix().apply {
+                    setScale((pageWidth / source.width).toFloat(), (pageHeight / source.height).toFloat())
+                    postTranslate((-left * pageWidth).toFloat(), (-top * pageHeight).toFloat())
+                }
                 source.render(bitmap, null, matrix, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
                 val pixels = IntArray(width * height)
                 bitmap.getPixels(pixels, 0, width, 0, 0, width, height)

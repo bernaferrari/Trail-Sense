@@ -11,7 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -27,6 +29,7 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseTopBar
 import com.kylecorry.trail_sense.shared.views.compose.rememberTrailSenseBack
 import com.kylecorry.trail_sense.tools.offline_maps.domain.photo_maps.*
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.MapService
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.PdfRegion
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.SharedMapFiles
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -164,7 +167,7 @@ internal fun SharedPhotoMapScreen(mapId: Long) {
                     PercentCoordinate(pixel.x / image.width, pixel.y / image.height)
                 }
                 PhotoMapCanvas(
-                    image,
+                    image, photo, files,
                     (if (calibrating) draft.map { it.imageLocation } else listOfNotNull(marker)),
                     if (calibrating) ({ pickedPoint = it }) else null,
                     Modifier.weight(1f).fillMaxWidth()
@@ -230,12 +233,16 @@ private fun MapCoordinateDialog(onDismiss: () -> Unit, onPoint: (Coordinate) -> 
 @Composable
 private fun PhotoMapCanvas(
     image: ImageBitmap,
+    map: PhotoMap,
+    files: SharedMapFiles,
     points: List<PercentCoordinate>,
     onPoint: ((PercentCoordinate) -> Unit)?,
     modifier: Modifier
 ) {
     var zoom by remember(image) { mutableFloatStateOf(1f) }
     var pan by remember(image) { mutableStateOf(Offset.Zero) }
+    var viewport by remember(image) { mutableStateOf(IntSize.Zero) }
+    val tiles = remember(image, map.filename) { PdfMapTiles(image) }
     val markerColor = MaterialTheme.colorScheme.primary
     val outline = MaterialTheme.colorScheme.onPrimary
     val selectPoint by rememberUpdatedState(onPoint)
@@ -246,21 +253,58 @@ private fun PhotoMapCanvas(
     fun topLeft(width: Float, height: Float, drawn: Offset) =
         Offset((width - drawn.x) / 2, (height - drawn.y) / 2)
 
+    fun transform(size: IntSize, centroid: Offset, delta: Offset, factor: Float) {
+        val newZoom = (zoom * factor).coerceIn(1f, 32f)
+        val drawn = imageSize(size.width.toFloat(), size.height.toFloat(), newZoom)
+        val center = Offset(size.width / 2f, size.height / 2f)
+        val scaledPan = (pan - centroid + center) * (newZoom / zoom) + centroid - center + delta
+        val maxX = ((drawn.x - size.width) / 2).coerceAtLeast(0f)
+        val maxY = ((drawn.y - size.height) / 2).coerceAtLeast(0f)
+        pan = Offset(scaledPan.x.coerceIn(-maxX, maxX), scaledPan.y.coerceIn(-maxY, maxY))
+        zoom = newZoom
+    }
+
+    LaunchedEffect(tiles, files) { tiles.load(files, map) }
+    LaunchedEffect(tiles, viewport, zoom, pan) {
+        if (viewport.width > 0 && viewport.height > 0) {
+            val width = viewport.width.toFloat()
+            val height = viewport.height.toFloat()
+            val drawn = imageSize(width, height, zoom)
+            val origin = topLeft(width, height, drawn) + pan
+            tiles.update((drawn.x / image.width).toDouble(), PdfRegion(
+                (-origin.x / drawn.x).toDouble(), (-origin.y / drawn.y).toDouble(),
+                ((width - origin.x) / drawn.x).toDouble(), ((height - origin.y) / drawn.y).toDouble()
+            ))
+        }
+    }
+
     Canvas(
-        modifier.pointerInput(image) {
-            detectTransformGestures { centroid, delta, factor, _ ->
-                val newZoom = (zoom * factor).coerceIn(1f, 16f)
-                val drawn = imageSize(size.width.toFloat(), size.height.toFloat(), newZoom)
-                val center = Offset(size.width / 2f, size.height / 2f)
-                val scaledPan = (pan - centroid + center) * (newZoom / zoom) + centroid - center + delta
-                val maxX = ((drawn.x - size.width) / 2).coerceAtLeast(0f)
-                val maxY = ((drawn.y - size.height) / 2).coerceAtLeast(0f)
-                pan = Offset(scaledPan.x.coerceIn(-maxX, maxX), scaledPan.y.coerceIn(-maxY, maxY))
-                zoom = newZoom
+        modifier.onSizeChanged { viewport = it }.pointerInput(image) {
+            detectTransformGestures { centroid, delta, factor, _ -> transform(size, centroid, delta, factor) }
+        }.pointerInput(image) {
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent()
+                    if (event.type == PointerEventType.Scroll) {
+                        val change = event.changes.firstOrNull() ?: continue
+                        val direction = change.scrollDelta.y
+                        if (direction != 0f) {
+                            transform(size, change.position, Offset.Zero, if (direction < 0) 1.25f else 0.8f)
+                            change.consume()
+                        }
+                    }
+                }
             }
         }.pointerInput(image) {
             detectTapGestures(
-                onDoubleTap = { zoom = 1f; pan = Offset.Zero },
+                onDoubleTap = { point ->
+                    if (zoom > 1f) {
+                        zoom = 1f
+                        pan = Offset.Zero
+                    } else {
+                        transform(size, point, Offset.Zero, 2f)
+                    }
+                },
                 onTap = { tap ->
                     val drawn = imageSize(size.width.toFloat(), size.height.toFloat(), zoom)
                     val origin = topLeft(size.width.toFloat(), size.height.toFloat(), drawn) + pan
@@ -279,6 +323,16 @@ private fun PhotoMapCanvas(
                 dstOffset = IntOffset(origin.x.roundToInt(), origin.y.roundToInt()),
                 dstSize = IntSize(drawn.x.roundToInt().coerceAtLeast(1), drawn.y.roundToInt().coerceAtLeast(1))
             )
+            for ((tile, detail) in tiles.visibleTiles) {
+                val region = tile.region
+                val left = (origin.x + drawn.x * region.left).roundToInt()
+                val top = (origin.y + drawn.y * region.top).roundToInt()
+                val right = (origin.x + drawn.x * region.right).roundToInt()
+                val bottom = (origin.y + drawn.y * region.bottom).roundToInt()
+                if (right > left && bottom > top) {
+                    drawImage(detail, dstOffset = IntOffset(left, top), dstSize = IntSize(right - left, bottom - top))
+                }
+            }
             for (point in points) {
                 if (point.x !in 0f..1f || point.y !in 0f..1f) continue
                 val center = origin + Offset(point.x * drawn.x, point.y * drawn.y)

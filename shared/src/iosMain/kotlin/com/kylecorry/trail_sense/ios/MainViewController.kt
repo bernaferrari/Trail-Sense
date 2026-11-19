@@ -10,7 +10,7 @@ import com.kylecorry.trail_sense.main.persistence.iosAppDatabase
 import com.kylecorry.trail_sense.main.registerSharedApp
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.SharedMapFiles
 import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.diskOfflineMapStorage
-import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.renderNativeMapPdf
+import com.kylecorry.trail_sense.tools.offline_maps.infrastructure.openNativeMapPdf
 import com.kylecorry.trail_sense.settings.backup.FilePortableBackup
 import com.kylecorry.trail_sense.shared.images.IosAppImages
 import com.kylecorry.trail_sense.shared.images.ComposeBundledImages
@@ -58,7 +58,7 @@ fun MainViewController(
         formats = IosPlatformFormats(),
         hasMotion = CMMotionManager().deviceMotionAvailable,
         hasCamera = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo) != null,
-        mapFiles = SharedMapFiles(diskOfflineMapStorage(files), ::renderNativeMapPdf),
+        mapFiles = SharedMapFiles(diskOfflineMapStorage(files), ::openNativeMapPdf),
         portableBackup = FilePortableBackup(database, files),
         createSunAlerts = { preferences, sensors ->
             listOf(true, false).map { sunrise ->

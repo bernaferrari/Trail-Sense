@@ -398,15 +398,24 @@ compose.resources {
 @CacheableTask
 abstract class GenerateRawTextsTask : DefaultTask() {
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val rawFiles: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    abstract val guideFiles: ConfigurableFileCollection
 
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
     @TaskAction
     fun generate() {
-        val names = rawFiles.files.map { it.nameWithoutExtension }.toSortedSet()
+        val names = rawFiles.files.filter { it.parentFile.name == "raw" }.map { it.nameWithoutExtension }.toSortedSet()
+        val paths = (
+            rawFiles.files.filter { it.extension in setOf("txt", "md", "json") }
+                .map { "${it.parentFile.name}/${it.name}" } +
+                guideFiles.files.map { "raw/${it.name}" }
+            ).toSortedSet()
         val out = outputDir.get().asFile
         out.deleteRecursively()
         val file = File(out, "com/kylecorry/trail_sense/shared/text/RawTexts.kt")
@@ -419,13 +428,23 @@ abstract class GenerateRawTextsTask : DefaultTask() {
             appendLine("object RawTexts {")
             names.forEach { appendLine("    val $it = RawText(\"$it\")") }
             appendLine("}")
+            appendLine()
+            appendLine("internal val bundledRawTextPaths = setOf(")
+            paths.forEach { appendLine("    \"$it\",") }
+            appendLine(")")
         })
     }
 }
 
 val generateRawTexts = tasks.register<GenerateRawTextsTask>("generateRawTexts") {
     rawFiles.from(
-        rootProject.layout.projectDirectory.dir("app/src/main/res/raw").asFileTree.matching { exclude("*.xml") }
+        rootProject.layout.projectDirectory.dir("app/src/main/res").asFileTree.matching {
+            include("raw/*", "raw*/*.txt", "raw*/*.md", "raw*/*.json")
+            exclude("raw/*.xml")
+        }
+    )
+    guideFiles.from(
+        rootProject.layout.projectDirectory.dir("guides/en-US").asFileTree.matching { include("*.txt") }
     )
     outputDir.set(layout.buildDirectory.dir("generated/rawTexts/commonMain/kotlin"))
 }

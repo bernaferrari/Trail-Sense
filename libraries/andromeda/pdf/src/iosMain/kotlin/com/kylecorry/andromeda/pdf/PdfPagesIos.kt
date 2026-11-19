@@ -42,7 +42,16 @@ public actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseabl
         val (width, height) = box.useContents { size.width.toFloat() to size.height.toFloat() }
         if (CGPDFPageGetRotationAngle(source) % 180 == 0) PdfPageSize(width, height) else PdfPageSize(height, width)
     }
-    public actual fun render(page: Int, width: Int, height: Int, background: Int): PixelImage = locked {
+    public actual fun render(page: Int, width: Int, height: Int, background: Int): PixelImage =
+        renderRegion(page, width, height, 0.0, 0.0, 1.0, 1.0, background)
+
+    public actual fun renderRegion(
+        page: Int, width: Int, height: Int,
+        left: Double, top: Double, right: Double, bottom: Double, background: Int
+    ): PixelImage = locked {
+        requirePageRegion(left, top, right, bottom)
+        val pageWidth = width / (right - left)
+        val pageHeight = height / (bottom - top)
         requireRenderSize(width, height)
         val source = pageAt(page)
         val rgba = ByteArray(width * height * 4)
@@ -56,7 +65,7 @@ public actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseabl
                         ((background ushr 8) and 255) / 255.0, (background and 255) / 255.0, (background ushr 24) / 255.0)
                     CGContextFillRect(context, CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()))
                     val transform = CGPDFPageGetDrawingTransform(source, kCGPDFCropBox,
-                        CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()), 0, false)
+                        CGRectMake(-left * pageWidth, -(1.0 - bottom) * pageHeight, pageWidth, pageHeight), 0, false)
                     CGContextConcatCTM(context, transform)
                     CGContextDrawPDFPage(context, source)
                 } finally { CGContextRelease(context) }

@@ -18,8 +18,17 @@ public actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseabl
         val box = source.cropBox
         if (source.rotation % 180 == 0) PdfPageSize(box.width, box.height) else PdfPageSize(box.height, box.width)
     }
-    public actual fun render(page: Int, width: Int, height: Int, background: Int): PixelImage = synchronized(lock) {
+    public actual fun render(page: Int, width: Int, height: Int, background: Int): PixelImage =
+        renderRegion(page, width, height, 0.0, 0.0, 1.0, 1.0, background)
+
+    public actual fun renderRegion(
+        page: Int, width: Int, height: Int,
+        left: Double, top: Double, right: Double, bottom: Double, background: Int
+    ): PixelImage = synchronized(lock) {
         check(!closed)
+        requirePageRegion(left, top, right, bottom)
+        val pageWidth = width / (right - left)
+        val pageHeight = height / (bottom - top)
         requireRenderSize(width, height)
         val size = pageSize(page)
         val image = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
@@ -28,7 +37,8 @@ public actual class PdfPages actual constructor(bytes: ByteArray) : AutoCloseabl
             graphics.background = Color(background, true)
             graphics.color = graphics.background
             graphics.fillRect(0, 0, width, height)
-            renderer.renderPageToGraphics(page, graphics, width / size.widthPoints, height / size.heightPoints)
+            graphics.translate(-left * pageWidth, -top * pageHeight)
+            renderer.renderPageToGraphics(page, graphics, (pageWidth / size.widthPoints).toFloat(), (pageHeight / size.heightPoints).toFloat())
         } finally { graphics.dispose() }
         PixelImage(width, height, image.getRGB(0, 0, width, height, null, 0, width))
     }

@@ -164,6 +164,7 @@ final class com.kylecorry.andromeda.pdf/PdfPages : kotlin/AutoCloseable { // com
     final fun close() // com.kylecorry.andromeda.pdf/PdfPages.close|close(){}[0]
     final fun pageSize(kotlin/Int): com.kylecorry.andromeda.pdf/PdfPageSize // com.kylecorry.andromeda.pdf/PdfPages.pageSize|pageSize(kotlin.Int){}[0]
     final fun render(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.pdf/PdfPages.render|render(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun renderRegion(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Int = ...): com.kylecorry.andromeda.bitmaps/PixelImage // com.kylecorry.andromeda.pdf/PdfPages.renderRegion|renderRegion(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Int){}[0]
 }
 
 final fun (com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary).com.kylecorry.andromeda.pdf/getProperties(kotlin/String, kotlin.collections/List<com.kylecorry.andromeda.pdf/PDFValue.PDFObject>): com.kylecorry.andromeda.pdf/PDFValue.PDFDictionary? // com.kylecorry.andromeda.pdf/getProperties|getProperties@com.kylecorry.andromeda.pdf.PDFValue.PDFDictionary(kotlin.String;kotlin.collections.List<com.kylecorry.andromeda.pdf.PDFValue.PDFObject>){}[0]

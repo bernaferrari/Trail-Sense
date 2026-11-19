@@ -31,11 +31,11 @@ import com.kylecorry.trail_sense.shared.views.compose.TrailSenseListItem
 import com.kylecorry.trail_sense.shared.views.compose.trailSenseSection
 
 @Composable
-fun SensorSettingsToolScreen() {
+fun SensorSettingsToolScreen(showCompass: Boolean = true) {
     val navigator = LocalNavigator.current
     val hasBarometer = remember { getAppService<DeviceProfile>().hasBarometer }
-    val items = remember(hasBarometer) {
-        sensorSettingsItems(hasBarometer)
+    val items = remember(hasBarometer, showCompass) {
+        sensorSettingsItems(hasBarometer, showCompass)
     }
     // The sensors to calibrate, then the raw readings of every sensor on their own.
     val (details, sensors) = items.partition { it.key == "details" }
@@ -68,14 +68,14 @@ fun SensorSettingsToolScreen() {
     }
 }
 
-private fun sensorSettingsItems(hasBarometer: Boolean): List<SensorSettingsItem> {
+private fun sensorSettingsItems(hasBarometer: Boolean, showCompass: Boolean): List<SensorSettingsItem> {
     return listOfNotNull(
-        SensorSettingsItem(
+        if (showCompass) SensorSettingsItem(
             key = "compass",
             title = Res.string.pref_compass_sensor_title,
             icon = TrailIcons.CompassIcon,
             destination = Route.CalibrateCompass
-        ),
+        ) else null,
         SensorSettingsItem(
             key = "gps",
             title = Res.string.gps,
